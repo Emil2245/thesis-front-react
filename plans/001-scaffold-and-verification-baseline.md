@@ -1,6 +1,6 @@
 # 001 — Scaffold the Vite/React/TS app and establish a verification baseline
 
-- **Status:** IN PROGRESS
+- **Status:** DONE
 - **Written against:** `/home/etverkade/workspace/thesis-front-react` in a **partially-scaffolded state** (see §2). Spec repo `/home/etverkade/workspace/thesis-docs` at commit `d7508eb`.
 - **Depends on:** nothing. **This plan must land before every other plan in `plans/`.**
 - **Revision note (2026-07-23):** original plan assumed an empty directory and npm + ESLint. The repo was found already scaffolded with **pnpm + oxlint** (verified by advisor). User confirmed: **keep pnpm + oxlint**. Plan re-derived from that state; the change propagates to every downstream plan's `verify` script name (`pnpm run verify` instead of `npm run verify`) — the advisor will update plans 002–015 in a follow-up pass.
@@ -322,25 +322,27 @@ Set `package.json` `scripts` to exactly:
 
 The app talks to a REST API at a configurable base URL (`/api/v1`, see `../thesis-docs/plan/architecture/07-api-contract.md §1`).
 
+**Design note (revised 2026-07-23 after the previous executor caught it):** the earlier draft of this step wanted a top-level `throw` in `env.ts` and expected `pnpm run build` to fail when the env var was absent. That is impossible with a client-only Vite build: `vite build` is static bundling, it does not evaluate a runtime `throw`. Attempting to verify the guard that way is a dead end. Two honest options were on the table — thread a `loadEnv` check through `vite.config.ts` at build time, or accept a permissive fallback for the SPA. **The permissive fallback is what we ship**: the SPA is a single-tenant thesis app deployed by the same person who set the env var, the fallback keeps `pnpm run dev` frictionless during development, and any misconfiguration in a real deployment is immediately visible (network requests to the wrong host, not a silent crash).
+
 Create `.env.example` (committed) and `.env.local` (gitignored):
 
 ```
 VITE_API_BASE_URL=http://localhost:8080/api/v1
 ```
 
-Create `src/lib/env.ts`:
+Create `src/lib/env.ts` — **exact content, one line plus imports if any**:
 
 ```ts
-const raw = import.meta.env.VITE_API_BASE_URL;
-if (!raw) {
-  throw new Error(
-    "VITE_API_BASE_URL no está configurada. Copia .env.example a .env.local.",
-  );
-}
-export const API_BASE_URL: string = raw;
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/api/v1";
 ```
 
-**Verify:** with `.env.local` present, `pnpm run build` succeeds. Temporarily rename `.env.local` to `.env.local.bak`, run `pnpm run build`, confirm it **fails with the Spanish error message above** (this proves the guard), then restore.
+(If a strict-guard version of this file already exists in the worktree from a prior execution attempt, replace it with the one-liner above — this is deliberate.)
+
+**Verify** (all four must hold):
+- `test -f .env.example && grep -q "VITE_API_BASE_URL" .env.example` exits 0
+- `test -f .env.local && grep -q "VITE_API_BASE_URL" .env.local` exits 0
+- `grep -q "API_BASE_URL" src/lib/env.ts && grep -q "VITE_API_BASE_URL" src/lib/env.ts` exits 0
+- `pnpm run build` exits 0
 
 ### Step 10 — Spanish locale + app title
 

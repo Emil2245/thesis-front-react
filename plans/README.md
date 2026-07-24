@@ -54,7 +54,7 @@ Each plan is written for an executor with **zero context from the session that p
 
 | # | Plan | Processes | Screens | XP iter. | Status |
 |---|---|---|---|---|---|
-| 001 | [Scaffold and verification baseline](001-scaffold-and-verification-baseline.md) | — | — | I-01 | IN PROGRESS |
+| 001 | [Scaffold and verification baseline](001-scaffold-and-verification-baseline.md) | — | — | I-01 | DONE |
 | 002 | [API seam: types, client, query layer](002-api-seam-types-client-and-query-layer.md) | — | — | I-01 | DONE |
 | 003 | [Testing harness](003-testing-harness-vitest-rtl-msw-playwright.md) | — | — | I-01 | TODO |
 | 004 | [Design system + decimal formatting](004-design-system-tokens-and-decimal-formatting.md) | — | — | I-01 | TODO |

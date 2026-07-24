@@ -4,6 +4,7 @@
 §11 (Apéndice B) porque el backend Quarkus todavía no expone OpenAPI.
 
 Cuando el backend publique `/q/openapi`:
+
 1. `OPENAPI_URL=<url> npm run gen:api` → genera `src/api/schema.d.ts`.
 2. Reescribe `contract.ts` para re-exportar desde `schema.d.ts`
    (`export type ApuResponse = components["schemas"]["ApuResponse"]`), manteniendo

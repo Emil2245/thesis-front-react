@@ -1,6 +1,6 @@
 # 003 — Testing harness: Vitest + RTL + MSW + Playwright + axe
 
-- **Status:** TODO
+- **Status:** DONE
 - **Written against:** repo state after plans 001–002. Spec repo `/home/etverkade/workspace/thesis-docs` at commit `d7508eb`.
 - **Depends on:** 001 (scripts), 002 (types + client to mock and to test).
 - **Blocks:** the *verification* steps of 005–014, and plan 015 (E2E suite + CI).

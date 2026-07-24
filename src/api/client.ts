@@ -8,14 +8,20 @@ export const http = axios.create({
 });
 
 let accessToken: string | null = null;
-export const setAccessToken = (t: string | null) => { accessToken = t; };
+export const setAccessToken = (t: string | null) => {
+  accessToken = t;
+};
 export const getAccessToken = () => accessToken;
 
 let refrescar: (() => Promise<string | null>) | null = null;
-export const setRefrescador = (f: typeof refrescar) => { refrescar = f; };
+export const setRefrescador = (f: typeof refrescar) => {
+  refrescar = f;
+};
 
 let onSesionExpirada: (() => void) | null = null;
-export const setOnSesionExpirada = (f: typeof onSesionExpirada) => { onSesionExpirada = f; };
+export const setOnSesionExpirada = (f: typeof onSesionExpirada) => {
+  onSesionExpirada = f;
+};
 
 http.interceptors.request.use((config) => {
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
@@ -25,15 +31,10 @@ http.interceptors.request.use((config) => {
 http.interceptors.response.use(
   (r) => r,
   async (error: AxiosError<Problem>) => {
-    const original = error.config as (typeof error.config & { _reintentado?: boolean });
+    const original = error.config as typeof error.config & { _reintentado?: boolean };
     const status = error.response?.status ?? 0;
 
-    if (
-      status === 401 &&
-      original &&
-      !original._reintentado &&
-      !original.url?.includes("/auth/")
-    ) {
+    if (status === 401 && original && !original._reintentado && !original.url?.includes("/auth/")) {
       original._reintentado = true;
       const nuevo = refrescar ? await refrescar() : null;
       if (nuevo) {

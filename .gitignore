@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Testing (arrives in plan 003)
+coverage
+playwright-report
+test-results
+
+# Environment
+.env.local
+.env.*.local
+
+# Claude Code worktrees / local agent state
+.claude/

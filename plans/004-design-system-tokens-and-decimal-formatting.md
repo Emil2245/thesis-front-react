@@ -1,6 +1,6 @@
 # 004 — Design system: tokens, base components, and es-EC decimal formatting
 
-- **Status:** TODO
+- **Status:** DONE
 - **Written against:** repo state after plans 001–003. Spec repo `/home/etverkade/workspace/thesis-docs` at commit `d7508eb`.
 - **Depends on:** 001 (shadcn init), 002 (`Decimal` type), 003 (test harness).
 - **Blocks:** 005–014 (every screen uses these tokens, components and formatters).
