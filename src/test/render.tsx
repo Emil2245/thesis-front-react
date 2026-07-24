@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, type RenderOptions } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import type { ReactElement, ReactNode } from "react";
 
 export function crearQueryClient() {
@@ -20,7 +21,9 @@ export function renderConProviders(
   const client = crearQueryClient();
   const Wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={[ruta]}>{children}</MemoryRouter>
+      <MemoryRouter initialEntries={[ruta]}>
+        <TooltipProvider>{children}</TooltipProvider>
+      </MemoryRouter>
     </QueryClientProvider>
   );
   return {

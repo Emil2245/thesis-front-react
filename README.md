@@ -1,32 +1,68 @@
-# React + TypeScript + Vite
+# Sistema APU — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React SPA for Ecuadorian public-works bidding (APU · presupuesto · cronograma).
+Part of a cloud-native platform automating SERCOP _propuestas técnico-económicas_.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **React 19** + **TypeScript 6** + **Vite 8**
+- **shadcn/ui 4** (Radix UI) + **Tailwind CSS 4**
+- **TanStack Query 5** + **React Router 7**
+- **Zustand** (client state) + **Zod** (validation)
+- **Vitest** + **Testing Library** + **MSW** (unit tests)
+- **Playwright** + **axe-core** (E2E + a11y)
+- **oxlint** + **Prettier** (lint/format)
 
-## React Compiler
+## Quick start
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+pnpm install
+pnpm run dev        # http://localhost:5173
+pnpm run verify     # typecheck + lint + format + test + build
+pnpm run e2e        # Playwright E2E tests
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Architecture
+
+Single-page application with route-based code splitting:
+
+- **Public routes:** login, registro, verificar-email, recuperar, restablecer
+- **Private routes** (behind `RutaPrivada`): proyectos, insumos, APUs, presupuesto, cronograma, documentos, plantillas
+- **Admin routes** (behind `RutaAdmin`): usuarios, bases, plantillas, parámetros, valores ref., logs
+
+Key architectural decisions (see `plans/README.md` for full ADR log):
+
+- No calc engine in the client — all cost/pricing math is server-side (ADR 9)
+- Money/percentages travel as `Decimal` branded strings (`"61.390000"`)
+- `src/api/` is the only HTTP-aware layer
+- Version selector uses `?v=` search param (not nested routes)
+
+## Project structure
+
+```
+src/
+├── api/          # API client, DTOs, query keys
+├── components/   # Shared UI components
+├── features/     # Feature modules (auth, proyectos, insumos, apu-editor, presupuesto, cronograma, exportar, admin)
+├── hooks/        # Shared hooks
+├── lib/          # Utilities (decimal, env, error handling)
+├── routes/       # Router config + guards
+├── shell/        # App shell (sidebar, topbar, breadcrumbs)
+└── test/         # Test setup (MSW handlers, fixtures, render utilities)
+```
+
+## Tests
+
+- **165 unit tests** across 42 files (Vitest + RTL + MSW)
+- **2 E2E tests** (Playwright + axe-core for a11y)
+- Commands: `pnpm test`, `pnpm run test:watch`, `pnpm run test:coverage`, `pnpm run e2e`
+
+## CI
+
+GitHub Actions workflow (`.github/workflows/ci.yml`):
+typecheck → lint → format check → test → build → install Playwright → E2E
+
+## Spec repository
+
+API contracts and design docs live in the companion [thesis-docs](https://github.com/anomalyco/thesis-docs) repo.
+DTOs for 40+ endpoints are hand-transcribed from Apéndice B (backend does not exist yet).

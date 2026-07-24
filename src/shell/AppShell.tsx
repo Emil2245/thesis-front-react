@@ -1,0 +1,24 @@
+import { Outlet } from "react-router-dom";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { AppSidebar } from "./Sidebar";
+import { Topbar } from "./Topbar";
+import { LimiteDeError } from "@/components/comunes/LimiteDeError";
+
+export function AppShell() {
+  return (
+    <TooltipProvider>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <Topbar />
+          <main className="flex-1 p-6">
+            <LimiteDeError>
+              <Outlet />
+            </LimiteDeError>
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
+    </TooltipProvider>
+  );
+}

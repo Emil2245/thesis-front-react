@@ -54,12 +54,19 @@ export interface RestablecerPasswordRequest {
   password: string;
 }
 
+export interface RegistroRequest {
+  nombre: string;
+  email: string;
+  password: string;
+}
+
 export interface PerfilResponse {
   id: number;
   nombre: string;
   email: string;
   rol: Rol;
   emailVerificado: boolean;
+  fechaCreacion: string;
 }
 
 export interface PerfilActualizarRequest {

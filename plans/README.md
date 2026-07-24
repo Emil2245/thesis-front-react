@@ -53,22 +53,22 @@ Each plan is written for an executor with **zero context from the session that p
 ## Status
 
 | # | Plan | Processes | Screens | XP iter. | Status |
-|---|---|---|---|---|---|
+|---|---|---|---|---|---|---|
 | 001 | [Scaffold and verification baseline](001-scaffold-and-verification-baseline.md) | — | — | I-01 | DONE |
 | 002 | [API seam: types, client, query layer](002-api-seam-types-client-and-query-layer.md) | — | — | I-01 | DONE |
-| 003 | [Testing harness](003-testing-harness-vitest-rtl-msw-playwright.md) | — | — | I-01 | TODO |
-| 004 | [Design system + decimal formatting](004-design-system-tokens-and-decimal-formatting.md) | — | — | I-01 | TODO |
-| 005 | [Auth module](005-auth-module.md) | P-01…P-04 | S-01…S-06 | I-01, I-02 | TODO |
-| 006 | [Shell, routing, global states](006-app-shell-routing-and-global-states.md) | P-43, P-44 | S-43, S-44 | I-01 | TODO |
-| 007 | [Proyectos](007-proyectos-module.md) | P-05…P-12 | S-07…S-13 | I-03, I-06 | TODO |
-| 008 | [Insumos](008-insumos-module.md) | P-13…P-18 | S-14…S-19 | I-04 | TODO |
-| 009 | [APU editor (núcleo)](009-apu-editor-core.md) | P-19…P-22 | S-20…S-23 | I-05 | TODO |
-| 010 | [APU completo](010-apu-completion-ci-descuento-auxiliares-plantillas.md) | P-23…P-27 | S-24…S-26, S-36 | I-06 | TODO |
-| 011 | [Presupuesto y versiones](011-presupuesto-and-versions.md) | P-28…P-32 | S-27…S-32 | I-07, I-08 | TODO |
-| 012 | [Cronograma y Gantt](012-cronograma-and-gantt.md) | P-33…P-36 | S-33, S-34 | I-08, I-09 | TODO |
-| 013 | [Export documentos](013-export-documentos.md) | P-37 | S-35 | I-10 | TODO |
-| 014 | [Panel Super-Admin](014-admin-panel.md) | P-38…P-42 | S-37…S-42 | I-11 | TODO |
-| 015 | [E2E, a11y y CI](015-e2e-suite-accessibility-and-ci.md) | — | — | I-01 → I-12 | TODO |
+| 003 | [Testing harness](003-testing-harness-vitest-rtl-msw-playwright.md) | — | — | I-01 | DONE |
+| 004 | [Design system + decimal formatting](004-design-system-tokens-and-decimal-formatting.md) | — | — | I-01 | DONE |
+| 005 | [Auth module](005-auth-module.md) | P-01…P-04 | S-01…S-06 | I-01, I-02 | DONE |
+| 006 | [Shell, routing, global states](006-app-shell-routing-and-global-states.md) | P-43, P-44 | S-43, S-44 | I-01 | DONE |
+| 007 | [Proyectos](007-proyectos-module.md) | P-05…P-12 | S-07…S-13 | I-03, I-06 | DONE |
+| 008 | [Insumos](008-insumos-module.md) | P-13…P-18 | S-14…S-19 | I-04 | DONE |
+| 009 | [APU editor (núcleo)](009-apu-editor-core.md) | P-19…P-22 | S-20…S-23 | I-05 | DONE |
+| 010 | [APU completo](010-apu-completion-ci-descuento-auxiliares-plantillas.md) | P-23…P-27 | S-24…S-26, S-36 | I-06 | DONE |
+| 011 | [Presupuesto y versiones](011-presupuesto-and-versions.md) | P-28…P-32 | S-27…S-32 | I-07, I-08 | DONE |
+| 012 | [Cronograma y Gantt](012-cronograma-and-gantt.md) | P-33…P-36 | S-33, S-34 | I-08, I-09 | DONE |
+| 013 | [Export documentos](013-export-documentos.md) | P-37 | S-35 | I-10 | DONE |
+| 014 | [Panel Super-Admin](014-admin-panel.md) | P-38…P-42 | S-37…S-42 | I-11 | DONE |
+| 015 | [E2E, a11y y CI](015-e2e-suite-accessibility-and-ci.md) | — | — | I-01 → I-12 | DONE |
 
 Executors update the `Status` cell (TODO → IN PROGRESS → DONE) **and** the `Status:` line at the top of their plan file.
 

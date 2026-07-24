@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Sistema APU · Frontend — Documentation Review</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+    color: #1b1f24;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    margin: 0;
+  }
+  h1 { font-size: 22pt; margin: 0 0 4pt; letter-spacing: -0.01em; }
+  h2 { font-size: 14pt; margin: 20pt 0 6pt; padding-bottom: 4pt; border-bottom: 1px solid #d0d7de; letter-spacing: -0.005em; }
+  h3 { font-size: 11.5pt; margin: 14pt 0 4pt; color: #0b3d91; }
+  p  { margin: 0 0 8pt; }
+  ul, ol { margin: 0 0 8pt 0; padding-left: 18pt; }
+  li { margin-bottom: 3pt; }
+  code, kbd, samp {
+    font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+    font-size: 9.2pt;
+    background: #f3f5f7;
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 4pt 0 10pt;
+    font-size: 9.4pt;
+  }
+  th, td {
+    text-align: left;
+    padding: 5pt 7pt;
+    border-bottom: 1px solid #e2e6ea;
+    vertical-align: top;
+  }
+  th {
+    background: #f3f5f7;
+    font-weight: 600;
+    border-bottom: 1px solid #c8cdd3;
+  }
+  tr td:first-child, tr th:first-child { padding-left: 4pt; }
+  .cover {
+    padding: 22pt 0 8pt;
+    border-bottom: 3px solid #0b3d91;
+    margin-bottom: 14pt;
+  }
+  .kicker {
+    font-size: 9pt;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #0b3d91;
+    font-weight: 600;
+  }
+  .subhead {
+    font-size: 12pt;
+    color: #454b52;
+    margin-top: 6pt;
+  }
+  .meta {
+    margin-top: 12pt;
+    font-size: 9pt;
+    color: #5a6068;
+    display: flex;
+    gap: 22pt;
+    flex-wrap: wrap;
+  }
+  .meta b { color: #1b1f24; font-weight: 600; }
+  .callout {
+    background: #f5f8ff;
+    border-left: 3px solid #0b3d91;
+    padding: 8pt 12pt;
+    margin: 8pt 0 12pt;
+    border-radius: 0 4px 4px 0;
+    font-size: 10pt;
+  }
+  .callout b { color: #0b3d91; }
+  .warn {
+    background: #fff8ec;
+    border-left-color: #a36a00;
+  }
+  .warn b { color: #a36a00; }
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10pt 18pt;
+  }
+  .card {
+    border: 1px solid #e2e6ea;
+    border-radius: 4px;
+    padding: 8pt 10pt;
+    background: #fff;
+  }
+  .card h3 { margin-top: 0; }
+  .tag {
+    display: inline-block;
+    font-size: 8.4pt;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: #eaf1ff;
+    color: #0b3d91;
+    margin-right: 4pt;
+    font-weight: 600;
+  }
+  .status-done { color: #157347; font-weight: 600; }
+  .muted { color: #5a6068; }
+  .small { font-size: 9pt; }
+  .no-break { break-inside: avoid; page-break-inside: avoid; }
+  h2, h3 { break-after: avoid; page-break-after: avoid; }
+  .footer {
+    position: running(footer);
+  }
+  @page {
+    @bottom-center {
+      content: "Sistema APU · Frontend — Documentation Review · " counter(page) " / " counter(pages);
+      font-size: 8.5pt;
+      color: #6a7079;
+    }
+  }
+  .toc-list li { margin-bottom: 2pt; }
+  .kv { display: grid; grid-template-columns: max-content 1fr; column-gap: 10pt; row-gap: 3pt; font-size: 9.6pt; }
+  .kv dt { color: #5a6068; }
+  .kv dd { margin: 0; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div class="kicker">Thesis · Frontend implementation plans</div>
+  <h1>Sistema APU — Frontend</h1>
+  <div class="subhead">Documentation review pack: scope, architecture, traceability, and flagged risks</div>
+  <div class="meta">
+    <div><b>Repository:</b> <code>thesis-front-react</code></div>
+    <div><b>Spec ref:</b> <code>thesis-docs @ d7508eb</code></div>
+    <div><b>Plans:</b> 001–015 (all 44 processes / 44 screens)</div>
+    <div><b>Date:</b> 2026-07-24</div>
+  </div>
+</section>
+
+<div class="callout">
+  <b>TL;DR.</b> The plan set covers the full v1.1 scope — <b>P-01…P-44</b> and <b>S-01…S-44</b>, each assigned exactly once — across <b>15 self-contained plans</b>. Three architectural decisions govern the whole codebase (no client calc engine, decimal-string money, a single API seam). Every plan traces to spec identifiers (P/S/TC/RNF/ADR) so the SPA remains auditable against the thesis. Six gaps were surfaced rather than papered over; a further eight paths were considered and rejected with recorded reasons.
+</div>
+
+<h2>1 · Scope &amp; coverage</h2>
+
+<p>The frontend is a React 19 + TypeScript SPA (Vite 8), styled with shadcn/ui 4 on Tailwind 4, using TanStack Query for server state and Zustand for client state, with Vitest + RTL + MSW for unit tests and Playwright + axe-core for E2E and accessibility. Fifteen plans partition the work with hard ordering rules so any plan can be executed from cold context.</p>
+
+<table class="no-break">
+  <thead>
+    <tr><th style="width:34pt">#</th><th>Plan</th><th style="width:78pt">Processes</th><th style="width:78pt">Screens</th><th style="width:60pt">XP iter.</th><th style="width:38pt">Status</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>001</td><td>Scaffold + verification baseline</td><td>—</td><td>—</td><td>I-01</td><td class="status-done">DONE</td></tr>
+    <tr><td>002</td><td>API seam: types, client, query layer</td><td>—</td><td>—</td><td>I-01</td><td class="status-done">DONE</td></tr>
+    <tr><td>003</td><td>Testing harness (Vitest · RTL · MSW · Playwright)</td><td>—</td><td>—</td><td>I-01</td><td class="status-done">DONE</td></tr>
+    <tr><td>004</td><td>Design system + decimal formatting</td><td>—</td><td>—</td><td>I-01</td><td class="status-done">DONE</td></tr>
+    <tr><td>005</td><td>Auth module</td><td>P-01…P-04</td><td>S-01…S-06</td><td>I-01, I-02</td><td class="status-done">DONE</td></tr>
+    <tr><td>006</td><td>Shell, routing, global states</td><td>P-43, P-44</td><td>S-43, S-44</td><td>I-01</td><td class="status-done">DONE</td></tr>
+    <tr><td>007</td><td>Proyectos</td><td>P-05…P-12</td><td>S-07…S-13</td><td>I-03, I-06</td><td class="status-done">DONE</td></tr>
+    <tr><td>008</td><td>Insumos</td><td>P-13…P-18</td><td>S-14…S-19</td><td>I-04</td><td class="status-done">DONE</td></tr>
+    <tr><td>009</td><td>APU editor (núcleo)</td><td>P-19…P-22</td><td>S-20…S-23</td><td>I-05</td><td class="status-done">DONE</td></tr>
+    <tr><td>010</td><td>APU completo (%CI, descuento, auxiliares, plantillas)</td><td>P-23…P-27</td><td>S-24…S-26, S-36</td><td>I-06</td><td class="status-done">DONE</td></tr>
+    <tr><td>011</td><td>Presupuesto y versiones</td><td>P-28…P-32</td><td>S-27…S-32</td><td>I-07, I-08</td><td class="status-done">DONE</td></tr>
+    <tr><td>012</td><td>Cronograma y Gantt</td><td>P-33…P-36</td><td>S-33, S-34</td><td>I-08, I-09</td><td class="status-done">DONE</td></tr>
+    <tr><td>013</td><td>Export documentos SERCOP</td><td>P-37</td><td>S-35</td><td>I-10</td><td class="status-done">DONE</td></tr>
+    <tr><td>014</td><td>Panel Super-Admin</td><td>P-38…P-42</td><td>S-37…S-42</td><td>I-11</td><td class="status-done">DONE</td></tr>
+    <tr><td>015</td><td>E2E, accessibility, and CI</td><td>—</td><td>—</td><td>I-01 → I-12</td><td class="status-done">DONE</td></tr>
+  </tbody>
+</table>
+
+<p class="small muted"><b>Coverage check.</b> P-01…P-44 all assigned exactly once · S-01…S-44 all assigned exactly once. The mapping is exhaustive by construction — no process or screen escapes a plan, and no plan claims another’s territory.</p>
+
+<h3>Execution graph (hard ordering)</h3>
+<p>The verification gate <code>pnpm run verify</code> only exists after 001. Test-suite steps in 005–014 rely on 003. Budget items in 011 reference APUs from 009/010; cronograma activities are auto-imported 1:1 from budget items (011 → 012); export (013) blocks on both. Admin (014) reuses components from 008 and 010 rather than rebuilding them. E2E + CI (015) exercises the finished app.</p>
+
+<h2>2 · The architectural decisions that govern the whole codebase</h2>
+
+<p>Any plan executor should know these three before writing a line — they are what makes an implementation that <i>looks</i> right actually match the thesis’s dependent variables.</p>
+
+<div class="grid2">
+  <div class="card no-break">
+    <div class="tag">ADR 9</div>
+    <h3>No calc engine in the client</h3>
+    <p>Every cost, subtotal, HM, CD, CI and CT is computed server-side. RNF-04’s <i>“cálculo en tiempo real”</i> means <b>no page reload, cell-commit granularity</b>: commit a cell → <code>PATCH</code> → repaint from the DTO, with an optimistic <i>pendiente</i> state that shows no guessed number.</p>
+    <p class="small muted">Rationale: the thesis’s headline dependent variable is <code>exactitud_calculo = 0%</code> deviation against certified reference cases. A parallel TS implementation would put that at risk for cosmetic gain. Plan 015 mechanises the guard as a CI grep for <code>toFixed</code>/<code>parseFloat</code> outside <code>src/lib/decimal.ts</code>.</p>
+  </div>
+  <div class="card no-break">
+    <div class="tag">API contract §1</div>
+    <h3>Money travels as decimal strings</h3>
+    <p>Money and percentages are branded <code>Decimal</code> strings (<code>"61.390000"</code>), never <code>number</code>. Percentages travel as fractions (<code>"0.1800"</code> = 18 %). Plan 002 brands the type; plan 004 supplies display-only formatters. Never parse to <code>number</code> and send it back.</p>
+    <p class="small muted">Rationale: JS <code>number</code> loses precision at the tail digits SERCOP tolerances depend on.</p>
+  </div>
+  <div class="card no-break">
+    <div class="tag">Codebase design §8</div>
+    <h3>One seam with the backend</h3>
+    <p><code>src/api/</code> is the only place that knows HTTP exists. No <code>src/features/**</code> file imports axios or builds a URL. DTOs are hand-transcribed from Apéndice B until the Quarkus backend publishes OpenAPI — at which point <code>openapi-typescript</code> replaces the transcription and DTO drift becomes a compile error.</p>
+    <p class="small muted">Rationale: keeps HTTP concerns testable at one MSW seam and future-proofs against the still-unbuilt backend.</p>
+  </div>
+  <div class="card no-break">
+    <div class="tag">Design §5.3</div>
+    <h3>Version selector via <code>?v=</code> (open decision, closed)</h3>
+    <p>Version was open in <code>design/02 §5.3</code>. Resolved to a search param rather than nested routes because <code>TC-P43-02</code> already assumed it, and it lets any budget/cronograma/export page share one URL scheme without touching the route table.</p>
+  </div>
+</div>
+
+<h3 class="no-break">Open decisions the plans had to resolve or route around</h3>
+<p class="small">These were unresolved in <code>thesis-docs</code> at plan time. Each plan states its assumption and flags it so the humans’ later ruling can be back-propagated.</p>
+
+<table class="no-break">
+  <thead><tr><th>Open decision</th><th>Choice made</th><th>Plan</th></tr></thead>
+  <tbody>
+    <tr><td>Discount semantics (% vs monto; project + rubro)</td><td>Percentage-only; help text mentions both levels exist</td><td>007, 010</td></tr>
+    <tr><td>APU editing model: inline grid vs row-opens-form</td><td>Inline (spreadsheet-familiar); SUS pilot may revisit</td><td>009</td></tr>
+    <tr><td>Nested auxiliaries enforced client-side</td><td>Not enforced; surface the server’s error</td><td>010</td></tr>
+    <tr><td>Central-base propagation (live vs snapshot)</td><td>Snapshot; UI shows the price’s source</td><td>008, 014</td></tr>
+    <tr><td>Archiving vs deleting a central base</td><td>Archivar; UI never says <i>eliminar</i></td><td>014</td></tr>
+    <tr><td>Gantt: read-only vs drag-to-reschedule</td><td>Read-only — v1.1 only asks for <i>“Gantt simplificado”</i></td><td>012</td></tr>
+    <tr><td>Unidades: closed list vs free text</td><td>Open catalogue (§17 #10): warn, never block</td><td>008</td></tr>
+    <tr><td>Sync vs async document generation</td><td>Sync + stream, isolated in <code>descarga.ts</code></td><td>013</td></tr>
+    <tr><td>Enforced coverage thresholds</td><td>Report only, no gate</td><td>003, 015</td></tr>
+    <tr><td>Design fidelity: low-fi vs Figma</td><td>Low-fi; tokens documented as the thesis deliverable</td><td>004</td></tr>
+    <tr><td>Dark mode</td><td>shadcn defaults, no investment</td><td>004</td></tr>
+  </tbody>
+</table>
+
+<h2>3 · Traceability to the thesis</h2>
+
+<p>Every plan cites the spec repository’s stable identifiers so the SPA and the thesis document stay linkable. When a decision is confirmed or changed by the humans, the canonical home is <code>thesis-docs</code>; the affected plan is reconciled after.</p>
+
+<dl class="kv">
+  <dt><b>P-01…P-44</b></dt><dd>Processes — <code>plan/design/03-procesos-detalle.md</code>. Each plan lists which P-numbers it covers.</dd>
+  <dt><b>S-01…S-44</b></dt><dd>Screens — <code>plan/design/02-pantallas-flujos.md</code>.</dd>
+  <dt><b>TC / GM</b></dt><dd>Test cases — <code>plan/quality/02-catalogo-pruebas.md</code>. Every plan lists the TCs its verification step must exercise.</dd>
+  <dt><b>CHK-01…CHK-31</b></dt><dd>SERCOP conformity items — <code>plan/design/04-export-sercop-spec.md</code>. Measured by plan 013’s downloads.</dd>
+  <dt><b>US-nn / I-xx</b></dt><dd>XP stories and iterations — <code>plan/roadmap/01-plan-iteraciones-xp.md</code>.</dd>
+  <dt><b>D-xx</b></dt><dd>Process decisions — <code>plan/design/03-procesos-detalle.md §J</code>.</dd>
+  <dt><b>RNF-xx</b></dt><dd>Non-functional requirements — <code>res/docs/requirements/v1.1-non-functional-requirements.md</code>. RNF-02 (intermodular integrity) is the milestone for plan 012.</dd>
+  <dt><b>ADR 8–10</b></dt><dd>Architectural decision records — <code>plan/architecture/01-system-architecture.md §9</code>. ADR 9 (no client calc) is the load-bearing one.</dd>
+</dl>
+
+<p>Thesis milestones the plans mechanise directly: <b>week 10</b> (plan 009) — reconstruct a real IESS APU in the UI and obtain its exact CT; <b>week 14</b> (plan 011) — the IESS tree (33 chapters / 298 rubros) reconstructed; <b>week 18</b> (plan 012) — RNF-02 at 100 %; <b>week 20</b> (plan 013) — conformity rate CHK-01…CHK-31 measured on the exported files.</p>
+
+<h2>4 · Gaps &amp; risks flagged (not papered over)</h2>
+
+<p>Six items were surfaced during planning. Each is on the record with the plan that bridges it. None is a blocker for v1.1; each is a candidate for the tutor to flag back to the spec owners.</p>
+
+<ol>
+  <li><b>No <code>openapi-typescript</code> source yet.</b> The <i>single seam</i> plus <i>DTO-drift-as-compile-error</i> guarantees depend on OpenAPI, which the still-unbuilt Quarkus backend must publish. Plan 002 bridges with a hand-transcribed Apéndice B and a documented migration path. Until the swap, FE↔BE drift is caught by <b>nothing</b> except the backend’s own API tests.</li>
+  <li><b>Firmantes (P-08 / S-11) has no requirements source.</b> <code>Firmante</code> exists in the data model, but v1.1 §2 assigns it neither screen nor process. Plan 007 builds the proposal (a tab in S-09) and isolates it.</li>
+  <li><b>No CSV template spec.</b> P-15 / S-16 step ① says <i>“descargar la plantilla del tipo”</i>, but no document defines the columns. Plan 008 derives them from <code>InsumoCrearRequest</code> and flags it.</li>
+  <li><b>No preview endpoint for exports.</b> <code>design/03</code> P-37 step 3 requires a preview; <code>07 §8</code> only offers streaming download. Plan 013 previews PDFs from the downloaded blob and shows a summary card for xlsx — at the cost of a second generation round-trip.</li>
+  <li><b>Pinned frontend versions were ~1 month stale.</b> <code>02-shadcn-components.md §0.1</code> was researched June 2026. Plan 001 installs by major line and writes <code>plans/RESOLVED-VERSIONS.md</code> for reconciliation.</li>
+  <li><b>No per-rubro discount preview endpoint</b> (unlike the global discount, which has one — <code>07 §3</code>). Plan 010 shows before/after values rather than fabricating a preview client-side.</li>
+</ol>
+
+<div class="callout warn no-break">
+  <b>Note on the RESOLVED-VERSIONS diff.</b> pnpm supersedes npm and oxlint supersedes ESLint relative to the pinned spec. Five packages drifted a patch/minor within the same major line (shadcn CLI 4.10 → 4.14, radix-ui 1.5 → 1.6.5, tailwindcss 4.3.0 → 4.3.3, TanStack Query 5.101.0 → 5.101.4, lucide-react 1.17 → 1.25). Consistent with plan 001’s <i>install-by-major-line</i> policy — worth spec-owner sign-off.
+</div>
+
+<h3 class="no-break">Considered and rejected (recorded so they are not re-audited)</h3>
+<ul class="small">
+  <li><b>Client-side document generation</b> (ExcelJS / react-pdf). Rejected: ADR 4 / RNF-03 keep SERCOP-format authority server-side.</li>
+  <li><b>Client-side calc preview for “snappier” totals.</b> Rejected: ADR 9. The most likely well-intentioned regression, so guarded in CI.</li>
+  <li><b>Next.js.</b> Rejected upstream: auth-gated internal app, no SEO need, static Cloudflare Pages deploy.</li>
+  <li><b>Commercial data-grid / Gantt (AG Grid Enterprise, MUI X Pro, SheetJS Pro).</b> Rejected on licensing.</li>
+  <li><b>Decimal arithmetic library</b> (<code>decimal.js</code>, <code>big.js</code>). Rejected: the client performs no arithmetic; installing one would only enable what ADR 9 forbids.</li>
+  <li><b>Per-node query keys for the budget tree.</b> Rejected: a single cache key lets whole-tree mutation responses repaint write-through totals atomically.</li>
+  <li><b>Manual activity CRUD in the cronograma.</b> Rejected: activities are auto-imported 1:1 from budget items — that mechanism <i>is</i> RNF-02’s 100 % linkage guarantee.</li>
+  <li><b>Jest / Enzyme / Cypress.</b> Rejected upstream (<code>quality/01 §B1, §B2, §B4</code>).</li>
+</ul>
+
+<h2>5 · Meeting talking points</h2>
+
+<ol>
+  <li><b>Completeness argument.</b> P-01…P-44 and S-01…S-44 are each covered exactly once by the fifteen plans (§1). This is the “whole frontend” claim on which the thesis rests.</li>
+  <li><b>Load-bearing architectural constraint.</b> ADR 9 — no client calc engine — is the single decision that keeps <code>exactitud_calculo = 0 %</code> defensible; it is enforced by a CI grep, not by convention alone.</li>
+  <li><b>Traceability isn’t decorative.</b> Every plan cites P/S/TC/RNF/ADR/US identifiers; the plans and the thesis stay bidirectionally linkable when the spec repo changes.</li>
+  <li><b>Honesty about spec debt.</b> Six unresolved items (§4) are surfaced with the bridging plan named, not hidden behind assumptions. Two of them (openapi-typescript source; firmantes requirements) are appropriate to escalate to the spec owners.</li>
+  <li><b>Deferred until the backend exists.</b> The DTO seam and the export preview both improve materially the day the Quarkus service publishes OpenAPI and an export-preview endpoint — plans 002 and 013 already describe the one-file migration.</li>
+</ol>
+
+<p class="small muted" style="margin-top: 18pt; border-top: 1px solid #e2e6ea; padding-top: 8pt;">
+  Compiled from <code>plans/README.md</code>, <code>plans/RESOLVED-VERSIONS.md</code>, and the fifteen plan files at repo state 2026-07-24. Every claim in this review is verifiable against the plan file cited in its column.
+</p>
+
+</body>
+</html>
