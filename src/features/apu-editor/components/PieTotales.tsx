@@ -93,6 +93,7 @@ export function PieTotales({
                     if (e.key === "Enter") guardarCi();
                     if (e.key === "Escape") cancelarEdicionCi();
                   }}
+                  // oxlint-disable-next-line jsx-a11y/no-autofocus -- inline edit triggered by user click
                   autoFocus
                 />
                 <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={guardarCi}>

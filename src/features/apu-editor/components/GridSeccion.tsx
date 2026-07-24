@@ -27,16 +27,39 @@ export function GridSeccion({
         {seccion.bloque} — {seccion.etiqueta}
       </h3>
       <table className="w-full text-xs">
+        <caption className="sr-only">Detalle de {seccion.etiqueta}</caption>
         <thead>
           <tr className="border-b text-left text-muted-foreground">
-            <th className="p-2 font-medium">Insumo</th>
-            <th className="p-2 font-medium">U</th>
-            <th className="p-2 font-medium num">Cantidad</th>
-            {seccion.muestraRendimiento && <th className="p-2 font-medium num">Rendimiento</th>}
-            {seccion.muestraRendimiento && <th className="p-2 font-medium num">Costo/hora</th>}
-            {!seccion.muestraRendimiento && <th className="p-2 font-medium num">Precio</th>}
-            <th className="p-2 font-medium num">Costo</th>
-            <th className="p-2 w-8" />
+            <th scope="col" className="p-2 font-medium">
+              Insumo
+            </th>
+            <th scope="col" className="p-2 font-medium">
+              U
+            </th>
+            <th scope="col" className="p-2 font-medium num">
+              Cantidad
+            </th>
+            {seccion.muestraRendimiento && (
+              <th scope="col" className="p-2 font-medium num">
+                Rendimiento
+              </th>
+            )}
+            {seccion.muestraRendimiento && (
+              <th scope="col" className="p-2 font-medium num">
+                Costo/hora
+              </th>
+            )}
+            {!seccion.muestraRendimiento && (
+              <th scope="col" className="p-2 font-medium num">
+                Precio
+              </th>
+            )}
+            <th scope="col" className="p-2 font-medium num">
+              Costo
+            </th>
+            <th scope="col" className="p-2 w-8">
+              <span className="sr-only">Acciones</span>
+            </th>
           </tr>
         </thead>
         <tbody>

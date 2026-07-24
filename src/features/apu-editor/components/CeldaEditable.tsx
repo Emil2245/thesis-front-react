@@ -83,21 +83,18 @@ export function CeldaEditable({ value, onCommit, editable, className }: CeldaEdi
   }
 
   return (
-    <span
+    <button
+      type="button"
+      onClick={iniciarEdicion}
       className={cn(
-        "block cursor-pointer rounded px-1 hover:bg-muted",
+        "block w-full cursor-pointer rounded px-1 text-left hover:bg-muted",
         error && "text-destructive",
         className,
       )}
-      onClick={iniciarEdicion}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") iniciarEdicion();
-      }}
-      tabIndex={0}
-      role="button"
+      aria-label={`Editar valor ${displayValue}`}
     >
       {error && <AlertCircleIcon className="mr-1 inline size-3 text-destructive" />}
       {displayValue}
-    </span>
+    </button>
   );
 }

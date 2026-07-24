@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,10 +81,18 @@ export function LoginPage() {
             </Field>
 
             <div className="flex items-center gap-2">
-              <Checkbox
-                id="recordar"
-                checked={form.watch("recordarSesion")}
-                onCheckedChange={(v) => form.setValue("recordarSesion", v === true)}
+              <Controller
+                control={form.control}
+                name="recordarSesion"
+                render={({ field }) => (
+                  <Checkbox
+                    id="recordar"
+                    checked={field.value}
+                    onCheckedChange={(v) => field.onChange(v === true)}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
+                  />
+                )}
               />
               <Label htmlFor="recordar">Recordar sesión</Label>
             </div>

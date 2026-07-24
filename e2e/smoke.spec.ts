@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { sinViolacionesA11y } from "./axe";
 
 const API = "http://localhost:8080/api/v1";
 
@@ -24,6 +25,12 @@ test.describe("smoke", () => {
     await page.goto("/login", { waitUntil: "networkidle" });
     await expect(page.getByLabel(/correo/i)).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole("button", { name: /ingresar/i })).toBeVisible();
+  });
+
+  test("login page no tiene violaciones a11y críticas o serias", async ({ page }) => {
+    await page.goto("/login", { waitUntil: "networkidle" });
+    await expect(page.getByLabel(/correo/i)).toBeVisible({ timeout: 10000 });
+    await sinViolacionesA11y(page);
   });
 
   test("login con credenciales inválidas muestra error", async ({ page }) => {

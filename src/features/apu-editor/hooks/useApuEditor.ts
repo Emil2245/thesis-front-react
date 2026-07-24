@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, patch, post, del } from "@/api/request";
 import { qk } from "@/api/queryKeys";
@@ -46,10 +46,7 @@ export interface UseApuEditor {
     valor: string,
   ): Promise<void>;
   restaurarHerencia(detalleId: number): Promise<void>;
-  agregarFila(
-    seccion: SeccionTipo,
-    sel: { insumoId?: number; apuAuxiliarId?: number },
-  ): Promise<void>;
+  agregarFila(sel: { insumoId?: number; apuAuxiliarId?: number }): Promise<void>;
   eliminarFila(detalleId: number): Promise<void>;
   editarEncabezado(patchReq: ApuPatchRequest): Promise<void>;
   editarPorcentajeCi(valor: string | null): Promise<void>;
@@ -80,6 +77,7 @@ const ETIQUETA: Record<SeccionTipo, string> = {
 
 export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEditor {
   const qc = useQueryClient();
+  const [estadoCeldas, setEstadoCeldas] = useState<Map<number, EstadoCelda>>(new Map());
 
   const { data: apu, isPending: cargando } = useQuery({
     queryKey: qk.apu(apuId),
@@ -102,11 +100,11 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
           protegida: d.esHerramientaMenor,
           heredado: d.precioHeredado,
           esAuxiliar: d.apuAuxiliarId != null,
-          estado: "estable" as EstadoCelda,
+          estado: estadoCeldas.get(d.id) ?? "estable",
         })),
       };
     });
-  }, [apu]);
+  }, [apu, estadoCeldas]);
 
   const editMutation = useMutation({
     mutationFn: ({ detalleId, body }: { detalleId: number; body: ApuDetallePatchRequest }) =>
@@ -121,7 +119,7 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
   });
 
   const agregarMutation = useMutation({
-    mutationFn: ({ seccion, ...body }: ApuDetalleCrearRequest & { seccion: SeccionTipo }) =>
+    mutationFn: (body: ApuDetalleCrearRequest) =>
       post<ApuResponse>(`/apus/${apuId}/detalles`, body),
     onSuccess: (response) => {
       qc.setQueryData(qk.apu(apuId), response);
@@ -165,21 +163,14 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
     },
   });
 
-  const actualizarEstado = useCallback(
-    (detalleId: number, estado: EstadoCelda) => {
-      qc.setQueryData(qk.apu(apuId), (prev: ApuResponse | undefined) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          secciones: prev.secciones.map((sec) => ({
-            ...sec,
-            detalles: sec.detalles.map((d) => (d.id === detalleId ? { ...d, _estado: estado } : d)),
-          })),
-        };
-      });
-    },
-    [apuId, qc],
-  );
+  const actualizarEstado = useCallback((detalleId: number, estado: EstadoCelda) => {
+    setEstadoCeldas((prev) => {
+      const next = new Map(prev);
+      if (estado === "estable") next.delete(detalleId);
+      else next.set(detalleId, estado);
+      return next;
+    });
+  }, []);
 
   const editarCelda = useCallback(
     async (
@@ -232,9 +223,9 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
           body.precioOverride = valor === "" ? null : (parsedVal ?? null);
 
         await editMutation.mutateAsync({ detalleId, body });
+        actualizarEstado(detalleId, "estable");
       } catch {
         actualizarEstado(detalleId, "error");
-        qc.setQueryData(qk.apu(apuId), apuActual);
       }
     },
     [apuId, qc, editMutation, actualizarEstado],
@@ -255,9 +246,9 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
   );
 
   const agregarFila = useCallback(
-    async (_seccion: SeccionTipo, sel: { insumoId?: number; apuAuxiliarId?: number }) => {
+    async (sel: { insumoId?: number; apuAuxiliarId?: number }) => {
       try {
-        await agregarMutation.mutateAsync({ seccion: _seccion, ...sel });
+        await agregarMutation.mutateAsync(sel);
       } catch {
         // handled by react-query
       }

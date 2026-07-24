@@ -12,10 +12,15 @@ export default defineConfig({
     video: "retain-on-failure",
     locale: "es-EC",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+    { name: "mobile-chrome", use: { ...devices["Pixel 7"] } },
+  ],
   webServer: {
-    command: "pnpm run dev",
+    command: process.env.CI ? "pnpm run build && pnpm run preview -- --port 5173" : "pnpm run dev",
     url: "http://localhost:5173",
     reuseExistingServer: !process.env.CI,
+    timeout: 180_000,
   },
 });

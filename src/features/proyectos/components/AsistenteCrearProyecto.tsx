@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { proyectoSchema, type ProyectoFormData } from "../schemas";
 import { useCrearProyecto } from "../hooks/useProyectos";
+import type { ProyectoCrearRequest } from "@/api/contract";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -55,11 +56,15 @@ export function AsistenteCrearProyecto({
 
   const handleCrear = async () => {
     const data = form.getValues();
+    const body: ProyectoCrearRequest = {
+      nombre: data.nombre,
+      codigo: data.codigo,
+      direccionInstitucional: data.direccionInstitucional,
+      anio: data.anio,
+      origenInsumos: { tipo: origen },
+    };
     try {
-      const res = await crear.mutateAsync({
-        ...data,
-        origenInsumos: { tipo: origen },
-      } as never);
+      const res = await crear.mutateAsync(body);
       toast.success("Proyecto creado");
       onClose();
       navigate(`/proyectos/${res.id}`);

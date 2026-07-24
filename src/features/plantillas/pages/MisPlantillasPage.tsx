@@ -87,6 +87,7 @@ export function MisPlantillasPage() {
                             setNuevoNombre("");
                           }
                         }}
+                        // oxlint-disable-next-line jsx-a11y/no-autofocus -- inline rename triggered by user click
                         autoFocus
                       />
                       <Button variant="ghost" size="icon-sm" onClick={handleRenombrar}>

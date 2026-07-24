@@ -1,9 +1,10 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "ignorePatterns": ["dist", "coverage", "playwright-report", "src/components/ui"],
+  "plugins": ["react", "typescript", "oxc", "jsx-a11y", "import", "promise"],
+  "ignorePatterns": ["dist", "coverage", "playwright-report", "src/components/ui", ".agents"],
   "rules": {
     "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+    "react/only-export-components": ["warn", { "allowConstantExport": true }],
+    "jsx-a11y/control-has-associated-label": "off"
   }
 }

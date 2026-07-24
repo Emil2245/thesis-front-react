@@ -6,7 +6,11 @@ import { dirname, resolve } from "node:path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const jobs = [
-  { html: "review.html", pdf: "APU-Frontend-Review.pdf", title: "Sistema APU · Frontend — Documentation Review" },
+  {
+    html: "review.html",
+    pdf: "APU-Frontend-Review.pdf",
+    title: "Sistema APU · Frontend — Documentation Review",
+  },
 ];
 
 const browser = await chromium.launch();

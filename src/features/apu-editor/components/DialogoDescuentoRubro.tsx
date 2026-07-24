@@ -90,6 +90,7 @@ export function DialogoDescuentoRubro({
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleApply();
               }}
+              // oxlint-disable-next-line jsx-a11y/no-autofocus -- dialog primary input
               autoFocus
             />
             {error && <p className="text-xs text-destructive">{error}</p>}

@@ -1,3 +1,5 @@
+import type { InsumoUsoResponse } from "./contract";
+
 export interface Problem {
   type: string;
   title: string;
@@ -6,6 +8,10 @@ export interface Problem {
   instance?: string;
   errores?: Array<{ campo: string; mensaje: string }>;
   [k: string]: unknown;
+}
+
+export interface InsumoEnUsoProblem extends Problem {
+  usos: InsumoUsoResponse[];
 }
 
 export const PROBLEM_TYPES = [

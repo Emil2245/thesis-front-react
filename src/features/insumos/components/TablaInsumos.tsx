@@ -4,8 +4,9 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   createColumnHelper,
-  type SortingState,
   flexRender,
+  type SortingState,
+  type RowData,
 } from "@tanstack/react-table";
 import { useInsumos } from "../hooks/useInsumos";
 import { useEliminarInsumo } from "../hooks/useInsumoMutaciones";
@@ -55,8 +56,15 @@ import {
   Trash2Icon,
   SearchIcon,
 } from "lucide-react";
-import type { InsumoResponse } from "@/api/contract";
-import { ApiError } from "@/api/problem";
+import type { InsumoResponse, InsumoUsoResponse } from "@/api/contract";
+import { ApiError, type InsumoEnUsoProblem } from "@/api/problem";
+
+declare module "@tanstack/react-table" {
+  interface ColumnMeta<TData extends RowData, TValue> {
+    align?: "left" | "right";
+    _phantom?: [TData, TValue];
+  }
+}
 
 const TIPO_TABS = [
   { value: "", label: "Todos" },
@@ -82,7 +90,7 @@ export function TablaInsumos({ proyectoId }: { proyectoId: number }) {
   const [usoDialogo, setUsoDialogo] = useState<{
     abierto: boolean;
     insumoId: number;
-    usosPrecargados?: InsumoResponse["id"][];
+    usosPrecargados?: InsumoUsoResponse[];
   }>({ abierto: false, insumoId: 0 });
 
   const filtros = useMemo(() => {
@@ -177,7 +185,7 @@ export function TablaInsumos({ proyectoId }: { proyectoId: number }) {
                         setUsoDialogo({
                           abierto: true,
                           insumoId: insumo.id,
-                          usosPrecargados: (err.problem as any).usos,
+                          usosPrecargados: (err.problem as InsumoEnUsoProblem).usos,
                         });
                       }
                     }
@@ -305,9 +313,8 @@ export function TablaInsumos({ proyectoId }: { proyectoId: number }) {
                       {hg.headers.map((h) => (
                         <TableHead
                           key={h.id}
-                          className={
-                            (h.column.columnDef.meta as any)?.align === "right" ? "text-right" : ""
-                          }
+                          scope="col"
+                          className={h.column.columnDef.meta?.align === "right" ? "text-right" : ""}
                         >
                           {h.isPlaceholder
                             ? null
@@ -324,7 +331,7 @@ export function TablaInsumos({ proyectoId }: { proyectoId: number }) {
                         <TableCell
                           key={cell.id}
                           className={
-                            (cell.column.columnDef.meta as any)?.align === "right"
+                            cell.column.columnDef.meta?.align === "right"
                               ? "text-right tabular-nums"
                               : ""
                           }
@@ -391,7 +398,7 @@ export function TablaInsumos({ proyectoId }: { proyectoId: number }) {
         onClose={() => setUsoDialogo({ abierto: false, insumoId: 0 })}
         proyectoId={proyectoId}
         insumoId={usoDialogo.insumoId}
-        usosPrecargados={usoDialogo.usosPrecargados as any}
+        usosPrecargados={usoDialogo.usosPrecargados}
       />
 
       <AsistenteImportCsv

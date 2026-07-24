@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { descuentoSchema, type DescuentoFormData } from "../schemas";
 import { usePreviewDescuento, useAplicarDescuento } from "../hooks/useDescuentoGlobal";
+import { asDecimal } from "@/lib/decimal";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -71,12 +72,12 @@ export function DialogoDescuentoGlobal({
     } else {
       setPreviewData(null);
     }
-  }, [porcentaje]);
+  }, [porcentaje, preview]);
 
   const handleAplicar = async () => {
     await aplicar.mutateAsync({
       presupuestoId: proyectoId,
-      porcentaje: String((porcentaje / 100).toFixed(6)) as never,
+      porcentaje: asDecimal((porcentaje / 100).toFixed(6)),
     });
     toast.success("Descuento aplicado");
     onClose();

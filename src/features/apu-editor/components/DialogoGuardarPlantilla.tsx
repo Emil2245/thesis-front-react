@@ -71,6 +71,7 @@ export function DialogoGuardarPlantilla({ abierto, onClose, apuId }: DialogoGuar
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleGuardar();
               }}
+              // oxlint-disable-next-line jsx-a11y/no-autofocus -- dialog primary input
               autoFocus
             />
             {error && <FieldError>{error}</FieldError>}

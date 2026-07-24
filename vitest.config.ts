@@ -15,6 +15,12 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "html", "lcov"],
       exclude: ["src/components/ui/**", "src/test/**", "**/*.d.ts", "e2e/**"],
+      thresholds: {
+        lines: 60,
+        statements: 60,
+        functions: 55,
+        branches: 55,
+      },
     },
   },
 });

@@ -28,7 +28,7 @@ export function VerificarEmailPage() {
         },
       });
     }
-  }, [token]);
+  }, [token, estado, verificar]);
 
   useEffect(() => {
     if (cooldown > 0) {

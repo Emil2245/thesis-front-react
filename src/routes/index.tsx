@@ -2,32 +2,17 @@ import { createBrowserRouter } from "react-router-dom";
 import { RutaPrivada, RutaAdmin } from "./Guards";
 import { AppShell } from "@/shell/AppShell";
 import App from "@/App";
-import { LoginPage } from "@/features/auth/pages/LoginPage";
-import { RegistroPage } from "@/features/auth/pages/RegistroPage";
-import { VerificarEmailPage } from "@/features/auth/pages/VerificarEmailPage";
-import { RecuperarPage } from "@/features/auth/pages/RecuperarPage";
-import { RestablecerPage } from "@/features/auth/pages/RestablecerPage";
-import { PerfilPage } from "@/features/auth/pages/PerfilPage";
-import { ListaProyectosPage } from "@/features/proyectos/pages/ListaProyectosPage";
-import { ResumenProyectoPage } from "@/features/proyectos/pages/ResumenProyectoPage";
-import { ParametrosPage } from "@/features/proyectos/pages/ParametrosPage";
-import { NoEncontradaPage } from "@/features/errores/pages/NoEncontradaPage";
-import { SinPermisoPage } from "@/features/errores/pages/SinPermisoPage";
 import { ErrorPage } from "@/features/errores/pages/ErrorPage";
-import { InsumosPage } from "@/features/insumos/pages/InsumosPage";
-import { ListaApusPage } from "@/features/apu-editor/pages/ListaApusPage";
-import { EditorApuPage } from "@/features/apu-editor/pages/EditorApuPage";
-import { MisPlantillasPage } from "@/features/plantillas/pages/MisPlantillasPage";
-import { PresupuestoPage } from "@/features/presupuesto/pages/PresupuestoPage";
-import { VersionesPage } from "@/features/presupuesto/pages/VersionesPage";
-import { CronogramaPage } from "@/features/cronograma/pages/CronogramaPage";
-import { ExportPage } from "@/features/exportar/pages/ExportPage";
-import { AdminUsuariosPage } from "@/features/admin/pages/AdminUsuariosPage";
-import { AdminBasesPage } from "@/features/admin/pages/AdminBasesPage";
-import { AdminPlantillasPage } from "@/features/admin/pages/AdminPlantillasPage";
-import { AdminParametrosPage } from "@/features/admin/pages/AdminParametrosPage";
-import { AdminValoresPage } from "@/features/admin/pages/AdminValoresPage";
-import { AdminLogsPage } from "@/features/admin/pages/AdminLogsPage";
+
+const lazyPage =
+  <TModule extends Record<string, unknown>, TKey extends keyof TModule & string>(
+    loader: () => Promise<TModule>,
+    name: TKey,
+  ) =>
+  async () => {
+    const mod = await loader();
+    return { Component: mod[name] as React.ComponentType };
+  };
 
 export const router = createBrowserRouter([
   {
@@ -35,11 +20,29 @@ export const router = createBrowserRouter([
     errorElement: <ErrorPage />,
     children: [
       // ———— Públicas ————
-      { path: "/login", element: <LoginPage /> },
-      { path: "/registro", element: <RegistroPage /> },
-      { path: "/verificar-email", element: <VerificarEmailPage /> },
-      { path: "/recuperar", element: <RecuperarPage /> },
-      { path: "/restablecer/:token", element: <RestablecerPage /> },
+      {
+        path: "/login",
+        lazy: lazyPage(() => import("@/features/auth/pages/LoginPage"), "LoginPage"),
+      },
+      {
+        path: "/registro",
+        lazy: lazyPage(() => import("@/features/auth/pages/RegistroPage"), "RegistroPage"),
+      },
+      {
+        path: "/verificar-email",
+        lazy: lazyPage(
+          () => import("@/features/auth/pages/VerificarEmailPage"),
+          "VerificarEmailPage",
+        ),
+      },
+      {
+        path: "/recuperar",
+        lazy: lazyPage(() => import("@/features/auth/pages/RecuperarPage"), "RecuperarPage"),
+      },
+      {
+        path: "/restablecer/:token",
+        lazy: lazyPage(() => import("@/features/auth/pages/RestablecerPage"), "RestablecerPage"),
+      },
 
       // ———— Autenticadas ————
       {
@@ -48,41 +51,80 @@ export const router = createBrowserRouter([
           {
             element: <AppShell />,
             children: [
-              { path: "/proyectos", element: <ListaProyectosPage /> },
-              { path: "/perfil", element: <PerfilPage /> },
-              { path: "/plantillas", element: <MisPlantillasPage /> },
-              { path: "/proyectos/:id", element: <ResumenProyectoPage /> },
+              {
+                path: "/proyectos",
+                lazy: lazyPage(
+                  () => import("@/features/proyectos/pages/ListaProyectosPage"),
+                  "ListaProyectosPage",
+                ),
+              },
+              {
+                path: "/perfil",
+                lazy: lazyPage(() => import("@/features/auth/pages/PerfilPage"), "PerfilPage"),
+              },
+              {
+                path: "/plantillas",
+                lazy: lazyPage(
+                  () => import("@/features/plantillas/pages/MisPlantillasPage"),
+                  "MisPlantillasPage",
+                ),
+              },
+              {
+                path: "/proyectos/:id",
+                lazy: lazyPage(
+                  () => import("@/features/proyectos/pages/ResumenProyectoPage"),
+                  "ResumenProyectoPage",
+                ),
+              },
               {
                 path: "/proyectos/:id/parametros",
-                element: <ParametrosPage />,
+                lazy: lazyPage(
+                  () => import("@/features/proyectos/pages/ParametrosPage"),
+                  "ParametrosPage",
+                ),
               },
               {
                 path: "/proyectos/:id/insumos",
-                element: <InsumosPage />,
+                lazy: lazyPage(() => import("@/features/insumos/pages/InsumosPage"), "InsumosPage"),
               },
               {
                 path: "/proyectos/:id/versiones",
-                element: <VersionesPage />,
+                lazy: lazyPage(
+                  () => import("@/features/presupuesto/pages/VersionesPage"),
+                  "VersionesPage",
+                ),
               },
               {
                 path: "/proyectos/:id/apus",
-                element: <ListaApusPage />,
+                lazy: lazyPage(
+                  () => import("@/features/apu-editor/pages/ListaApusPage"),
+                  "ListaApusPage",
+                ),
               },
               {
                 path: "/proyectos/:id/apus/:apuId",
-                element: <EditorApuPage />,
+                lazy: lazyPage(
+                  () => import("@/features/apu-editor/pages/EditorApuPage"),
+                  "EditorApuPage",
+                ),
               },
               {
                 path: "/proyectos/:id/presupuesto",
-                element: <PresupuestoPage />,
+                lazy: lazyPage(
+                  () => import("@/features/presupuesto/pages/PresupuestoPage"),
+                  "PresupuestoPage",
+                ),
               },
               {
                 path: "/proyectos/:id/cronograma",
-                element: <CronogramaPage />,
+                lazy: lazyPage(
+                  () => import("@/features/cronograma/pages/CronogramaPage"),
+                  "CronogramaPage",
+                ),
               },
               {
                 path: "/proyectos/:id/documentos",
-                element: <ExportPage />,
+                lazy: lazyPage(() => import("@/features/exportar/pages/ExportPage"), "ExportPage"),
               },
             ],
           },
@@ -96,21 +138,72 @@ export const router = createBrowserRouter([
           {
             element: <AppShell />,
             children: [
-              { path: "/admin/usuarios", element: <AdminUsuariosPage /> },
-              { path: "/admin/bases", element: <AdminBasesPage /> },
-              { path: "/admin/plantillas", element: <AdminPlantillasPage /> },
-              { path: "/admin/parametros", element: <AdminParametrosPage /> },
-              { path: "/admin/valores", element: <AdminValoresPage /> },
-              { path: "/admin/logs", element: <AdminLogsPage /> },
+              {
+                path: "/admin/usuarios",
+                lazy: lazyPage(
+                  () => import("@/features/admin/pages/AdminUsuariosPage"),
+                  "AdminUsuariosPage",
+                ),
+              },
+              {
+                path: "/admin/bases",
+                lazy: lazyPage(
+                  () => import("@/features/admin/pages/AdminBasesPage"),
+                  "AdminBasesPage",
+                ),
+              },
+              {
+                path: "/admin/plantillas",
+                lazy: lazyPage(
+                  () => import("@/features/admin/pages/AdminPlantillasPage"),
+                  "AdminPlantillasPage",
+                ),
+              },
+              {
+                path: "/admin/parametros",
+                lazy: lazyPage(
+                  () => import("@/features/admin/pages/AdminParametrosPage"),
+                  "AdminParametrosPage",
+                ),
+              },
+              {
+                path: "/admin/valores",
+                lazy: lazyPage(
+                  () => import("@/features/admin/pages/AdminValoresPage"),
+                  "AdminValoresPage",
+                ),
+              },
+              {
+                path: "/admin/logs",
+                lazy: lazyPage(
+                  () => import("@/features/admin/pages/AdminLogsPage"),
+                  "AdminLogsPage",
+                ),
+              },
             ],
           },
         ],
       },
 
       // ———— Errores ————
-      { path: "/403", element: <SinPermisoPage /> },
-      { path: "/404", element: <NoEncontradaPage /> },
-      { path: "*", element: <NoEncontradaPage /> },
+      {
+        path: "/403",
+        lazy: lazyPage(() => import("@/features/errores/pages/SinPermisoPage"), "SinPermisoPage"),
+      },
+      {
+        path: "/404",
+        lazy: lazyPage(
+          () => import("@/features/errores/pages/NoEncontradaPage"),
+          "NoEncontradaPage",
+        ),
+      },
+      {
+        path: "*",
+        lazy: lazyPage(
+          () => import("@/features/errores/pages/NoEncontradaPage"),
+          "NoEncontradaPage",
+        ),
+      },
     ],
   },
 ]);
