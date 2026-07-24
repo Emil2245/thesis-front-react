@@ -31,6 +31,7 @@ export function RegistroPage() {
         nombre: data.nombre,
         email: data.email,
         password: data.password,
+        passwordConfirmacion: data.passwordConfirmacion,
       });
     } catch (e) {
       if (e instanceof ApiError && e.is("validacion")) {

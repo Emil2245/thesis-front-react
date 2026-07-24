@@ -52,12 +52,20 @@ export interface RecuperarPasswordRequest {
 export interface RestablecerPasswordRequest {
   token: string;
   password: string;
+  passwordConfirmacion: string;
 }
 
 export interface RegistroRequest {
   nombre: string;
   email: string;
   password: string;
+  passwordConfirmacion: string;
+}
+
+export interface AceptarInvitacionRequest {
+  token: string;
+  password: string;
+  passwordConfirmacion: string;
 }
 
 export interface PerfilResponse {
@@ -65,18 +73,18 @@ export interface PerfilResponse {
   nombre: string;
   email: string;
   rol: Rol;
-  emailVerificado: boolean;
   fechaCreacion: string;
 }
 
 export interface PerfilActualizarRequest {
-  nombre?: string;
-  email?: string;
+  nombre: string;
+  email: string;
 }
 
 export interface PasswordCambiarRequest {
   passwordActual: string;
   passwordNueva: string;
+  passwordConfirmacion: string;
 }
 
 // ————— Proyectos, firmantes y parámetros (§11) —————

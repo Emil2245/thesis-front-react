@@ -10,8 +10,10 @@ import type {
   PerfilActualizarRequest,
   PasswordCambiarRequest,
   RegistroRequest,
+  RestablecerPasswordRequest,
   TokenResponse,
 } from "@/api/contract";
+import { leerRefreshGuardado } from "../sesion";
 import type { UseFormSetError, FieldValues } from "react-hook-form";
 import { useSesionStore } from "../sesion";
 
@@ -61,15 +63,18 @@ export function useRecuperarPassword() {
 
 export function useRestablecerPassword() {
   return useMutation({
-    mutationFn: (body: { token: string; password: string }) =>
-      post<void>("/auth/restablecer", body),
+    mutationFn: (body: RestablecerPasswordRequest) => post<void>("/auth/restablecer", body),
   });
 }
 
 export function useCerrarSesion() {
   const cerrar = useSesionStore((s) => s.cerrar);
   return useMutation({
-    mutationFn: () => post<void>("/auth/logout", {}),
+    mutationFn: () => {
+      const refreshToken = useSesionStore.getState().refreshToken ?? leerRefreshGuardado();
+      if (!refreshToken) return Promise.resolve();
+      return post<void>("/auth/logout", { refreshToken });
+    },
     onSettled: () => {
       setAccessToken(null);
       cerrar();

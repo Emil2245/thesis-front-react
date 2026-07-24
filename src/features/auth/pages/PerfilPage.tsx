@@ -80,6 +80,7 @@ export function PerfilPage() {
               await cambiarPassword.mutateAsync({
                 passwordActual: data.passwordActual,
                 passwordNueva: data.passwordNueva,
+                passwordConfirmacion: data.passwordConfirmacion,
               });
               passwordForm.reset();
               cerrar();

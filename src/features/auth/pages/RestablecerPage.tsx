@@ -24,7 +24,11 @@ export function RestablecerPage() {
   async function onSubmit(data: { password: string; passwordConfirmacion: string }) {
     if (!token) return;
     try {
-      await restablecer.mutateAsync({ token, password: data.password });
+      await restablecer.mutateAsync({
+        token,
+        password: data.password,
+        passwordConfirmacion: data.passwordConfirmacion,
+      });
       setExito(true);
     } catch (e) {
       if (e instanceof ApiError && e.is("token-invalido-o-expirado")) {
