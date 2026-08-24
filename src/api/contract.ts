@@ -152,9 +152,10 @@ export interface FirmanteCrearRequest {
 }
 
 export interface ParametrosProyectoResponse {
-  porcentajeHerramientaMenor: Decimal;
-  porcentajeIndirecto?: Decimal | null;
-  iva: Decimal;
+  proyectoId?: number;
+  porcentajeHerramientaMenor: number;
+  porcentajeIndirecto?: number | null;
+  iva: number;
   moneda: string;
   mostrarSeccionesVacias: boolean;
   sufijosSeccionActivos: boolean;
@@ -162,23 +163,15 @@ export interface ParametrosProyectoResponse {
   mostrarSubtotalesPie: boolean;
   mostrarNombreProyectoHeader: boolean;
   enumerarApus: boolean;
-  mensajeFooter?: string;
+  mensajeFooter?: string | null;
   modoCodigoRubro: "AUTOGENERADO" | "MANUAL";
 }
 
 export interface ParametrosProyectoActualizarRequest {
-  porcentajeHerramientaMenor?: Decimal;
-  porcentajeIndirecto?: Decimal | null;
-  iva?: Decimal;
-  moneda?: string;
-  mostrarSeccionesVacias?: boolean;
-  sufijosSeccionActivos?: boolean;
-  mostrarSubtotalesSeccion?: boolean;
-  mostrarSubtotalesPie?: boolean;
-  mostrarNombreProyectoHeader?: boolean;
-  enumerarApus?: boolean;
-  mensajeFooter?: string;
-  modoCodigoRubro?: "AUTOGENERADO" | "MANUAL";
+  porcentajeHerramientaMenor: number;
+  porcentajeIndirecto?: number | null;
+  iva: number;
+  moneda: string;
 }
 
 export interface DescuentoGlobalPreviewResponse {

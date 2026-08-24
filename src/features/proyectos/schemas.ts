@@ -35,10 +35,10 @@ export const parametrosSchema = z
   })
   .transform((v) => ({
     ...v,
-    porcentajeHerramientaMenor: String((v.porcentajeHerramientaMenor / 100).toFixed(6)),
+    porcentajeHerramientaMenor: Number((v.porcentajeHerramientaMenor / 100).toFixed(6)),
     porcentajeIndirecto:
-      v.porcentajeIndirecto != null ? String((v.porcentajeIndirecto / 100).toFixed(6)) : null,
-    iva: String((v.iva / 100).toFixed(6)),
+      v.porcentajeIndirecto != null ? Number((v.porcentajeIndirecto / 100).toFixed(6)) : null,
+    iva: Number((v.iva / 100).toFixed(6)),
   }));
 
 export const firmanteSchema = z.object({

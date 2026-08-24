@@ -87,7 +87,7 @@ describe("parametrosSchema", () => {
     expect(r.success).toBe(false);
   });
 
-  it("convierte 5 %HM a fracción '0.050000'", () => {
+  it("convierte 5 %HM a fracción numérica 0.05", () => {
     const r = parametrosSchema.safeParse({
       porcentajeHerramientaMenor: 5,
       porcentajeIndirecto: 10,
@@ -103,7 +103,7 @@ describe("parametrosSchema", () => {
     });
     expect(r.success).toBe(true);
     if (r.success) {
-      expect(r.data.porcentajeHerramientaMenor).toBe("0.050000");
+      expect(r.data.porcentajeHerramientaMenor).toBe(0.05);
     }
   });
 });
