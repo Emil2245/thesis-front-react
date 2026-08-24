@@ -16,11 +16,23 @@ import {
 import { Input } from "@/components/ui/input";
 import { Field, FieldError } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const editarSchema = z.object({
-  nombre: z.string().min(1, "El nombre es obligatorio"),
+  nombreProyecto: z.string().min(1, "El nombre es obligatorio"),
   codigo: z.string().min(1, "El código es obligatorio"),
+  descripcion: z.string().optional(),
+  fechaInicio: z.string().optional(),
+  plazoEjecucion: z.number().int().min(1).max(600).optional(),
+  plazoUnidad: z.enum(["SEMANA", "MES"]).optional(),
   direccionInstitucional: z.string().optional(),
+  subdireccionInstitucional: z.string().optional(),
   anio: z.number().int().min(2000).max(2100).optional(),
 });
 
@@ -43,16 +55,34 @@ export function DialogoEditarProyecto({
     resolver: zodResolver(editarSchema),
     values: proyecto
       ? {
-          nombre: proyecto.nombreProyecto,
+          nombreProyecto: proyecto.nombreProyecto,
           codigo: proyecto.codigo,
+          descripcion: proyecto.descripcion ?? "",
+          fechaInicio: proyecto.fechaInicio ?? "",
+          plazoEjecucion: proyecto.plazoEjecucion,
+          plazoUnidad:
+            proyecto.plazoUnidad === "SEMANA" || proyecto.plazoUnidad === "MES"
+              ? proyecto.plazoUnidad
+              : undefined,
           direccionInstitucional: proyecto.direccionInstitucional ?? "",
+          subdireccionInstitucional: proyecto.subdireccionInstitucional ?? "",
           anio: proyecto.anio,
         }
       : undefined,
   });
 
   const handleSubmit = form.handleSubmit(async (data) => {
-    await editar.mutateAsync(data);
+    await editar.mutateAsync({
+      nombreProyecto: data.nombreProyecto,
+      codigo: data.codigo,
+      descripcion: data.descripcion || undefined,
+      fechaInicio: data.fechaInicio || undefined,
+      plazoEjecucion: data.plazoEjecucion || undefined,
+      plazoUnidad: data.plazoUnidad || undefined,
+      direccionInstitucional: data.direccionInstitucional || undefined,
+      subdireccionInstitucional: data.subdireccionInstitucional || undefined,
+      anio: data.anio,
+    });
     toast.success("Proyecto actualizado");
     onClose();
     navigate(`/proyectos/${proyectoId}`);
@@ -67,8 +97,8 @@ export function DialogoEditarProyecto({
         <div className="space-y-4">
           <Field>
             <Label htmlFor="edit-nombre">Nombre</Label>
-            <Input id="edit-nombre" {...form.register("nombre")} />
-            <FieldError>{form.formState.errors.nombre?.message}</FieldError>
+            <Input id="edit-nombre" {...form.register("nombreProyecto")} />
+            <FieldError>{form.formState.errors.nombreProyecto?.message}</FieldError>
           </Field>
           <Field>
             <Label htmlFor="edit-codigo">Código</Label>
@@ -76,8 +106,46 @@ export function DialogoEditarProyecto({
             <FieldError>{form.formState.errors.codigo?.message}</FieldError>
           </Field>
           <Field>
+            <Label htmlFor="edit-descripcion">Descripción</Label>
+            <Input id="edit-descripcion" {...form.register("descripcion")} />
+          </Field>
+          <Field>
+            <Label htmlFor="edit-fechaInicio">Fecha de inicio</Label>
+            <Input id="edit-fechaInicio" type="date" {...form.register("fechaInicio")} />
+          </Field>
+          <div className="grid grid-cols-2 gap-4">
+            <Field>
+              <Label htmlFor="edit-plazo">Plazo de ejecución</Label>
+              <Input
+                id="edit-plazo"
+                type="number"
+                {...form.register("plazoEjecucion", { valueAsNumber: true })}
+              />
+              <FieldError>{form.formState.errors.plazoEjecucion?.message}</FieldError>
+            </Field>
+            <Field>
+              <Label>Unidad de plazo</Label>
+              <Select
+                value={form.watch("plazoUnidad")}
+                onValueChange={(v) => form.setValue("plazoUnidad", v as "SEMANA" | "MES")}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="—" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MES">Meses</SelectItem>
+                  <SelectItem value="SEMANA">Semanas</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
+          <Field>
             <Label htmlFor="edit-direccion">Dirección institucional</Label>
             <Input id="edit-direccion" {...form.register("direccionInstitucional")} />
+          </Field>
+          <Field>
+            <Label htmlFor="edit-subdireccion">Subdirección institucional</Label>
+            <Input id="edit-subdireccion" {...form.register("subdireccionInstitucional")} />
           </Field>
           <Field>
             <Label htmlFor="edit-anio">Año</Label>

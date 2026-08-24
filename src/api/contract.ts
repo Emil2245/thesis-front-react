@@ -108,24 +108,27 @@ export interface ProyectoResponse {
 export type ProyectoDetalleResponse = ProyectoResponse & { alertas?: string[] };
 
 export interface ProyectoCrearRequest {
-  nombre: string;
-  codigo: string;
-  direccionInstitucional?: string;
+  nombreProyecto: string;
+  codigo?: string;
+  descripcion?: string;
   anio?: number;
-  origenInsumos: OrigenInsumosRequest;
-}
-
-export interface OrigenInsumosRequest {
-  tipo: "CENTRAL" | "PROYECTO" | "VACIA";
-  baseId?: number;
-  proyectoId?: number;
+  fechaInicio?: string;
+  plazoEjecucion?: number;
+  plazoUnidad?: "SEMANA" | "MES";
+  direccionInstitucional?: string;
+  subdireccionInstitucional?: string;
 }
 
 export interface ProyectoEditarRequest {
-  nombre?: string;
+  nombreProyecto?: string;
   codigo?: string;
-  direccionInstitucional?: string;
+  descripcion?: string;
   anio?: number;
+  fechaInicio?: string;
+  plazoEjecucion?: number;
+  plazoUnidad?: "SEMANA" | "MES";
+  direccionInstitucional?: string;
+  subdireccionInstitucional?: string;
 }
 
 export interface ProyectoDuplicarRequest {
