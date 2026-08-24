@@ -28,8 +28,21 @@ http.interceptors.request.use((config) => {
   return config;
 });
 
+// El backend pagina con { items, total }; el contrato interno usa { contenido, totalElementos }.
+const normalizarPaginado = (data: unknown): unknown => {
+  if (data !== null && typeof data === "object" && "items" in data && !("contenido" in data)) {
+    const { items, total, ...resto } = data as { items: unknown; total?: number };
+    if (!Array.isArray(items)) return data;
+    return { ...resto, contenido: items, totalElementos: total ?? items.length };
+  }
+  return data;
+};
+
 http.interceptors.response.use(
-  (r) => r,
+  (r) => {
+    r.data = normalizarPaginado(r.data);
+    return r;
+  },
   async (error: AxiosError<Problem>) => {
     const original = error.config as typeof error.config & { _reintentado?: boolean };
     const status = error.response?.status ?? 0;

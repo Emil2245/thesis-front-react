@@ -50,3 +50,39 @@ describe("interceptor de 401", () => {
     expect(expirada).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("normalización de paginado", () => {
+  it("mapea { items, total } del backend a { contenido, totalElementos }", async () => {
+    server.use(
+      mswHttp.get("*/proyectos", () =>
+        HttpResponse.json({
+          items: [{ id: 1 }, { id: 2 }],
+          page: 0,
+          size: 25,
+          total: 2,
+          totalPaginas: 1,
+        }),
+      ),
+    );
+
+    await expect(get("/proyectos")).resolves.toEqual({
+      contenido: [{ id: 1 }, { id: 2 }],
+      page: 0,
+      size: 25,
+      totalElementos: 2,
+      totalPaginas: 1,
+    });
+  });
+
+  it("deja intactas las respuestas que ya traen contenido o son arreglos", async () => {
+    server.use(
+      mswHttp.get("*/bases-centrales", () => HttpResponse.json([{ id: 1 }])),
+      mswHttp.get("*/otros", () =>
+        HttpResponse.json({ contenido: [{ id: 5 }], totalElementos: 1 }),
+      ),
+    );
+
+    await expect(get("/bases-centrales")).resolves.toEqual([{ id: 1 }]);
+    await expect(get("/otros")).resolves.toEqual({ contenido: [{ id: 5 }], totalElementos: 1 });
+  });
+});

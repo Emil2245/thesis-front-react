@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import type { Page, ProyectoResponse, PresupuestoVersionResponse } from "@/api/contract";
+import type { ProyectoResponse, PresupuestoVersionResponse } from "@/api/contract";
 import type { Problem } from "@/api/problem";
 import { tokenFixture } from "./fixtures/auth";
 import {
@@ -51,11 +51,11 @@ export const problema = (
     { status, headers: { "Content-Type": "application/problem+json" } },
   );
 
-export const pagina = <T>(contenido: T[]): Page<T> => ({
-  contenido,
+export const pagina = <T>(items: T[]) => ({
+  items,
   page: 0,
   size: 25,
-  totalElementos: contenido.length,
+  total: items.length,
   totalPaginas: 1,
 });
 
@@ -84,13 +84,7 @@ export const handlers = [
   http.get(`${API}/proyectos/:id`, ({ params }) => {
     const p = proyectosFixture.find((x) => x.id === Number(params.id));
     if (!p) return HttpResponse.json(null, { status: 404 });
-    return HttpResponse.json({
-      ...proyectoDetalleFixture,
-      id: p.id,
-      nombre: p.nombre,
-      codigo: p.codigo,
-      estado: p.estado,
-    });
+    return HttpResponse.json({ ...proyectoDetalleFixture, ...p });
   }),
   http.post(`${API}/proyectos`, () => HttpResponse.json(proyectoDetalleFixture, { status: 201 })),
   http.put(`${API}/proyectos/:id`, () => HttpResponse.json(proyectoDetalleFixture)),

@@ -90,23 +90,22 @@ export interface PasswordCambiarRequest {
 // ————— Proyectos, firmantes y parámetros (§11) —————
 export interface ProyectoResponse {
   id: number;
-  nombre: string;
+  nombreProyecto: string;
   codigo: string;
   estado: "BORRADOR" | "EN_PROCESO" | "FINALIZADO";
-  fechaCreacion: string;
+  descripcion?: string;
+  direccionInstitucional?: string;
+  subdireccionInstitucional?: string;
+  anio?: number;
+  fechaInicio?: string;
+  plazoEjecucion?: number;
+  plazoUnidad?: string;
+  tieneLogo?: boolean;
+  updatedAt?: string;
 }
 
-export interface ProyectoDetalleResponse {
-  id: number;
-  nombre: string;
-  codigo: string;
-  estado: "BORRADOR" | "EN_PROCESO" | "FINALIZADO";
-  direccionInstitucional?: string;
-  anio?: number;
-  fechaCreacion: string;
-  alertas: string[];
-  tieneLogo: boolean;
-}
+// El backend aún no envía alertas; opcional hasta que las implemente.
+export type ProyectoDetalleResponse = ProyectoResponse & { alertas?: string[] };
 
 export interface ProyectoCrearRequest {
   nombre: string;

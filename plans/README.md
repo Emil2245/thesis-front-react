@@ -69,6 +69,13 @@ Each plan is written for an executor with **zero context from the session that p
 | 013 | [Export documentos](013-export-documentos.md) | P-37 | S-35 | I-10 | DONE |
 | 014 | [Panel Super-Admin](014-admin-panel.md) | P-38…P-42 | S-37…S-42 | I-11 | DONE |
 | 015 | [E2E, a11y y CI](015-e2e-suite-accessibility-and-ci.md) | — | — | I-01 → I-12 | DONE |
+| 016 | [Alinear crear/editar proyecto con el backend real](016-align-project-create-edit-with-backend.md) | P-05, P-06 | S-07 | — | TODO |
+| 017 | [Alinear módulo de insumos con el backend real](017-align-insumos-module-with-backend.md) | P-13…P-16 | S-14…S-18 | — | TODO |
+| 018 | [Parámetros de proyecto numéricos](018-numeric-project-parameters.md) | P-09 | S-10 | 016 (mismos archivos) | TODO |
+
+### Batch de alineación con el backend (2026-08-24)
+
+Planes 016–018 escritos contra los contratos **verificados** del backend Quarkus (`../thesis-back-quarkus`, colección Bruno `api/bruno/TC-06..08` + código fuente), que divergen del Apéndice B transcrito en `src/api/contract.ts`. Ejecutar **en serie** (todos editan `src/test/handlers.ts` y `contract.ts`). Desviación consciente: para insumos y parámetros el backend serializa dinero/porcentajes como **números JSON**, no decimal strings; los planes 017/018 adoptan el formato real y documentan la desviación de la convención "Money travels as decimal strings" (§ decisión 2). Gaps de backend confirmados sin plan: versiones/presupuesto/cronograma/descuento-global/plantillas/admin y `POST /proyectos/{id}/duplicar`.
 
 Executors update the `Status` cell (TODO → IN PROGRESS → DONE) **and** the `Status:` line at the top of their plan file.
 

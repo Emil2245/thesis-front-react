@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { RutaPrivada, RutaAdmin } from "./Guards";
 import { AppShell } from "@/shell/AppShell";
 import App from "@/App";
@@ -19,6 +19,10 @@ export const router = createBrowserRouter([
     element: <App />,
     errorElement: <ErrorPage />,
     children: [
+      {
+        index: true,
+        element: <Navigate to="/proyectos" replace />,
+      },
       // ———— Públicas ————
       {
         path: "/login",

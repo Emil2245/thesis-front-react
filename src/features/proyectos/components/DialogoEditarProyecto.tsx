@@ -43,7 +43,7 @@ export function DialogoEditarProyecto({
     resolver: zodResolver(editarSchema),
     values: proyecto
       ? {
-          nombre: proyecto.nombre,
+          nombre: proyecto.nombreProyecto,
           codigo: proyecto.codigo,
           direccionInstitucional: proyecto.direccionInstitucional ?? "",
           anio: proyecto.anio,

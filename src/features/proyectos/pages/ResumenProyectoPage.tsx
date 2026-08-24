@@ -27,7 +27,7 @@ export function ResumenProyectoPage() {
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold">{proyecto.nombre}</h1>
+            <h1 className="text-xl font-semibold">{proyecto.nombreProyecto}</h1>
             <ChipEstado estado={proyecto.estado} />
           </div>
           <p className="text-sm text-muted-foreground">{proyecto.codigo}</p>
@@ -52,7 +52,7 @@ export function ResumenProyectoPage() {
           </Button>
           <ConfirmarDestructivo
             titulo="Eliminar proyecto"
-            descripcion={`¿Eliminar "${proyecto.nombre}"? Esta acción no se puede deshacer.`}
+            descripcion={`¿Eliminar "${proyecto.nombreProyecto}"? Esta acción no se puede deshacer.`}
             textoConfirmar="Eliminar"
             onConfirmar={() => {
               eliminar.mutate(proyectoId);
@@ -66,12 +66,12 @@ export function ResumenProyectoPage() {
         </div>
       </div>
 
-      {proyecto.alertas.length > 0 && (
+      {(proyecto.alertas?.length ?? 0) > 0 && (
         <Alert variant="destructive">
           <TriangleAlertIcon />
           <AlertTitle>Alertas</AlertTitle>
           <AlertDescription>
-            {proyecto.alertas.includes("CI_NO_CONFIGURADO") && (
+            {proyecto.alertas?.includes("CI_NO_CONFIGURADO") && (
               <span>
                 Porcentaje de indirectos no configurado.{" "}
                 <Link to={`/proyectos/${proyectoId}/parametros`} className="underline">

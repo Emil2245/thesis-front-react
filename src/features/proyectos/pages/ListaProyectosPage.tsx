@@ -68,7 +68,7 @@ export function ListaProyectosPage() {
             <TableHead>Código</TableHead>
             <TableHead>Nombre</TableHead>
             <TableHead>Estado</TableHead>
-            <TableHead>Fecha de creación</TableHead>
+            <TableHead>Última modificación</TableHead>
             <TableHead className="w-12" />
           </TableRow>
         </TableHeader>
@@ -78,14 +78,14 @@ export function ListaProyectosPage() {
               <TableCell className="font-mono text-xs">{p.codigo}</TableCell>
               <TableCell>
                 <Link to={`/proyectos/${p.id}`} className="text-primary underline">
-                  {p.nombre}
+                  {p.nombreProyecto}
                 </Link>
               </TableCell>
               <TableCell>
                 <ChipEstado estado={p.estado} />
               </TableCell>
               <TableCell className="text-muted-foreground">
-                {new Date(p.fechaCreacion).toLocaleDateString("es-EC")}
+                {p.updatedAt ? new Date(p.updatedAt).toLocaleDateString("es-EC") : "—"}
               </TableCell>
               <TableCell>
                 <DropdownMenu>
@@ -103,7 +103,7 @@ export function ListaProyectosPage() {
                     </DropdownMenuItem>
                     <ConfirmarDestructivo
                       titulo="Eliminar proyecto"
-                      descripcion={`¿Eliminar "${p.nombre}"? Esta acción no se puede deshacer.`}
+                      descripcion={`¿Eliminar "${p.nombreProyecto}"? Esta acción no se puede deshacer.`}
                       textoConfirmar="Eliminar"
                       onConfirmar={() => eliminar.mutate(p.id)}
                     >

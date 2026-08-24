@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { get } from "@/api/request";
+import { ApiError } from "@/api/problem";
 import { qk } from "@/api/queryKeys";
 import type {
   PresupuestoResponse,
@@ -36,7 +37,15 @@ export function useValidacion(presupuestoId: number) {
 export function useVersiones(proyectoId: number) {
   return useQuery({
     queryKey: qk.versiones(proyectoId),
-    queryFn: () => get<PresupuestoVersionResponse[]>(`/proyectos/${proyectoId}/presupuestos`),
+    queryFn: async () => {
+      try {
+        return await get<PresupuestoVersionResponse[]>(`/proyectos/${proyectoId}/presupuestos`);
+      } catch (e) {
+        // El backend aún no expone esta ruta para proyectos sin presupuestos.
+        if (e instanceof ApiError && e.status === 404) return [];
+        throw e;
+      }
+    },
     enabled: proyectoId > 0,
   });
 }

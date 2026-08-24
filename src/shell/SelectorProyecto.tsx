@@ -26,7 +26,7 @@ export function SelectorProyecto() {
       <SelectContent>
         {data?.contenido.map((p) => (
           <SelectItem key={p.id} value={String(p.id)}>
-            {p.codigo} — {p.nombre}
+            {p.codigo} — {p.nombreProyecto}
           </SelectItem>
         ))}
       </SelectContent>

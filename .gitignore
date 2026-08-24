@@ -38,3 +38,5 @@ test-results
 # Claude Code worktrees / local agent state
 .claude/
 .agents/
+
+**/.temp/

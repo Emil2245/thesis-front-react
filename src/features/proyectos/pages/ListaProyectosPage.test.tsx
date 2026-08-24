@@ -18,7 +18,7 @@ describe("ListaProyectosPage", () => {
   it("muestra CTA vacío cuando no hay proyectos", async () => {
     server.use(
       http.get(`${API}/proyectos`, () =>
-        HttpResponse.json({ contenido: [], page: 0, size: 25, totalElementos: 0, totalPaginas: 0 }),
+        HttpResponse.json({ items: [], page: 0, size: 25, total: 0, totalPaginas: 0 }),
       ),
     );
 
