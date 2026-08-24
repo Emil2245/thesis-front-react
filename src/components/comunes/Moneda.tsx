@@ -7,7 +7,7 @@ export function Moneda({
   dp = 2,
   className,
 }: {
-  valor: Decimal | null | undefined;
+  valor: Decimal | number | null | undefined;
   dp?: number;
   className?: string;
 }) {

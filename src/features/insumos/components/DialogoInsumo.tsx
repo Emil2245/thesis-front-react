@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { ApiError } from "@/api/problem";
 import type { InsumoResponse } from "@/api/contract";
-import { parsearEntradaDecimal, asDecimal } from "@/lib/decimal";
+import { parsearEntradaDecimal } from "@/lib/decimal";
 
 function precioLabel(tipo: string): string {
   if (tipo === "MANO_OBRA") return "Jornal/hr";
@@ -76,7 +76,7 @@ export function DialogoInsumo({
         descripcion: insumo.descripcion,
         tipo: insumo.tipo as InsumoFormData["tipo"],
         unidad: insumo.unidad,
-        precioUnitario: insumo.precio,
+        precioUnitario: String(insumo.precioUnitario),
       } as InsumoFormData);
     } else {
       form.reset({
@@ -104,10 +104,9 @@ export function DialogoInsumo({
         await editar.mutateAsync({
           id: insumo.id,
           body: {
-            codigo: data.codigo,
             descripcion: data.descripcion,
             unidad: data.unidad,
-            precio: asDecimal(precio),
+            precioUnitario: Number(precio),
           },
         });
         toast.success("Insumo actualizado");
@@ -117,7 +116,7 @@ export function DialogoInsumo({
           descripcion: data.descripcion,
           tipo: data.tipo,
           unidad: data.unidad,
-          precio: asDecimal(precio),
+          precioUnitario: Number(precio),
         });
         toast.success("Insumo creado");
       }

@@ -6,7 +6,7 @@ export const DECIMAL_ZERO = asDecimal("0.000000");
 
 const LOCALE = "es-EC";
 
-export function formatearMoneda(valor: Decimal | null | undefined, dp = 2): string {
+export function formatearMoneda(valor: Decimal | number | null | undefined, dp = 2): string {
   if (valor == null || valor === "") return "—";
   const n = Number(valor);
   if (!Number.isFinite(n)) return "—";
@@ -19,7 +19,7 @@ export function formatearMoneda(valor: Decimal | null | undefined, dp = 2): stri
 }
 
 export function formatearNumero(
-  valor: Decimal | null | undefined,
+  valor: Decimal | number | null | undefined,
   { min = 2, max = 4 }: { min?: number; max?: number } = {},
 ): string {
   if (valor == null || valor === "") return "—";
@@ -31,7 +31,7 @@ export function formatearNumero(
   }).format(n);
 }
 
-export function formatearPorcentaje(valor: Decimal | null | undefined, dp = 2): string {
+export function formatearPorcentaje(valor: Decimal | number | null | undefined, dp = 2): string {
   if (valor == null || valor === "") return "—";
   const n = Number(valor);
   if (!Number.isFinite(n)) return "—";

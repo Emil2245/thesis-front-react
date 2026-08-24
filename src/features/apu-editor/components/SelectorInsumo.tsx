@@ -32,18 +32,17 @@ export function SelectorInsumo({
   abierto,
   onClose,
   proyectoId,
-  tipo,
   onSeleccionar,
 }: SelectorInsumoProps) {
   const [fuente, setFuente] = useState("LOCAL");
   const [q, setQ] = useState("");
 
-  const { data: resultados, isPending } = useBusquedaParaApu({
+  const { data, isPending } = useBusquedaParaApu({
     proyectoId,
     fuente,
     q: q || undefined,
-    tipo,
   });
+  const resultados = data?.contenido ?? [];
 
   return (
     <Dialog open={abierto} onOpenChange={(open) => !open && onClose()}>
@@ -95,7 +94,7 @@ export function SelectorInsumo({
                     {r.codigo} — {r.descripcion}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {r.unidad} · {formatearMoneda(r.precio)}
+                    {r.unidad} · {formatearMoneda(r.precioUnitario)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">

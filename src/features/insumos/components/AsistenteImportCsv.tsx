@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import Papa from "papaparse";
 import { toast } from "sonner";
 import { useImportarCsv } from "../hooks/useImportCsv";
+import type { ImportResultadoResponse } from "@/api/contract";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,10 +15,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
-import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon, AlertCircleIcon } from "lucide-react";
+import { ChevronLeftIcon, DownloadIcon, AlertCircleIcon } from "lucide-react";
 import { ApiError } from "@/api/problem";
 
-const PASOS = ["Seleccionar archivo", "Validar", "Importar"];
+const PASOS = ["Seleccionar archivo", "Importar"];
 
 export function AsistenteImportCsv({
   abierto,
@@ -31,11 +32,7 @@ export function AsistenteImportCsv({
   const [paso, setPaso] = useState(0);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [filas, setFilas] = useState<Record<string, string>[]>([]);
-  const [resultado, setResultado] = useState<{
-    creados: number;
-    actualizados: number;
-    errores: Array<{ fila: number; mensaje: string }>;
-  } | null>(null);
+  const [resultado, setResultado] = useState<ImportResultadoResponse | null>(null);
   const importar = useImportarCsv(proyectoId);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -52,35 +49,27 @@ export function AsistenteImportCsv({
     });
   };
 
-  const handleValidar = async () => {
-    if (!archivo) return;
-    const formData = new FormData();
-    formData.append("archivo", archivo);
-    try {
-      const res = await importar.mutateAsync({ formData, soloValidar: true });
-      setResultado(res);
-      setPaso(2);
-    } catch (err) {
-      if (err instanceof ApiError && err.is("csv-invalido")) {
-        toast.error(err.problem.detail ?? "El archivo CSV no es válido");
-      } else {
-        toast.error("Error al validar el archivo");
-      }
-    }
-  };
-
   const handleImportar = async () => {
     if (!archivo) return;
     const formData = new FormData();
     formData.append("archivo", archivo);
     try {
-      const res = await importar.mutateAsync({ formData, soloValidar: false });
+      const res = await importar.mutateAsync({ formData });
       toast.success(
         `${res.creados} creados, ${res.actualizados} actualizados${res.errores.length ? `, ${res.errores.length} errores` : ""}`,
       );
-      onClose();
-    } catch {
-      toast.error("Error al importar");
+      if (res.errores.length > 0) {
+        setResultado(res);
+        setPaso(1);
+      } else {
+        onClose();
+      }
+    } catch (err) {
+      if (err instanceof ApiError && err.is("csv-invalido")) {
+        toast.error(err.problem.detail ?? "El archivo CSV no es válido");
+      } else {
+        toast.error("Error al importar");
+      }
     }
   };
 
@@ -90,14 +79,15 @@ export function AsistenteImportCsv({
         <DialogHeader>
           <DialogTitle>Importar insumos desde CSV</DialogTitle>
           <DialogDescription>
-            Paso {paso + 1} de 3 — {PASOS[paso]}
+            Paso {paso + 1} de 2 — {PASOS[paso]}
           </DialogDescription>
         </DialogHeader>
 
         {paso === 0 && (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Selecciona un archivo CSV con columnas: codigo, descripcion, tipo, unidad, precio.
+              Selecciona un archivo CSV con columnas: codigo, descripcion, tipo, unidad,
+              precioUnitario.
             </p>
             <Field>
               <Label htmlFor="csv-archivo">Archivo CSV</Label>
@@ -123,65 +113,31 @@ export function AsistenteImportCsv({
         {paso === 1 && resultado && (
           <div className="space-y-4">
             <p className="text-sm">
-              {resultado.errores.length > 0
-                ? `${resultado.errores.length} filas con errores`
-                : "Sin errores de validación"}
+              Se importaron {resultado.creados} nuevos y se actualizaron {resultado.actualizados}{" "}
+              existentes, con {resultado.errores.length} errores.
             </p>
-            {resultado.errores.length > 0 && (
-              <div className="max-h-48 overflow-y-auto">
-                {resultado.errores.map((e) => (
-                  <div key={e.fila} className="flex items-center gap-2 text-sm text-destructive">
-                    <AlertCircleIcon className="size-4" />
-                    <span>
-                      Fila {e.fila}: {e.mensaje}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {paso === 2 && resultado && (
-          <div className="space-y-4">
-            <p className="text-sm">
-              Se importarán {resultado.creados} nuevos y se actualizarán {resultado.actualizados}{" "}
-              existentes.
-            </p>
-            {resultado.errores.length > 0 && (
-              <div className="max-h-48 overflow-y-auto">
-                {resultado.errores.map((e) => (
-                  <div key={e.fila} className="flex items-center gap-2 text-sm text-destructive">
-                    <AlertCircleIcon className="size-4" />
-                    <span>
-                      Fila {e.fila}: {e.mensaje}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="max-h-48 overflow-y-auto">
+              {resultado.errores.map((e) => (
+                <div key={e.fila} className="flex items-center gap-2 text-sm text-destructive">
+                  <AlertCircleIcon className="size-4" />
+                  <span>
+                    Fila {e.fila}: {e.mensaje}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         <DialogFooter className="flex justify-between">
-          {paso > 0 && (
-            <Button variant="outline" onClick={() => setPaso((p) => p - 1)}>
+          {paso === 1 && (
+            <Button variant="outline" onClick={() => setPaso(0)}>
               <ChevronLeftIcon /> Atrás
             </Button>
           )}
           {paso === 0 && (
-            <Button onClick={() => setPaso(1)} disabled={!archivo}>
-              Siguiente <ChevronRightIcon />
-            </Button>
-          )}
-          {paso === 1 && (
-            <Button onClick={handleValidar} disabled={importar.isPending}>
-              {importar.isPending ? "Validando…" : "Validar"}
-            </Button>
-          )}
-          {paso === 2 && (
-            <Button onClick={handleImportar} disabled={importar.isPending}>
-              {importar.isPending ? "Importando…" : "Confirmar importación"}
+            <Button onClick={handleImportar} disabled={!archivo || importar.isPending}>
+              {importar.isPending ? "Importando…" : "Importar"}
             </Button>
           )}
         </DialogFooter>

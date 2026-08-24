@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { renderConProviders } from "@/test/render";
 import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router-dom";
 import { InsumosPage } from "./InsumosPage";
 import { useSesionStore } from "@/features/auth/sesion";
@@ -26,6 +27,7 @@ describe("InsumosPage", () => {
   });
 
   it("tabs switch between project insumos and central bases", async () => {
+    const user = userEvent.setup();
     renderConProviders(
       <Routes>
         <Route path="/proyectos/:id/insumos" element={<InsumosPage />} />
@@ -35,6 +37,13 @@ describe("InsumosPage", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Bases centrales")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("tab", { name: "Bases centrales" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("93 insumos")).toBeInTheDocument();
+      expect(screen.getByText("Base IESS 2026")).toBeInTheDocument();
     });
   });
 });

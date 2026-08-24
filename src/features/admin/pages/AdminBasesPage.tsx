@@ -46,7 +46,7 @@ export function AdminBasesPage() {
             <TableRow key={b.id}>
               <TableCell className="font-medium">{b.nombre}</TableCell>
               <TableCell>{b.archivada ? "Archivada" : "Activa"}</TableCell>
-              <TableCell className="font-mono text-sm">{b.insumoCount}</TableCell>
+              <TableCell className="font-mono text-sm">{b.totalInsumos}</TableCell>
               <TableCell className="text-right">
                 <Button
                   variant="ghost"
