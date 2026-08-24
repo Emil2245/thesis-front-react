@@ -7,8 +7,8 @@
 > in `plans/README.md` — unless a reviewer dispatched you and told you they
 > maintain the index.
 >
-> **Drift check (run first)**: `git diff --stat 3514822..HEAD -- src/api/contract.ts src/features/insumos src/features/apu-editor/hooks/useBusquedaParaApu.ts src/lib/decimal.ts src/test/handlers.ts src/test/fixtures/insumos.ts`
-> If any in-scope file changed since `3514822`, compare the "Current state"
+> **Drift check (run first)**: `git diff --stat cd90a7b..HEAD -- src/api/contract.ts src/features/insumos src/features/apu-editor/hooks/useBusquedaParaApu.ts src/lib/decimal.ts src/test/handlers.ts src/test/fixtures/insumos.ts`
+> If any in-scope file changed since `cd90a7b`, compare the "Current state"
 > excerpts against the live code; on mismatch, STOP.
 
 ## Status
@@ -16,9 +16,10 @@
 - **Priority**: P1
 - **Effort**: L
 - **Risk**: MED (toca tipos compartidos de dinero; se mitigará ampliando firmas, no rompiéndolas)
-- **Depends on**: none técnico; ejecutar en serie con 016/018 porque todos editan `src/test/handlers.ts` y `src/api/contract.ts`
+- **Depends on**: 016 + 018 (YA MERGED en `cd90a7b`); este plan se ejecuta sobre ese estado
 - **Category**: bug
-- **Planned at**: commit `3514822`, 2026-08-24
+- **Planned at**: commit `cd90a7b`, 2026-08-24
+- **Revision**: r2 — amplía alcance con `AdminBasesPage.tsx` y `fixtures/admin.ts` (primera ejecución se detuvo correctamente: `BaseInsumosResponse.insumoCount` es consumido por el panel admin, descubierto por el executor)
 
 ## Why this matters
 
@@ -83,6 +84,8 @@ Ver `AGENTS.md`: UI español, pnpm, MSW con `onUnhandledRequest:"error"` (toda U
 - `src/features/apu-editor/hooks/useBusquedaParaApu.ts`
 - `src/features/apu-editor/components/SelectorInsumo.tsx` (solo la línea del precio)
 - `src/test/fixtures/insumos.ts`, `src/test/handlers.ts` (sección insumos/bases)
+- `src/features/admin/pages/AdminBasesPage.tsx` (solo renombrar `insumoCount` → `totalInsumos`; r2)
+- `src/test/fixtures/admin.ts` (solo filas de bases centrales: `insumoCount` → `totalInsumos` + `tipo: "CENTRAL"`; r2)
 - Tests existentes de los componentes listados
 - `plans/README.md`
 
@@ -236,12 +239,13 @@ El backend no tiene dry-run: fusiona "Validar" e "Importar".
 ### Step 7: Fixtures y handlers de prueba
 
 1. `src/test/fixtures/insumos.ts`: convierte `precio: "12.500000" as never` → `precioUnitario: 12.5` en todos los rows; borra `jornal`/`tarifa`; `basesCentralesFixture` → `{ id, nombre, tipo: "CENTRAL", archivada, totalInsumos }` (93/45/120); `insumosBusquedaFixture` con `precioUnitario` numérico.
-2. `src/test/handlers.ts` sección insumos (~152-181):
+2. **Admin (r2)**: en `src/test/fixtures/admin.ts`, las filas de bases centrales pasan a `{ id, nombre, tipo: "CENTRAL", archivada, totalInsumos }`; en `src/features/admin/pages/AdminBasesPage.tsx`, reemplaza el render de `b.insumoCount` por `b.totalInsumos`. Nada más de esa página.
+3. `src/test/handlers.ts` sección insumos (~152-181):
    - `http.post(\`${API}/proyectos/:id/insumos/importar\`, …)` (reemplaza `/import`; devuelve `importResultadoFixture`).
    - `http.post(\`${API}/proyectos/:id/insumos/copiar\`, …)` (reemplaza `/copiar-base`).
    - `http.get(\`${API}/proyectos/:id/insumos/selector\`, …)` devuelve `pagina(insumosBusquedaFixture)` (reemplaza `/busqueda`).
    - **Elimina** `http.get(\`${API}/bases-centrales/:id/insumos\`, …)` (endpoint ya no lo llama nadie).
-3. Actualiza los tests que referencian URLs/campos viejos: `SelectorInsumo.test.tsx` (mock `/selector` con `pagina(...)`), `AsistenteImportCsv.test.tsx` (flujo de 2 pasos), `TablaInsumos.test.tsx` (fixtures nuevos), `DialogoInsumo.test.tsx` (labels iguales; verificar submit).
+4. Actualiza los tests que referencian URLs/campos viejos: `SelectorInsumo.test.tsx` (mock `/selector` con `pagina(...)`), `AsistenteImportCsv.test.tsx` (flujo de 2 pasos), `TablaInsumos.test.tsx` (fixtures nuevos), `DialogoInsumo.test.tsx` (labels iguales; verificar submit).
 
 **Verify**: `pnpm exec prettier --write src/features/insumos src/features/apu-editor src/test src/lib/decimal.ts src/components/comunes/Moneda.tsx && pnpm run test -- src/features/insumos src/features/apu-editor src/lib` → all pass.
 
@@ -268,7 +272,7 @@ El backend no tiene dry-run: fusiona "Validar" e "Importar".
 
 ## STOP conditions
 
-- Drift check detecta cambios post-`3514822` que contradigan los excerpts.
+- Drift check detecta cambios post-`2282375` que contradigan los excerpts.
 - `typecheck` marca errores de precio fuera del Scope (p.ej. algún componente de presupuesto consumiendo `InsumoResponse`) — reporta en lugar de ampliar alcance.
 - Descubres que el backend SÍ implementa `GET /bases-centrales/{id}/insumos` (entonces conserva la vista expandible y reporta).
 - Un paso falla dos veces tras intento razonable.

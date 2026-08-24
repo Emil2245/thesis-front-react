@@ -69,9 +69,9 @@ Each plan is written for an executor with **zero context from the session that p
 | 013 | [Export documentos](013-export-documentos.md) | P-37 | S-35 | I-10 | DONE |
 | 014 | [Panel Super-Admin](014-admin-panel.md) | P-38…P-42 | S-37…S-42 | I-11 | DONE |
 | 015 | [E2E, a11y y CI](015-e2e-suite-accessibility-and-ci.md) | — | — | I-01 → I-12 | DONE |
-| 016 | [Alinear crear/editar proyecto con el backend real](016-align-project-create-edit-with-backend.md) | P-05, P-06 | S-07 | — | TODO |
-| 017 | [Alinear módulo de insumos con el backend real](017-align-insumos-module-with-backend.md) | P-13…P-16 | S-14…S-18 | — | TODO |
-| 018 | [Parámetros de proyecto numéricos](018-numeric-project-parameters.md) | P-09 | S-10 | 016 (mismos archivos) | TODO |
+| 016 | [Alinear crear/editar proyecto con el backend real](016-align-project-create-edit-with-backend.md) | P-05, P-06 | S-07 | — | DONE (`54d8830`) |
+| 017 | [Alinear módulo de insumos con el backend real](017-align-insumos-module-with-backend.md) | P-13…P-16 | S-14…S-18 | 016+018 merged (`cd90a7b`); r2 amplía alcance admin | DONE (`b3b3e2a`) |
+| 018 | [Parámetros de proyecto numéricos](018-numeric-project-parameters.md) | P-09 | S-10 | — | DONE (`38faaa3`) |
 
 ### Batch de alineación con el backend (2026-08-24)
 

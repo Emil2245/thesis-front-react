@@ -7,8 +7,8 @@
 > in `plans/README.md` — unless a reviewer dispatched you and told you they
 > maintain the index.
 >
-> **Drift check (run first)**: `git diff --stat 3514822..HEAD -- src/api/contract.ts src/features/proyectos src/test/handlers.ts src/test/fixtures/proyectos.ts`
-> If any of those files changed since `3514822`, compare the "Current state"
+> **Drift check (run first)**: `git diff --stat 2282375..HEAD -- src/api/contract.ts src/features/proyectos src/test/handlers.ts src/test/fixtures/proyectos.ts`
+> If any of those files changed since `2282375`, compare the "Current state"
 > excerpts below against the live code before proceeding; on a mismatch,
 > treat it as a STOP condition.
 
@@ -19,7 +19,7 @@
 - **Risk**: LOW
 - **Depends on**: none (but execute after plans 017/018 are merged OR before them — see README ordering note; all three touch `src/test/handlers.ts`)
 - **Category**: bug
-- **Planned at**: commit `3514822`, 2026-08-24
+- **Planned at**: commit `2282375`, 2026-08-24
 
 ## Why this matters
 
@@ -266,7 +266,7 @@ const body: ProyectoCrearRequest = {
 
 ## STOP conditions
 
-- El drift check muestra cambios en archivos in-scope posteriores a `3514822` que contradigan los excerpts.
+- El drift check muestra cambios en archivos in-scope posteriores a `2282375` que contradigan los excerpts.
 - `typecheck` reporta errores en archivos fuera del Scope tras el Step 2 (indica otro consumidor desconocido de `OrigenInsumosRequest`).
 - Encuentras que el backend YA tiene `POST /proyectos/{id}/duplicar` (entonces reporta y detente; cambia el alcance).
 - Un paso falla dos veces tras intento razonable de arreglo.

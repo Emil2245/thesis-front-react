@@ -7,7 +7,7 @@
 > in `plans/README.md` — unless a reviewer dispatched you and told you they
 > maintain the index.
 >
-> **Drift check (run first)**: `git diff --stat 3514822..HEAD -- src/api/contract.ts src/features/proyectos/hooks/useParametros.ts src/features/proyectos/pages/ParametrosPage.tsx src/features/proyectos/schemas.ts src/test/fixtures/proyectos.ts`
+> **Drift check (run first)**: `git diff --stat 2282375..HEAD -- src/api/contract.ts src/features/proyectos/hooks/useParametros.ts src/features/proyectos/pages/ParametrosPage.tsx src/features/proyectos/schemas.ts src/test/fixtures/proyectos.ts`
 > On mismatch with the excerpts below, STOP.
 
 ## Status
@@ -17,7 +17,7 @@
 - **Risk**: LOW
 - **Depends on**: ninguno técnico; ejecutar en serie con 016 (ambos tocan `schemas.ts`, `contract.ts`, `fixtures/proyectos.ts`)
 - **Category**: tech-debt
-- **Planned at**: commit `3514822`, 2026-08-24
+- **Planned at**: commit `2282375`, 2026-08-24
 
 ## Why this matters
 
