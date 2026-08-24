@@ -70,15 +70,15 @@ export function ParametrosPage() {
   if (isPending) return <CargandoTabla />;
   if (!params) return <p className="text-muted-foreground">Parámetros no encontrados</p>;
 
-  const handleGuardar = async () => {
+  const handleGuardar = form.handleSubmit(async (values) => {
     try {
-      await actualizar.mutateAsync(form.getValues() as never);
+      await actualizar.mutateAsync(values);
       toast.success("Parámetros actualizados");
       navigate(`/proyectos/${proyectoId}`);
     } catch {
       toast.error("Error al guardar parámetros");
     }
-  };
+  });
 
   return (
     <div className="space-y-6">

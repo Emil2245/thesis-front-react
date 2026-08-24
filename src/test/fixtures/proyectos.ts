@@ -71,9 +71,9 @@ export const proyectoDetalleFixture: ProyectoDetalleResponse = {
 };
 
 export const parametrosFixture: ParametrosProyectoResponse = {
-  porcentajeHerramientaMenor: "0.050000" as never,
-  porcentajeIndirecto: "0.150000" as never,
-  iva: "0.120000" as never,
+  porcentajeHerramientaMenor: 0.05,
+  porcentajeIndirecto: 0.15,
+  iva: 0.12,
   moneda: "USD",
   mostrarSeccionesVacias: false,
   sufijosSeccionActivos: true,
