@@ -156,23 +156,16 @@ export const handlers = [
     return HttpResponse.json(null, { status: 204 });
   }),
   http.get(`${API}/proyectos/:id/insumos/:iid/uso`, () => HttpResponse.json(insumoUsoFixture)),
-  http.post(`${API}/proyectos/:id/insumos/import`, ({ request }) => {
-    const url = new URL(request.url);
-    if (url.searchParams.get("soloValidar") === "true") {
-      return HttpResponse.json(importResultadoFixture);
-    }
-    return HttpResponse.json(importResultadoFixture);
-  }),
-  http.post(`${API}/proyectos/:id/insumos/copiar-base`, () =>
+  http.post(`${API}/proyectos/:id/insumos/importar`, () =>
+    HttpResponse.json(importResultadoFixture),
+  ),
+  http.post(`${API}/proyectos/:id/insumos/copiar`, () =>
     HttpResponse.json(copiaBaseResultadoFixture),
   ),
-  http.get(`${API}/proyectos/:id/insumos/busqueda`, () =>
-    HttpResponse.json(insumosBusquedaFixture),
+  http.get(`${API}/proyectos/:id/insumos/selector`, () =>
+    HttpResponse.json(pagina(insumosBusquedaFixture)),
   ),
   http.get(`${API}/bases-centrales`, () => HttpResponse.json(basesCentralesFixture)),
-  http.get(`${API}/bases-centrales/:id/insumos`, () =>
-    HttpResponse.json(pagina(insumosFixture.filter((i) => i.fuente === "CENTRAL"))),
-  ),
 
   // ———— APU editor (Plan 009) ————
   http.post(`${API}/presupuestos/:id/apus`, () =>

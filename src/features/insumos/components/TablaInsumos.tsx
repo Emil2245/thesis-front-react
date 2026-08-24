@@ -121,7 +121,7 @@ export function TablaInsumos({ proyectoId }: { proyectoId: number }) {
       columnHelper.accessor("unidad", {
         header: "Unidad",
       }),
-      columnHelper.accessor("precio", {
+      columnHelper.accessor("precioUnitario", {
         header: "Precio",
         cell: (info) => <Moneda valor={info.getValue()} />,
         meta: { align: "right" },

@@ -41,7 +41,8 @@ export function DialogoCopiarBase({
 
   const copiar = useMutation({
     mutationFn: () =>
-      post<CopiaBaseResultadoResponse>(`/proyectos/${proyectoId}/insumos/copiar-base`, {
+      post<CopiaBaseResultadoResponse>(`/proyectos/${proyectoId}/insumos/copiar`, {
+        fuenteTipo: "CENTRAL",
         baseId: Number(baseId),
       }),
     onSuccess: (data) => {
@@ -80,7 +81,7 @@ export function DialogoCopiarBase({
                 <SelectContent>
                   {bases?.map((b) => (
                     <SelectItem key={b.id} value={String(b.id)}>
-                      {b.nombre} ({b.insumoCount} insumos)
+                      {b.nombre} ({b.totalInsumos} insumos)
                     </SelectItem>
                   ))}
                 </SelectContent>

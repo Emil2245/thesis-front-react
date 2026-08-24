@@ -3,6 +3,7 @@ import { renderConProviders } from "@/test/render";
 import { screen, waitFor } from "@testing-library/react";
 import { SelectorInsumo } from "./SelectorInsumo";
 import { server } from "@/test/server";
+import { pagina } from "@/test/handlers";
 import { http, HttpResponse } from "msw";
 
 const API = "*/api/v1";
@@ -43,19 +44,21 @@ describe("SelectorInsumo", () => {
 
   it("shows CENTRAL source with base name", async () => {
     server.use(
-      http.get(`${API}/proyectos/:id/insumos/busqueda`, () =>
-        HttpResponse.json([
-          {
-            id: 100,
-            codigo: "C-001",
-            descripcion: "Cemento IESS",
-            tipo: "MATERIAL",
-            unidad: "kg",
-            precio: "11.200000" as never,
-            fuente: "CENTRAL",
-            baseNombre: "Base IESS 2026",
-          },
-        ]),
+      http.get(`${API}/proyectos/:id/insumos/selector`, () =>
+        HttpResponse.json(
+          pagina([
+            {
+              id: 100,
+              codigo: "C-001",
+              descripcion: "Cemento IESS",
+              tipo: "MATERIAL",
+              unidad: "kg",
+              precioUnitario: 11.2,
+              fuente: "CENTRAL",
+              baseNombre: "Base IESS 2026",
+            },
+          ]),
+        ),
       ),
     );
     renderConProviders(

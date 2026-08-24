@@ -199,35 +199,28 @@ export type TipoInsumo = "EQUIPO" | "MANO_OBRA" | "MATERIAL" | "TRANSPORTE";
 export interface InsumoResponse {
   id: number;
   codigo: string;
-  descripcion: string;
   tipo: TipoInsumo;
+  descripcion: string;
   unidad: string;
-  precio: Decimal;
-  tarifa?: Decimal | null;
-  jornal?: Decimal | null;
+  precioUnitario: number;
   fechaActualizacion: string;
   desactualizado: boolean;
-  fuente: "LOCAL" | "CENTRAL";
+  fuente?: "LOCAL" | "CENTRAL";
   baseNombre?: string;
 }
 
 export interface InsumoCrearRequest {
   codigo: string;
-  descripcion: string;
   tipo: TipoInsumo;
+  descripcion: string;
   unidad: string;
-  precio: Decimal;
-  tarifa?: Decimal | null;
-  jornal?: Decimal | null;
+  precioUnitario: number;
 }
 
 export interface InsumoEditarRequest {
-  codigo?: string;
   descripcion?: string;
   unidad?: string;
-  precio?: Decimal;
-  tarifa?: Decimal | null;
-  jornal?: Decimal | null;
+  precioUnitario?: number;
 }
 
 export interface InsumoUsoResponse {
@@ -244,20 +237,21 @@ export interface InsumoBusquedaResponse {
   descripcion: string;
   tipo: TipoInsumo;
   unidad: string;
-  precio: Decimal;
-  fuente: "LOCAL" | "CENTRAL" | "COMBINADA";
+  precioUnitario: number;
+  fuente?: "LOCAL" | "CENTRAL";
   baseNombre?: string;
 }
 
 export interface ImportResultadoResponse {
   creados: number;
   actualizados: number;
-  errores: Array<{ fila: number; mensaje: string }>;
+  errores: Array<{ fila: number; campo?: string; mensaje: string }>;
 }
 
 export interface CopiarBaseRequest {
-  baseId: number;
-  tipos?: TipoInsumo[];
+  fuenteTipo: "CENTRAL" | "PROYECTO";
+  baseId?: number;
+  proyectoId?: number;
 }
 
 export interface CopiaBaseResultadoResponse {
@@ -268,8 +262,9 @@ export interface CopiaBaseResultadoResponse {
 export interface BaseInsumosResponse {
   id: number;
   nombre: string;
+  tipo: "CENTRAL";
   archivada: boolean;
-  insumoCount: number;
+  totalInsumos: number;
 }
 
 export interface BaseInsumosCrearRequest {
