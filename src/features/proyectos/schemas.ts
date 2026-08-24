@@ -1,23 +1,15 @@
 import { z } from "zod";
 
-export const origenInsumosSchema = z.discriminatedUnion("tipo", [
-  z.object({
-    tipo: z.literal("CENTRAL"),
-    baseId: z.number({ required_error: "Selecciona una base" }),
-  }),
-  z.object({
-    tipo: z.literal("PROYECTO"),
-    proyectoId: z.number({ required_error: "Selecciona un proyecto" }),
-  }),
-  z.object({ tipo: z.literal("VACIA") }),
-]);
-
 export const proyectoSchema = z.object({
-  nombre: z.string().min(1, "El nombre es obligatorio").max(200),
-  codigo: z.string().min(1, "El código es obligatorio").max(50),
-  direccionInstitucional: z.string().max(200).optional(),
+  nombreProyecto: z.string().min(1, "El nombre es obligatorio").max(200),
+  codigo: z.string().max(50).optional(),
+  descripcion: z.string().max(2000).optional(),
   anio: z.number().int().min(2000, "Año inválido").max(2100, "Año inválido").optional(),
-  origenInsumos: origenInsumosSchema,
+  fechaInicio: z.string().optional(),
+  plazoEjecucion: z.number().int().min(1, "Plazo inválido").max(600, "Plazo inválido").optional(),
+  plazoUnidad: z.enum(["SEMANA", "MES"]).optional(),
+  direccionInstitucional: z.string().max(200).optional(),
+  subdireccionInstitucional: z.string().max(200).optional(),
   duplicarDesde: z
     .discriminatedUnion("tipo", [
       z.object({ tipo: z.literal("SISTEMA"), baseId: z.number() }),
