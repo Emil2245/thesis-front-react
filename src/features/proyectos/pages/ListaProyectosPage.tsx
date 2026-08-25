@@ -143,7 +143,8 @@ export function ListaProyectosPage() {
             </InputGroup>
             <Select value={estado} onValueChange={manejarCambioEstado}>
               <SelectTrigger aria-label="Filtrar por estado" className="w-36">
-                <SelectValue />
+                {/* Radix trata "" como "sin selección": sin placeholder el trigger queda en blanco. */}
+                <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
