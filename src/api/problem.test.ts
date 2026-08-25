@@ -28,6 +28,13 @@ describe("ApiError", () => {
     expect(e.camposConError[0].campo).toBe("porcentaje");
   });
 
+  it("no revienta cuando el cuerpo del error no trae type", () => {
+    // `request.ts` castea sin validar: un `{}` del servidor llega hasta aquí.
+    const e = new ApiError({} as never, 500);
+    expect(e.slug).toBe("");
+    expect(e.is("validacion")).toBe(false);
+  });
+
   it("el catálogo de types coincide con architecture/07 §1", () => {
     expect(PROBLEM_TYPES).toHaveLength(16);
   });

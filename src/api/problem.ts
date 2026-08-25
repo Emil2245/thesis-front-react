@@ -46,7 +46,9 @@ export class ApiError extends Error {
     this.status = status;
   }
   get slug(): string {
-    return this.problem.type.replace(/^\/problemas\//, "");
+    // El servidor puede responder un cuerpo sin `type` (o vacío): `request.ts`
+    // no valida, así que el cast lo deja pasar. Sin guarda, esto revienta.
+    return this.problem.type?.replace(/^\/problemas\//, "") ?? "";
   }
   is(t: ProblemType): boolean {
     return this.slug === t;
