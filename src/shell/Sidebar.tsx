@@ -56,7 +56,11 @@ function estaActivo(pathname: string, path: string) {
 
 /** Insignia discreta para una entrada de navegación cuyo backend aún no existe. */
 function InsigniaPronto() {
-  return <span className="ml-auto text-xs text-muted-foreground">pronto</span>;
+  return (
+    <span className="ml-auto text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+      pronto
+    </span>
+  );
 }
 
 // `modulo` casa con las claves de MODULOS_SIN_BACKEND (src/lib/disponibilidad.ts):
@@ -104,7 +108,7 @@ export function AppSidebar() {
   const base = proyectoId ? `/proyectos/${proyectoId}` : null;
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -131,7 +135,11 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={estaActivo(pathname, "/proyectos")}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={estaActivo(pathname, "/proyectos")}
+                  tooltip="Proyectos"
+                >
                   <Link to="/proyectos">
                     <FolderIcon />
                     <span>Proyectos</span>
@@ -143,6 +151,7 @@ export function AppSidebar() {
                   asChild
                   isActive={estaActivo(pathname, "/plantillas")}
                   className={MODULOS_SIN_BACKEND.has("plantillas") ? "opacity-60" : ""}
+                  tooltip="Plantillas APU"
                 >
                   <Link to="/plantillas">
                     <FileSpreadsheetIcon />
@@ -174,6 +183,7 @@ export function AppSidebar() {
                           asChild
                           isActive={activo}
                           className={pendiente ? "opacity-60" : ""}
+                          tooltip={etiqueta}
                         >
                           <Link to={ruta}>
                             <Icono />
@@ -205,6 +215,7 @@ export function AppSidebar() {
                           asChild
                           isActive={estaActivo(pathname, ruta)}
                           className={pendiente ? "opacity-60" : ""}
+                          tooltip={etiqueta}
                         >
                           <Link to={ruta}>
                             <Icono />
