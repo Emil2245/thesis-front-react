@@ -22,7 +22,10 @@ const config: Record<string, { label: string; className: string }> = {
 };
 
 export function ChipAlerta({ tipo }: ChipAlertaProps) {
-  const cfg = config[tipo] || { label: tipo, className: "bg-muted text-muted-foreground border-border" };
+  const cfg = config[tipo] || {
+    label: tipo,
+    className: "bg-muted text-muted-foreground border-border",
+  };
   return (
     <Tooltip>
       <TooltipTrigger>
