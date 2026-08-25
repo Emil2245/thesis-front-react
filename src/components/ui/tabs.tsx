@@ -13,6 +13,13 @@ function Tabs({
     <TabsPrimitive.Root
       data-slot="tabs"
       data-orientation={orientation}
+      // Divergencia deliberada del registro de shadcn: sus clases apuntan a
+      // `data-horizontal` / `data-vertical` (atributos sueltos), pero el
+      // componente solo emitía `data-orientation`. Resultado: `flex-col` nunca
+      // se aplicaba y cualquier página con Tabs quedaba en fila, desbordando
+      // en horizontal. Emitimos el atributo que sus propias clases esperan.
+      data-horizontal={orientation === "horizontal" ? "" : undefined}
+      data-vertical={orientation === "vertical" ? "" : undefined}
       className={cn(
         "group/tabs flex gap-2 data-horizontal:flex-col",
         className
