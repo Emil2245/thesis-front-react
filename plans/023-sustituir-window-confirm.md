@@ -11,6 +11,7 @@
 
 ## Status
 
+- **Status**: DONE 2026-08-24
 - **Priority**: P2
 - **Effort**: S
 - **Risk**: LOW

@@ -1,15 +1,19 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import { renderConProviders } from "@/test/render";
 import { Route, Routes } from "react-router-dom";
 import { useSesionStore } from "@/features/auth/sesion";
 import { usuarioFixture } from "@/test/fixtures/auth";
+import { http, HttpResponse } from "msw";
+import { server } from "@/test/server";
+import { presupuestoFixture } from "@/test/fixtures/presupuesto";
 import { PresupuestoPage } from "../pages/PresupuestoPage";
 import { VersionesPage } from "../pages/VersionesPage";
 
+const API = "*/api/v1";
+
 beforeEach(() => {
   useSesionStore.setState({ usuario: usuarioFixture, cargando: false });
-  window.confirm = vi.fn(() => true);
 });
 
 // ─── Helpers ───
@@ -35,6 +39,14 @@ async function setupVersionesPage() {
   await waitFor(() => expect(screen.getByText("Versiones del presupuesto")).toBeInTheDocument());
   await waitFor(() => expect(screen.getByText("v1")).toBeInTheDocument());
   return { user: result.user, result };
+}
+
+async function abrirDialogoEliminarCapitulo(user: ReturnType<typeof renderConProviders>["user"]) {
+  const preliminares = screen.getByText("Preliminares");
+  const row = preliminares.closest("div")?.parentElement?.parentElement;
+  const deleteBtn = row?.querySelector('[title="Eliminar capítulo"]');
+  await user.click(deleteBtn!);
+  return screen.findByRole("alertdialog");
 }
 
 // ─── PresupuestoPage ───
@@ -158,16 +170,42 @@ describe("PresupuestoPage", () => {
     });
   });
 
-  it("elimina un capítulo con confirmación", async () => {
+  it("eliminar un capítulo pide confirmación en un diálogo del sistema", async () => {
     const { user } = await setupPresupuestoPage();
-    expect(window.confirm).not.toHaveBeenCalled();
-    const preliminares = screen.getByText("Preliminares");
-    const row = preliminares.closest("div")?.parentElement?.parentElement;
-    const deleteBtn = row?.querySelector('[title="Eliminar capítulo"]');
-    await user.click(deleteBtn!);
+    const dialogo = await abrirDialogoEliminarCapitulo(user);
+    expect(within(dialogo).getByText(/"Preliminares"/)).toBeInTheDocument();
+  });
+
+  it("cancelar la confirmación no elimina el capítulo", async () => {
+    let deletes = 0;
+    server.use(
+      http.delete(`${API}/presupuestos/:id/capitulos/:cid`, () => {
+        deletes += 1;
+        return HttpResponse.json(presupuestoFixture);
+      }),
+    );
+    const { user } = await setupPresupuestoPage();
+    const dialogo = await abrirDialogoEliminarCapitulo(user);
+    await user.click(within(dialogo).getByRole("button", { name: "Cancelar" }));
     await waitFor(() => {
-      expect(window.confirm).toHaveBeenCalled();
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     });
+    expect(screen.getByText("Preliminares")).toBeInTheDocument();
+    expect(deletes).toBe(0);
+  });
+
+  it("confirmar la confirmación elimina el capítulo", async () => {
+    let cidEliminado = -1;
+    server.use(
+      http.delete(`${API}/presupuestos/:id/capitulos/:cid`, ({ params }) => {
+        cidEliminado = Number(params.cid);
+        return HttpResponse.json(presupuestoFixture);
+      }),
+    );
+    const { user } = await setupPresupuestoPage();
+    const dialogo = await abrirDialogoEliminarCapitulo(user);
+    await user.click(within(dialogo).getByRole("button", { name: "Eliminar" }));
+    await waitFor(() => expect(cidEliminado).toBe(10));
   });
 });
 
@@ -206,10 +244,20 @@ describe("VersionesPage", () => {
     });
   });
 
-  it("elimina una versión histórica", async () => {
+  it("elimina una versión histórica tras confirmar en el diálogo", async () => {
+    let idEliminado = -1;
+    server.use(
+      http.delete(`${API}/presupuestos/:id`, ({ params }) => {
+        idEliminado = Number(params.id);
+        return HttpResponse.json(null, { status: 204 });
+      }),
+    );
     const { user } = await setupVersionesPage();
     const deleteBtns = screen.getAllByRole("button", { name: /eliminar/i });
     await user.click(deleteBtns[0]);
+    const dialogo = await screen.findByRole("alertdialog");
+    await user.click(within(dialogo).getByRole("button", { name: "Eliminar" }));
+    await waitFor(() => expect(idEliminado).toBe(10));
   });
 
   it("no permite eliminar la versión vigente", async () => {

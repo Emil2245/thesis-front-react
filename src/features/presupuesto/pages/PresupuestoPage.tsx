@@ -14,6 +14,7 @@ import { DialogoAgregarItem } from "../components/DialogoAgregarItem";
 import { DialogoMoverCapitulo } from "../components/DialogoMoverCapitulo";
 import { ResumenComponentes } from "../components/ResumenComponentes";
 import { BannerIntegridad } from "../components/BannerIntegridad";
+import { ConfirmarDestructivo } from "@/components/comunes/ConfirmarDestructivo";
 import type { CapituloResponse } from "@/api/contract";
 
 export function PresupuestoPage() {
@@ -30,11 +31,16 @@ export function PresupuestoPage() {
   const { crear, editar, mover, eliminar } = useCapituloMutaciones(versionId);
   const { agregar, actualizarCantidad, eliminar: eliminarRubro } = useRubroMutaciones(versionId);
 
-  const [dialogo, setDialogo] = useState<{
-    type: "crear" | "editar" | "mover" | "agregar";
-    padreId?: number;
-    capitulo?: CapituloResponse;
-  } | null>(null);
+  const [dialogo, setDialogo] = useState<
+    | {
+        type: "crear" | "editar" | "mover" | "agregar";
+        padreId?: number;
+        capitulo?: CapituloResponse;
+      }
+    | { type: "eliminar-capitulo"; capitulo: CapituloResponse }
+    | { type: "eliminar-rubro"; capituloId: number; rubroId: number }
+    | null
+  >(null);
 
   const handleEditarCapitulo = useCallback((capitulo: CapituloResponse) => {
     setDialogo({ type: "editar", capitulo });
@@ -50,14 +56,9 @@ export function PresupuestoPage() {
     [editar, dialogo],
   );
 
-  const handleEliminarCapitulo = useCallback(
-    (capitulo: CapituloResponse) => {
-      if (window.confirm(`¿Eliminar capítulo "${capitulo.descripcion}" y su contenido?`)) {
-        eliminar.mutate(capitulo.id);
-      }
-    },
-    [eliminar],
-  );
+  const handleEliminarCapitulo = useCallback((capitulo: CapituloResponse) => {
+    setDialogo({ type: "eliminar-capitulo", capitulo });
+  }, []);
 
   const handleMoverCapitulo = useCallback((capitulo: CapituloResponse) => {
     setDialogo({ type: "mover", capitulo });
@@ -106,14 +107,9 @@ export function PresupuestoPage() {
     [actualizarCantidad],
   );
 
-  const handleEliminarRubro = useCallback(
-    (capituloId: number, rubroId: number) => {
-      if (window.confirm("¿Eliminar este rubro del presupuesto?")) {
-        eliminarRubro.mutate({ capituloId, rubroId });
-      }
-    },
-    [eliminarRubro],
-  );
+  const handleEliminarRubro = useCallback((capituloId: number, rubroId: number) => {
+    setDialogo({ type: "eliminar-rubro", capituloId, rubroId });
+  }, []);
 
   const optionsText = useMemo(() => {
     if (!presupuesto) return "";
@@ -213,6 +209,37 @@ export function PresupuestoPage() {
         onOpenChange={() => setDialogo(null)}
         onConfirm={handleConfirmarAgregarRubro}
         presupuestoId={versionId}
+      />
+
+      <ConfirmarDestructivo
+        abierto={dialogo?.type === "eliminar-capitulo"}
+        onAbiertoChange={(v) => {
+          if (!v) setDialogo(null);
+        }}
+        titulo="Eliminar capítulo"
+        descripcion={
+          dialogo?.type === "eliminar-capitulo"
+            ? `¿Eliminar el capítulo "${dialogo.capitulo.descripcion}" y todo su contenido? Esta acción no se puede deshacer.`
+            : ""
+        }
+        onConfirmar={() => {
+          if (dialogo?.type === "eliminar-capitulo") eliminar.mutate(dialogo.capitulo.id);
+          setDialogo(null);
+        }}
+      />
+
+      <ConfirmarDestructivo
+        abierto={dialogo?.type === "eliminar-rubro"}
+        onAbiertoChange={(v) => {
+          if (!v) setDialogo(null);
+        }}
+        titulo="Eliminar rubro"
+        descripcion="¿Eliminar este rubro del presupuesto? Esta acción no se puede deshacer."
+        onConfirmar={() => {
+          if (dialogo?.type === "eliminar-rubro")
+            eliminarRubro.mutate({ capituloId: dialogo.capituloId, rubroId: dialogo.rubroId });
+          setDialogo(null);
+        }}
       />
     </>
   );
