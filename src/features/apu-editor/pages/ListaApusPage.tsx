@@ -138,10 +138,10 @@ export function ListaApusPage() {
               <TableRow key={apu.id}>
                 <TableCell className="font-mono text-xs">{apu.codigo}</TableCell>
                 <TableCell>
-                    <Link
-                      to={`/proyectos/${proyectoId}/apus/${apu.id}`}
-                      className="text-primary underline"
-                    >
+                  <Link
+                    to={`/proyectos/${proyectoId}/apus/${apu.id}`}
+                    className="text-primary underline"
+                  >
                     {apu.descripcion}
                   </Link>
                 </TableCell>
