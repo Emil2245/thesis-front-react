@@ -368,10 +368,15 @@ function json(data: unknown) {
   };
 }
 
-async function capturar(page: import("@playwright/test").Page, nombre: string) {
+async function capturar(
+  page: import("@playwright/test").Page,
+  nombre: string,
+  testInfo: import("@playwright/test").TestInfo,
+) {
   await page.waitForTimeout(2000);
-  mkdirSync(OUT, { recursive: true });
   const buf = await page.screenshot({ fullPage: true });
+  if (testInfo.project.name !== "chromium") return;
+  mkdirSync(OUT, { recursive: true });
   writeFileSync(join(OUT, `${nombre}.png`), buf);
 }
 
@@ -404,9 +409,9 @@ async function baseAutenticado(page: import("@playwright/test").Page) {
   await page.route(`${API}/**`, (route) => route.fulfill(json({})));
   await page.route(`${API}/auth/refresh`, (route) => route.fulfill(json(token)));
   await page.route(`${API}/perfil`, (route) => route.fulfill(json(usuario)));
-  await page.route(`${API}/proyectos`, (route) => route.fulfill(json(proyectosResponse)));
-  await page.route(`${API}/proyectos/1/presupuestos`, (route) => route.fulfill(json(versiones)));
-  await page.route(`${API}/plantillas-apu`, (route) => {
+  await page.route(`${API}/proyectos*`, (route) => route.fulfill(json(proyectosResponse)));
+  await page.route(`${API}/proyectos/1/presupuestos*`, (route) => route.fulfill(json(versiones)));
+  await page.route(`${API}/plantillas-apu*`, (route) => {
     const url = new URL(route.request().url());
     const tipo = url.searchParams.get("tipo");
     if (tipo === "PERSONAL") return route.fulfill(json(plantillasPersonales));
@@ -415,7 +420,7 @@ async function baseAutenticado(page: import("@playwright/test").Page) {
   await page.addInitScript(() => localStorage.setItem("apu.refresh", "rt-test"));
 }
 
-test("01-login", async ({ page }) => {
+test("01-login", async ({ page }, testInfo) => {
   await page.route(`${API}/auth/refresh`, (route) =>
     route.fulfill({
       status: 401,
@@ -425,40 +430,40 @@ test("01-login", async ({ page }) => {
   );
   await page.addInitScript(() => localStorage.clear());
   await page.goto("/login", { waitUntil: "networkidle", timeout: 30000 });
-  await capturar(page, "01-login");
+  await capturar(page, "01-login", testInfo);
 });
 
-test("02-proyectos", async ({ page }) => {
+test("02-proyectos", async ({ page }, testInfo) => {
   await baseAutenticado(page);
   await page.goto("/proyectos", { waitUntil: "networkidle", timeout: 30000 });
-  await capturar(page, "02-proyectos");
+  await capturar(page, "02-proyectos", testInfo);
 });
 
-test("03-proyecto-detalle", async ({ page }) => {
+test("03-proyecto-detalle", async ({ page }, testInfo) => {
   await baseAutenticado(page);
   await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
-  await page.route(`${API}/proyectos/1/firmantes`, (route) => route.fulfill(json(firmantes)));
+  await page.route(`${API}/proyectos/1/firmantes*`, (route) => route.fulfill(json(firmantes)));
   await page.goto("/proyectos/1", { waitUntil: "networkidle", timeout: 30000 });
-  await capturar(page, "03-proyecto-detalle");
+  await capturar(page, "03-proyecto-detalle", testInfo);
 });
 
-test("04-parametros", async ({ page }) => {
+test("04-parametros", async ({ page }, testInfo) => {
   await baseAutenticado(page);
   await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
   await page.route(`${API}/proyectos/1/parametros`, (route) => route.fulfill(json(parametros)));
   await page.goto("/proyectos/1/parametros", { waitUntil: "networkidle", timeout: 30000 });
-  await capturar(page, "04-parametros");
+  await capturar(page, "04-parametros", testInfo);
 });
 
-test("05-insumos", async ({ page }) => {
+test("05-insumos", async ({ page }, testInfo) => {
   await baseAutenticado(page);
   await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
-  await page.route(`${API}/proyectos/1/insumos`, (route) =>
+  await page.route(`${API}/proyectos/1/insumos*`, (route) =>
     route.fulfill(
       json({ contenido: insumos, page: 0, size: 25, totalElementos: 4, totalPaginas: 1 }),
     ),
   );
-  await page.route(`${API}/bases-centrales`, (route) =>
+  await page.route(`${API}/bases-centrales*`, (route) =>
     route.fulfill(
       json([
         { id: 1, nombre: "Base IESS 2026", archivada: false, insumoCount: 93 },
@@ -467,31 +472,31 @@ test("05-insumos", async ({ page }) => {
     ),
   );
   await page.goto("/proyectos/1/insumos", { waitUntil: "networkidle", timeout: 30000 });
-  await capturar(page, "05-insumos");
+  await capturar(page, "05-insumos", testInfo);
 });
 
-test("06-apus", async ({ page }) => {
+test("06-apus", async ({ page }, testInfo) => {
   await baseAutenticado(page);
   await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
-  await page.route(`${API}/presupuestos/*/apus`, (route) =>
+  await page.route(`${API}/presupuestos/*/apus*`, (route) =>
     route.fulfill(json({ contenido: apusResumen, total: 3, pagina: 0, tamano: 20 })),
   );
   await page.goto("/proyectos/1/apus", { waitUntil: "networkidle", timeout: 30000 });
-  await capturar(page, "06-apus");
+  await capturar(page, "06-apus", testInfo);
 });
 
-test("07-apu-editor", async ({ page }) => {
+test("07-apu-editor", async ({ page }, testInfo) => {
   await baseAutenticado(page);
   await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
   await page.route(`${API}/apus/1`, (route) => route.fulfill(json(apuDetalle)));
   await page.goto("/proyectos/1/apus/1", { waitUntil: "networkidle", timeout: 30000 });
-  await capturar(page, "07-apu-editor");
+  await capturar(page, "07-apu-editor", testInfo);
 });
 
-test("08-presupuesto", async ({ page }) => {
+test("08-presupuesto", async ({ page }, testInfo) => {
   await baseAutenticado(page);
   await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
-  await page.route(`${API}/proyectos/1/presupuestos`, (route) => route.fulfill(json(versiones)));
+  await page.route(`${API}/proyectos/1/presupuestos*`, (route) => route.fulfill(json(versiones)));
   await page.route(`${API}/presupuestos/11`, (route) => route.fulfill(json(presupuesto)));
   await page.route(`${API}/presupuestos/11/resumen`, (route) =>
     route.fulfill(
@@ -521,31 +526,31 @@ test("08-presupuesto", async ({ page }) => {
     ),
   );
   await page.goto("/proyectos/1/presupuesto", { waitUntil: "networkidle", timeout: 30000 });
-  await capturar(page, "08-presupuesto");
+  await capturar(page, "08-presupuesto", testInfo);
 });
 
-test("09-versiones", async ({ page }) => {
+test("09-versiones", async ({ page }, testInfo) => {
   await baseAutenticado(page);
   await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
-  await page.route(`${API}/proyectos/1/presupuestos`, (route) => route.fulfill(json(versiones)));
+  await page.route(`${API}/proyectos/1/presupuestos*`, (route) => route.fulfill(json(versiones)));
   await page.route(`${API}/presupuestos/11`, (route) => route.fulfill(json(presupuesto)));
   await page.goto("/proyectos/1/versiones", { waitUntil: "networkidle", timeout: 30000 });
-  await capturar(page, "09-versiones");
+  await capturar(page, "09-versiones", testInfo);
 });
 
-test("10-cronograma", async ({ page }) => {
+test("10-cronograma", async ({ page }, testInfo) => {
   await baseAutenticado(page);
   await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
-  await page.route(`${API}/proyectos/1/presupuestos`, (route) => route.fulfill(json(versiones)));
+  await page.route(`${API}/proyectos/1/presupuestos*`, (route) => route.fulfill(json(versiones)));
   await page.route(`${API}/presupuestos/11/cronograma`, (route) => route.fulfill(json(cronograma)));
   await page.goto("/proyectos/1/cronograma", { waitUntil: "networkidle", timeout: 30000 });
-  await capturar(page, "10-cronograma");
+  await capturar(page, "10-cronograma", testInfo);
 });
 
-test("11-documentos", async ({ page }) => {
+test("11-documentos", async ({ page }, testInfo) => {
   await baseAutenticado(page);
   await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
-  await page.route(`${API}/proyectos/1/presupuestos`, (route) => route.fulfill(json(versiones)));
+  await page.route(`${API}/proyectos/1/presupuestos*`, (route) => route.fulfill(json(versiones)));
   await page.goto("/proyectos/1/documentos", { waitUntil: "networkidle", timeout: 30000 });
-  await capturar(page, "11-documentos");
+  await capturar(page, "11-documentos", testInfo);
 });

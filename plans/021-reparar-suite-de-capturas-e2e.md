@@ -16,6 +16,7 @@
 - **Depends on**: `plans/020-plantillas-lista-sin-snapshot.md` (arregla la captura 06; sin él, el paso 4 de este plan no puede pasar)
 - **Category**: dx
 - **Planned at**: commit `ab31892`, 2026-08-24
+- **Status**: implementado en `plan/021`, 2026-08-24. `pnpm run e2e` exit 0 (20 passed), 11 capturas de escritorio, 0 PAGE ERROR. Dos bugs de `src/` detectados y NO tapados: desbordamiento horizontal en la pagina de insumos (captura de 2239px) y `ApiError.is` reventando cuando `problem.type` es undefined (`src/api/problem.ts:52`).
 
 ## Why this matters
 

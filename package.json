@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "e2e": "playwright test",
+    "e2e:screenshots": "playwright test --project=chromium e2e/screenshots.spec.ts",
     "verify": "pnpm run typecheck && pnpm run lint && pnpm run format:check && pnpm run test && pnpm run build",
     "gen:api": "openapi-typescript ${OPENAPI_URL:-http://localhost:8080/q/openapi} -o src/api/schema.d.ts"
   },
