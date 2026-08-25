@@ -31,7 +31,7 @@ export function ComparadorVersiones({ data, isLoading }: ComparadorVersionesProp
           <span
             className={cn(
               "ml-2 inline-flex items-center",
-              difTotal >= 0 ? "text-green-600" : "text-red-600",
+              difTotal >= 0 ? "text-exito-texto" : "text-peligro-texto",
             )}
           >
             {difTotal > 0 ? (
@@ -61,7 +61,7 @@ export function ComparadorVersiones({ data, isLoading }: ComparadorVersionesProp
               <span
                 className={cn(
                   "font-mono tabular-nums w-28 text-right",
-                  dif > 0 ? "text-green-600" : dif < 0 ? "text-red-600" : "",
+                  dif > 0 ? "text-exito-texto" : dif < 0 ? "text-peligro-texto" : "",
                 )}
               >
                 {dif > 0 ? "+" : ""}

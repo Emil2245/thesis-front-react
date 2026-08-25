@@ -145,7 +145,7 @@ export function DialogoNuevoApu({
               ))}
             </div>
             {plantillaId && (
-              <p className="text-xs text-amber-600">
+              <p className="text-xs text-advertencia-texto">
                 Los valores son referenciales y deben revisarse
               </p>
             )}
