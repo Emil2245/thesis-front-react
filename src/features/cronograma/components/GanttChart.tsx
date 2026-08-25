@@ -6,13 +6,15 @@ interface GanttChartProps {
   cronograma: CronogramaResponse;
 }
 
+// Rampa monocroma: opacidades decrecientes del color de texto, así invierte
+// sola en modo oscuro y no depende de --chart-*, que son todos neutros.
 const COLORS = [
-  "bg-blue-400",
-  "bg-green-400",
-  "bg-amber-400",
-  "bg-purple-400",
-  "bg-pink-400",
-  "bg-cyan-400",
+  "bg-foreground/90",
+  "bg-foreground/75",
+  "bg-foreground/60",
+  "bg-foreground/45",
+  "bg-foreground/30",
+  "bg-foreground/15",
 ];
 
 export function GanttChart({ cronograma }: GanttChartProps) {
@@ -90,7 +92,7 @@ export function GanttChart({ cronograma }: GanttChartProps) {
                     {formatearPorcentaje(String(pct / 100) as never)}
                     <div className="inline-block ml-2 w-20 h-2.5 bg-muted rounded-sm align-middle overflow-hidden">
                       <div
-                        className="bg-green-500 h-full rounded-sm"
+                        className="bg-foreground h-full rounded-sm"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
