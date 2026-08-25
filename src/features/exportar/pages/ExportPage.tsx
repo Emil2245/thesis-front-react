@@ -111,11 +111,10 @@ export function ExportPageActiva() {
               {opcionesExport.map((op) => (
                 <TableRow key={op.key}>
                   <TableCell className="flex items-center gap-2">
-                    {/* Excepción al tema: verde/azul distinguen formato de archivo (hoja de cálculo/PDF); --chart-2..5 son neutros y borrarían la convención. */}
                     {op.key.includes("excel") ? (
-                      <FileSpreadsheet className="size-4 text-green-600" />
+                      <FileSpreadsheet className="size-4 text-muted-foreground" />
                     ) : (
-                      <FileDown className="size-4 text-blue-600" />
+                      <FileDown className="size-4 text-muted-foreground" />
                     )}
                     {op.label}
                   </TableCell>
