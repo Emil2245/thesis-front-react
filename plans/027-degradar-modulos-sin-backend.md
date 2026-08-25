@@ -13,6 +13,7 @@
 
 ## Status
 
+- **Estado**: Done — ejecutado en rama `plan/027`, commits `e9bc8c8..f65a94e`
 - **Priority**: P1
 - **Effort**: M
 - **Risk**: MED
