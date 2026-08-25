@@ -76,9 +76,7 @@ export function VersionesPageActiva() {
       <EncabezadoPagina
         titulo="Versiones del presupuesto"
         descripcion={`${versiones?.length ?? 0} versión(es)`}
-        acciones={
-          <Button onClick={() => setNuevaDialog(true)}>Nueva versión</Button>
-        }
+        acciones={<Button onClick={() => setNuevaDialog(true)}>Nueva versión</Button>}
       />
 
       {versiones && versiones.length > 0 && (
@@ -106,12 +104,20 @@ export function VersionesPageActiva() {
                     {new Date(v.fechaCreacion).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    {v.vigente ? <Badge>Vigente</Badge> : <Badge variant="outline">Histórica</Badge>}
+                    {v.vigente ? (
+                      <Badge>Vigente</Badge>
+                    ) : (
+                      <Badge variant="outline">Histórica</Badge>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       {!v.vigente && (
-                        <Button variant="outline" size="sm" onClick={() => handleMarcarVigente(v.id)}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleMarcarVigente(v.id)}
+                        >
                           Marcar vigente
                         </Button>
                       )}
@@ -119,7 +125,11 @@ export function VersionesPageActiva() {
                         Comparar
                       </Button>
                       {!v.vigente && (
-                        <Button variant="destructive" size="sm" onClick={() => handleEliminar(v.id)}>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleEliminar(v.id)}
+                        >
                           Eliminar
                         </Button>
                       )}

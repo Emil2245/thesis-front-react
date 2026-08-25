@@ -67,10 +67,7 @@ export function ExportPageActiva() {
 
   return (
     <>
-      <EncabezadoPagina
-        titulo="Exportar"
-        descripcion="Descargue documentos del presupuesto"
-      />
+      <EncabezadoPagina titulo="Exportar" descripcion="Descargue documentos del presupuesto" />
 
       {valLoading && (
         <div className="flex justify-center py-8">
