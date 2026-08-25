@@ -70,7 +70,7 @@ describe("PieTotales", () => {
     expect(screen.getByText("Valor propio")).toBeInTheDocument();
   });
 
-  it("muestra botones Descuento y Desglose", () => {
+  it("muestra botones Descuento y Desglose deshabilitados (sin endpoint en el backend)", () => {
     renderConProviders(
       <PieTotales
         apu={apuDetalleFixture}
@@ -79,7 +79,7 @@ describe("PieTotales", () => {
         onAbrirDesglose={() => {}}
       />,
     );
-    expect(screen.getByText("Descuento")).toBeInTheDocument();
-    expect(screen.getByText("Desglose")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /descuento/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /desglose/i })).toBeDisabled();
   });
 });
