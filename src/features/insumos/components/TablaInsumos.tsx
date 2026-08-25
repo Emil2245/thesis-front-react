@@ -19,6 +19,7 @@ import { CargandoTabla } from "@/components/comunes/CargandoTabla";
 import { EstadoVacio } from "@/components/comunes/EstadoVacio";
 import { ConfirmarDestructivo } from "@/components/comunes/ConfirmarDestructivo";
 import { Moneda } from "@/components/comunes/Moneda";
+import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -315,7 +316,15 @@ export function TablaInsumos({ proyectoId }: { proyectoId: number }) {
               }
             />
           ) : (
-            <>
+            <TarjetaTabla
+              pie={
+                data.totalPaginas > 1 ? (
+                  <span>
+                    Página {data.page + 1} de {data.totalPaginas} ({data.totalElementos} total)
+                  </span>
+                ) : undefined
+              }
+            >
               <Table>
                 <TableHeader>
                   {table.getHeaderGroups().map((hg) => (
@@ -355,43 +364,38 @@ export function TablaInsumos({ proyectoId }: { proyectoId: number }) {
               </Table>
 
               {data.totalPaginas > 1 && (
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    Página {data.page + 1} de {data.totalPaginas} ({data.totalElementos} total)
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page === 0}
-                      onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    >
-                      Anterior
-                    </Button>
-                    <Select value={String(page)} onValueChange={(v) => setPage(Number(v))}>
-                      <SelectTrigger className="w-20">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: data.totalPaginas }, (_, i) => (
-                          <SelectItem key={i} value={String(i)}>
-                            {i + 1}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page >= data.totalPaginas - 1}
-                      onClick={() => setPage((p) => Math.min(data.totalPaginas - 1, p + 1))}
-                    >
-                      Siguiente
-                    </Button>
-                  </div>
+                <div className="flex items-center justify-end gap-2 border-t px-4 py-2.5">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === 0}
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  >
+                    Anterior
+                  </Button>
+                  <Select value={String(page)} onValueChange={(v) => setPage(Number(v))}>
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: data.totalPaginas }, (_, i) => (
+                        <SelectItem key={i} value={String(i)}>
+                          {i + 1}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= data.totalPaginas - 1}
+                    onClick={() => setPage((p) => Math.min(data.totalPaginas - 1, p + 1))}
+                  >
+                    Siguiente
+                  </Button>
                 </div>
               )}
-            </>
+            </TarjetaTabla>
           )}
         </TabsContent>
       </Tabs>
