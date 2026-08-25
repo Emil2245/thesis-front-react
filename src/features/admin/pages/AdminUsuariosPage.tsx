@@ -33,6 +33,7 @@ import {
 } from "../hooks/useAdminUsuarios";
 import { CargandoTabla } from "@/components/comunes/CargandoTabla";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
+import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
 import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
 import { PlusIcon, Trash2Icon, RotateCcwIcon } from "lucide-react";
 
@@ -64,62 +65,66 @@ export function AdminUsuariosPageActiva() {
   if (isPending) return <CargandoTabla />;
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Usuarios</h1>
-        <Button onClick={() => setDialogAbierto(true)}>
-          <PlusIcon /> Invitar
-        </Button>
-      </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nombre</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Rol</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead>Verificado</TableHead>
-            <TableHead className="w-24 text-right">Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data?.contenido.map((u) => (
-            <TableRow key={u.id}>
-              <TableCell>{u.nombre}</TableCell>
-              <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
-              <TableCell>
-                <Badge variant={u.rol === "SUPER_ADMIN" ? "default" : "outline"}>{u.rol}</Badge>
-              </TableCell>
-              <TableCell>
-                {u.activo ? <Badge>Activo</Badge> : <Badge variant="destructive">Inactivo</Badge>}
-              </TableCell>
-              <TableCell>
-                {u.emailVerificado ? (
-                  <Badge variant="outline">Sí</Badge>
-                ) : (
-                  <Badge variant="secondary">No</Badge>
-                )}
-              </TableCell>
-              <TableCell className="text-right">
-                {u.activo ? (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive"
-                    onClick={() => eliminar.mutate(u.id)}
-                  >
-                    <Trash2Icon className="size-4" />
-                  </Button>
-                ) : (
-                  <Button variant="ghost" size="icon" onClick={() => restaurar.mutate(u.id)}>
-                    <RotateCcwIcon className="size-4" />
-                  </Button>
-                )}
-              </TableCell>
+    <>
+      <EncabezadoPagina
+        titulo="Usuarios"
+        acciones={
+          <Button onClick={() => setDialogAbierto(true)}>
+            <PlusIcon data-icon="inline-start" /> Invitar
+          </Button>
+        }
+      />
+      <TarjetaTabla>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nombre</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Rol</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead>Verificado</TableHead>
+              <TableHead className="w-24 text-right">Acciones</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {data?.contenido.map((u) => (
+              <TableRow key={u.id}>
+                <TableCell>{u.nombre}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
+                <TableCell>
+                  <Badge variant={u.rol === "SUPER_ADMIN" ? "default" : "outline"}>{u.rol}</Badge>
+                </TableCell>
+                <TableCell>
+                  {u.activo ? <Badge>Activo</Badge> : <Badge variant="destructive">Inactivo</Badge>}
+                </TableCell>
+                <TableCell>
+                  {u.emailVerificado ? (
+                    <Badge variant="outline">Sí</Badge>
+                  ) : (
+                    <Badge variant="secondary">No</Badge>
+                  )}
+                </TableCell>
+                <TableCell className="text-right">
+                  {u.activo ? (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() => eliminar.mutate(u.id)}
+                    >
+                      <Trash2Icon className="size-4" />
+                    </Button>
+                  ) : (
+                    <Button variant="ghost" size="icon" onClick={() => restaurar.mutate(u.id)}>
+                      <RotateCcwIcon className="size-4" />
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TarjetaTabla>
 
       <Dialog open={dialogAbierto} onOpenChange={setDialogAbierto}>
         <DialogContent>
@@ -169,6 +174,6 @@ export function AdminUsuariosPageActiva() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
