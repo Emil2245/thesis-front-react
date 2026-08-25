@@ -11,9 +11,26 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAdminLogs } from "../hooks/useAdminLogs";
+import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
+import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
 import { SearchIcon } from "lucide-react";
 
+// El backend no tiene /admin/logs todavía (plan 027). Para reactivar: borra
+// este bloque, quita "admin" de MODULOS_SIN_BACKEND (si ya no aplica al resto
+// del grupo) y exporta AdminLogsPageActiva como AdminLogsPage.
 export function AdminLogsPage() {
+  return (
+    <>
+      <EncabezadoPagina titulo="Registro de actividades" />
+      <ModuloNoDisponible
+        modulo="El registro de actividades"
+        descripcion="El servidor todavía no expone el registro de actividades del sistema. La pantalla está construida y se activará cuando el endpoint exista."
+      />
+    </>
+  );
+}
+
+export function AdminLogsPageActiva() {
   const [filtroEvento, setFiltroEvento] = useState("");
   const { data, isPending } = useAdminLogs(filtroEvento ? { evento: filtroEvento } : undefined);
 
