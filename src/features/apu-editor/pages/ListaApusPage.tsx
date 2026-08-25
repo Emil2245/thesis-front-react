@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { useVersionActiva, useProyectoActivoId } from "@/shell/contexto";
 import { useApus, useEliminarApu, useDuplicarApu } from "../hooks/useApus";
 import { DialogoNuevoApu } from "../components/DialogoNuevoApu";
 import { BadgeAuxiliar } from "../components/BadgeAuxiliar";
@@ -38,8 +39,11 @@ import { toast } from "sonner";
 import { ApiError } from "@/api/problem";
 
 export function ListaApusPage() {
-  const { id } = useParams<{ id: string }>();
-  const presupuestoId = Number(id);
+  // La versión la manda el selector de la barra superior; el id de ruta es del
+  // proyecto y solo se usa para las URLs de navegación.
+  const proyectoId = useProyectoActivoId();
+  const { presupuestoId: versionActiva } = useVersionActiva();
+  const presupuestoId = versionActiva ?? 0;
   const navigate = useNavigate();
 
   const [q, setQ] = useState("");
@@ -65,6 +69,15 @@ export function ListaApusPage() {
       }
     }
   };
+
+  if (!presupuestoId) {
+    return (
+      <EstadoVacio
+        titulo="Sin versión seleccionada"
+        descripcion="Elige una versión en la barra superior para ver sus APUs."
+      />
+    );
+  }
 
   if (isPending) return <CargandoTabla />;
 
@@ -125,10 +138,10 @@ export function ListaApusPage() {
               <TableRow key={apu.id}>
                 <TableCell className="font-mono text-xs">{apu.codigo}</TableCell>
                 <TableCell>
-                  <Link
-                    to={`/proyectos/${presupuestoId}/apus/${apu.id}`}
-                    className="text-primary underline"
-                  >
+                    <Link
+                      to={`/proyectos/${proyectoId}/apus/${apu.id}`}
+                      className="text-primary underline"
+                    >
                     {apu.descripcion}
                   </Link>
                 </TableCell>
@@ -150,7 +163,7 @@ export function ListaApusPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem
-                        onClick={() => navigate(`/proyectos/${presupuestoId}/apus/${apu.id}`)}
+                        onClick={() => navigate(`/proyectos/${proyectoId}/apus/${apu.id}`)}
                       >
                         <ExternalLinkIcon /> Abrir
                       </DropdownMenuItem>
@@ -185,10 +198,10 @@ export function ListaApusPage() {
         abierto={crearAbierto}
         onClose={() => setCrearAbierto(false)}
         presupuestoId={presupuestoId}
-        proyectoId={presupuestoId}
+        proyectoId={proyectoId ?? 0}
         onCreate={(apuId) => {
           setCrearAbierto(false);
-          navigate(`/proyectos/${presupuestoId}/apus/${apuId}`);
+          navigate(`/proyectos/${proyectoId}/apus/${apuId}`);
         }}
       />
     </div>
