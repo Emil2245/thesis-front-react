@@ -27,3 +27,18 @@ Rutas anidadas (ej. `/proyectos/1/versiones/2/apus`). Se descartó porque:
 
 - `contexto.ts` — `useProyectoActivoId`, `useVersiones`, `useVersionActiva`.
 - `useVersionActiva` es el hook único para toda la app. Ningún feature module debe leer `?v=` directamente.
+  La corrección de un `?v=` inválido vive en un `useEffect`, no en el cuerpo del
+  render: hacerlo durante el render dispara un `setState` de otro componente.
+- Las pantallas de APU toman el `presupuestoId` de este hook, **nunca** del `:id`
+  de la ruta — ese id es el del proyecto, y usarlo como versión devolvía los APUs
+  de otro presupuesto con aspecto de correctos (plan 019).
+
+## Rail lateral
+
+`<Sidebar collapsible="icon">`: al plegarlo quedan los iconos, no desaparece.
+Por eso cada entrada lleva `tooltip` — es el único rótulo que queda plegado — y
+la insignia "pronto" de los módulos sin backend se oculta en ese estado.
+
+El padding y el espaciado de página los pone el shell (`main` con
+`flex flex-col gap-5 p-6`), no cada página: las páginas devuelven un fragmento
+con `EncabezadoPagina` y su contenido, sin `p-6` ni `space-y-*`.

@@ -75,11 +75,11 @@ Each plan is written for an executor with **zero context from the session that p
 
 ### Segunda tanda — auditoría posterior al rediseño de UI (2026-08-24)
 
-Escritos contra `ab31892` **más el rediseño de UI que aún está sin commitear en
-el árbol de trabajo**: `src/shell/*`, `src/index.css`, `ChipEstado`,
-`ListaProyectosPage`, `ResumenProyectoPage`, el editor de APU, `PresupuestoPage`
-y los dos primitivos nuevos `EncabezadoPagina` / `TarjetaTabla`. Los drift checks
-de estos planes comparan contra los extractos inlineados, no contra `ab31892`.
+**Los nueve planes están integrados en `main`** (reconciliado 2026-08-25). El
+rediseño de UI que estaba sin commitear se consolidó primero en `067f116`; a
+partir de ahí cada plan fue a su rama, se revisó su diff y se mergeó de uno en
+uno. Baseline al cerrar: **197 tests en 43 archivos** y `pnpm run e2e` en verde
+(20 passed), frente a los 172/42 del arranque.
 
 | Plan | Título | Prioridad | Esfuerzo | Depende de | Estado |
 |---|---|---|---|---|---|
@@ -92,6 +92,30 @@ de estos planes comparan contra los extractos inlineados, no contra `ab31892`.
 | 025 | [Colores crudos de Tailwind → tokens del tema](025-colores-crudos-a-tokens-del-tema.md) | P3 | S | — | DONE (`346294f`) |
 | 026 | [Alinear el módulo APU con el backend real](026-alinear-modulo-apu-con-el-backend-real.md) | P1 | M | — | DONE (`73d4606`) |
 | 027 | [Degradar los módulos sin backend](027-degradar-modulos-sin-backend.md) | P1 | M | 019 | DONE (`2862321`) |
+
+### Trabajo fuera de plan (2026-08-25)
+
+Surgió al revisar los diffs y las capturas; no tenía plan propio porque se
+descubrió durante la integración. Todo mergeado y verificado.
+
+| Cambio | Merge | Por qué |
+|---|---|---|
+| El selector de estado mostraba un trigger en blanco | `7df50b3` | `SelectItem value=""` hace que Radix considere que hay selección y no pinte el placeholder. Introducido por el plan 022 |
+| `ApiError.slug` reventaba con `problem.type` ausente | `7df50b3` | `request.ts` castea sin validar: un `{}` del servidor llegaba al getter. Guarda en el getter, que es por donde pasan todos los llamadores |
+| Tema neutro: fuera el azul de marca | `346294f`+ | `--primary`, `--ring` y `--chart-1` compartían el mismo azul; el Gantt usaba seis colores crudos. Ahora rampa monocroma de `bg-foreground`, que invierte sola en oscuro |
+| Concordancia en los avisos de módulo no disponible | `d6ba212` | `ModuloNoDisponible` conjuga en singular y cuatro pantallas le pasaban un nombre en plural |
+| El rail se minimiza a iconos en vez de esconderse | `6a65c0c` | `<Sidebar>` estaba en el modo `offcanvas` por defecto. Ahora `collapsible="icon"` + `tooltip` en cada entrada |
+| **`Tabs` desbordaba en horizontal** | `6a65c0c` | El componente emite `data-orientation` pero sus clases apuntan a `data-horizontal`: `flex-col` no se aplicaba **nunca**. La página de insumos salía a 2239 px en vez de 1280. Afectaba también a `DialogoNuevoApu` y a los filtros de `TablaInsumos`. Verificado en el CSS compilado: `data-orientation` no aparecía ni una vez |
+
+El último es una **divergencia deliberada del registro de shadcn** — `tabs.tsx`
+era idéntico al upstream, así que el fallo viene de allí. Está comentado en el
+archivo: una futura actualización del componente lo pisaría.
+
+> **Trampa de diagnóstico, documentada porque costó dos rondas**:
+> `playwright.config.ts` usa `reuseExistingServer`, así que un `vite` levantado
+> de antes sirve el bundle obsoleto y produce mediciones falsas. Si el
+> comportamiento viejo persiste tras un cambio, mata el dev server antes de
+> concluir nada.
 
 **Orden recomendado si van en serie**: 019 → 020 → 021 → 023 → 022 → 025 → 024.
 Los dos primeros son bugs de correctitud y no dependen de nada. 021 necesita 020
@@ -133,15 +157,22 @@ backend —que **sí** está implementado, con su motor de cálculo— es inalca
 desde la interfaz. `Apu.presupuestoId` es una columna `Long` que apunta a una
 tabla sin entidad ni recurso propietario.
 
-Dos consecuencias que ya son bugs vivos, no futuros:
+Los dos bugs vivos que registraba esta sección **están cerrados** (2026-08-25):
 
 - El backend serializa `BigDecimal` como **número JSON** (`JacksonConfig` solo
   registra `JsonNullableModule`; no hay `WRITE_BIGDECIMAL_AS_PLAIN`). El módulo
-  APU sigue tipándolos como strings `Decimal`, y `esCero()` hace `valor.trim()`:
-  abrir cualquier APU contra el backend real lanza `TypeError`. → plan 026.
-- `ListaApusPage` y `EditorApuPage` pasan el id del **proyecto** a
-  `/presupuestos/{id}/apus`, que existe y responde: devuelven APUs de otro
-  presupuesto con aspecto de correctos. → plan 019.
+  APU los tipaba como strings `Decimal` y `esCero()` hacía `valor.trim()`.
+  **Resuelto por el plan 026**: los DTOs del APU declaran `number` y `esCero`
+  lleva guarda de tipo. `cdAjustado` se borró en vez de recalcularse.
+- `ListaApusPage` y `EditorApuPage` pasaban el id del **proyecto** a
+  `/presupuestos/{id}/apus`. **Resuelto por el plan 019**: ambas toman el
+  `presupuestoId` de `useVersionActiva()` y degradan a un estado vacío explícito
+  cuando no hay versión seleccionada.
+
+El frontend ya no finge tener backend donde no lo hay: el plan 027 introdujo
+`src/lib/disponibilidad.ts` como inventario único, y las pantallas sin servidor
+muestran `ModuloNoDisponible` conservando su implementación como
+`<Nombre>PageActiva`. El rail lateral las marca con "pronto".
 
 ### Ejecución en paralelo
 
@@ -315,6 +346,14 @@ un arreglo obvio.
    plan 025 limpia. Definir una rampa categórica de 4–5 tonos en oklch, con
    croma y luminosidad constantes variando el matiz, es trabajo de diseño de
    media hora que evita el problema antes de que aparezca.
+
+   **Actualización 2026-08-25**: ahora es más apremiante. El tema pasó a neutro
+   (sin azul de marca), así que `--chart-1` también perdió su croma: la rampa
+   entera es gris. `GanttChart` se resolvió con opacidades decrecientes de
+   `bg-foreground` — funciona para barras apiladas y tiene la ventaja de
+   invertir sola en modo oscuro, pero no distingue categorías. La decisión
+   pendiente es si el tema neutro admite una rampa categórica con croma o si
+   las visualizaciones se quedan monocromas por diseño.
 
 ## Conventions every plan assumes
 
