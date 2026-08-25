@@ -33,6 +33,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { MOTIVO_SIN_BACKEND } from "@/lib/disponibilidad";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -238,11 +240,19 @@ export function ListaProyectosPage() {
                       <DropdownMenuItem onClick={() => navigate(`/proyectos/${p.id}`)}>
                         <ExternalLinkIcon /> Abrir
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => navigate(`/proyectos/${p.id}?duplicar=true`)}
-                      >
-                        <CopyIcon /> Duplicar
-                      </DropdownMenuItem>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>
+                            <DropdownMenuItem
+                              disabled
+                              onClick={() => navigate(`/proyectos/${p.id}?duplicar=true`)}
+                            >
+                              <CopyIcon /> Duplicar
+                            </DropdownMenuItem>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>{MOTIVO_SIN_BACKEND}</TooltipContent>
+                      </Tooltip>
                       <ConfirmarDestructivo
                         titulo="Eliminar proyecto"
                         descripcion={`¿Eliminar "${p.nombreProyecto}"? Esta acción no se puede deshacer.`}

@@ -24,10 +24,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TriangleAlertIcon, PencilIcon, CopyIcon, Trash2Icon, PercentIcon } from "lucide-react";
 import { MoreHorizontalIcon } from "lucide-react";
 import { DialogoDescuentoGlobal } from "../components/DialogoDescuentoGlobal";
 import { useVersionActiva } from "@/shell/contexto";
+import { MOTIVO_SIN_BACKEND } from "@/lib/disponibilidad";
 import { usePresupuesto, useResumen } from "@/features/presupuesto/hooks/usePresupuesto";
 import { formatearPorcentaje } from "@/lib/decimal";
 import type { Decimal } from "@/lib/decimal";
@@ -89,11 +91,19 @@ export function ResumenProyectoPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuItem
-                  onClick={() => navigate(`/proyectos/${proyectoId}?duplicar=true`)}
-                >
-                  <CopyIcon /> Duplicar
-                </DropdownMenuItem>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <DropdownMenuItem
+                        disabled
+                        onClick={() => navigate(`/proyectos/${proyectoId}?duplicar=true`)}
+                      >
+                        <CopyIcon /> Duplicar
+                      </DropdownMenuItem>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>{MOTIVO_SIN_BACKEND}</TooltipContent>
+                </Tooltip>
                 <DropdownMenuItem onClick={() => setDescuentoAbierto(true)}>
                   <PercentIcon /> Descuento global
                 </DropdownMenuItem>
