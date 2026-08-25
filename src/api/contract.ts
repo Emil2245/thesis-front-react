@@ -281,13 +281,13 @@ export interface ApuDetalleResponse {
   esHerramientaMenor: boolean;
   insumoId?: number | null;
   apuAuxiliarId?: number | null;
-  cantidad?: Decimal | null;
-  rendimiento?: Decimal | null;
+  cantidad?: number | null;
+  rendimiento?: number | null;
   unidad?: string | null;
-  precioEfectivo: Decimal;
+  precioEfectivo: number;
   precioHeredado: boolean;
-  costoHora?: Decimal | null;
-  costo: Decimal;
+  costoHora?: number | null;
+  costo: number;
 }
 
 export interface ApuResponse {
@@ -296,18 +296,16 @@ export interface ApuResponse {
   descripcion: string;
   unidad: string;
   esAuxiliar: boolean;
-  costoDirecto: Decimal;
-  costoTotal: Decimal;
-  vinculado: boolean;
-  porcentajeIndirecto?: Decimal | null;
-  porcentajeIndirectoEfectivo: Decimal;
-  porcentajeDescuento: Decimal;
-  cdAjustado: Decimal;
-  costoIndirecto: Decimal;
+  costoDirecto: number;
+  costoTotal: number;
+  porcentajeIndirecto?: number | null;
+  porcentajeIndirectoEfectivo: number;
+  porcentajeDescuento: number;
+  costoIndirecto: number;
   secciones: Array<{
     tipo: SeccionTipo;
     orden: number;
-    subtotal: Decimal;
+    subtotal: number;
     detalles: ApuDetalleResponse[];
   }>;
 }
@@ -318,8 +316,8 @@ export interface ApuResumenResponse {
   descripcion: string;
   unidad: string;
   esAuxiliar: boolean;
-  costoDirecto: Decimal;
-  costoTotal: Decimal;
+  costoDirecto: number;
+  costoTotal: number;
   vinculado: boolean;
 }
 
