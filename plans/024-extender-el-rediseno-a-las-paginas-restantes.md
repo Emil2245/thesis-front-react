@@ -18,6 +18,7 @@
 - **Depends on**: ninguno técnico. Ejecutar **después** de 019 y 020 si van en paralelo: aquellos tocan `ListaApusPage` y `CronogramaPage`, que también están aquí.
 - **Category**: tech-debt
 - **Planned at**: commit `ab31892` + rediseño de UI sin commitear, 2026-08-24
+- **Status**: implementado en `plan/024`, 2026-08-24. Trece paginas migradas a EncabezadoPagina (+TarjetaTabla donde hay tabla), cero `p-6` en src/features, 11 capturas regeneradas sin PAGE ERROR.
 
 ## Why this matters
 
