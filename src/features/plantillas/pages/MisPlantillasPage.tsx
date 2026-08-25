@@ -27,6 +27,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
+import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
 import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
 import { EyeIcon, PencilIcon, Trash2Icon, SaveIcon, XIcon } from "lucide-react";
 
@@ -38,7 +39,7 @@ export function MisPlantillasPage() {
     <>
       <EncabezadoPagina titulo="Mis plantillas" />
       <ModuloNoDisponible
-        modulo="Las plantillas de APU"
+        modulo="La biblioteca de plantillas de APU"
         descripcion="El servidor todavía no expone las plantillas de APU. La pantalla está construida y se activará cuando el endpoint exista."
       />
     </>
@@ -69,8 +70,8 @@ export function MisPlantillasPageActiva() {
   if (isPending) return <CargandoTabla />;
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Mis plantillas</h1>
+    <>
+      <EncabezadoPagina titulo="Mis plantillas" />
 
       {!plantillas?.length ? (
         <EstadoVacio
@@ -78,90 +79,92 @@ export function MisPlantillasPageActiva() {
           descripcion="Guarda un APU como plantilla desde el editor para verlo aquí."
         />
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Descripción</TableHead>
-              <TableHead>Fecha</TableHead>
-              <TableHead className="w-24" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {plantillas.map((p) => (
-              <TableRow key={p.id}>
-                <TableCell className="font-medium">
-                  {renombrarId === p.id ? (
-                    <div className="flex items-center gap-1">
-                      <Input
-                        className="h-7 text-xs"
-                        value={nuevoNombre}
-                        onChange={(e) => setNuevoNombre(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleRenombrar();
-                          if (e.key === "Escape") {
+        <TarjetaTabla>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Descripción</TableHead>
+                <TableHead>Fecha</TableHead>
+                <TableHead className="w-24" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {plantillas.map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell className="font-medium">
+                    {renombrarId === p.id ? (
+                      <div className="flex items-center gap-1">
+                        <Input
+                          className="h-7 text-xs"
+                          value={nuevoNombre}
+                          onChange={(e) => setNuevoNombre(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleRenombrar();
+                            if (e.key === "Escape") {
+                              setRenombrarId(0);
+                              setNuevoNombre("");
+                            }
+                          }}
+                          // oxlint-disable-next-line jsx-a11y/no-autofocus -- inline rename triggered by user click
+                          autoFocus
+                        />
+                        <Button variant="ghost" size="icon-sm" onClick={handleRenombrar}>
+                          <SaveIcon />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => {
                             setRenombrarId(0);
                             setNuevoNombre("");
-                          }
-                        }}
-                        // oxlint-disable-next-line jsx-a11y/no-autofocus -- inline rename triggered by user click
-                        autoFocus
-                      />
-                      <Button variant="ghost" size="icon-sm" onClick={handleRenombrar}>
-                        <SaveIcon className="size-3" />
+                          }}
+                        >
+                          <XIcon />
+                        </Button>
+                      </div>
+                    ) : (
+                      p.nombre
+                    )}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {p.descripcion ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {new Date(p.fechaCreacion).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon-sm" onClick={() => setPreviewId(p.id)}>
+                        <EyeIcon />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon-sm"
                         onClick={() => {
-                          setRenombrarId(0);
-                          setNuevoNombre("");
+                          setRenombrarId(p.id);
+                          setNuevoNombre(p.nombre);
                         }}
                       >
-                        <XIcon className="size-3" />
+                        <PencilIcon />
                       </Button>
+                      <ConfirmarDestructivo
+                        titulo="Eliminar plantilla"
+                        descripcion={`¿Eliminar "${p.nombre}"? No afecta a los APUs ya creados.`}
+                        textoConfirmar="Eliminar"
+                        onConfirmar={() => eliminar.mutate(p.id)}
+                      >
+                        <Button variant="ghost" size="icon-sm" className="text-destructive">
+                          <Trash2Icon />
+                        </Button>
+                      </ConfirmarDestructivo>
                     </div>
-                  ) : (
-                    p.nombre
-                  )}
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {p.descripcion ?? "—"}
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {new Date(p.fechaCreacion).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon-sm" onClick={() => setPreviewId(p.id)}>
-                      <EyeIcon className="size-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => {
-                        setRenombrarId(p.id);
-                        setNuevoNombre(p.nombre);
-                      }}
-                    >
-                      <PencilIcon className="size-3" />
-                    </Button>
-                    <ConfirmarDestructivo
-                      titulo="Eliminar plantilla"
-                      descripcion={`¿Eliminar "${p.nombre}"? No afecta a los APUs ya creados.`}
-                      textoConfirmar="Eliminar"
-                      onConfirmar={() => eliminar.mutate(p.id)}
-                    >
-                      <Button variant="ghost" size="icon-sm" className="text-destructive">
-                        <Trash2Icon className="size-3" />
-                      </Button>
-                    </ConfirmarDestructivo>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TarjetaTabla>
       )}
 
       <Dialog open={previewId > 0} onOpenChange={(o) => !o && setPreviewId(0)}>
@@ -197,6 +200,6 @@ export function MisPlantillasPageActiva() {
           <DialogFooter showCloseButton />
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

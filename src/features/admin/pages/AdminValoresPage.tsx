@@ -24,7 +24,7 @@ export function AdminValoresPage() {
     <>
       <EncabezadoPagina titulo="Valores de referencia" />
       <ModuloNoDisponible
-        modulo="Los valores de referencia"
+        modulo="La tabla de valores de referencia"
         descripcion="El servidor todavía no expone los valores de referencia del sistema. La pantalla está construida y se activará cuando el endpoint exista."
       />
     </>
@@ -38,15 +38,15 @@ export function AdminValoresPageActiva() {
 
   if (isLoading)
     return (
-      <div className="p-6 space-y-4">
+      <>
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-64" />
-      </div>
+      </>
     );
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-xl font-semibold">Valores de referencia</h1>
+    <>
+      <EncabezadoPagina titulo="Valores de referencia" />
       <Card>
         <CardHeader>
           <CardTitle>Parámetros configurables</CardTitle>
@@ -98,6 +98,6 @@ export function AdminValoresPageActiva() {
           </Table>
         </CardContent>
       </Card>
-    </div>
+    </>
   );
 }

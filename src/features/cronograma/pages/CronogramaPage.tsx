@@ -75,36 +75,36 @@ export function CronogramaPageActiva() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-4">
+      <>
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-96" />
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Cronograma</h1>
-          <p className="text-sm text-muted-foreground">
-            {cronograma
-              ? `${cronograma.numeroPeriodos} períodos (${cronograma.unidadTiempo.toLowerCase()})`
-              : "No configurado"}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <BadgeDesactualizado desactualizado={cronograma?.desactualizado ?? false} />
-          {cronograma && (
-            <Button variant="outline" onClick={() => revisar()}>
-              Revisar
+    <>
+      <EncabezadoPagina
+        titulo="Cronograma"
+        descripcion={
+          cronograma
+            ? `${cronograma.numeroPeriodos} períodos (${cronograma.unidadTiempo.toLowerCase()})`
+            : "No configurado"
+        }
+        insignia={<BadgeDesactualizado desactualizado={cronograma?.desactualizado ?? false} />}
+        acciones={
+          <>
+            {cronograma && (
+              <Button variant="outline" onClick={() => revisar()}>
+                Revisar
+              </Button>
+            )}
+            <Button onClick={() => setConfigDialog(true)}>
+              {cronograma ? "Reconfigurar" : "Crear cronograma"}
             </Button>
-          )}
-          <Button onClick={() => setConfigDialog(true)}>
-            {cronograma ? "Reconfigurar" : "Crear cronograma"}
-          </Button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {!cronograma && (
         <div className="text-center py-16 text-muted-foreground">
@@ -151,6 +151,6 @@ export function CronogramaPageActiva() {
         }
         numeroPeriodos={cronograma?.numeroPeriodos ?? 1}
       />
-    </div>
+    </>
   );
 }

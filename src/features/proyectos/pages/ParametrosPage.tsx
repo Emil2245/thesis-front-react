@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { parametrosSchema } from "../schemas";
 import { useParametros, useActualizarParametros } from "../hooks/useParametros";
 import { CargandoTabla } from "@/components/comunes/CargandoTabla";
+import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldError } from "@/components/ui/field";
@@ -81,8 +82,8 @@ export function ParametrosPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-semibold">Parámetros del proyecto</h1>
+    <>
+      <EncabezadoPagina titulo="Parámetros del proyecto" />
 
       <Alert>
         <TriangleAlertIcon />
@@ -210,6 +211,6 @@ export function ParametrosPage() {
           </Button>
         </div>
       </div>
-    </div>
+    </>
   );
 }
