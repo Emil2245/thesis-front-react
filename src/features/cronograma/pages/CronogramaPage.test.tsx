@@ -4,7 +4,7 @@ import { renderConProviders } from "@/test/render";
 import { Route, Routes } from "react-router-dom";
 import { useSesionStore } from "@/features/auth/sesion";
 import { usuarioFixture } from "@/test/fixtures/auth";
-import { CronogramaPage } from "../pages/CronogramaPage";
+import { CronogramaPage, CronogramaPageActiva } from "../pages/CronogramaPage";
 
 beforeEach(() => {
   useSesionStore.setState({ usuario: usuarioFixture, cargando: false });
@@ -13,7 +13,7 @@ beforeEach(() => {
 async function setupCronogramaPage(version = "11") {
   const result = renderConProviders(
     <Routes>
-      <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
+      <Route path="/proyectos/:id/cronograma" element={<CronogramaPageActiva />} />
     </Routes>,
     { ruta: `/proyectos/1/cronograma?v=${version}` },
   );
@@ -24,11 +24,16 @@ async function setupCronogramaPage(version = "11") {
   return { user: result.user };
 }
 
-describe("CronogramaPage", () => {
+// El backend no expone /presupuestos/{id}/cronograma todavía (plan 027): la
+// ruta real muestra CronogramaPage, que degrada a "todavía no disponible" sin
+// llamar al backend (ver más abajo). CronogramaPageActiva es la
+// implementación completa, conservada para reactivarla cuando el endpoint
+// exista: estos tests siguen probándola directamente.
+describe("CronogramaPageActiva", () => {
   it("muestra estado vacío cuando no hay cronograma", async () => {
     renderConProviders(
       <Routes>
-        <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
+        <Route path="/proyectos/:id/cronograma" element={<CronogramaPageActiva />} />
       </Routes>,
       { ruta: "/proyectos/1/cronograma?v=999" },
     );
@@ -87,5 +92,23 @@ describe("CronogramaPage", () => {
   it("no muestra BadgeDesactualizado cuando está actualizado", async () => {
     await setupCronogramaPage();
     expect(screen.queryByText("Desactualizado")).not.toBeInTheDocument();
+  });
+});
+
+describe("CronogramaPage", () => {
+  it("explica que el módulo todavía no está disponible, sin pedir el cronograma al backend", async () => {
+    // MSW está configurado con onUnhandledRequest: "error": si esta pantalla
+    // llamara al hook real, el test fallaría por la petición no mockeada.
+    renderConProviders(
+      <Routes>
+        <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
+      </Routes>,
+      { ruta: "/proyectos/1/cronograma?v=11" },
+    );
+
+    expect(screen.getByText("Cronograma")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/todavía no está disponible/i)).toBeInTheDocument();
+    });
   });
 });
