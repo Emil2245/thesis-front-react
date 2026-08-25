@@ -28,7 +28,7 @@ export function AdminPlantillasPage() {
     <>
       <EncabezadoPagina titulo="Plantillas del sistema" />
       <ModuloNoDisponible
-        modulo="Las plantillas del sistema"
+        modulo="La gestión de plantillas del sistema"
         descripcion="El servidor todavía no expone las plantillas de sistema. La pantalla está construida y se activará cuando el endpoint exista."
       />
     </>

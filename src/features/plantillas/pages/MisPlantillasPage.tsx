@@ -39,7 +39,7 @@ export function MisPlantillasPage() {
     <>
       <EncabezadoPagina titulo="Mis plantillas" />
       <ModuloNoDisponible
-        modulo="Las plantillas de APU"
+        modulo="La biblioteca de plantillas de APU"
         descripcion="El servidor todavía no expone las plantillas de APU. La pantalla está construida y se activará cuando el endpoint exista."
       />
     </>

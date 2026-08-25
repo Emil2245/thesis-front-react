@@ -24,7 +24,7 @@ export function AdminValoresPage() {
     <>
       <EncabezadoPagina titulo="Valores de referencia" />
       <ModuloNoDisponible
-        modulo="Los valores de referencia"
+        modulo="La tabla de valores de referencia"
         descripcion="El servidor todavía no expone los valores de referencia del sistema. La pantalla está construida y se activará cuando el endpoint exista."
       />
     </>

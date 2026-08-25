@@ -31,7 +31,7 @@ export function VersionesPage() {
     <>
       <EncabezadoPagina titulo="Versiones del presupuesto" />
       <ModuloNoDisponible
-        modulo="Las versiones del presupuesto"
+        modulo="La lista de versiones del presupuesto"
         descripcion="El servidor todavía no expone la lista de versiones de un proyecto. La pantalla está construida y se activará cuando el endpoint exista."
       />
     </>
