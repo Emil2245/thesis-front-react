@@ -88,10 +88,10 @@ de estos planes comparan contra los extractos inlineados, no contra `ab31892`.
 | 021 | [Reparar la suite de capturas E2E](021-reparar-suite-de-capturas-e2e.md) | P2 | M | 020 | DONE (`4925c52`) |
 | 022 | [Buscador, filtro y paginación en la lista de proyectos](022-buscador-y-filtros-en-lista-de-proyectos.md) | P2 | M | — | DONE (`c95cd83`) |
 | 023 | [Sustituir `window.confirm` por el diálogo del sistema](023-sustituir-window-confirm.md) | P2 | S | — | DONE (`6f9e706`) |
-| 024 | [Extender el encabezado a las 13 páginas restantes](024-extender-el-rediseno-a-las-paginas-restantes.md) | P2 | L | 019, 021 (solapan en archivos) | TODO |
+| 024 | [Extender el encabezado a las 13 páginas restantes](024-extender-el-rediseno-a-las-paginas-restantes.md) | P2 | L | 019, 021 (solapan en archivos) | IN PROGRESS |
 | 025 | [Colores crudos de Tailwind → tokens del tema](025-colores-crudos-a-tokens-del-tema.md) | P3 | S | — | DONE (`346294f`) |
 | 026 | [Alinear el módulo APU con el backend real](026-alinear-modulo-apu-con-el-backend-real.md) | P1 | M | — | DONE (`73d4606`) |
-| 027 | [Degradar los módulos sin backend](027-degradar-modulos-sin-backend.md) | P1 | M | 019 | TODO |
+| 027 | [Degradar los módulos sin backend](027-degradar-modulos-sin-backend.md) | P1 | M | 019 | DONE (`2862321`) |
 
 **Orden recomendado si van en serie**: 019 → 020 → 021 → 023 → 022 → 025 → 024.
 Los dos primeros son bugs de correctitud y no dependen de nada. 021 necesita 020
