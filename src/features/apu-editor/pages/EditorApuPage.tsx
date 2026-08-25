@@ -35,12 +35,16 @@ export function EditorApuPage() {
 
   if (cargando) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-40 w-full" />
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-32 w-full" />
+      <div className="flex flex-col gap-5">
+        <Skeleton className="h-14 w-full" />
+        <div className="flex flex-col gap-5 xl:flex-row">
+          <div className="flex min-w-0 flex-1 flex-col gap-4">
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+          <Skeleton className="h-72 w-full shrink-0 xl:w-80" />
+        </div>
       </div>
     );
   }
@@ -54,31 +58,43 @@ export function EditorApuPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <>
       <EncabezadoApu apu={apu} onEditar={editarEncabezado} onAlternarAuxiliar={alternarAuxiliar} />
 
-      {secciones.map((seccion) => (
-        <GridSeccion
-          key={seccion.tipo}
-          seccion={seccion}
-          onEditarCelda={editarCelda}
-          onRestaurarHerencia={restaurarHerencia}
-          onEliminarFila={eliminarFila}
-        />
-      ))}
+      <div className="flex flex-col gap-5 xl:flex-row xl:items-start">
+        {/* Las secciones se editan a la izquierda; los totales quedan a la vista
+            a la derecha en vez de al final del scroll. */}
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          {secciones.map((seccion) => (
+            <GridSeccion
+              key={seccion.tipo}
+              seccion={seccion}
+              onEditarCelda={editarCelda}
+              onRestaurarHerencia={restaurarHerencia}
+              onEliminarFila={eliminarFila}
+            />
+          ))}
 
-      <div className="flex justify-end">
-        <Button variant="outline" size="sm" onClick={() => setGuardarPlantillaDialogAbierto(true)}>
-          <SaveIcon /> Guardar como plantilla
-        </Button>
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setGuardarPlantillaDialogAbierto(true)}
+            >
+              <SaveIcon data-icon="inline-start" /> Guardar como plantilla
+            </Button>
+          </div>
+        </div>
+
+        <div className="w-full shrink-0 xl:sticky xl:top-19 xl:w-80">
+          <PieTotales
+            apu={apu}
+            onEditarPorcentajeCi={editarPorcentajeCi}
+            onAbrirDescuento={() => setDescuentoDialogAbierto(true)}
+            onAbrirDesglose={() => setDesgloseAbierto(true)}
+          />
+        </div>
       </div>
-
-      <PieTotales
-        apu={apu}
-        onEditarPorcentajeCi={editarPorcentajeCi}
-        onAbrirDescuento={() => setDescuentoDialogAbierto(true)}
-        onAbrirDesglose={() => setDesgloseAbierto(true)}
-      />
 
       <DialogoDescuentoRubro
         abierto={descuentoDialogAbierto}
@@ -98,6 +114,6 @@ export function EditorApuPage() {
         onClose={() => setDesgloseAbierto(false)}
         apuId={parsedApuId}
       />
-    </div>
+    </>
   );
 }

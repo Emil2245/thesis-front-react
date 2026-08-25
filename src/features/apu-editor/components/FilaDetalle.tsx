@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Button } from "@/components/ui/button";
 import { Trash2Icon, TriangleAlertIcon } from "lucide-react";
 import { formatearMoneda } from "@/lib/decimal";
+import { cn } from "@/lib/utils";
 
 interface FilaDetalleProps {
   fila: FilaEditor;
@@ -32,8 +33,8 @@ export function FilaDetalle({
   if (protegida) {
     return (
       <TooltipProvider>
-        <tr className="bg-muted/30 italic text-muted-foreground">
-          <td className="p-2">
+        <tr className="h-8 border-b bg-muted/30 text-muted-foreground italic last:border-0">
+          <td className="px-2.5">
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="inline-flex items-center gap-1">
@@ -46,28 +47,34 @@ export function FilaDetalle({
               </TooltipContent>
             </Tooltip>
           </td>
-          <td className="p-2">{detalle.unidad ?? "—"}</td>
-          <td className="p-2 num">—</td>
-          {muestraRendimiento && <td className="p-2 num">—</td>}
-          {muestraRendimiento && <td className="p-2 num">—</td>}
-          {!muestraRendimiento && <td className="p-2 num">—</td>}
-          <td className="p-2 num">{formatearMoneda(detalle.costo)}</td>
-          <td className="p-2" />
+          <td className="px-2.5">{detalle.unidad ?? "—"}</td>
+          <td className="px-2.5 num">—</td>
+          {muestraRendimiento && <td className="px-2.5 num">—</td>}
+          {muestraRendimiento && <td className="px-2.5 num">—</td>}
+          {!muestraRendimiento && <td className="px-2.5 num">—</td>}
+          <td className="px-2.5 num">{formatearMoneda(detalle.costo)}</td>
+          <td className="px-2.5" />
         </tr>
       </TooltipProvider>
     );
   }
 
   return (
-    <tr className={estado === "error" ? "bg-red-50" : estado === "pendiente" ? "opacity-70" : ""}>
-      <td className="p-2">
+    <tr
+      className={cn(
+        "h-8 border-b last:border-0",
+        estado === "error" && "bg-destructive/10",
+        estado === "pendiente" && "opacity-70",
+      )}
+    >
+      <td className="px-2.5">
         <div className="flex items-center gap-2">
           <span className="font-medium">{detalle.descripcion}</span>
           <BadgeAuxiliar esAuxiliar={esAuxiliarRow} />
         </div>
       </td>
-      <td className="p-2">{detalle.unidad ?? "—"}</td>
-      <td className="p-2 num">
+      <td className="px-2.5">{detalle.unidad ?? "—"}</td>
+      <td className="px-2.5 num">
         <CeldaEditable
           value={detalle.cantidad as unknown as string | null}
           onCommit={(v) => onEditarCelda(detalle.id, "cantidad", v)}
@@ -75,7 +82,7 @@ export function FilaDetalle({
         />
       </td>
       {muestraRendimiento && (
-        <td className="p-2 num">
+        <td className="px-2.5 num">
           <CeldaEditable
             value={detalle.rendimiento as unknown as string | null}
             onCommit={(v) => onEditarCelda(detalle.id, "rendimiento", v)}
@@ -84,12 +91,12 @@ export function FilaDetalle({
         </td>
       )}
       {muestraRendimiento && (
-        <td className="p-2 num">
+        <td className="px-2.5 num">
           {detalle.costoHora != null ? formatearMoneda(detalle.costoHora) : "—"}
         </td>
       )}
       {!muestraRendimiento && (
-        <td className="p-2 num">
+        <td className="px-2.5 num">
           <div className="flex items-center gap-1">
             <CeldaEditable
               value={detalle.precioEfectivo}
@@ -105,8 +112,8 @@ export function FilaDetalle({
           </div>
         </td>
       )}
-      <td className="p-2 num">{formatearMoneda(detalle.costo)}</td>
-      <td className="p-2">
+      <td className="px-2.5 num">{formatearMoneda(detalle.costo)}</td>
+      <td className="px-2.5">
         {!protegida && (
           <Button variant="ghost" size="icon-xs" onClick={() => onEliminarFila(detalle.id)}>
             <Trash2Icon className="size-3" />

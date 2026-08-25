@@ -3,6 +3,8 @@ import { ApiError } from "@/api/problem";
 import type { ApuResponse, ApuPatchRequest } from "@/api/contract";
 import { BadgeAuxiliar } from "./BadgeAuxiliar";
 import { Button } from "@/components/ui/button";
+import { EncabezadoPagina, PuntoMeta } from "@/components/comunes/EncabezadoPagina";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -62,27 +64,31 @@ export function EncabezadoApu({ apu, onEditar, onAlternarAuxiliar }: EncabezadoA
 
   if (editando) {
     return (
-      <div className="rounded-lg border bg-card p-4">
-        <div className="grid grid-cols-3 gap-4">
-          <div className="space-y-1">
-            <Label>Código</Label>
-            <Input value={codigo} onChange={(e) => setCodigo(e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label>Descripción</Label>
-            <Input value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label>Unidad</Label>
-            <Input value={unidad} onChange={(e) => setUnidad(e.target.value)} />
-          </div>
-        </div>
-        <div className="mt-3 flex gap-2">
+      <div className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+        <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Field>
+            <FieldLabel htmlFor="apu-codigo">Código</FieldLabel>
+            <Input id="apu-codigo" value={codigo} onChange={(e) => setCodigo(e.target.value)} />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="apu-descripcion">Descripción</FieldLabel>
+            <Input
+              id="apu-descripcion"
+              value={descripcion}
+              onChange={(e) => setDescripcion(e.target.value)}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="apu-unidad">Unidad</FieldLabel>
+            <Input id="apu-unidad" value={unidad} onChange={(e) => setUnidad(e.target.value)} />
+          </Field>
+        </FieldGroup>
+        <div className="mt-4 flex gap-2">
           <Button size="sm" onClick={guardar}>
-            <CheckIcon /> Guardar
+            <CheckIcon data-icon="inline-start" /> Guardar
           </Button>
           <Button size="sm" variant="outline" onClick={cancelar}>
-            <XIcon /> Cancelar
+            <XIcon data-icon="inline-start" /> Cancelar
           </Button>
         </div>
       </div>
@@ -91,32 +97,40 @@ export function EncabezadoApu({ apu, onEditar, onAlternarAuxiliar }: EncabezadoA
 
   return (
     <>
-      <div className="rounded-lg border bg-card p-4">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold">{apu.codigo}</h2>
-              <BadgeAuxiliar esAuxiliar={apu.esAuxiliar} />
-            </div>
-            <p className="text-sm text-muted-foreground">{apu.descripcion}</p>
-            <p className="text-xs text-muted-foreground">Unidad: {apu.unidad}</p>
-          </div>
-          <Button variant="ghost" size="icon-sm" onClick={iniciar}>
-            <EditIcon className="size-4" />
+      <EncabezadoPagina
+        titulo={
+          <>
+            <span className="mr-2 font-mono text-sm font-normal text-muted-foreground">
+              {apu.codigo}
+            </span>
+            {apu.descripcion}
+          </>
+        }
+        insignia={<BadgeAuxiliar esAuxiliar={apu.esAuxiliar} />}
+        meta={
+          <>
+            <span>
+              Unidad <span className="font-medium text-foreground">{apu.unidad}</span>
+            </span>
+            <PuntoMeta />
+            <span className="flex items-center gap-2">
+              <Switch
+                id="es-auxiliar"
+                checked={apu.esAuxiliar}
+                onCheckedChange={manejarToggleAuxiliar}
+              />
+              <Label htmlFor="es-auxiliar" className="text-sm font-normal text-muted-foreground">
+                Rubro auxiliar
+              </Label>
+            </span>
+          </>
+        }
+        acciones={
+          <Button variant="outline" onClick={iniciar}>
+            <EditIcon data-icon="inline-start" /> Editar encabezado
           </Button>
-        </div>
-
-        <div className="mt-3 flex items-center gap-2 border-t pt-3">
-          <Switch
-            id="es-auxiliar"
-            checked={apu.esAuxiliar}
-            onCheckedChange={manejarToggleAuxiliar}
-          />
-          <Label htmlFor="es-auxiliar" className="text-xs">
-            Rubro auxiliar
-          </Label>
-        </div>
-      </div>
+        }
+      />
 
       <AlertDialog open={conflictoAbierto} onOpenChange={setConflictoAbierto}>
         <AlertDialogContent>

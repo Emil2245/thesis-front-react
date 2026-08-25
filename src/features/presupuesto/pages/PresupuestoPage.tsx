@@ -1,7 +1,10 @@
 import { useState, useCallback, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useVersionActiva } from "@/shell/contexto";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
+import { EstadoVacio } from "@/components/comunes/EstadoVacio";
+import { PlusIcon } from "lucide-react";
 import { usePresupuesto, useResumen, useValidacion } from "../hooks/usePresupuesto";
 import { useCapituloMutaciones } from "../hooks/useCapituloMutaciones";
 import { useRubroMutaciones } from "../hooks/useRubroMutaciones";
@@ -14,8 +17,11 @@ import { BannerIntegridad } from "../components/BannerIntegridad";
 import type { CapituloResponse } from "@/api/contract";
 
 export function PresupuestoPage() {
-  const [searchParams] = useSearchParams();
-  const versionId = Number(searchParams.get("v")) || 0;
+  // La versión la manda el selector de la barra superior, que ya cae en la
+  // vigente cuando la URL no trae `?v=`; leer el parámetro en crudo dejaba la
+  // pantalla vacía en la primera carga.
+  const { presupuestoId } = useVersionActiva();
+  const versionId = presupuestoId ?? 0;
 
   const { data: presupuesto, isLoading } = usePresupuesto(versionId);
   const { data: resumen, isLoading: resumenLoading } = useResumen(versionId);
@@ -116,37 +122,46 @@ export function PresupuestoPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 p-6">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-96" />
+      <div className="flex flex-col gap-5">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-96 w-full" />
       </div>
     );
   }
 
   if (!presupuesto || !versionId) {
     return (
-      <div className="p-6">
-        <h1 className="text-xl font-semibold mb-4">Presupuesto</h1>
-        <div className="text-center py-12 text-muted-foreground">
-          {!versionId
-            ? "Seleccione una versión del presupuesto para visualizar"
-            : "Presupuesto no encontrado"}
-        </div>
-      </div>
+      <>
+        <EncabezadoPagina titulo="Presupuesto" />
+        <EstadoVacio
+          titulo={!versionId ? "Sin versión seleccionada" : "Presupuesto no encontrado"}
+          descripcion={
+            !versionId
+              ? "Elige una versión en la barra superior para ver su presupuesto."
+              : "La versión solicitada ya no existe."
+          }
+        />
+      </>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Presupuesto</h1>
-          <p className="text-sm text-muted-foreground">{optionsText}</p>
-        </div>
-        <Button onClick={() => setDialogo({ type: "crear" })}>Nuevo capítulo</Button>
-      </div>
+    <>
+      <EncabezadoPagina
+        titulo="Presupuesto"
+        descripcion={optionsText}
+        acciones={
+          <Button onClick={() => setDialogo({ type: "crear" })}>
+            <PlusIcon data-icon="inline-start" /> Nuevo capítulo
+          </Button>
+        }
+      />
 
       <BannerIntegridad data={validacion} isLoading={validacionLoading} />
+
+      {/* El total encabeza la pantalla: es lo que se consulta, no el detalle. */}
+      <ResumenComponentes data={resumen} isLoading={resumenLoading} />
 
       <ArbolPresupuesto
         presupuesto={presupuesto}
@@ -158,8 +173,6 @@ export function PresupuestoPage() {
         onEliminarRubro={handleEliminarRubro}
         onCantidadChange={handleCantidadChange}
       />
-
-      <ResumenComponentes data={resumen} isLoading={resumenLoading} />
 
       <DialogoCapitulo
         open={dialogo?.type === "crear"}
@@ -201,6 +214,6 @@ export function PresupuestoPage() {
         onConfirm={handleConfirmarAgregarRubro}
         presupuestoId={versionId}
       />
-    </div>
+    </>
   );
 }
