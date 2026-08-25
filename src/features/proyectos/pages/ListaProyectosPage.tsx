@@ -1,16 +1,12 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { get } from "@/api/request";
-import { qk } from "@/api/queryKeys";
-import type { ProyectoResponse } from "@/api/contract";
 import { ChipEstado } from "@/components/comunes/ChipEstado";
 import { ConfirmarDestructivo } from "@/components/comunes/ConfirmarDestructivo";
 import { EstadoVacio } from "@/components/comunes/EstadoVacio";
 import { CargandoTabla } from "@/components/comunes/CargandoTabla";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
-import { useEliminarProyecto } from "../hooks/useProyectos";
+import { useEliminarProyecto, useProyectos } from "../hooks/useProyectos";
 import { AsistenteCrearProyecto } from "../components/AsistenteCrearProyecto";
 import {
   Table,
@@ -27,22 +23,91 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontalIcon, PlusIcon, ExternalLinkIcon, CopyIcon, Trash2Icon } from "lucide-react";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  MoreHorizontalIcon,
+  PlusIcon,
+  ExternalLinkIcon,
+  CopyIcon,
+  Trash2Icon,
+  SearchIcon,
+} from "lucide-react";
+
+type EstadoFiltro = "" | "BORRADOR" | "EN_PROCESO" | "FINALIZADO";
+
+function useDebounce<T>(valor: T, retardoMs: number): T {
+  const [debounced, setDebounced] = useState(valor);
+  useEffect(() => {
+    const temporizador = setTimeout(() => setDebounced(valor), retardoMs);
+    return () => clearTimeout(temporizador);
+  }, [valor, retardoMs]);
+  return debounced;
+}
 
 export function ListaProyectosPage() {
   const navigate = useNavigate();
-  const { data, isPending } = useQuery({
-    queryKey: qk.proyectos(),
-    queryFn: () => get<{ contenido: ProyectoResponse[] }>("/proyectos"),
-  });
+
+  const [q, setQ] = useState("");
+  const [estado, setEstado] = useState<EstadoFiltro>("");
+  const [page, setPage] = useState(0);
+  const qBuscado = useDebounce(q, 300);
+
+  const filtros = useMemo(() => {
+    const f: Record<string, unknown> = {};
+    if (qBuscado) f.q = qBuscado;
+    if (estado) f.estado = estado;
+    f.page = page;
+    return f;
+  }, [qBuscado, estado, page]);
+
+  const { data, isPending } = useProyectos(filtros);
 
   const eliminar = useEliminarProyecto();
   const [asistenteAbierto, setAsistenteAbierto] = useState(false);
 
+  const manejarCambioBusqueda = (valor: string) => {
+    setQ(valor);
+    setPage(0);
+  };
+
+  const manejarCambioEstado = (valor: string) => {
+    setEstado(valor as EstadoFiltro);
+    setPage(0);
+  };
+
+  const limpiarFiltros = () => {
+    setQ("");
+    setEstado("");
+    setPage(0);
+  };
+
   if (isPending) return <CargandoTabla />;
 
+  const hayFiltros = q !== "" || estado !== "";
+
   if (!data?.contenido.length) {
-    return (
+    return hayFiltros ? (
+      <EstadoVacio
+        titulo="Sin resultados"
+        descripcion="Ningún proyecto coincide con la búsqueda."
+        accion={
+          <Button variant="outline" onClick={limpiarFiltros}>
+            Limpiar filtros
+          </Button>
+        }
+      />
+    ) : (
       <EstadoVacio
         titulo="No hay proyectos"
         descripcion="Crea tu primer proyecto para empezar."
@@ -64,17 +129,74 @@ export function ListaProyectosPage() {
         titulo="Proyectos"
         descripcion={`${total} ${total === 1 ? "proyecto" : "proyectos"} · ${enProceso} en proceso`}
         acciones={
-          <Button onClick={() => setAsistenteAbierto(true)}>
-            <PlusIcon data-icon="inline-start" /> Nuevo proyecto
-          </Button>
+          <>
+            <InputGroup className="w-64">
+              <InputGroupAddon>
+                <SearchIcon />
+              </InputGroupAddon>
+              <InputGroupInput
+                placeholder="Buscar proyecto…"
+                aria-label="Buscar proyecto"
+                value={q}
+                onChange={(e) => manejarCambioBusqueda(e.target.value)}
+              />
+            </InputGroup>
+            <Select value={estado} onValueChange={manejarCambioEstado}>
+              <SelectTrigger aria-label="Filtrar por estado" className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="BORRADOR">Borrador</SelectItem>
+                  <SelectItem value="EN_PROCESO">En proceso</SelectItem>
+                  <SelectItem value="FINALIZADO">Finalizado</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <Button onClick={() => setAsistenteAbierto(true)}>
+              <PlusIcon data-icon="inline-start" /> Nuevo proyecto
+            </Button>
+          </>
         }
       />
 
       <TarjetaTabla
         pie={
-          <span>
-            Mostrando {total} de {total} {total === 1 ? "proyecto" : "proyectos"}
-          </span>
+          <>
+            <span>
+              Mostrando {data.contenido.length} de {data.totalElementos}{" "}
+              {data.totalElementos === 1 ? "proyecto" : "proyectos"}
+            </span>
+            {data.totalPaginas > 1 && (
+              <Pagination className="mx-0 w-auto">
+                <PaginationContent>
+                  <PaginationItem>
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      aria-label="Página anterior"
+                      disabled={data.page === 0}
+                      onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    >
+                      <ChevronLeftIcon />
+                    </Button>
+                  </PaginationItem>
+                  <PaginationItem>
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      aria-label="Página siguiente"
+                      disabled={data.page >= data.totalPaginas - 1}
+                      onClick={() => setPage((p) => p + 1)}
+                    >
+                      <ChevronRightIcon />
+                    </Button>
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+          </>
         }
       >
         <Table>
