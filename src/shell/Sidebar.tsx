@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useProyectoActivoId } from "./contexto";
+import { MODULOS_SIN_BACKEND, type ModuloSinBackend } from "@/lib/disponibilidad";
 import {
   CalculatorIcon,
   ChevronsUpDownIcon,
@@ -53,25 +54,45 @@ function estaActivo(pathname: string, path: string) {
   return pathname === path || pathname.startsWith(path + "/");
 }
 
-const RUTAS_PROYECTO = [
+/** Insignia discreta para una entrada de navegación cuyo backend aún no existe. */
+function InsigniaPronto() {
+  return <span className="ml-auto text-xs text-muted-foreground">pronto</span>;
+}
+
+// `modulo` casa con las claves de MODULOS_SIN_BACKEND (src/lib/disponibilidad.ts):
+// única fuente de qué está pendiente. Sin `modulo`, la entrada siempre está activa.
+const RUTAS_PROYECTO: {
+  sufijo: string;
+  icono: typeof LayoutDashboardIcon;
+  etiqueta: string;
+  modulo?: ModuloSinBackend;
+}[] = [
   { sufijo: "", icono: LayoutDashboardIcon, etiqueta: "Resumen" },
   { sufijo: "/insumos", icono: PackageIcon, etiqueta: "Insumos" },
   { sufijo: "/apus", icono: FileTextIcon, etiqueta: "APUs" },
-  { sufijo: "/presupuesto", icono: BarChart3Icon, etiqueta: "Presupuesto" },
-  { sufijo: "/cronograma", icono: CalendarIcon, etiqueta: "Cronograma" },
-  { sufijo: "/documentos", icono: DownloadIcon, etiqueta: "Documentos" },
+  { sufijo: "/presupuesto", icono: BarChart3Icon, etiqueta: "Presupuesto", modulo: "presupuesto" },
+  { sufijo: "/cronograma", icono: CalendarIcon, etiqueta: "Cronograma", modulo: "cronograma" },
+  { sufijo: "/documentos", icono: DownloadIcon, etiqueta: "Documentos", modulo: "documentos" },
   { sufijo: "/parametros", icono: SettingsIcon, etiqueta: "Parámetros" },
-  { sufijo: "/versiones", icono: GitBranchIcon, etiqueta: "Versiones" },
-] as const;
+  { sufijo: "/versiones", icono: GitBranchIcon, etiqueta: "Versiones", modulo: "versiones" },
+];
 
-const RUTAS_ADMIN = [
-  { ruta: "/admin/usuarios", icono: UsersIcon, etiqueta: "Usuarios" },
-  { ruta: "/admin/bases", icono: DatabaseIcon, etiqueta: "Bases" },
-  { ruta: "/admin/plantillas", icono: BookTemplateIcon, etiqueta: "Plantillas" },
+// La entrada "Parámetros" queda fuera de "admin": su lectura ya funciona
+// (GET /proyectos/parametros-sistema, ver useParametrosSistema.ts) aunque el
+// resto del grupo admin todavía no tenga backend.
+const RUTAS_ADMIN: {
+  ruta: string;
+  icono: typeof UsersIcon;
+  etiqueta: string;
+  modulo?: ModuloSinBackend;
+}[] = [
+  { ruta: "/admin/usuarios", icono: UsersIcon, etiqueta: "Usuarios", modulo: "admin" },
+  { ruta: "/admin/bases", icono: DatabaseIcon, etiqueta: "Bases", modulo: "admin" },
+  { ruta: "/admin/plantillas", icono: BookTemplateIcon, etiqueta: "Plantillas", modulo: "admin" },
   { ruta: "/admin/parametros", icono: SettingsIcon, etiqueta: "Parámetros" },
-  { ruta: "/admin/valores", icono: ScrollTextIcon, etiqueta: "Valores ref." },
-  { ruta: "/admin/logs", icono: ActivityIcon, etiqueta: "Logs" },
-] as const;
+  { ruta: "/admin/valores", icono: ScrollTextIcon, etiqueta: "Valores ref.", modulo: "admin" },
+  { ruta: "/admin/logs", icono: ActivityIcon, etiqueta: "Logs", modulo: "admin" },
+];
 
 export function AppSidebar() {
   const { pathname } = useLocation();
@@ -118,10 +139,15 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={estaActivo(pathname, "/plantillas")}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={estaActivo(pathname, "/plantillas")}
+                  className={MODULOS_SIN_BACKEND.has("plantillas") ? "opacity-60" : ""}
+                >
                   <Link to="/plantillas">
                     <FileSpreadsheetIcon />
                     <span>Plantillas APU</span>
+                    {MODULOS_SIN_BACKEND.has("plantillas") && <InsigniaPronto />}
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -138,15 +164,21 @@ export function AppSidebar() {
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {RUTAS_PROYECTO.map(({ sufijo, icono: Icono, etiqueta }) => {
+                  {RUTAS_PROYECTO.map(({ sufijo, icono: Icono, etiqueta, modulo }) => {
                     const ruta = `${base}${sufijo}`;
                     const activo = sufijo === "" ? pathname === base : estaActivo(pathname, ruta);
+                    const pendiente = modulo ? MODULOS_SIN_BACKEND.has(modulo) : false;
                     return (
                       <SidebarMenuItem key={etiqueta}>
-                        <SidebarMenuButton asChild isActive={activo}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={activo}
+                          className={pendiente ? "opacity-60" : ""}
+                        >
                           <Link to={ruta}>
                             <Icono />
                             <span>{etiqueta}</span>
+                            {pendiente && <InsigniaPronto />}
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -165,16 +197,24 @@ export function AppSidebar() {
               <SidebarGroupLabel>Administración</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {RUTAS_ADMIN.map(({ ruta, icono: Icono, etiqueta }) => (
-                    <SidebarMenuItem key={ruta}>
-                      <SidebarMenuButton asChild isActive={estaActivo(pathname, ruta)}>
-                        <Link to={ruta}>
-                          <Icono />
-                          <span>{etiqueta}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
+                  {RUTAS_ADMIN.map(({ ruta, icono: Icono, etiqueta, modulo }) => {
+                    const pendiente = modulo ? MODULOS_SIN_BACKEND.has(modulo) : false;
+                    return (
+                      <SidebarMenuItem key={ruta}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={estaActivo(pathname, ruta)}
+                          className={pendiente ? "opacity-60" : ""}
+                        >
+                          <Link to={ruta}>
+                            <Icono />
+                            <span>{etiqueta}</span>
+                            {pendiente && <InsigniaPronto />}
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
