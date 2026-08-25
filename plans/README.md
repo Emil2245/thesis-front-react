@@ -85,7 +85,7 @@ de estos planes comparan contra los extractos inlineados, no contra `ab31892`.
 |---|---|---|---|---|---|
 | 019 | [Unificar el origen de la versión activa](019-unificar-origen-de-la-version-activa.md) | P1 | M | — | DONE (`d1a4987`) |
 | 020 | [Crash de "Nuevo APU": la lista de plantillas no trae `snapshot`](020-plantillas-lista-sin-snapshot.md) | P1 | S | — | DONE (`8cff993`) |
-| 021 | [Reparar la suite de capturas E2E](021-reparar-suite-de-capturas-e2e.md) | P2 | M | 020 | IN PROGRESS |
+| 021 | [Reparar la suite de capturas E2E](021-reparar-suite-de-capturas-e2e.md) | P2 | M | 020 | DONE (`4925c52`) |
 | 022 | [Buscador, filtro y paginación en la lista de proyectos](022-buscador-y-filtros-en-lista-de-proyectos.md) | P2 | M | — | DONE (`c95cd83`) |
 | 023 | [Sustituir `window.confirm` por el diálogo del sistema](023-sustituir-window-confirm.md) | P2 | S | — | DONE (`6f9e706`) |
 | 024 | [Extender el encabezado a las 13 páginas restantes](024-extender-el-rediseno-a-las-paginas-restantes.md) | P2 | L | 019, 021 (solapan en archivos) | TODO |
