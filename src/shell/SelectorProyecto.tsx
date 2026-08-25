@@ -1,9 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { get } from "@/api/request";
-import { qk } from "@/api/queryKeys";
-import type { ProyectoResponse } from "@/api/contract";
 import { ChevronsUpDownIcon } from "lucide-react";
+import { useProyectos } from "@/features/proyectos/hooks/useProyectos";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,10 +17,7 @@ import {
  */
 export function SelectorProyecto({ nombre }: { nombre: string }) {
   const navigate = useNavigate();
-  const { data } = useQuery({
-    queryKey: qk.proyectos(),
-    queryFn: () => get<{ contenido: ProyectoResponse[] }>("/proyectos"),
-  });
+  const { data } = useProyectos();
 
   return (
     <DropdownMenu>

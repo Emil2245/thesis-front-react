@@ -1,7 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, post, put, del } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import type {
+  Page,
   ProyectoResponse,
   ProyectoDetalleResponse,
   ProyectoCrearRequest,
@@ -12,7 +13,8 @@ import type {
 export function useProyectos(filtros?: Record<string, unknown>) {
   return useQuery({
     queryKey: qk.proyectos(filtros),
-    queryFn: () => get<{ contenido: ProyectoResponse[] }>("/proyectos", filtros),
+    queryFn: () => get<Page<ProyectoResponse>>("/proyectos", filtros),
+    placeholderData: keepPreviousData,
   });
 }
 
