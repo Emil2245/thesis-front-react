@@ -55,7 +55,8 @@ export function compararDecimal(a: Decimal, b: Decimal): number {
   return na === nb ? 0 : na < nb ? -1 : 1;
 }
 
-export function esCero(valor: Decimal | null | undefined): boolean {
+export function esCero(valor: Decimal | number | null | undefined): boolean {
   if (valor == null) return true;
+  if (typeof valor === "number") return valor === 0;
   return /^-?0+(\.0+)?$/.test(valor.trim());
 }
