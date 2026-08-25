@@ -66,13 +66,11 @@ export function ExportPageActiva() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Exportar</h1>
-          <p className="text-sm text-muted-foreground">Descargue documentos del presupuesto</p>
-        </div>
-      </div>
+    <>
+      <EncabezadoPagina
+        titulo="Exportar"
+        descripcion="Descargue documentos del presupuesto"
+      />
 
       {valLoading && (
         <div className="flex justify-center py-8">
@@ -141,6 +139,6 @@ export function ExportPageActiva() {
           </Table>
         </CardContent>
       </Card>
-    </div>
+    </>
   );
 }
