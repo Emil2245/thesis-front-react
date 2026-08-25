@@ -9,9 +9,26 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAdminBases, useCrearBase, useEliminarBase } from "../hooks/useAdminBases";
+import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
+import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
 import { PlusIcon, Trash2Icon } from "lucide-react";
 
+// El backend no tiene /admin/bases todavía (plan 027). Para reactivar: borra
+// este bloque, quita "admin" de MODULOS_SIN_BACKEND (si ya no aplica al resto
+// del grupo) y exporta AdminBasesPageActiva como AdminBasesPage.
 export function AdminBasesPage() {
+  return (
+    <>
+      <EncabezadoPagina titulo="Bases de insumos" />
+      <ModuloNoDisponible
+        modulo="La administración de bases de insumos"
+        descripcion="El servidor todavía no expone la administración de bases centrales. La pantalla está construida y se activará cuando el endpoint exista."
+      />
+    </>
+  );
+}
+
+export function AdminBasesPageActiva() {
   const { data, isPending } = useAdminBases();
   const crear = useCrearBase();
   const eliminar = useEliminarBase();

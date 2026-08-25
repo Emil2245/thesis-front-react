@@ -11,7 +11,7 @@ import { PopoverDesglose } from "../components/PopoverDesglose";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { MOTIVO_SIN_BACKEND } from "../components/PieTotales";
+import { MOTIVO_SIN_BACKEND } from "@/lib/disponibilidad";
 import { SaveIcon } from "lucide-react";
 
 export function EditorApuPage() {

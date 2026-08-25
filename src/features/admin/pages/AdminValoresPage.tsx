@@ -12,8 +12,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useValoresReferencia, useActualizarValor } from "../hooks/useValoresReferencia";
+import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
+import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
 
+// El backend no tiene /admin/valores-referencia todavía (plan 027). Para
+// reactivar: borra este bloque, quita "admin" de MODULOS_SIN_BACKEND (si ya
+// no aplica al resto del grupo) y exporta AdminValoresPageActiva como
+// AdminValoresPage.
 export function AdminValoresPage() {
+  return (
+    <>
+      <EncabezadoPagina titulo="Valores de referencia" />
+      <ModuloNoDisponible
+        modulo="Los valores de referencia"
+        descripcion="El servidor todavía no expone los valores de referencia del sistema. La pantalla está construida y se activará cuando el endpoint exista."
+      />
+    </>
+  );
+}
+
+export function AdminValoresPageActiva() {
   const { data, isLoading } = useValoresReferencia();
   const actualizar = useActualizarValor();
   const inputsRef = useRef<Record<string, HTMLInputElement | null>>({});

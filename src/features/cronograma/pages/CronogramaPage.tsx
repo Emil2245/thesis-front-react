@@ -14,9 +14,26 @@ import { GanttChart } from "../components/GanttChart";
 import { BadgeDesactualizado } from "../components/BadgeDesactualizado";
 import { DialogoConfigurarCronograma } from "../components/DialogoConfigurarCronograma";
 import { DialogoEditarActividad } from "../components/DialogoEditarActividad";
+import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
+import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
 import type { ActividadResponse, UnidadTiempo } from "@/api/contract";
 
+// El backend no expone /presupuestos/{id}/cronograma todavía (plan 027).
+// Para reactivar: borra este bloque, quita "cronograma" de MODULOS_SIN_BACKEND
+// y exporta CronogramaPageActiva como CronogramaPage.
 export function CronogramaPage() {
+  return (
+    <>
+      <EncabezadoPagina titulo="Cronograma" />
+      <ModuloNoDisponible
+        modulo="El cronograma"
+        descripcion="El servidor todavía no expone el cronograma de un presupuesto. La pantalla está construida y se activará cuando el endpoint exista."
+      />
+    </>
+  );
+}
+
+export function CronogramaPageActiva() {
   // La versión la manda el selector de la barra superior, que ya cae en la
   // vigente cuando la URL no trae `?v=`.
   const { presupuestoId } = useVersionActiva();

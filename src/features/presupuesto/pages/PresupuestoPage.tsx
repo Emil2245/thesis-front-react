@@ -15,9 +15,25 @@ import { DialogoMoverCapitulo } from "../components/DialogoMoverCapitulo";
 import { ResumenComponentes } from "../components/ResumenComponentes";
 import { BannerIntegridad } from "../components/BannerIntegridad";
 import { ConfirmarDestructivo } from "@/components/comunes/ConfirmarDestructivo";
+import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
 import type { CapituloResponse } from "@/api/contract";
 
+// El backend no expone /proyectos/{id}/presupuestos ni /presupuestos/{id}
+// todavía (plan 027). Para reactivar: borra este bloque, quita "presupuesto"
+// de MODULOS_SIN_BACKEND y exporta PresupuestoPageActiva como PresupuestoPage.
 export function PresupuestoPage() {
+  return (
+    <>
+      <EncabezadoPagina titulo="Presupuesto" />
+      <ModuloNoDisponible
+        modulo="El presupuesto"
+        descripcion="El servidor todavía no expone las versiones de presupuesto. La pantalla está construida y se activará cuando el endpoint exista."
+      />
+    </>
+  );
+}
+
+export function PresupuestoPageActiva() {
   // La versión la manda el selector de la barra superior, que ya cae en la
   // vigente cuando la URL no trae `?v=`; leer el parámetro en crudo dejaba la
   // pantalla vacía en la primera carga.

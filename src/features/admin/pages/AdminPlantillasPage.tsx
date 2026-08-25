@@ -14,9 +14,27 @@ import {
   useCrearPlantillaSistema,
   useEliminarPlantillaSistema,
 } from "../hooks/useAdminPlantillas";
+import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
+import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
 import { PlusIcon, Trash2Icon } from "lucide-react";
 
+// El backend no tiene /admin/plantillas todavía (plan 027). Para reactivar:
+// borra este bloque, quita "admin" de MODULOS_SIN_BACKEND (si ya no aplica al
+// resto del grupo) y exporta AdminPlantillasPageActiva como
+// AdminPlantillasPage.
 export function AdminPlantillasPage() {
+  return (
+    <>
+      <EncabezadoPagina titulo="Plantillas del sistema" />
+      <ModuloNoDisponible
+        modulo="Las plantillas del sistema"
+        descripcion="El servidor todavía no expone las plantillas de sistema. La pantalla está construida y se activará cuando el endpoint exista."
+      />
+    </>
+  );
+}
+
+export function AdminPlantillasPageActiva() {
   const { data, isPending } = useAdminPlantillas();
   const crear = useCrearPlantillaSistema();
   const eliminar = useEliminarPlantillaSistema();

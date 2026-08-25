@@ -4,6 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
+import { MOTIVO_SIN_BACKEND } from "@/lib/disponibilidad";
 import { useParametrosSistema, useActualizarParametros } from "../hooks/useParametrosSistema";
 
 export function AdminParametrosPage() {
@@ -25,7 +28,7 @@ export function AdminParametrosPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-xl font-semibold">Parámetros del sistema</h1>
+      <EncabezadoPagina titulo="Parámetros del sistema" />
       <Card>
         <CardHeader>
           <CardTitle>Configuración global</CardTitle>
@@ -67,18 +70,29 @@ export function AdminParametrosPage() {
               className="w-40"
             />
           </div>
-          <Button
-            onClick={() => {
-              actualizar.mutate({
-                porcentajeHerramientaMenor: hmRef.current?.value as never,
-                porcentajeIndirecto: ciRef.current?.value as never,
-                iva: ivaRef.current?.value as never,
-                moneda: monedaRef.current?.value,
-              });
-            }}
-          >
-            Guardar
-          </Button>
+          {/* El backend solo expone la lectura de parámetros del sistema
+              (plan 027): guardar queda deshabilitado hasta que exista la
+              escritura. */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <Button
+                  disabled
+                  onClick={() => {
+                    actualizar.mutate({
+                      porcentajeHerramientaMenor: hmRef.current?.value as never,
+                      porcentajeIndirecto: ciRef.current?.value as never,
+                      iva: ivaRef.current?.value as never,
+                      moneda: monedaRef.current?.value,
+                    });
+                  }}
+                >
+                  Guardar
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{MOTIVO_SIN_BACKEND}</TooltipContent>
+          </Tooltip>
         </CardContent>
       </Card>
     </div>

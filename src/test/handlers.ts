@@ -434,8 +434,15 @@ export const handlers = [
   ),
   http.delete(`${API}/admin/plantillas/:id`, () => HttpResponse.json(null, { status: 204 })),
 
-  http.get(`${API}/admin/parametros-sistema`, () => HttpResponse.json(parametrosSistemaFixture)),
-  http.put(`${API}/admin/parametros-sistema`, () => HttpResponse.json(parametrosSistemaFixture)),
+  // El backend expone esta lectura en /proyectos/parametros-sistema, sin rol
+  // de admin (plan 027); la escritura no existe todavía y AdminParametrosPage
+  // la mantiene deshabilitada.
+  http.get(`${API}/proyectos/parametros-sistema`, () =>
+    HttpResponse.json(parametrosSistemaFixture),
+  ),
+  http.put(`${API}/proyectos/parametros-sistema`, () =>
+    HttpResponse.json(parametrosSistemaFixture),
+  ),
 
   http.get(`${API}/admin/valores-referencia`, () => HttpResponse.json(valoresReferenciaFixture)),
   http.put(`${API}/admin/valores-referencia/:clave`, () =>

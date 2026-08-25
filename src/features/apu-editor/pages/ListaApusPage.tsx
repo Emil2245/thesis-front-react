@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { MOTIVO_SIN_BACKEND } from "../components/PieTotales";
+import { MOTIVO_SIN_BACKEND } from "@/lib/disponibilidad";
 import {
   PlusIcon,
   MoreHorizontalIcon,

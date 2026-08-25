@@ -39,6 +39,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { MOTIVO_SIN_BACKEND } from "@/lib/disponibilidad";
 import {
   Select,
   SelectContent,
@@ -163,16 +165,24 @@ export function TablaInsumos({ proyectoId }: { proyectoId: number }) {
                 >
                   <EditIcon /> Editar
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    setUsoDialogo({
-                      abierto: true,
-                      insumoId: insumo.id,
-                    })
-                  }
-                >
-                  <EyeIcon /> Ver uso
-                </DropdownMenuItem>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <DropdownMenuItem
+                        disabled
+                        onClick={() =>
+                          setUsoDialogo({
+                            abierto: true,
+                            insumoId: insumo.id,
+                          })
+                        }
+                      >
+                        <EyeIcon /> Ver uso
+                      </DropdownMenuItem>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>{MOTIVO_SIN_BACKEND}</TooltipContent>
+                </Tooltip>
                 <ConfirmarDestructivo
                   titulo="Eliminar insumo"
                   descripcion={`¿Eliminar "${insumo.codigo}"?`}

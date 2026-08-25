@@ -32,9 +32,26 @@ import {
   useRestaurarUsuario,
 } from "../hooks/useAdminUsuarios";
 import { CargandoTabla } from "@/components/comunes/CargandoTabla";
+import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
+import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
 import { PlusIcon, Trash2Icon, RotateCcwIcon } from "lucide-react";
 
+// El backend no tiene /admin/usuarios todavía (plan 027). Para reactivar:
+// borra este bloque, quita "admin" de MODULOS_SIN_BACKEND (si ya no aplica al
+// resto del grupo) y exporta AdminUsuariosPageActiva como AdminUsuariosPage.
 export function AdminUsuariosPage() {
+  return (
+    <>
+      <EncabezadoPagina titulo="Usuarios" />
+      <ModuloNoDisponible
+        modulo="La administración de usuarios"
+        descripcion="El servidor todavía no expone la administración de usuarios. La pantalla está construida y se activará cuando el endpoint exista."
+      />
+    </>
+  );
+}
+
+export function AdminUsuariosPageActiva() {
   const { data, isPending } = useAdminUsuarios();
   const invitar = useInvitarUsuario();
   const eliminar = useEliminarUsuario();

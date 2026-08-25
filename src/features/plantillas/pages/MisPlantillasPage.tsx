@@ -26,9 +26,26 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
+import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
 import { EyeIcon, PencilIcon, Trash2Icon, SaveIcon, XIcon } from "lucide-react";
 
+// El backend no tiene /plantillas-apu todavía (plan 027). Para reactivar:
+// borra este bloque, quita "plantillas" de MODULOS_SIN_BACKEND y exporta
+// MisPlantillasPageActiva como MisPlantillasPage.
 export function MisPlantillasPage() {
+  return (
+    <>
+      <EncabezadoPagina titulo="Mis plantillas" />
+      <ModuloNoDisponible
+        modulo="Las plantillas de APU"
+        descripcion="El servidor todavía no expone las plantillas de APU. La pantalla está construida y se activará cuando el endpoint exista."
+      />
+    </>
+  );
+}
+
+export function MisPlantillasPageActiva() {
   const { data: plantillas, isPending } = usePlantillas("PERSONAL");
   const eliminar = useEliminarPlantilla();
   const renombrar = useRenombrarPlantilla();

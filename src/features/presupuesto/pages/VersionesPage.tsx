@@ -16,9 +16,28 @@ import { useVersionMutaciones } from "../hooks/useVersionMutaciones";
 import { DialogoNuevaVersion } from "../components/DialogoNuevaVersion";
 import { ComparadorVersiones } from "../components/ComparadorVersiones";
 import { ConfirmarDestructivo } from "@/components/comunes/ConfirmarDestructivo";
+import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
+import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
 import { formatearMoneda } from "@/lib/decimal";
 
+// El backend no expone /proyectos/{id}/presupuestos todavía (plan 027). Es el
+// desbloqueo de mayor apalancamiento: sin él, el módulo APU del backend queda
+// inalcanzable desde la interfaz. Para reactivar: borra este bloque, quita
+// "versiones" de MODULOS_SIN_BACKEND y exporta VersionesPageActiva como
+// VersionesPage.
 export function VersionesPage() {
+  return (
+    <>
+      <EncabezadoPagina titulo="Versiones del presupuesto" />
+      <ModuloNoDisponible
+        modulo="Las versiones del presupuesto"
+        descripcion="El servidor todavía no expone la lista de versiones de un proyecto. La pantalla está construida y se activará cuando el endpoint exista."
+      />
+    </>
+  );
+}
+
+export function VersionesPageActiva() {
   const { id: proyectoId } = useParams<{ id: string }>();
   const pid = Number(proyectoId);
 

@@ -7,8 +7,8 @@ import { usuarioFixture } from "@/test/fixtures/auth";
 import { http, HttpResponse } from "msw";
 import { server } from "@/test/server";
 import { presupuestoFixture } from "@/test/fixtures/presupuesto";
-import { PresupuestoPage } from "../pages/PresupuestoPage";
-import { VersionesPage } from "../pages/VersionesPage";
+import { PresupuestoPage, PresupuestoPageActiva } from "../pages/PresupuestoPage";
+import { VersionesPage, VersionesPageActiva } from "../pages/VersionesPage";
 
 const API = "*/api/v1";
 
@@ -16,12 +16,19 @@ beforeEach(() => {
   useSesionStore.setState({ usuario: usuarioFixture, cargando: false });
 });
 
+// El backend no expone /proyectos/{id}/presupuestos ni /presupuestos/{id}
+// (plan 027): las rutas reales muestran PresupuestoPage y VersionesPage, que
+// degradan a "todavía no disponible" sin llamar al backend (ver más abajo).
+// PresupuestoPageActiva y VersionesPageActiva son las implementaciones
+// completas, conservadas para reactivarlas cuando el endpoint exista: estos
+// tests siguen probándolas directamente.
+
 // ─── Helpers ───
 
 async function setupPresupuestoPage() {
   const result = renderConProviders(
     <Routes>
-      <Route path="/proyectos/:id/presupuesto" element={<PresupuestoPage />} />
+      <Route path="/proyectos/:id/presupuesto" element={<PresupuestoPageActiva />} />
     </Routes>,
     { ruta: "/proyectos/1/presupuesto?v=11" },
   );
@@ -32,7 +39,7 @@ async function setupPresupuestoPage() {
 async function setupVersionesPage() {
   const result = renderConProviders(
     <Routes>
-      <Route path="/proyectos/:id/versiones" element={<VersionesPage />} />
+      <Route path="/proyectos/:id/versiones" element={<VersionesPageActiva />} />
     </Routes>,
     { ruta: "/proyectos/1/versiones" },
   );
@@ -49,9 +56,9 @@ async function abrirDialogoEliminarCapitulo(user: ReturnType<typeof renderConPro
   return screen.findByRole("alertdialog");
 }
 
-// ─── PresupuestoPage ───
+// ─── PresupuestoPageActiva ───
 
-describe("PresupuestoPage", () => {
+describe("PresupuestoPageActiva", () => {
   it("muestra el árbol del presupuesto con capítulos", async () => {
     await setupPresupuestoPage();
     expect(screen.getByText("Preliminares")).toBeInTheDocument();
@@ -209,9 +216,9 @@ describe("PresupuestoPage", () => {
   });
 });
 
-// ─── VersionesPage ───
+// ─── VersionesPageActiva ───
 
-describe("VersionesPage", () => {
+describe("VersionesPageActiva", () => {
   it("muestra la tabla de versiones", async () => {
     await setupVersionesPage();
     expect(screen.getByText("v1")).toBeInTheDocument();
@@ -267,5 +274,41 @@ describe("VersionesPage", () => {
     expect(vigenteRow).toBeTruthy();
     const deleteBtn = within(vigenteRow).queryByRole("button", { name: /eliminar/i });
     expect(deleteBtn).not.toBeInTheDocument();
+  });
+});
+
+// ─── PresupuestoPage / VersionesPage (degradadas) ───
+
+describe("PresupuestoPage", () => {
+  it("explica que el módulo todavía no está disponible, sin pedir el presupuesto al backend", async () => {
+    // MSW está configurado con onUnhandledRequest: "error": si esta pantalla
+    // llamara al hook real, el test fallaría por la petición no mockeada.
+    renderConProviders(
+      <Routes>
+        <Route path="/proyectos/:id/presupuesto" element={<PresupuestoPage />} />
+      </Routes>,
+      { ruta: "/proyectos/1/presupuesto?v=11" },
+    );
+
+    expect(screen.getByText("Presupuesto")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/todavía no está disponible/i)).toBeInTheDocument();
+    });
+  });
+});
+
+describe("VersionesPage", () => {
+  it("explica que el módulo todavía no está disponible, sin pedir las versiones al backend", async () => {
+    renderConProviders(
+      <Routes>
+        <Route path="/proyectos/:id/versiones" element={<VersionesPage />} />
+      </Routes>,
+      { ruta: "/proyectos/1/versiones" },
+    );
+
+    expect(screen.getByText("Versiones del presupuesto")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/todavía no está disponible/i)).toBeInTheDocument();
+    });
   });
 });

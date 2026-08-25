@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useValidacionExport, useExportar, opcionesExport } from "../hooks/useExportar";
+import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
+import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
 import type { RubroRefResponse } from "@/api/contract";
 
 function ListaRubros({ items, titulo }: { items: RubroRefResponse[]; titulo: string }) {
@@ -33,7 +35,22 @@ function ListaRubros({ items, titulo }: { items: RubroRefResponse[]; titulo: str
   );
 }
 
+// El backend no tiene ningún endpoint de exportación todavía (plan 027).
+// Para reactivar: borra este bloque, quita "documentos" de MODULOS_SIN_BACKEND
+// y exporta ExportPageActiva como ExportPage.
 export function ExportPage() {
+  return (
+    <>
+      <EncabezadoPagina titulo="Exportar" />
+      <ModuloNoDisponible
+        modulo="La exportación de documentos"
+        descripcion="El servidor todavía no expone la generación de documentos del presupuesto. La pantalla está construida y se activará cuando el endpoint exista."
+      />
+    </>
+  );
+}
+
+export function ExportPageActiva() {
   const { id: proyectoId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const versionId = Number(searchParams.get("v")) || 0;
