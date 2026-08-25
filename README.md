@@ -20,6 +20,7 @@ pnpm install
 pnpm run dev        # http://localhost:5173
 pnpm run verify     # typecheck + lint + format + test + build
 pnpm run e2e        # Playwright E2E tests
+pnpm run e2e:screenshots  # solo las capturas de escritorio (chromium)
 ```
 
 ## Architecture
