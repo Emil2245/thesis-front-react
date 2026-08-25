@@ -76,7 +76,7 @@ export function FilaDetalle({
       <td className="px-2.5">{detalle.unidad ?? "—"}</td>
       <td className="px-2.5 num">
         <CeldaEditable
-          value={detalle.cantidad as unknown as string | null}
+          value={detalle.cantidad != null ? String(detalle.cantidad) : null}
           onCommit={(v) => onEditarCelda(detalle.id, "cantidad", v)}
           editable={!protegida}
         />
@@ -84,7 +84,7 @@ export function FilaDetalle({
       {muestraRendimiento && (
         <td className="px-2.5 num">
           <CeldaEditable
-            value={detalle.rendimiento as unknown as string | null}
+            value={detalle.rendimiento != null ? String(detalle.rendimiento) : null}
             onCommit={(v) => onEditarCelda(detalle.id, "rendimiento", v)}
             editable={!protegida}
           />
@@ -99,7 +99,7 @@ export function FilaDetalle({
         <td className="px-2.5 num">
           <div className="flex items-center gap-1">
             <CeldaEditable
-              value={detalle.precioEfectivo}
+              value={String(detalle.precioEfectivo)}
               onCommit={(v) => onEditarCelda(detalle.id, "precioOverride", v)}
               editable={!esAuxiliarRow && !protegida}
             />
