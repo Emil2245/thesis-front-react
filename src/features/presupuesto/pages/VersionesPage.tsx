@@ -15,6 +15,7 @@ import { useVersiones, useComparacion } from "../hooks/usePresupuesto";
 import { useVersionMutaciones } from "../hooks/useVersionMutaciones";
 import { DialogoNuevaVersion } from "../components/DialogoNuevaVersion";
 import { ComparadorVersiones } from "../components/ComparadorVersiones";
+import { ConfirmarDestructivo } from "@/components/comunes/ConfirmarDestructivo";
 import { formatearMoneda } from "@/lib/decimal";
 
 export function VersionesPage() {
@@ -26,6 +27,7 @@ export function VersionesPage() {
 
   const [nuevaDialog, setNuevaDialog] = useState(false);
   const [compararId, setCompararId] = useState<number | null>(null);
+  const [versionAEliminar, setVersionAEliminar] = useState<number | null>(null);
 
   const { data: comparacion, isLoading: compLoading } = useComparacion(compararId ?? 0, undefined);
 
@@ -36,14 +38,9 @@ export function VersionesPage() {
     [marcarVigente],
   );
 
-  const handleEliminar = useCallback(
-    (versionId: number) => {
-      if (window.confirm("¿Eliminar esta versión? No se puede eliminar la versión vigente.")) {
-        eliminar.mutate(versionId);
-      }
-    },
-    [eliminar],
-  );
+  const handleEliminar = useCallback((versionId: number) => {
+    setVersionAEliminar(versionId);
+  }, []);
 
   if (isLoading) {
     return (
@@ -123,6 +120,19 @@ export function VersionesPage() {
           setNuevaDialog(false);
         }}
         versiones={versiones ?? []}
+      />
+
+      <ConfirmarDestructivo
+        abierto={versionAEliminar !== null}
+        onAbiertoChange={(v) => {
+          if (!v) setVersionAEliminar(null);
+        }}
+        titulo="Eliminar versión"
+        descripcion="¿Eliminar esta versión? No se puede eliminar la versión vigente. Esta acción no se puede deshacer."
+        onConfirmar={() => {
+          if (versionAEliminar !== null) eliminar.mutate(versionAEliminar);
+          setVersionAEliminar(null);
+        }}
       />
     </div>
   );
