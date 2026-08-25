@@ -52,6 +52,17 @@ describe("esCero", () => {
   it.each(["0.000001", "1", "-3.5"])("%s no es cero", (v) => {
     expect(esCero(asDecimal(v))).toBe(false);
   });
+
+  it.each([0, 0.0])("%s (número) es cero", (v) => {
+    expect(esCero(v)).toBe(true);
+  });
+  it("1 (número) no es cero", () => {
+    expect(esCero(1)).toBe(false);
+  });
+  it("null/undefined son cero", () => {
+    expect(esCero(null)).toBe(true);
+    expect(esCero(undefined)).toBe(true);
+  });
 });
 
 describe("compararDecimal", () => {

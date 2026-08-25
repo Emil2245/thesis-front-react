@@ -1,12 +1,15 @@
 import { useState } from "react";
 import type { ApuResponse } from "@/api/contract";
-import { formatearMoneda, formatearPorcentaje, esCero } from "@/lib/decimal";
+import { formatearMoneda, formatearPorcentaje } from "@/lib/decimal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Edit2Icon, PercentIcon, CalculatorIcon } from "lucide-react";
 import { parsearEntradaDecimal } from "@/lib/decimal";
+
+export const MOTIVO_SIN_BACKEND = "Disponible cuando el backend implemente esta operación.";
 
 interface PieTotalesProps {
   apu: ApuResponse;
@@ -34,7 +37,7 @@ export function PieTotales({
   const [ciValor, setCiValor] = useState("");
 
   const iniciarEdicionCi = () => {
-    setCiValor(apu.porcentajeIndirecto ?? "");
+    setCiValor(apu.porcentajeIndirecto != null ? String(apu.porcentajeIndirecto) : "");
     setEditandoCi(true);
   };
 
@@ -56,8 +59,6 @@ export function PieTotales({
     setEditandoCi(false);
   };
 
-  const tieneDescuento = !esCero(apu.porcentajeDescuento);
-
   return (
     <div className="flex flex-col gap-3">
       <TarjetaTabla titulo="Costo unitario">
@@ -69,10 +70,6 @@ export function PieTotales({
 
         <div className="flex flex-col gap-2.5 p-4 text-sm">
           <Linea etiqueta="Costo Directo" valor={formatearMoneda(apu.costoDirecto)} />
-
-          {tieneDescuento && (
-            <Linea etiqueta="CD Ajustado" valor={formatearMoneda(apu.cdAjustado)} />
-          )}
 
           {!apu.esAuxiliar && (
             <div className="flex flex-col gap-1.5">
@@ -153,12 +150,26 @@ export function PieTotales({
       </TarjetaTabla>
 
       <div className="grid grid-cols-2 gap-2">
-        <Button variant="outline" onClick={onAbrirDescuento}>
-          <PercentIcon data-icon="inline-start" /> Descuento
-        </Button>
-        <Button variant="outline" onClick={onAbrirDesglose}>
-          <CalculatorIcon data-icon="inline-start" /> Desglose
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <Button variant="outline" className="w-full" onClick={onAbrirDescuento} disabled>
+                <PercentIcon data-icon="inline-start" /> Descuento
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>{MOTIVO_SIN_BACKEND}</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <Button variant="outline" className="w-full" onClick={onAbrirDesglose} disabled>
+                <CalculatorIcon data-icon="inline-start" /> Desglose
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>{MOTIVO_SIN_BACKEND}</TooltipContent>
+        </Tooltip>
       </div>
 
       <p className="text-xs leading-relaxed text-pretty text-muted-foreground">

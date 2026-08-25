@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, patch, post, del } from "@/api/request";
 import { qk } from "@/api/queryKeys";
-import { parsearEntradaDecimal, asDecimal, type Decimal } from "@/lib/decimal";
+import { parsearEntradaDecimal } from "@/lib/decimal";
 import { celdaCantidadSchema, celdaRendimientoSchema, precioOverrideSchema } from "../schemas";
 import type {
   ApuResponse,
@@ -29,7 +29,7 @@ export interface SeccionEditor {
   tipo: SeccionTipo;
   etiqueta: string;
   bloque: "M" | "N" | "O" | "P";
-  subtotal: Decimal;
+  subtotal: number;
   filas: FilaEditor[];
   muestraRendimiento: boolean;
 }
@@ -93,7 +93,7 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
         tipo,
         etiqueta: ETIQUETA[tipo],
         bloque: BLOQUE[tipo],
-        subtotal: s?.subtotal ?? asDecimal("0.000000"),
+        subtotal: s?.subtotal ?? 0,
         muestraRendimiento: tipo === "EQUIPO" || tipo === "MANO_OBRA",
         filas: (s?.detalles ?? []).map((d) => ({
           detalle: d,

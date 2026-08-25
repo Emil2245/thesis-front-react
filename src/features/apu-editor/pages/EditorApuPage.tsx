@@ -10,6 +10,8 @@ import { DialogoGuardarPlantilla } from "../components/DialogoGuardarPlantilla";
 import { PopoverDesglose } from "../components/PopoverDesglose";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { MOTIVO_SIN_BACKEND } from "../components/PieTotales";
 import { SaveIcon } from "lucide-react";
 
 export function EditorApuPage() {
@@ -79,13 +81,21 @@ export function EditorApuPage() {
           ))}
 
           <div className="flex justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setGuardarPlantillaDialogAbierto(true)}
-            >
-              <SaveIcon data-icon="inline-start" /> Guardar como plantilla
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setGuardarPlantillaDialogAbierto(true)}
+                    disabled
+                  >
+                    <SaveIcon data-icon="inline-start" /> Guardar como plantilla
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{MOTIVO_SIN_BACKEND}</TooltipContent>
+            </Tooltip>
           </div>
         </div>
 

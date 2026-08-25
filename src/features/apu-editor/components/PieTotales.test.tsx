@@ -6,22 +6,14 @@ import { apuDetalleFixture } from "@/test/fixtures/apu";
 import type { ApuResponse } from "@/api/contract";
 
 function apuAuxiliar(): ApuResponse {
-  return { ...apuDetalleFixture, esAuxiliar: true, costoTotal: "800.000000" as never };
-}
-
-function apuConDescuento(): ApuResponse {
-  return {
-    ...apuDetalleFixture,
-    porcentajeDescuento: "5.000000" as never,
-    cdAjustado: "760.000000" as never,
-  };
+  return { ...apuDetalleFixture, esAuxiliar: true, costoTotal: 800 };
 }
 
 function apuConPorcentajePropio(): ApuResponse {
   return {
     ...apuDetalleFixture,
-    porcentajeIndirecto: "0.200000" as never,
-    porcentajeIndirectoEfectivo: "0.200000" as never,
+    porcentajeIndirecto: 0.2,
+    porcentajeIndirectoEfectivo: 0.2,
   };
 }
 
@@ -54,19 +46,7 @@ describe("PieTotales", () => {
     expect(screen.getByText("Costo total (CT = CD)")).toBeInTheDocument();
   });
 
-  it("muestra CD Ajustado solo cuando hay descuento", () => {
-    renderConProviders(
-      <PieTotales
-        apu={apuConDescuento()}
-        onEditarPorcentajeCi={() => Promise.resolve()}
-        onAbrirDescuento={() => {}}
-        onAbrirDesglose={() => {}}
-      />,
-    );
-    expect(screen.getByText("CD Ajustado")).toBeInTheDocument();
-  });
-
-  it("no muestra CD Ajustado cuando descuento es cero", () => {
+  it("nunca muestra CD Ajustado (el backend no expone ese campo)", () => {
     renderConProviders(
       <PieTotales
         apu={apuDetalleFixture}
@@ -90,7 +70,7 @@ describe("PieTotales", () => {
     expect(screen.getByText("Valor propio")).toBeInTheDocument();
   });
 
-  it("muestra botones Descuento y Desglose", () => {
+  it("muestra botones Descuento y Desglose deshabilitados (sin endpoint en el backend)", () => {
     renderConProviders(
       <PieTotales
         apu={apuDetalleFixture}
@@ -99,7 +79,7 @@ describe("PieTotales", () => {
         onAbrirDesglose={() => {}}
       />,
     );
-    expect(screen.getByText("Descuento")).toBeInTheDocument();
-    expect(screen.getByText("Desglose")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /descuento/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /desglose/i })).toBeDisabled();
   });
 });

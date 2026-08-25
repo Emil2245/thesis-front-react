@@ -8,8 +8,7 @@ import type { ApuResponse } from "@/api/contract";
 function apuConDescuentoExistente(): ApuResponse {
   return {
     ...apuDetalleFixture,
-    porcentajeDescuento: "5.000000" as never,
-    cdAjustado: "760.000000" as never,
+    porcentajeDescuento: 5,
   };
 }
 
