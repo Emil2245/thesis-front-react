@@ -13,6 +13,7 @@
 
 ## Status
 
+- **Status**: implementado en `plan/025` (aa0b96c, b09927a, bba04fc, 847794b), 2026-08-24. Excepción documentada en `ExportPage` (`chart-*` neutros). Quedan crudos fuera de alcance: `GanttChart.tsx` (colores categóricos de barras).
 - **Priority**: P3
 - **Effort**: S
 - **Risk**: LOW

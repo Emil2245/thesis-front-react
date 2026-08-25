@@ -9,7 +9,7 @@ interface BadgeHerenciaProps {
 export function BadgeHerencia({ heredero, onRestaurar }: BadgeHerenciaProps) {
   if (heredero) {
     return (
-      <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100">
+      <Badge variant="secondary" className="bg-exito/15 text-exito-texto hover:bg-exito/15">
         Heredado
       </Badge>
     );
@@ -17,7 +17,10 @@ export function BadgeHerencia({ heredero, onRestaurar }: BadgeHerenciaProps) {
 
   return (
     <div className="flex items-center gap-1">
-      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+      <Badge
+        variant="outline"
+        className="bg-advertencia/15 text-advertencia-texto border-advertencia/30"
+      >
         Manual
       </Badge>
       {onRestaurar && (

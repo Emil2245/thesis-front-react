@@ -47,7 +47,7 @@ export function ComboboxUnidad({
         placeholder="O escribe una unidad personalizada…"
       />
       {value !== "" && !esConocida && (
-        <p className="flex items-center gap-1 text-xs text-amber-600">
+        <p className="flex items-center gap-1 text-xs text-advertencia-texto">
           <TriangleAlertIcon className="size-3" />
           Unidad no común. Verifica que sea correcta.
         </p>

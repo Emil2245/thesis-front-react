@@ -9,26 +9,29 @@ interface ChipAlertaProps {
 const config: Record<string, { label: string; className: string }> = {
   PU_CERO: {
     label: "PU=0",
-    className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+    className: "bg-peligro/15 text-peligro-texto border-peligro/30",
   },
   CANTIDAD_CERO: {
     label: "Cant.=0",
-    className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+    className: "bg-advertencia/15 text-advertencia-texto border-advertencia/30",
   },
   SIN_ACTIVIDAD: {
     label: "Sin act.",
-    className: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+    className: "bg-advertencia/15 text-advertencia-texto border-advertencia/30",
   },
 };
 
 export function ChipAlerta({ tipo }: ChipAlertaProps) {
-  const cfg = config[tipo] || { label: tipo, className: "bg-gray-100 text-gray-700" };
+  const cfg = config[tipo] || {
+    label: tipo,
+    className: "bg-muted text-muted-foreground border-border",
+  };
   return (
     <Tooltip>
       <TooltipTrigger>
         <span
           className={cn(
-            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium",
+            "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium",
             cfg.className,
           )}
         >

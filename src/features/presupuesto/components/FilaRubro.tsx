@@ -45,7 +45,7 @@ export function FilaRubro({ rubro, nivel, onEliminar, onCantidadChange }: FilaRu
         {rubro.alertas.length > 0 && (
           <Tooltip>
             <TooltipTrigger>
-              <AlertTriangle className="size-3.5 text-amber-500" />
+              <AlertTriangle className="size-3.5 text-advertencia-texto" />
             </TooltipTrigger>
             <TooltipContent>
               <p>{rubro.alertas.join(", ")}</p>
