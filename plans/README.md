@@ -92,6 +92,7 @@ uno. Baseline al cerrar: **197 tests en 43 archivos** y `pnpm run e2e` en verde
 | 025 | [Colores crudos de Tailwind → tokens del tema](025-colores-crudos-a-tokens-del-tema.md) | P3 | S | — | DONE (`346294f`) |
 | 026 | [Alinear el módulo APU con el backend real](026-alinear-modulo-apu-con-el-backend-real.md) | P1 | M | — | DONE (`73d4606`) |
 | 027 | [Degradar los módulos sin backend](027-degradar-modulos-sin-backend.md) | P1 | M | 019 | DONE (`2862321`) |
+| 028 | [Validar las respuestas con Zod en el seam](028-validar-respuestas-con-zod.md) | P1 | M | — | TODO |
 
 ### Trabajo fuera de plan (2026-08-25)
 
