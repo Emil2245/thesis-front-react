@@ -7,6 +7,8 @@ import { BadgeAuxiliar } from "../components/BadgeAuxiliar";
 import { CargandoTabla } from "@/components/comunes/CargandoTabla";
 import { EstadoVacio } from "@/components/comunes/EstadoVacio";
 import { ConfirmarDestructivo } from "@/components/comunes/ConfirmarDestructivo";
+import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
+import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
 import {
   Table,
   TableBody,
@@ -80,16 +82,18 @@ export function ListaApusPage() {
   if (isPending) return <CargandoTabla />;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">APUs</h1>
-        <Button onClick={() => setCrearAbierto(true)}>
-          <PlusIcon /> Nuevo APU
-        </Button>
-      </div>
+    <>
+      <EncabezadoPagina
+        titulo="APUs"
+        acciones={
+          <Button onClick={() => setCrearAbierto(true)}>
+            <PlusIcon data-icon="inline-start" /> Nuevo APU
+          </Button>
+        }
+      />
 
       <div className="relative">
-        <SearchIcon className="absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input
           className="pl-8"
           placeholder="Buscar por código o descripción…"
@@ -104,89 +108,91 @@ export function ListaApusPage() {
           descripcion="Crea el primer APU para empezar."
           accion={
             <Button onClick={() => setCrearAbierto(true)}>
-              <PlusIcon /> Crear APU
+              <PlusIcon data-icon="inline-start" /> Crear APU
             </Button>
           }
         />
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Código</TableHead>
-              <TableHead>Descripción</TableHead>
-              <TableHead>Unidad</TableHead>
-              <TableHead className="num">CD</TableHead>
-              <TableHead className="num">CT</TableHead>
-              <TableHead />
-              <TableHead className="w-12" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.contenido.map((apu) => (
-              <TableRow key={apu.id}>
-                <TableCell className="font-mono text-xs">{apu.codigo}</TableCell>
-                <TableCell>
-                  <Link
-                    to={`/proyectos/${proyectoId}/apus/${apu.id}`}
-                    className="text-primary underline"
-                  >
-                    {apu.descripcion}
-                  </Link>
-                </TableCell>
-                <TableCell>{apu.unidad}</TableCell>
-                <TableCell className="num">{formatearMoneda(apu.costoDirecto)}</TableCell>
-                <TableCell className="num">{formatearMoneda(apu.costoTotal)}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <BadgeAuxiliar esAuxiliar={apu.esAuxiliar} />
-                    {apu.vinculado && <LinkIcon className="size-3 text-muted-foreground" />}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon-sm">
-                        <MoreHorizontalIcon />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => navigate(`/proyectos/${proyectoId}/apus/${apu.id}`)}
-                      >
-                        <ExternalLinkIcon /> Abrir
-                      </DropdownMenuItem>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span>
-                            <DropdownMenuItem disabled onClick={() => duplicar.mutate(apu.id)}>
-                              <CopyIcon /> Duplicar
-                            </DropdownMenuItem>
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>{MOTIVO_SIN_BACKEND}</TooltipContent>
-                      </Tooltip>
-                      {!apu.vinculado && (
-                        <ConfirmarDestructivo
-                          titulo="Eliminar APU"
-                          descripcion={`¿Eliminar "${apu.descripcion}"? Esta acción no se puede deshacer.`}
-                          textoConfirmar="Eliminar"
-                          onConfirmar={() => manejarEliminar(apu.id)}
-                        >
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onSelect={(e) => e.preventDefault()}
-                          >
-                            <Trash2Icon /> Eliminar
-                          </DropdownMenuItem>
-                        </ConfirmarDestructivo>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+        <TarjetaTabla>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Código</TableHead>
+                <TableHead>Descripción</TableHead>
+                <TableHead>Unidad</TableHead>
+                <TableHead className="num">CD</TableHead>
+                <TableHead className="num">CT</TableHead>
+                <TableHead />
+                <TableHead className="w-12" />
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {data.contenido.map((apu) => (
+                <TableRow key={apu.id}>
+                  <TableCell className="font-mono text-xs">{apu.codigo}</TableCell>
+                  <TableCell>
+                    <Link
+                      to={`/proyectos/${proyectoId}/apus/${apu.id}`}
+                      className="text-primary underline"
+                    >
+                      {apu.descripcion}
+                    </Link>
+                  </TableCell>
+                  <TableCell>{apu.unidad}</TableCell>
+                  <TableCell className="num">{formatearMoneda(apu.costoDirecto)}</TableCell>
+                  <TableCell className="num">{formatearMoneda(apu.costoTotal)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <BadgeAuxiliar esAuxiliar={apu.esAuxiliar} />
+                      {apu.vinculado && <LinkIcon className="size-3 text-muted-foreground" />}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon-sm">
+                          <MoreHorizontalIcon />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => navigate(`/proyectos/${proyectoId}/apus/${apu.id}`)}
+                        >
+                          <ExternalLinkIcon /> Abrir
+                        </DropdownMenuItem>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <DropdownMenuItem disabled onClick={() => duplicar.mutate(apu.id)}>
+                                <CopyIcon /> Duplicar
+                              </DropdownMenuItem>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>{MOTIVO_SIN_BACKEND}</TooltipContent>
+                        </Tooltip>
+                        {!apu.vinculado && (
+                          <ConfirmarDestructivo
+                            titulo="Eliminar APU"
+                            descripcion={`¿Eliminar "${apu.descripcion}"? Esta acción no se puede deshacer.`}
+                            textoConfirmar="Eliminar"
+                            onConfirmar={() => manejarEliminar(apu.id)}
+                          >
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onSelect={(e) => e.preventDefault()}
+                            >
+                              <Trash2Icon /> Eliminar
+                            </DropdownMenuItem>
+                          </ConfirmarDestructivo>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TarjetaTabla>
       )}
 
       <DialogoNuevoApu
@@ -199,6 +205,6 @@ export function ListaApusPage() {
           navigate(`/proyectos/${proyectoId}/apus/${apuId}`);
         }}
       />
-    </div>
+    </>
   );
 }
