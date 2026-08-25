@@ -12,6 +12,7 @@
 
 ## Status
 
+- **Status**: implementado en `plan/022`, 2026-08-24 (`pnpm run verify` en verde, 177 tests)
 - **Priority**: P2
 - **Effort**: M
 - **Risk**: LOW
