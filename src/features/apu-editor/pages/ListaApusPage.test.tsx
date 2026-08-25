@@ -26,13 +26,6 @@ describe("ListaApusPage", () => {
     });
   });
 
-  it("renders filter controls", async () => {
-    renderLista();
-    await waitFor(() => {
-      expect(screen.getByText(/Solo auxiliares/)).toBeInTheDocument();
-    });
-  });
-
   it("shows search input", async () => {
     renderLista();
     await waitFor(() => {

@@ -17,14 +17,14 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { MOTIVO_SIN_BACKEND } from "../components/PieTotales";
 import {
   PlusIcon,
   MoreHorizontalIcon,
@@ -47,12 +47,10 @@ export function ListaApusPage() {
   const navigate = useNavigate();
 
   const [q, setQ] = useState("");
-  const [soloAuxiliares, setSoloAuxiliares] = useState(false);
   const [crearAbierto, setCrearAbierto] = useState(false);
 
   const filtros: Record<string, unknown> = {};
   if (q) filtros.q = q;
-  if (soloAuxiliares) filtros.soloAuxiliares = true;
 
   const { data, isPending } = useApus(presupuestoId, filtros);
   const eliminar = useEliminarApu(presupuestoId);
@@ -90,24 +88,14 @@ export function ListaApusPage() {
         </Button>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1">
-          <SearchIcon className="absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-8"
-            placeholder="Buscar por código o descripción…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <Switch
-            id="solo-auxiliares"
-            checked={soloAuxiliares}
-            onCheckedChange={setSoloAuxiliares}
-          />
-          <Label htmlFor="solo-auxiliares">Solo auxiliares</Label>
-        </div>
+      <div className="relative">
+        <SearchIcon className="absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          className="pl-8"
+          placeholder="Buscar por código o descripción…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
       </div>
 
       {!data?.contenido.length ? (
@@ -167,9 +155,16 @@ export function ListaApusPage() {
                       >
                         <ExternalLinkIcon /> Abrir
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => duplicar.mutate(apu.id)}>
-                        <CopyIcon /> Duplicar
-                      </DropdownMenuItem>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>
+                            <DropdownMenuItem disabled onClick={() => duplicar.mutate(apu.id)}>
+                              <CopyIcon /> Duplicar
+                            </DropdownMenuItem>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>{MOTIVO_SIN_BACKEND}</TooltipContent>
+                      </Tooltip>
                       {!apu.vinculado && (
                         <ConfirmarDestructivo
                           titulo="Eliminar APU"
