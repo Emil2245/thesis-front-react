@@ -239,7 +239,15 @@ export const handlers = [
         },
       ]);
     }
-    return HttpResponse.json([plantillaDetalleFixture]);
+    return HttpResponse.json([
+      {
+        id: plantillaDetalleFixture.id,
+        nombre: plantillaDetalleFixture.nombre,
+        descripcion: plantillaDetalleFixture.descripcion,
+        tipo: plantillaDetalleFixture.tipo,
+        fechaCreacion: "2026-07-01T00:00:00",
+      },
+    ]);
   }),
   http.get(`${API}/plantillas-apu/:id`, () => HttpResponse.json(plantillaDetalleFixture)),
   http.put(`${API}/plantillas-apu/:id`, () =>

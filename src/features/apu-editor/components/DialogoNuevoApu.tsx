@@ -1,9 +1,7 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { get } from "@/api/request";
-import { qk } from "@/api/queryKeys";
+import { useEffect, useState } from "react";
 import { useCrearApu } from "../hooks/useApus";
-import type { PlantillaApuDetalleResponse, ParametrosProyectoResponse } from "@/api/contract";
+import { usePlantillaDetalle, usePlantillas } from "../hooks/usePlantillas";
+import { useParametros } from "@/features/proyectos/hooks/useParametros";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Spinner } from "@/components/ui/spinner";
-import { formatearMoneda } from "@/lib/decimal";
 import { ApiError } from "@/api/problem";
 
 interface DialogoNuevoApuProps {
@@ -41,15 +38,16 @@ export function DialogoNuevoApu({
   const [plantillaId, setPlantillaId] = useState<number | undefined>();
   const [codigoError, setCodigoError] = useState<string | null>(null);
 
-  const { data: parametros } = useQuery({
-    queryKey: qk.parametrosProyecto(proyectoId),
-    queryFn: () => get<ParametrosProyectoResponse>(`/proyectos/${proyectoId}/parametros`),
-  });
+  const { data: parametros } = useParametros(proyectoId);
 
-  const { data: plantillas } = useQuery({
-    queryKey: qk.plantillas(),
-    queryFn: () => get<PlantillaApuDetalleResponse[]>("/plantillas-apu"),
-  });
+  const { data: plantillas } = usePlantillas();
+  const { data: detalle } = usePlantillaDetalle(plantillaId ?? 0);
+
+  useEffect(() => {
+    if (!detalle) return;
+    setDescripcion(detalle.snapshot.descripcion);
+    setUnidad(detalle.snapshot.unidad);
+  }, [detalle]);
 
   const modoAuto = parametros?.modoCodigoRubro === "AUTOGENERADO";
 
@@ -137,15 +135,11 @@ export function DialogoNuevoApu({
                   className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted ${
                     plantillaId === p.id ? "bg-muted font-medium" : ""
                   }`}
-                  onClick={() => {
-                    setPlantillaId(p.id);
-                    setDescripcion(p.snapshot.descripcion);
-                    setUnidad(p.snapshot.unidad);
-                  }}
+                  onClick={() => setPlantillaId(p.id)}
                 >
                   <span>{p.nombre}</span>
                   <span className="text-xs text-muted-foreground">
-                    {formatearMoneda(p.snapshot.costoTotal)}
+                    {p.tipo === "SISTEMA" ? "Sistema" : "Personal"}
                   </span>
                 </button>
               ))}

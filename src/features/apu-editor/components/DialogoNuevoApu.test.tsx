@@ -111,6 +111,55 @@ describe("DialogoNuevoApu", () => {
     });
   });
 
+  it("renders template list without crashing", async () => {
+    const { user } = renderConProviders(
+      <DialogoNuevoApu
+        abierto
+        onClose={onClose}
+        presupuestoId={1}
+        proyectoId={1}
+        onCreate={onCreate}
+      />,
+    );
+
+    await user.click(screen.getByText(/Desde plantilla/));
+    expect(await screen.findByText(/Excavación típica/)).toBeInTheDocument();
+  });
+
+  it("fills descripcion and unidad from detalle when template selected", async () => {
+    const { user } = renderConProviders(
+      <DialogoNuevoApu
+        abierto
+        onClose={onClose}
+        presupuestoId={1}
+        proyectoId={1}
+        onCreate={onCreate}
+      />,
+    );
+
+    await user.click(screen.getByText(/Desde plantilla/));
+    await user.click(await screen.findByText(/Excavación típica/));
+
+    expect(await screen.findByDisplayValue("Excavación a máquina")).toBeInTheDocument();
+    expect(await screen.findByDisplayValue("m3")).toBeInTheDocument();
+  });
+
+  it("shows template tipo instead of a price", async () => {
+    const { user } = renderConProviders(
+      <DialogoNuevoApu
+        abierto
+        onClose={onClose}
+        presupuestoId={1}
+        proyectoId={1}
+        onCreate={onCreate}
+      />,
+    );
+
+    await user.click(screen.getByText(/Desde plantilla/));
+    expect(await screen.findByText("Sistema")).toBeInTheDocument();
+    expect(screen.queryByText(/\$/)).not.toBeInTheDocument();
+  });
+
   it("MANUAL mode shows editable codigo field", async () => {
     server.use(
       http.get(`${API}/proyectos/:id/parametros`, () =>
