@@ -7,6 +7,7 @@ export function useApus(presupuestoId: number, filtros?: Record<string, unknown>
   return useQuery({
     queryKey: qk.apus(presupuestoId, filtros),
     queryFn: () => get<Page<ApuResumenResponse>>(`/presupuestos/${presupuestoId}/apus`, filtros),
+    enabled: presupuestoId > 0,
   });
 }
 

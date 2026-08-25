@@ -18,6 +18,9 @@ async function setupCronogramaPage(version = "11") {
     { ruta: `/proyectos/1/cronograma?v=${version}` },
   );
   await waitFor(() => expect(screen.getByText("Cronograma")).toBeInTheDocument());
+  // La versión activa se resuelve de forma asíncrona (selector de la barra
+  // superior): esperar a que el fixture esté pintado, no solo el encabezado.
+  await waitFor(() => expect(screen.getByText("Excavación a máquina")).toBeInTheDocument());
   return { user: result.user };
 }
 

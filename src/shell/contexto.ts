@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { get } from "@/api/request";
@@ -43,9 +44,12 @@ export function useVersionActiva() {
     setParams(next, { replace: false });
   };
 
-  if (encontrada == null && vigente != null && params.has("v")) {
-    cambiar(vigente.id);
-  }
+  useEffect(() => {
+    if (encontrada == null && vigente != null && params.has("v")) {
+      cambiar(vigente.id);
+    }
+    // `cambiar` se recrea en cada render: depende de los valores, no de la función.
+  }, [encontrada, vigente, params]);
 
   return {
     versiones: versiones ?? [],

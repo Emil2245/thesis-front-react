@@ -13,6 +13,7 @@
 
 ## Status
 
+- **Status**: EJECUTADO 2026-08-24 en rama `plan/019` — verify en verde (typecheck · lint · format · test · build), 176 tests en 42 archivos. Nota: el grep del done-criteria sobre `searchParams.get("v")` deja ver `src/features/exportar/pages/ExportPage.tsx:39`, pantalla fuera del alcance de este plan (su unificación corresponde al plan 027).
 - **Priority**: P1
 - **Effort**: M
 - **Risk**: MED

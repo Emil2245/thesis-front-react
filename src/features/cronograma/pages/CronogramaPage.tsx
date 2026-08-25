@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useVersionActiva } from "@/shell/contexto";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -17,8 +17,10 @@ import { DialogoEditarActividad } from "../components/DialogoEditarActividad";
 import type { ActividadResponse, UnidadTiempo } from "@/api/contract";
 
 export function CronogramaPage() {
-  const [searchParams] = useSearchParams();
-  const versionId = Number(searchParams.get("v")) || 0;
+  // La versión la manda el selector de la barra superior, que ya cae en la
+  // vigente cuando la URL no trae `?v=`.
+  const { presupuestoId } = useVersionActiva();
+  const versionId = presupuestoId ?? 0;
 
   const { data: cronograma, isLoading } = useCronograma(versionId);
   const crearCrono = useCrearCronograma(versionId);
