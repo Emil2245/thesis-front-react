@@ -300,7 +300,11 @@ export const handlers = [
     }
     return HttpResponse.json(null, { status: 204 });
   }),
-  http.get(`${API}/presupuestos/:id/apus`, ({ request }) => {
+  http.get(`${API}/presupuestos/:id/apus`, ({ params, request }) => {
+    const id = Number(params.id);
+    if (id !== 10 && id !== 11) {
+      return HttpResponse.json({ title: "No encontrado" }, { status: 404 });
+    }
     const url = new URL(request.url);
     const qParam = url.searchParams.get("q");
     const q = qParam?.toLowerCase();
