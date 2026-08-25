@@ -17,7 +17,10 @@ export function BadgeHerencia({ heredero, onRestaurar }: BadgeHerenciaProps) {
 
   return (
     <div className="flex items-center gap-1">
-      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+      <Badge
+        variant="outline"
+        className="bg-advertencia/15 text-advertencia-texto border-advertencia/30"
+      >
         Manual
       </Badge>
       {onRestaurar && (
