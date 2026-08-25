@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useApuEditor } from "../hooks/useApuEditor";
+import { useVersionActiva } from "@/shell/contexto";
 import { EncabezadoApu } from "../components/EncabezadoApu";
 import { GridSeccion } from "../components/GridSeccion";
 import { PieTotales } from "../components/PieTotales";
@@ -12,8 +13,10 @@ import { Button } from "@/components/ui/button";
 import { SaveIcon } from "lucide-react";
 
 export function EditorApuPage() {
-  const { id, apuId } = useParams<{ id: string; apuId: string }>();
-  const presupuestoId = Number(id);
+  // La versión la manda el selector de la barra superior; `:apuId` sí es de ruta.
+  const { apuId } = useParams<{ apuId: string }>();
+  const { presupuestoId: versionActiva } = useVersionActiva();
+  const presupuestoId = versionActiva ?? 0;
   const parsedApuId = Number(apuId);
 
   const {
@@ -27,7 +30,7 @@ export function EditorApuPage() {
     editarPorcentajeCi,
     aplicarDescuento,
     alternarAuxiliar,
-  } = useApuEditor(parsedApuId, presupuestoId);
+  } = useApuEditor(parsedApuId, presupuestoId || undefined);
 
   const [descuentoDialogAbierto, setDescuentoDialogAbierto] = useState(false);
   const [guardarPlantillaDialogAbierto, setGuardarPlantillaDialogAbierto] = useState(false);
