@@ -1,6 +1,9 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSesionStore, esSuperAdmin } from "@/features/auth/sesion";
+import { useCerrarSesion } from "@/features/auth/hooks/useAuthMutaciones";
+import { useProyecto } from "@/features/proyectos/hooks/useProyectos";
 import {
+  Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
@@ -10,11 +13,23 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useProyectoActivoId } from "./contexto";
 import {
   CalculatorIcon,
+  ChevronsUpDownIcon,
   FolderIcon,
   UsersIcon,
   FileTextIcon,
@@ -24,39 +39,64 @@ import {
   SettingsIcon,
   GitBranchIcon,
   LayoutDashboardIcon,
+  LogOutIcon,
   PackageIcon,
   FileSpreadsheetIcon,
   DatabaseIcon,
   BookTemplateIcon,
   ScrollTextIcon,
   ActivityIcon,
+  UserIcon,
 } from "lucide-react";
 
 function estaActivo(pathname: string, path: string) {
   return pathname === path || pathname.startsWith(path + "/");
 }
 
+const RUTAS_PROYECTO = [
+  { sufijo: "", icono: LayoutDashboardIcon, etiqueta: "Resumen" },
+  { sufijo: "/insumos", icono: PackageIcon, etiqueta: "Insumos" },
+  { sufijo: "/apus", icono: FileTextIcon, etiqueta: "APUs" },
+  { sufijo: "/presupuesto", icono: BarChart3Icon, etiqueta: "Presupuesto" },
+  { sufijo: "/cronograma", icono: CalendarIcon, etiqueta: "Cronograma" },
+  { sufijo: "/documentos", icono: DownloadIcon, etiqueta: "Documentos" },
+  { sufijo: "/parametros", icono: SettingsIcon, etiqueta: "Parámetros" },
+  { sufijo: "/versiones", icono: GitBranchIcon, etiqueta: "Versiones" },
+] as const;
+
+const RUTAS_ADMIN = [
+  { ruta: "/admin/usuarios", icono: UsersIcon, etiqueta: "Usuarios" },
+  { ruta: "/admin/bases", icono: DatabaseIcon, etiqueta: "Bases" },
+  { ruta: "/admin/plantillas", icono: BookTemplateIcon, etiqueta: "Plantillas" },
+  { ruta: "/admin/parametros", icono: SettingsIcon, etiqueta: "Parámetros" },
+  { ruta: "/admin/valores", icono: ScrollTextIcon, etiqueta: "Valores ref." },
+  { ruta: "/admin/logs", icono: ActivityIcon, etiqueta: "Logs" },
+] as const;
+
 export function AppSidebar() {
   const { pathname } = useLocation();
   const proyectoId = useProyectoActivoId();
   const usuario = useSesionStore((s) => s.usuario);
   const esAdmin = esSuperAdmin(usuario);
+  const { data: proyecto } = useProyecto(proyectoId);
 
   const base = proyectoId ? `/proyectos/${proyectoId}` : null;
 
   return (
-    <>
+    <Sidebar>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link to="/proyectos">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <CalculatorIcon className="size-4" />
                 </div>
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">APU</span>
-                  <span className="text-xs text-muted-foreground">Sistema de presupuestos</span>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-medium">Sistema APU</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    Presupuestos de obra
+                  </span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -93,85 +133,25 @@ export function AppSidebar() {
           <>
             <SidebarSeparator />
             <SidebarGroup>
-              <SidebarGroupLabel>Proyecto</SidebarGroupLabel>
+              <SidebarGroupLabel title={proyecto?.nombreProyecto}>
+                {proyecto?.nombreProyecto ?? "Proyecto"}
+              </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={estaActivo(pathname, base)}>
-                      <Link to={base}>
-                        <LayoutDashboardIcon />
-                        <span>Resumen</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={estaActivo(pathname, `${base}/insumos`)}>
-                      <Link to={`${base}/insumos`}>
-                        <PackageIcon />
-                        <span>Insumos</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={estaActivo(pathname, `${base}/apus`)}>
-                      <Link to={`${base}/apus`}>
-                        <FileTextIcon />
-                        <span>APUs</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={estaActivo(pathname, `${base}/presupuesto`)}
-                    >
-                      <Link to={`${base}/presupuesto`}>
-                        <BarChart3Icon />
-                        <span>Presupuesto</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={estaActivo(pathname, `${base}/cronograma`)}
-                    >
-                      <Link to={`${base}/cronograma`}>
-                        <CalendarIcon />
-                        <span>Cronograma</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={estaActivo(pathname, `${base}/documentos`)}
-                    >
-                      <Link to={`${base}/documentos`}>
-                        <DownloadIcon />
-                        <span>Documentos</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={estaActivo(pathname, `${base}/parametros`)}
-                    >
-                      <Link to={`${base}/parametros`}>
-                        <SettingsIcon />
-                        <span>Parámetros</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={estaActivo(pathname, `${base}/versiones`)}>
-                      <Link to={`${base}/versiones`}>
-                        <GitBranchIcon />
-                        <span>Versiones</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  {RUTAS_PROYECTO.map(({ sufijo, icono: Icono, etiqueta }) => {
+                    const ruta = `${base}${sufijo}`;
+                    const activo = sufijo === "" ? pathname === base : estaActivo(pathname, ruta);
+                    return (
+                      <SidebarMenuItem key={etiqueta}>
+                        <SidebarMenuButton asChild isActive={activo}>
+                          <Link to={ruta}>
+                            <Icono />
+                            <span>{etiqueta}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -185,54 +165,16 @@ export function AppSidebar() {
               <SidebarGroupLabel>Administración</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={estaActivo(pathname, "/admin/usuarios")}>
-                      <Link to="/admin/usuarios">
-                        <UsersIcon />
-                        <span>Usuarios</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={estaActivo(pathname, "/admin/bases")}>
-                      <Link to="/admin/bases">
-                        <DatabaseIcon />
-                        <span>Bases</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={estaActivo(pathname, "/admin/plantillas")}>
-                      <Link to="/admin/plantillas">
-                        <BookTemplateIcon />
-                        <span>Plantillas</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={estaActivo(pathname, "/admin/parametros")}>
-                      <Link to="/admin/parametros">
-                        <SettingsIcon />
-                        <span>Parámetros</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={estaActivo(pathname, "/admin/valores")}>
-                      <Link to="/admin/valores">
-                        <ScrollTextIcon />
-                        <span>Valores ref.</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={estaActivo(pathname, "/admin/logs")}>
-                      <Link to="/admin/logs">
-                        <ActivityIcon />
-                        <span>Logs</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  {RUTAS_ADMIN.map(({ ruta, icono: Icono, etiqueta }) => (
+                    <SidebarMenuItem key={ruta}>
+                      <SidebarMenuButton asChild isActive={estaActivo(pathname, ruta)}>
+                        <Link to={ruta}>
+                          <Icono />
+                          <span>{etiqueta}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -241,17 +183,62 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={estaActivo(pathname, "/perfil")}>
-              <Link to="/perfil">
-                <UsersIcon />
-                <span>Perfil</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <MenuUsuario />
       </SidebarFooter>
-    </>
+      <SidebarRail />
+    </Sidebar>
+  );
+}
+
+function MenuUsuario() {
+  const navigate = useNavigate();
+  const usuario = useSesionStore((s) => s.usuario);
+  const cerrarSesion = useCerrarSesion();
+  const inicial = usuario?.nombre?.charAt(0).toUpperCase() ?? "?";
+
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton size="lg" aria-label="Menú de usuario">
+              <Avatar className="size-8 rounded-lg">
+                <AvatarFallback className="rounded-lg">{inicial}</AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">{usuario?.nombre}</span>
+                <span className="truncate text-xs text-muted-foreground">{usuario?.email}</span>
+              </div>
+              <ChevronsUpDownIcon className="ml-auto size-4 text-muted-foreground" />
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56"
+            side="right"
+            align="end"
+            sideOffset={4}
+          >
+            <DropdownMenuLabel className="font-normal">
+              <div className="grid text-left text-sm leading-tight">
+                <span className="truncate font-medium">{usuario?.nombre}</span>
+                <span className="truncate text-xs text-muted-foreground">{usuario?.email}</span>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => navigate("/perfil")}>
+                <UserIcon />
+                Perfil
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => cerrarSesion.mutate()}>
+              <LogOutIcon />
+              Cerrar sesión
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    </SidebarMenu>
   );
 }

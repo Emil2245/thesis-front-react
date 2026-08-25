@@ -5,11 +5,32 @@ import { TabFirmantes } from "../components/TabFirmantes";
 import { ChipEstado } from "@/components/comunes/ChipEstado";
 import { CargandoTabla } from "@/components/comunes/CargandoTabla";
 import { ConfirmarDestructivo } from "@/components/comunes/ConfirmarDestructivo";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EncabezadoPagina, PuntoMeta } from "@/components/comunes/EncabezadoPagina";
+import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
+import { Moneda } from "@/components/comunes/Moneda";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { TriangleAlertIcon, PencilIcon, CopyIcon, Trash2Icon, PercentIcon } from "lucide-react";
+import { MoreHorizontalIcon } from "lucide-react";
 import { DialogoDescuentoGlobal } from "../components/DialogoDescuentoGlobal";
+import { useVersionActiva } from "@/shell/contexto";
+import { usePresupuesto, useResumen } from "@/features/presupuesto/hooks/usePresupuesto";
+import { formatearPorcentaje } from "@/lib/decimal";
+import type { Decimal } from "@/lib/decimal";
 
 export function ResumenProyectoPage() {
   const { id } = useParams();
@@ -18,53 +39,85 @@ export function ResumenProyectoPage() {
   const { data: proyecto, isPending } = useProyecto(proyectoId);
   const [descuentoAbierto, setDescuentoAbierto] = useState(false);
   const eliminar = useEliminarProyecto();
+  const { presupuestoId, activa } = useVersionActiva();
+  const { data: presupuesto } = usePresupuesto(presupuestoId ?? 0);
+  const { data: resumen } = useResumen(presupuestoId ?? 0);
 
   if (isPending) return <CargandoTabla />;
   if (!proyecto) return <p className="text-muted-foreground">Proyecto no encontrado</p>;
 
+  const capitulos = presupuesto?.capitulos ?? [];
+  const totalGeneral = presupuesto?.totalGeneral ?? resumen?.totalGeneral ?? null;
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold">{proyecto.nombreProyecto}</h1>
-            <ChipEstado estado={proyecto.estado} />
-          </div>
-          <p className="text-sm text-muted-foreground">{proyecto.codigo}</p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate(`/proyectos/${proyectoId}?editar=true`)}
-          >
-            <PencilIcon /> Editar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate(`/proyectos/${proyectoId}?duplicar=true`)}
-          >
-            <CopyIcon /> Duplicar
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setDescuentoAbierto(true)}>
-            <PercentIcon /> Descuento global
-          </Button>
-          <ConfirmarDestructivo
-            titulo="Eliminar proyecto"
-            descripcion={`¿Eliminar "${proyecto.nombreProyecto}"? Esta acción no se puede deshacer.`}
-            textoConfirmar="Eliminar"
-            onConfirmar={() => {
-              eliminar.mutate(proyectoId);
-              navigate("/proyectos");
-            }}
-          >
-            <Button variant="destructive" size="sm">
-              <Trash2Icon /> Eliminar
+    <>
+      <EncabezadoPagina
+        titulo={proyecto.nombreProyecto}
+        insignia={<ChipEstado estado={proyecto.estado} />}
+        meta={
+          <>
+            <span className="font-mono text-xs">{proyecto.codigo}</span>
+            {proyecto.anio ? (
+              <>
+                <PuntoMeta />
+                <span>Año {proyecto.anio}</span>
+              </>
+            ) : null}
+            {activa ? (
+              <>
+                <PuntoMeta />
+                <span>
+                  Versión {activa.numero}
+                  {activa.vigente ? " · vigente" : ""}
+                </span>
+              </>
+            ) : null}
+          </>
+        }
+        acciones={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/proyectos/${proyectoId}?editar=true`)}
+            >
+              <PencilIcon data-icon="inline-start" /> Editar
             </Button>
-          </ConfirmarDestructivo>
-        </div>
-      </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" aria-label="Más acciones">
+                  <MoreHorizontalIcon />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuItem
+                  onClick={() => navigate(`/proyectos/${proyectoId}?duplicar=true`)}
+                >
+                  <CopyIcon /> Duplicar
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setDescuentoAbierto(true)}>
+                  <PercentIcon /> Descuento global
+                </DropdownMenuItem>
+                <ConfirmarDestructivo
+                  titulo="Eliminar proyecto"
+                  descripcion={`¿Eliminar "${proyecto.nombreProyecto}"? Esta acción no se puede deshacer.`}
+                  textoConfirmar="Eliminar"
+                  onConfirmar={() => {
+                    eliminar.mutate(proyectoId);
+                    navigate("/proyectos");
+                  }}
+                >
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    <Trash2Icon /> Eliminar
+                  </DropdownMenuItem>
+                </ConfirmarDestructivo>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        }
+      />
 
       {(proyecto.alertas?.length ?? 0) > 0 && (
         <Alert variant="destructive">
@@ -83,47 +136,165 @@ export function ResumenProyectoPage() {
         </Alert>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Totales</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-bold">—</p>
-          <p className="text-xs text-muted-foreground">Selecciona una versión para ver totales</p>
-        </CardContent>
-      </Card>
+      <FranjaTotales total={totalGeneral} resumen={resumen} />
 
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" asChild>
-          <Link to={`/proyectos/${proyectoId}/insumos`}>Insumos</Link>
-        </Button>
-        <Button variant="outline" asChild>
-          <Link to={`/proyectos/${proyectoId}/apus`}>APUs</Link>
-        </Button>
-        <Button variant="outline" asChild>
-          <Link to={`/proyectos/${proyectoId}/presupuesto`}>Presupuesto</Link>
-        </Button>
-        <Button variant="outline" asChild>
-          <Link to={`/proyectos/${proyectoId}/cronograma`}>Cronograma</Link>
-        </Button>
-        <Button variant="outline" asChild>
-          <Link to={`/proyectos/${proyectoId}/documentos`}>Documentos</Link>
-        </Button>
-        <Button variant="outline" asChild>
-          <Link to={`/proyectos/${proyectoId}/parametros`}>Parámetros</Link>
-        </Button>
-        <Button variant="outline" asChild>
-          <Link to={`/proyectos/${proyectoId}/versiones`}>Versiones</Link>
-        </Button>
+      <div className="flex flex-col gap-5 xl:flex-row xl:items-start">
+        <div className="flex min-w-0 flex-1 flex-col gap-5">
+          <TarjetaTabla
+            titulo="Capítulos"
+            accion={
+              <Link
+                to={`/proyectos/${proyectoId}/presupuesto`}
+                className="text-sm text-primary hover:underline"
+              >
+                Ver presupuesto
+              </Link>
+            }
+          >
+            {capitulos.length === 0 ? (
+              <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+                Esta versión aún no tiene capítulos.
+              </p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-16">Ítem</TableHead>
+                    <TableHead>Descripción</TableHead>
+                    <TableHead className="w-24 text-right">Rubros</TableHead>
+                    <TableHead className="w-40 text-right">Subtotal</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {capitulos.map((c) => (
+                    <TableRow key={c.id} className="h-10">
+                      <TableCell className="font-mono text-xs text-muted-foreground">
+                        {c.item}
+                      </TableCell>
+                      <TableCell>{c.descripcion}</TableCell>
+                      <TableCell className="num text-muted-foreground">
+                        {c.rubros.length + c.subcapitulos.length}
+                      </TableCell>
+                      <TableCell>
+                        <Moneda valor={c.total} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </TarjetaTabla>
+
+          <TabFirmantes proyectoId={proyectoId} />
+        </div>
+
+        <div className="flex w-full shrink-0 flex-col gap-5 xl:w-80">
+          <TarjetaTabla titulo="Datos del proyecto">
+            <dl className="flex flex-col gap-3 p-4">
+              <Dato etiqueta="Dirección institucional" valor={proyecto.direccionInstitucional} />
+              <Dato etiqueta="Subdirección" valor={proyecto.subdireccionInstitucional} />
+              <Dato
+                etiqueta="Fecha de inicio"
+                valor={
+                  proyecto.fechaInicio
+                    ? new Date(proyecto.fechaInicio).toLocaleDateString("es-EC", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })
+                    : undefined
+                }
+              />
+              <Dato
+                etiqueta="Plazo de ejecución"
+                valor={
+                  proyecto.plazoEjecucion
+                    ? `${proyecto.plazoEjecucion} ${
+                        proyecto.plazoUnidad === "SEMANA" ? "semanas" : "meses"
+                      }`
+                    : undefined
+                }
+              />
+              <Dato etiqueta="Descripción" valor={proyecto.descripcion} multilinea />
+            </dl>
+          </TarjetaTabla>
+        </div>
       </div>
-
-      <TabFirmantes proyectoId={proyectoId} />
 
       <DialogoDescuentoGlobal
         abierto={descuentoAbierto}
         onClose={() => setDescuentoAbierto(false)}
         proyectoId={proyectoId}
       />
+    </>
+  );
+}
+
+function Dato({
+  etiqueta,
+  valor,
+  multilinea,
+}: {
+  etiqueta: string;
+  valor?: string;
+  multilinea?: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <dt className="text-xs text-muted-foreground">{etiqueta}</dt>
+      <dd className={multilinea ? "text-sm leading-relaxed text-pretty" : "truncate text-sm"}>
+        {valor || "—"}
+      </dd>
+    </div>
+  );
+}
+
+function FranjaTotales({
+  total,
+  resumen,
+}: {
+  total: Decimal | null;
+  resumen?: {
+    equipo: { total: Decimal; porcentaje: Decimal };
+    manoObra: { total: Decimal; porcentaje: Decimal };
+    material: { total: Decimal; porcentaje: Decimal };
+    transporte: { total: Decimal; porcentaje: Decimal };
+  };
+}) {
+  // Sin desglose real preferimos decirlo a pintar cuatro casillas en blanco.
+  const componentes = resumen?.equipo
+    ? [
+        { etiqueta: "Equipo", ...resumen.equipo },
+        { etiqueta: "Mano de obra", ...resumen.manoObra },
+        { etiqueta: "Materiales", ...resumen.material },
+        { etiqueta: "Transporte", ...resumen.transporte },
+      ]
+    : [];
+
+  return (
+    <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl bg-border ring-1 ring-foreground/10 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="flex flex-col gap-1 bg-muted/60 p-4">
+        <span className="text-xs font-medium">Total general</span>
+        <span className="num text-left text-xl font-semibold tracking-tight">
+          <Moneda valor={total} className="text-left" />
+        </span>
+      </div>
+      {componentes.length === 0 ? (
+        <div className="flex items-center bg-card p-4 text-sm text-muted-foreground sm:col-span-1 lg:col-span-4">
+          Selecciona una versión para ver el desglose por componente.
+        </div>
+      ) : (
+        componentes.map((c) => (
+          <div key={c.etiqueta} className="flex flex-col gap-1 bg-card p-4">
+            <span className="text-xs text-muted-foreground">
+              {c.etiqueta} · {formatearPorcentaje(c.porcentaje, 1)}
+            </span>
+            <span className="text-lg font-medium tracking-tight">
+              <Moneda valor={c.total} className="text-left" />
+            </span>
+          </div>
+        ))
+      )}
     </div>
   );
 }

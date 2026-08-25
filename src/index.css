@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -46,6 +47,11 @@
   --peligro: oklch(0.58 0.2 25);
   --peligro-foreground: oklch(0.98 0 0);
 
+  /* Texto sobre fondos tintados (los -foreground son para relleno sólido) */
+  --exito-texto: oklch(0.46 0.11 150);
+  --advertencia-texto: oklch(0.48 0.1 80);
+  --peligro-texto: oklch(0.5 0.19 25);
+
   /* Densidad de grid */
   --altura-fila-grid: 2rem;
 }
@@ -83,9 +89,19 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  --exito-texto: oklch(0.78 0.13 150);
+  --advertencia-texto: oklch(0.83 0.13 80);
+  --peligro-texto: oklch(0.75 0.17 25);
 }
 
 @theme inline {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --color-exito-texto: var(--exito-texto);
+  --color-advertencia-texto: var(--advertencia-texto);
+  --color-peligro-texto: var(--peligro-texto);
+
   --color-exito: var(--exito);
   --color-exito-foreground: var(--exito-foreground);
   --color-advertencia: var(--advertencia);
@@ -132,7 +148,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background font-sans text-foreground;
   }
 }
 

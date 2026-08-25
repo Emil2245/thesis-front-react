@@ -8,6 +8,8 @@ import { ChipEstado } from "@/components/comunes/ChipEstado";
 import { ConfirmarDestructivo } from "@/components/comunes/ConfirmarDestructivo";
 import { EstadoVacio } from "@/components/comunes/EstadoVacio";
 import { CargandoTabla } from "@/components/comunes/CargandoTabla";
+import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
+import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
 import { useEliminarProyecto } from "../hooks/useProyectos";
 import { AsistenteCrearProyecto } from "../components/AsistenteCrearProyecto";
 import {
@@ -53,79 +55,97 @@ export function ListaProyectosPage() {
     );
   }
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Proyectos</h1>
-        <Button onClick={() => setAsistenteAbierto(true)}>
-          <PlusIcon /> Nuevo proyecto
-        </Button>
-      </div>
+  const total = data.contenido.length;
+  const enProceso = data.contenido.filter((p) => p.estado === "EN_PROCESO").length;
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Código</TableHead>
-            <TableHead>Nombre</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead>Última modificación</TableHead>
-            <TableHead className="w-12" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.contenido.map((p) => (
-            <TableRow key={p.id}>
-              <TableCell className="font-mono text-xs">{p.codigo}</TableCell>
-              <TableCell>
-                <Link to={`/proyectos/${p.id}`} className="text-primary underline">
-                  {p.nombreProyecto}
-                </Link>
-              </TableCell>
-              <TableCell>
-                <ChipEstado estado={p.estado} />
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {p.updatedAt ? new Date(p.updatedAt).toLocaleDateString("es-EC") : "—"}
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon-sm">
-                      <MoreHorizontalIcon />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => navigate(`/proyectos/${p.id}`)}>
-                      <ExternalLinkIcon /> Abrir
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate(`/proyectos/${p.id}?duplicar=true`)}>
-                      <CopyIcon /> Duplicar
-                    </DropdownMenuItem>
-                    <ConfirmarDestructivo
-                      titulo="Eliminar proyecto"
-                      descripcion={`¿Eliminar "${p.nombreProyecto}"? Esta acción no se puede deshacer.`}
-                      textoConfirmar="Eliminar"
-                      onConfirmar={() => eliminar.mutate(p.id)}
-                    >
-                      <DropdownMenuItem
-                        className="text-destructive"
-                        onSelect={(e) => e.preventDefault()}
-                      >
-                        <Trash2Icon /> Eliminar
-                      </DropdownMenuItem>
-                    </ConfirmarDestructivo>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
+  return (
+    <>
+      <EncabezadoPagina
+        titulo="Proyectos"
+        descripcion={`${total} ${total === 1 ? "proyecto" : "proyectos"} · ${enProceso} en proceso`}
+        acciones={
+          <Button onClick={() => setAsistenteAbierto(true)}>
+            <PlusIcon data-icon="inline-start" /> Nuevo proyecto
+          </Button>
+        }
+      />
+
+      <TarjetaTabla
+        pie={
+          <span>
+            Mostrando {total} de {total} {total === 1 ? "proyecto" : "proyectos"}
+          </span>
+        }
+      >
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-28">Código</TableHead>
+              <TableHead>Nombre</TableHead>
+              <TableHead className="w-36">Estado</TableHead>
+              <TableHead className="w-40">Última modificación</TableHead>
+              <TableHead className="w-12" />
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {data.contenido.map((p) => (
+              <TableRow key={p.id} className="h-11">
+                <TableCell className="font-mono text-xs text-muted-foreground">
+                  {p.codigo}
+                </TableCell>
+                <TableCell>
+                  <Link to={`/proyectos/${p.id}`} className="font-medium hover:underline">
+                    {p.nombreProyecto}
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  <ChipEstado estado={p.estado} />
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {p.updatedAt ? new Date(p.updatedAt).toLocaleDateString("es-EC") : "—"}
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon-sm">
+                        <MoreHorizontalIcon />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => navigate(`/proyectos/${p.id}`)}>
+                        <ExternalLinkIcon /> Abrir
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => navigate(`/proyectos/${p.id}?duplicar=true`)}
+                      >
+                        <CopyIcon /> Duplicar
+                      </DropdownMenuItem>
+                      <ConfirmarDestructivo
+                        titulo="Eliminar proyecto"
+                        descripcion={`¿Eliminar "${p.nombreProyecto}"? Esta acción no se puede deshacer.`}
+                        textoConfirmar="Eliminar"
+                        onConfirmar={() => eliminar.mutate(p.id)}
+                      >
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onSelect={(e) => e.preventDefault()}
+                        >
+                          <Trash2Icon /> Eliminar
+                        </DropdownMenuItem>
+                      </ConfirmarDestructivo>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TarjetaTabla>
 
       <AsistenteCrearProyecto
         abierto={asistenteAbierto}
         onClose={() => setAsistenteAbierto(false)}
       />
-    </div>
+    </>
   );
 }

@@ -73,6 +73,122 @@ Each plan is written for an executor with **zero context from the session that p
 | 017 | [Alinear módulo de insumos con el backend real](017-align-insumos-module-with-backend.md) | P-13…P-16 | S-14…S-18 | 016+018 merged (`cd90a7b`); r2 amplía alcance admin | DONE (`b3b3e2a`) |
 | 018 | [Parámetros de proyecto numéricos](018-numeric-project-parameters.md) | P-09 | S-10 | — | DONE (`38faaa3`) |
 
+### Segunda tanda — auditoría posterior al rediseño de UI (2026-08-24)
+
+Escritos contra `ab31892` **más el rediseño de UI que aún está sin commitear en
+el árbol de trabajo**: `src/shell/*`, `src/index.css`, `ChipEstado`,
+`ListaProyectosPage`, `ResumenProyectoPage`, el editor de APU, `PresupuestoPage`
+y los dos primitivos nuevos `EncabezadoPagina` / `TarjetaTabla`. Los drift checks
+de estos planes comparan contra los extractos inlineados, no contra `ab31892`.
+
+| Plan | Título | Prioridad | Esfuerzo | Depende de | Estado |
+|---|---|---|---|---|---|
+| 019 | [Unificar el origen de la versión activa](019-unificar-origen-de-la-version-activa.md) | P1 | M | — | TODO |
+| 020 | [Crash de "Nuevo APU": la lista de plantillas no trae `snapshot`](020-plantillas-lista-sin-snapshot.md) | P1 | S | — | TODO |
+| 021 | [Reparar la suite de capturas E2E](021-reparar-suite-de-capturas-e2e.md) | P2 | M | 020 | TODO |
+| 022 | [Buscador, filtro y paginación en la lista de proyectos](022-buscador-y-filtros-en-lista-de-proyectos.md) | P2 | M | — | TODO |
+| 023 | [Sustituir `window.confirm` por el diálogo del sistema](023-sustituir-window-confirm.md) | P2 | S | — | TODO |
+| 024 | [Extender el encabezado a las 13 páginas restantes](024-extender-el-rediseno-a-las-paginas-restantes.md) | P2 | L | 019, 021 (solapan en archivos) | TODO |
+| 025 | [Colores crudos de Tailwind → tokens del tema](025-colores-crudos-a-tokens-del-tema.md) | P3 | S | — | TODO |
+| 026 | [Alinear el módulo APU con el backend real](026-alinear-modulo-apu-con-el-backend-real.md) | P1 | M | — | TODO |
+| 027 | [Degradar los módulos sin backend](027-degradar-modulos-sin-backend.md) | P1 | M | 019 | TODO |
+
+**Orden recomendado si van en serie**: 019 → 020 → 021 → 023 → 022 → 025 → 024.
+Los dos primeros son bugs de correctitud y no dependen de nada. 021 necesita 020
+(sin él, la captura 06 no puede pasar). 024 va al final porque toca trece
+archivos y cualquier otro plan que aterrice antes lo obligaría a rebasar.
+
+### Estado real del backend (verificado 2026-08-24)
+
+Contrastado contra `../thesis-back-quarkus`. **El frontend está por delante del
+backend, no por detrás**: el back implementa nueve recursos JAX-RS; el front
+tiene pantallas para los 44 procesos del contrato.
+
+```
+grep -rn '^@Path(' ../thesis-back-quarkus/src/main/java --include=*.java | sed 's/.*@Path(//' | sort -u
+```
+
+| Área | Backend | Notas |
+|---|---|---|
+| `/auth` (8 endpoints) | ✅ | además `POST /auth/aceptar-invitacion`, que el front no usa |
+| `/perfil` (3) | ✅ | |
+| `/proyectos` CRUD + `?q&estado&page&size` | ✅ | valida el plan 022 |
+| `/proyectos/{id}/firmantes` | ✅ | |
+| `/proyectos/{id}/parametros` | ✅ | |
+| `/proyectos/{id}/insumos` + `/selector` `/importar` `/copiar` | ✅ | |
+| `/bases-centrales` | ✅ | solo el listado; no hay `/{id}/insumos` |
+| `/presupuestos/{id}/apus` | ✅ | **sin** `soloAuxiliares`; el front lo envía y se ignora |
+| `/apus/{id}` + `/detalles` | ✅ | |
+| `/proyectos/{id}/duplicar` · `/logo` · `/insumos/{iid}/uso` | ❌ | casos sueltos → plan 027 |
+| `/apus/{id}/duplicar` `/descuento` `/calculo` `/guardar-plantilla` | ❌ | → plan 026 |
+| **presupuesto y versiones** (8 endpoints) | ❌ | sin paquete, sin entidad |
+| **cronograma** (3) | ❌ | sin paquete |
+| **exportar / documentos** | ❌ | sin paquete |
+| **plantillas APU** (2) | ❌ | sin paquete |
+| **admin** (6 áreas) | ❌ | salvo `parametros-sistema`, que vive en `/proyectos/parametros-sistema` |
+
+**El desbloqueo de mayor apalancamiento es `GET /proyectos/{id}/presupuestos`.**
+Sin esa lista no hay `presupuestoId`, y sin `presupuestoId` el módulo APU del
+backend —que **sí** está implementado, con su motor de cálculo— es inalcanzable
+desde la interfaz. `Apu.presupuestoId` es una columna `Long` que apunta a una
+tabla sin entidad ni recurso propietario.
+
+Dos consecuencias que ya son bugs vivos, no futuros:
+
+- El backend serializa `BigDecimal` como **número JSON** (`JacksonConfig` solo
+  registra `JsonNullableModule`; no hay `WRITE_BIGDECIMAL_AS_PLAIN`). El módulo
+  APU sigue tipándolos como strings `Decimal`, y `esCero()` hace `valor.trim()`:
+  abrir cualquier APU contra el backend real lanza `TypeError`. → plan 026.
+- `ListaApusPage` y `EditorApuPage` pasan el id del **proyecto** a
+  `/presupuestos/{id}/apus`, que existe y responde: devuelven APUs de otro
+  presupuesto con aspecto de correctos. → plan 019.
+
+### Ejecución en paralelo
+
+Matriz de solapes calculada desde los bloques "In scope" de cada plan.
+
+| | 019 | 020 | 021 | 022 | 023 | 024 | 025 |
+|---|---|---|---|---|---|---|---|
+| **019** | — | `handlers.ts` | — | `handlers.ts` | — | 2 archivos | — |
+| **020** | | — | dep. | `handlers.ts` | — | — | 1 archivo |
+| **021** | | | — | — | — | — | — |
+| **022** | | | | — | — | — | — |
+| **023** | | | | | — | 1 archivo | — |
+| **024** | | | | | | — | 1 archivo |
+
+**Tanda A — 019, 020, 022, 023 en paralelo (4 agentes).**
+Lo único compartido es `src/test/handlers.ts`, que tocan 019 (handler de APUs),
+020 (handler de plantillas) y 022 (handler de proyectos): son tres regiones
+separadas del archivo, así que el merge es mecánico. 023 no comparte nada.
+Si prefieres cero conflictos, saca los tres cambios de `handlers.ts` a un commit
+previo y quita el paso correspondiente de cada plan.
+
+**Tanda B — 021 y 025 en paralelo (2 agentes), tras la A.**
+Ambos dependen de que 020 esté mergeado: 021 porque su paso 4 exige que la
+captura `06-apus` pase, y 025 porque toca `DialogoNuevoApu.tsx`, que 020
+reescribe. Entre sí no comparten ningún archivo.
+
+**Tanda C — 024 en solitario, al final.**
+Choca con 019 (`ListaApusPage.tsx`, `CronogramaPage.tsx`), con 023
+(`VersionesPage.tsx`) y con 025 (`ExportPage.tsx`). Además toca trece archivos:
+cualquier cosa que aterrice después lo obligaría a rebasar.
+
+**Dónde entran 026 y 027.**
+026 (módulo APU) puede ir en la **tanda A** como quinto agente: solo comparte
+`DialogoNuevoApu.tsx` con 020 y `ListaApusPage.tsx` con 019, así que o va en
+serie con esos dos, o —más simple— entra en la **tanda B**, donde no choca con
+nada. 027 depende de 019 y toca `PresupuestoPage.tsx` (que 023 también toca) y
+las páginas del módulo admin (que 024 también toca): va en la **tanda C**, junto
+a 024 pero **no en paralelo con él** — comparten las seis páginas de admin,
+`VersionesPage`, `CronogramaPage` y `ExportPage`.
+
+Recomendación final: **A** = 019, 020, 022, 023 · **B** = 021, 025, 026 ·
+**C** = 027 → 024, en ese orden. Nueve planes en tres tandas, máximo cuatro
+agentes a la vez.
+
+Prioridad si hay que recortar: 026 y 019 son los dos que hacen que la aplicación
+funcione contra el backend real. Todo lo demás es mejora.
+
 ### Batch de alineación con el backend (2026-08-24)
 
 Planes 016–018 escritos contra los contratos **verificados** del backend Quarkus (`../thesis-back-quarkus`, colección Bruno `api/bruno/TC-06..08` + código fuente), que divergen del Apéndice B transcrito en `src/api/contract.ts`. Ejecutar **en serie** (todos editan `src/test/handlers.ts` y `contract.ts`). Desviación consciente: para insumos y parámetros el backend serializa dinero/porcentajes como **números JSON**, no decimal strings; los planes 017/018 adoptan el formato real y documentan la desviación de la convención "Money travels as decimal strings" (§ decisión 2). Gaps de backend confirmados sin plan: versiones/presupuesto/cronograma/descuento-global/plantillas/admin y `POST /proyectos/{id}/duplicar`.
@@ -136,6 +252,31 @@ These were unresolved in `thesis-docs` when the plans were written. Each plan st
 
 Recorded so they are not re-audited on a later pass.
 
+### De la auditoría del rediseño de UI (2026-08-24)
+
+- **Contadores en el rail lateral** (8 APUs · 34 insumos · 2 versiones junto a
+  cada entrada de navegación del proyecto). Aparecían en el lienzo de diseño y
+  el usuario los pidió explícitamente, pero: exigen tres queries adicionales en
+  **cada** ruta del proyecto (`/insumos`, `/presupuestos/{id}/apus`,
+  `/proyectos/{id}/presupuestos`) solo para decoración, y las tres cifras ya son
+  visibles en la propia pantalla a la que el enlace lleva. El coste es
+  permanente y el valor marginal. Reconsiderar solo si el backend expone los
+  contadores dentro de `GET /proyectos/{id}` (un campo, cero peticiones extra).
+- **Marca de tipo para `presupuestoId`** (`type PresupuestoId = number & {__brand}`
+  al estilo de `Decimal`). Haría imposible por construcción el bug del plan 019 —
+  pasar un id de proyecto donde va uno de versión. Rechazado *por ahora*: obliga
+  a tocar toda la capa de API y todos los fixtures, y 019 arregla los tres
+  sitios afectados hoy. Vuelve a la mesa si el bug reaparece.
+- **Migrar los ~98 `space-y-*` restantes.** El plan 024 elimina los de nivel de
+  página. Los que quedan viven en diálogos y formularios, y ahí la migración
+  correcta no es `flex gap-*` sino `FieldGroup` + `Field`, que cambia la
+  accesibilidad de los formularios y merece su propio plan con tests.
+- **Consolidar los dos `useVersiones`** (`src/shell/contexto.ts` y
+  `src/features/presupuesto/hooks/usePresupuesto.ts`, misma query key, mismo
+  endpoint). TanStack los deduplica, así que no hay bug: es solo confusión de
+  lectura. No justifica un plan propio; anotado en las notas de mantenimiento
+  del 019.
+
 - **Client-side document generation** (ExcelJS / @react-pdf/renderer). Rejected: ADR 4 / RNF-03 put SERCOP-format authority server-side, and `01-react-libraries.md §5` keeps client libs only as a hypothetical fallback.
 - **Client-side calc preview for "snappier" totals.** Rejected: ADR 9. This is the single most likely well-intentioned regression in the codebase.
 - **Next.js.** Rejected upstream (`01-react-libraries.md §1`): auth-gated internal app, no SEO need, simpler static deploy on Cloudflare Pages.
@@ -145,9 +286,39 @@ Recorded so they are not re-audited on a later pass.
 - **Manual activity CRUD in the cronograma.** Rejected: activities are auto-imported 1:1 from budget items — that mechanism *is* RNF-02's 100 % linkage guarantee.
 - **Jest / Enzyme / Cypress.** Rejected upstream (`quality/01 §B1, §B2, §B4`).
 
+## Direcciones abiertas (no son planes — decisión pendiente de los humanos)
+
+Surgidas de la auditoría del rediseño. Son opciones a sopesar, no defectos con
+un arreglo obvio.
+
+1. **Validar las respuestas en el seam de la API.** `src/api/request.ts` es un
+   cast puro: `get<T>()` promete `T` y no comprueba nada. Un `GET` con la URL
+   equivocada o una deriva del backend no dan error de red ni de tipos: dan una
+   pantalla blanca. El bug del plan 020 es exactamente esto (`get<PlantillaApu**Detalle**Response[]>`
+   sobre el endpoint de listado, que compila y revienta en runtime), y las
+   capturas 05 y 06 lo demuestran empíricamente: cuando el catch-all de
+   Playwright devuelve `{}`, las páginas revientan en vez de degradar.
+   Zod ya es dependencia del proyecto. Tres opciones, de menor a mayor alcance:
+   *(a)* endurecer solo los listados (`contenido ?? []`) — barato, tapa el
+   síntoma; *(b)* validar con Zod en `get()` los DTOs de listado — coste medio,
+   convierte la deriva en un error legible; *(c)* generar el cliente desde
+   OpenAPI, que es lo que el gap #1 de este mismo README ya identifica como la
+   solución de fondo y que sigue bloqueado porque el backend no publica el
+   esquema. **Recomendación**: (a) ahora como parte del 021 si molesta, y (c)
+   en cuanto el backend publique OpenAPI. (b) es trabajo que (c) tiraría.
+
+2. **`--chart-2..5` son todos grises.** La rampa de gráficos del tema solo tiene
+   un color con croma (`--chart-1`, el azul de marca); el resto son neutros. En
+   cuanto haya una visualización con más de dos series categóricas — el
+   cronograma o el desglose por componente son candidatos — no habrá con qué
+   distinguirlas y alguien recurrirá a colores crudos, que es justo lo que el
+   plan 025 limpia. Definir una rampa categórica de 4–5 tonos en oklch, con
+   croma y luminosidad constantes variando el matiz, es trabajo de diseño de
+   media hora que evita el problema antes de que aparezca.
+
 ## Conventions every plan assumes
 
-- **Package manager:** npm. **Verification gate:** `npm run verify` (typecheck · lint · format:check · test · build).
+- **Package manager:** pnpm (hay `pnpm-lock.yaml` y `pnpm-workspace.yaml`). **Verification gate:** `pnpm run verify` (typecheck · lint · format:check · test · build). E2E aparte: `pnpm run e2e`.
 - **UI language:** Spanish (`es-EC`). Domain nouns stay Spanish in code and UI: `insumo`, `rubro`, `apu`, `presupuesto`, `cronograma`, `capitulo`, `rendimiento`.
 - **Feature modules** mirror the process groups (`08 §8`): `auth`, `proyectos`, `insumos`, `apu-editor`, `presupuesto`, `cronograma`, `exportar`, `admin`, plus `shell` and `ui`.
 - **Server state** lives only in TanStack Query; local UI state lives in components; cross-cutting client state in Zustand.
