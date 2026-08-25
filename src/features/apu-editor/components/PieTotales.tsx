@@ -8,8 +8,7 @@ import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Edit2Icon, PercentIcon, CalculatorIcon } from "lucide-react";
 import { parsearEntradaDecimal } from "@/lib/decimal";
-
-export const MOTIVO_SIN_BACKEND = "Disponible cuando el backend implemente esta operación.";
+import { MOTIVO_SIN_BACKEND } from "@/lib/disponibilidad";
 
 interface PieTotalesProps {
   apu: ApuResponse;
