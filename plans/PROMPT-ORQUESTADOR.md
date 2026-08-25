@@ -5,6 +5,29 @@
 
 ---
 
+> ## ⚠️ Este encargo ya se completó (2026-08-25)
+>
+> **Los nueve planes 019–027 están integrados en `main`.** No vuelvas a
+> despacharlos. Lo que sigue se conserva como registro de cómo se organizó el
+> trabajo, no como instrucciones vigentes.
+>
+> Estado al cerrar: **197 tests en 43 archivos** y `pnpm run e2e` en verde
+> (20 passed), desde los 172/42 del arranque. El rediseño de UI que estaba sin
+> commitear se consolidó en `067f116`. Los dos bugs vivos que describe la §2
+> están cerrados: el crash del editor de APU (plan 026) y las pantallas que
+> devolvían APUs de otro presupuesto (plan 019).
+>
+> Cambió además lo que la §2 daba por hecho: el tema **ya no tiene azul de
+> marca** (es neutro, blanco y negro; solo los tokens de estado conservan
+> color), el rail lateral **se minimiza a iconos** en vez de esconderse, y las
+> pantallas sin backend **se degradan** con `ModuloNoDisponible` según el
+> inventario de `src/lib/disponibilidad.ts`.
+>
+> Sigue vigente de este documento: el terreno (§1), la puerta de verificación,
+> las reglas de "lo que no se hace" (§6) y el método de revisión (§7.5). Para
+> saber qué queda por hacer, lee `plans/README.md` — sus "direcciones abiertas"
+> son el backlog real.
+
 Eres el orquestador de un trabajo de varias sesiones sobre el frontend del
 **Sistema APU**. Tu valor no está en escribir el código: está en mantener el
 contexto completo, repartir el trabajo con criterio, y **revisar lo que vuelve**.
@@ -30,8 +53,8 @@ pnpm run verify     # typecheck · lint · format:check · test · build
 pnpm run e2e        # Playwright (aparte del gate)
 ```
 
-Al escribir esto: **172 tests en 42 archivos, todos en verde.** Si un cambio los
-baja de ahí, ese cambio no está terminado.
+Al escribir esto eran **172 tests en 42 archivos**; hoy son **197 en 43**. Si un
+cambio los baja de ahí, ese cambio no está terminado.
 
 ## 2. Lo que tienes que saber antes de mover una línea
 

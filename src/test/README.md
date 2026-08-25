@@ -8,6 +8,10 @@ architecture/08-codebase-design.md §9.
   Nunca por test-id ni por clase.
 - **Red:** siempre MSW. `onUnhandledRequest: "error"` — si un test falla por una
   petición no mockeada, el defecto es la URL o el handler, no el test.
+- **Toda ruta de listado se mockea con `*` al final** (`/proyectos/:id/insumos*`),
+  en MSW y en Playwright. La paginación manda `?page=0` siempre: un patrón
+  literal deja de casar, la petición cae en el catch-all que devuelve `{}` y la
+  página revienta. Es la clase de error que vuelve a colarse sola.
 - **Handlers tipados** desde `src/api/contract.ts`. Un mock que no compila es
   deriva de contrato detectada.
 - **Zod:** los tests de formulario importan el schema real del módulo. Nunca se
