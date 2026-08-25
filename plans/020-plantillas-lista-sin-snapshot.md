@@ -10,6 +10,7 @@
 
 ## Status
 
+- **Status**: done — implementado en rama `plan/020`, commit `478f715`, 2026-08-24
 - **Priority**: P1
 - **Effort**: S
 - **Risk**: LOW
