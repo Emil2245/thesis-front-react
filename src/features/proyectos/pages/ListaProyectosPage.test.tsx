@@ -5,6 +5,7 @@ import { Route, Routes } from "react-router-dom";
 import { ListaProyectosPage } from "./ListaProyectosPage";
 import { useSesionStore } from "@/features/auth/sesion";
 import { usuarioFixture } from "@/test/fixtures/auth";
+import { proyectosFixture } from "@/test/fixtures/proyectos";
 import { http, HttpResponse } from "msw";
 import { server } from "@/test/server";
 
@@ -47,5 +48,101 @@ describe("ListaProyectosPage", () => {
       expect(screen.getByText("Puente Ambato")).toBeInTheDocument();
       expect(screen.getByText("Vía Quito Sur")).toBeInTheDocument();
     });
+  });
+
+  it("buscar filtra la lista contra el servidor", async () => {
+    const { user } = renderConProviders(
+      <Routes>
+        <Route path="/proyectos" element={<ListaProyectosPage />} />
+      </Routes>,
+      { ruta: "/proyectos" },
+    );
+    await screen.findByLabelText("Buscar proyecto");
+    await screen.findByText("Puente Ambato");
+
+    await user.type(screen.getByLabelText("Buscar proyecto"), "Ambato");
+
+    await waitFor(() => {
+      expect(screen.queryByText("Vía Quito Sur")).not.toBeInTheDocument();
+      expect(screen.getByText("Puente Ambato")).toBeInTheDocument();
+    });
+  });
+
+  it("el filtro de estado filtra la lista", async () => {
+    const { user } = renderConProviders(
+      <Routes>
+        <Route path="/proyectos" element={<ListaProyectosPage />} />
+      </Routes>,
+      { ruta: "/proyectos" },
+    );
+    await screen.findByText("Puente Ambato");
+
+    await user.click(screen.getByRole("combobox", { name: "Filtrar por estado" }));
+    await user.click(await screen.findByRole("option", { name: "Borrador" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("Puente Ambato")).not.toBeInTheDocument();
+      expect(screen.queryByText("Escuela Milagro")).not.toBeInTheDocument();
+      expect(screen.getByText("Vía Quito Sur")).toBeInTheDocument();
+    });
+  });
+
+  it("sin resultados muestra el vacío de búsqueda, no el de creación", async () => {
+    const { user } = renderConProviders(
+      <Routes>
+        <Route path="/proyectos" element={<ListaProyectosPage />} />
+      </Routes>,
+      { ruta: "/proyectos" },
+    );
+    await screen.findByLabelText("Buscar proyecto");
+
+    await user.type(screen.getByLabelText("Buscar proyecto"), "zzz");
+
+    expect(await screen.findByText("Sin resultados")).toBeInTheDocument();
+    expect(screen.queryByText(/crea tu primer proyecto para empezar/i)).not.toBeInTheDocument();
+  });
+
+  it("limpiar filtros restaura la lista completa", async () => {
+    const { user } = renderConProviders(
+      <Routes>
+        <Route path="/proyectos" element={<ListaProyectosPage />} />
+      </Routes>,
+      { ruta: "/proyectos" },
+    );
+    await screen.findByLabelText("Buscar proyecto");
+
+    await user.type(screen.getByLabelText("Buscar proyecto"), "zzz");
+    await user.click(await screen.findByRole("button", { name: "Limpiar filtros" }));
+
+    expect(await screen.findByText("Puente Ambato")).toBeInTheDocument();
+    expect(screen.getByText("Vía Quito Sur")).toBeInTheDocument();
+    expect(screen.getByText("Escuela Milagro")).toBeInTheDocument();
+  });
+
+  it("el pie usa el total del servidor, no el de la página", async () => {
+    server.use(
+      http.get(`${API}/proyectos`, () =>
+        HttpResponse.json({
+          contenido: proyectosFixture,
+          page: 0,
+          size: 25,
+          totalElementos: 42,
+          totalPaginas: 2,
+        }),
+      ),
+    );
+
+    renderConProviders(
+      <Routes>
+        <Route path="/proyectos" element={<ListaProyectosPage />} />
+      </Routes>,
+      { ruta: "/proyectos" },
+    );
+
+    const pie = await screen.findByText(
+      (_, elemento) =>
+        elemento?.tagName === "SPAN" && elemento.textContent === "Mostrando 3 de 42 proyectos",
+    );
+    expect(pie).toBeInTheDocument();
   });
 });

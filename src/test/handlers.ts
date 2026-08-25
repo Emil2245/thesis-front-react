@@ -80,7 +80,17 @@ const versionesStub: PresupuestoVersionResponse[] = [
 
 export const handlers = [
   // ———— Proyectos ————
-  http.get(`${API}/proyectos`, () => HttpResponse.json(pagina<ProyectoResponse>(proyectosFixture))),
+  http.get(`${API}/proyectos`, ({ request }) => {
+    const url = new URL(request.url);
+    const q = url.searchParams.get("q")?.toLowerCase() ?? "";
+    const estado = url.searchParams.get("estado") ?? "";
+    const filtrados = proyectosFixture.filter(
+      (p) =>
+        (!q || p.nombreProyecto.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q)) &&
+        (!estado || p.estado === estado),
+    );
+    return HttpResponse.json(pagina<ProyectoResponse>(filtrados));
+  }),
   http.get(`${API}/proyectos/:id`, ({ params }) => {
     const p = proyectosFixture.find((x) => x.id === Number(params.id));
     if (!p) return HttpResponse.json(null, { status: 404 });
