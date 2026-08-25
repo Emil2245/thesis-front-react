@@ -17,16 +17,23 @@ export function ConfirmarDestructivo({
   textoConfirmar = "Eliminar",
   onConfirmar,
   children,
+  abierto,
+  onAbiertoChange,
 }: {
   titulo: string;
   descripcion: string;
   textoConfirmar?: string;
   onConfirmar: () => void;
-  children: ReactNode;
+  /** Modo trigger: el elemento que abre el diálogo. */
+  children?: ReactNode;
+  /** Modo controlado: la página gobierna la apertura. Requiere `onAbiertoChange`. */
+  abierto?: boolean;
+  onAbiertoChange?: (v: boolean) => void;
 }) {
+  const controlado = abierto !== undefined;
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
+    <AlertDialog {...(controlado ? { open: abierto, onOpenChange: onAbiertoChange } : {})}>
+      {children ? <AlertDialogTrigger asChild>{children}</AlertDialogTrigger> : null}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{titulo}</AlertDialogTitle>
