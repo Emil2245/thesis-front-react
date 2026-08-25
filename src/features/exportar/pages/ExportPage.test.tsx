@@ -4,7 +4,7 @@ import { renderConProviders } from "@/test/render";
 import { Route, Routes } from "react-router-dom";
 import { useSesionStore } from "@/features/auth/sesion";
 import { usuarioFixture } from "@/test/fixtures/auth";
-import { ExportPage } from "../pages/ExportPage";
+import { ExportPage, ExportPageActiva } from "../pages/ExportPage";
 
 beforeEach(() => {
   useSesionStore.setState({ usuario: usuarioFixture, cargando: false });
@@ -13,7 +13,7 @@ beforeEach(() => {
 async function setup() {
   const result = renderConProviders(
     <Routes>
-      <Route path="/proyectos/:id/documentos" element={<ExportPage />} />
+      <Route path="/proyectos/:id/documentos" element={<ExportPageActiva />} />
     </Routes>,
     { ruta: "/proyectos/1/documentos?v=11" },
   );
@@ -21,7 +21,12 @@ async function setup() {
   return { user: result.user };
 }
 
-describe("ExportPage", () => {
+// El backend no tiene ningún endpoint de exportación (plan 027): la ruta real
+// muestra ExportPage, que degrada a "todavía no disponible" sin llamar al
+// backend (ver más abajo). ExportPageActiva es la implementación completa,
+// conservada para reactivarla cuando el endpoint exista: estos tests siguen
+// probándola directamente.
+describe("ExportPageActiva", () => {
   it("muestra el título y subtítulo", async () => {
     await setup();
     expect(screen.getByText("Exportar")).toBeInTheDocument();
@@ -50,6 +55,24 @@ describe("ExportPage", () => {
     await setup();
     await waitFor(() => {
       expect(screen.getByText(/no puede exportarse/i)).toBeInTheDocument();
+    });
+  });
+});
+
+describe("ExportPage", () => {
+  it("explica que el módulo todavía no está disponible, sin pedir la exportación al backend", async () => {
+    // MSW está configurado con onUnhandledRequest: "error": si esta pantalla
+    // llamara al hook real, el test fallaría por la petición no mockeada.
+    renderConProviders(
+      <Routes>
+        <Route path="/proyectos/:id/documentos" element={<ExportPage />} />
+      </Routes>,
+      { ruta: "/proyectos/1/documentos?v=11" },
+    );
+
+    expect(screen.getByText("Exportar")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/todavía no está disponible/i)).toBeInTheDocument();
     });
   });
 });
