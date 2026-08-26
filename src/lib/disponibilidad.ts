@@ -6,7 +6,6 @@
 export const MODULOS_SIN_BACKEND = new Set([
   "presupuesto",
   "versiones",
-  "cronograma",
   "documentos",
   "plantillas",
   "admin",

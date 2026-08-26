@@ -4,9 +4,14 @@ import type { ActividadResponse } from "@/api/contract";
 interface TablaActividadesProps {
   actividades: ActividadResponse[];
   periodos: number;
+  onClickActividad?: (actividad: ActividadResponse) => void;
 }
 
-export function TablaActividades({ actividades, periodos }: TablaActividadesProps) {
+export function TablaActividades({
+  actividades,
+  periodos,
+  onClickActividad,
+}: TablaActividadesProps) {
   return (
     <div className="overflow-x-auto border rounded-lg">
       <table className="w-full text-sm">
@@ -26,7 +31,11 @@ export function TablaActividades({ actividades, periodos }: TablaActividadesProp
         </thead>
         <tbody>
           {actividades.map((act) => (
-            <tr key={act.id} className="border-b hover:bg-muted/30">
+            <tr
+              key={act.id}
+              className="border-b hover:bg-muted/30 cursor-pointer"
+              onClick={() => onClickActividad?.(act)}
+            >
               <td className="px-3 py-1.5 font-mono text-xs text-muted-foreground">{act.item}</td>
               <td className="px-3 py-1.5">{act.descripcion}</td>
               <td className="px-3 py-1.5 text-right font-mono tabular-nums">
@@ -35,13 +44,16 @@ export function TablaActividades({ actividades, periodos }: TablaActividadesProp
               <td className="px-3 py-1.5 text-right font-mono tabular-nums">
                 {formatearPorcentaje(act.pesoPonderado)}
               </td>
-              {Array.from({ length: periodos }, (_, i) => (
-                <td key={i} className="px-2 py-1.5 text-right font-mono tabular-nums text-xs">
-                  {act.avancePorPeriodo[String(i)]
-                    ? formatearMoneda(act.avancePorPeriodo[String(i)])
-                    : "—"}
-                </td>
-              ))}
+              {Array.from({ length: periodos }, (_, i) => {
+                const periodo = String(i + 1);
+                return (
+                  <td key={i} className="px-2 py-1.5 text-right font-mono tabular-nums text-xs">
+                    {act.avancePorPeriodo[periodo]
+                      ? formatearMoneda(act.avancePorPeriodo[periodo])
+                      : "—"}
+                  </td>
+                );
+              })}
               <td className="px-3 py-1.5 text-right font-mono tabular-nums text-xs">
                 {formatearMoneda(act.desviacion)}
               </td>

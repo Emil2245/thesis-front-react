@@ -352,13 +352,13 @@ export const handlers = [
   http.post(`${API}/presupuestos/:id/cronograma`, () =>
     HttpResponse.json(cronogramaFixture, { status: 201 }),
   ),
-  http.put(`${API}/presupuestos/:id/cronograma`, () =>
+  http.put(`${API}/cronogramas/:id`, () =>
     HttpResponse.json({ ...cronogramaFixture, desactualizado: false }),
   ),
-  http.patch(`${API}/cronograma/:id/actividades/:actId`, () =>
+  http.patch(`${API}/cronogramas/:id/actividades/:actId`, () =>
     HttpResponse.json(cronogramaFixture),
   ),
-  http.put(`${API}/cronograma/:id/revisar`, () => {
+  http.post(`${API}/cronogramas/:id/revisado`, () => {
     const revisado = Date.now().toString();
     return HttpResponse.json({
       ...cronogramaFixture,

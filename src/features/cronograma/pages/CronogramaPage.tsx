@@ -13,27 +13,12 @@ import { TablaActividades } from "../components/TablaActividades";
 import { GanttChart } from "../components/GanttChart";
 import { BadgeDesactualizado } from "../components/BadgeDesactualizado";
 import { DialogoConfigurarCronograma } from "../components/DialogoConfigurarCronograma";
+import { DialogoConfirmarReduccion } from "../components/DialogoConfirmarReduccion";
 import { DialogoEditarActividad } from "../components/DialogoEditarActividad";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
-import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
-import type { ActividadResponse, UnidadTiempo } from "@/api/contract";
+import type { ActividadResponse, CronogramaConfigurarRequest, UnidadTiempo } from "@/api/contract";
 
-// El backend no expone /presupuestos/{id}/cronograma todavía (plan 027).
-// Para reactivar: borra este bloque, quita "cronograma" de MODULOS_SIN_BACKEND
-// y exporta CronogramaPageActiva como CronogramaPage.
 export function CronogramaPage() {
-  return (
-    <>
-      <EncabezadoPagina titulo="Cronograma" />
-      <ModuloNoDisponible
-        modulo="El cronograma"
-        descripcion="El servidor todavía no expone el cronograma de un presupuesto. La pantalla está construida y se activará cuando el endpoint exista."
-      />
-    </>
-  );
-}
-
-export function CronogramaPageActiva() {
   // La versión la manda el selector de la barra superior, que ya cae en la
   // vigente cuando la URL no trae `?v=`.
   const { presupuestoId } = useVersionActiva();
@@ -41,19 +26,31 @@ export function CronogramaPageActiva() {
 
   const { data: cronograma, isLoading } = useCronograma(versionId);
   const crearCrono = useCrearCronograma(versionId);
-  const configCrono = useConfigurarCronograma(versionId);
-  const { mutate: actualizarAvance } = useActualizarAvance(cronograma?.id ?? 0, versionId);
-  const { mutate: revisar } = useRevisarCronograma(cronograma?.id ?? 0, versionId);
 
   const [configDialog, setConfigDialog] = useState(false);
   const [actividadEdit, setActividadEdit] = useState<ActividadResponse | null>(null);
+  const [reduccionData, setReduccionData] = useState<{
+    body: CronogramaConfigurarRequest;
+    periodos: string[];
+  } | null>(null);
+  const [lastConfigBody, setLastConfigBody] = useState<CronogramaConfigurarRequest | null>(null);
+
+  const configCrono = useConfigurarCronograma(cronograma?.id ?? 0, versionId, (periodos) => {
+    if (lastConfigBody) {
+      setReduccionData({ body: lastConfigBody, periodos });
+    }
+  });
+  const { mutate: actualizarAvance } = useActualizarAvance(cronograma?.id ?? 0, versionId);
+  const { mutate: revisar } = useRevisarCronograma(cronograma?.id ?? 0, versionId);
 
   const handleConfigurar = useCallback(
     (unidadTiempo: UnidadTiempo, numeroPeriodos: number) => {
+      const body = { unidadTiempo, numeroPeriodos };
       if (cronograma) {
-        configCrono.mutate({ unidadTiempo, numeroPeriodos, confirmarPerdida: true });
+        setLastConfigBody(body);
+        configCrono.mutate(body);
       } else {
-        crearCrono.mutate({ unidadTiempo, numeroPeriodos });
+        crearCrono.mutate(body);
       }
       setConfigDialog(false);
     },
@@ -117,6 +114,7 @@ export function CronogramaPageActiva() {
           <TablaActividades
             actividades={cronograma.actividades}
             periodos={cronograma.numeroPeriodos}
+            onClickActividad={setActividadEdit}
           />
           <GanttChart cronograma={cronograma} />
         </>
@@ -150,6 +148,20 @@ export function CronogramaPageActiva() {
           }
         }
         numeroPeriodos={cronograma?.numeroPeriodos ?? 1}
+      />
+
+      <DialogoConfirmarReduccion
+        open={!!reduccionData}
+        onOpenChange={(open) => {
+          if (!open) setReduccionData(null);
+        }}
+        onConfirm={() => {
+          if (reduccionData) {
+            configCrono.mutate({ ...reduccionData.body, confirmarPerdida: true });
+            setReduccionData(null);
+          }
+        }}
+        periodosAfectados={reduccionData?.periodos ?? []}
       />
     </>
   );

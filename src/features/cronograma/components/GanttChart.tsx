@@ -40,7 +40,8 @@ export function GanttChart({ cronograma }: GanttChartProps) {
                 </span>
                 <div className="flex h-5 rounded-sm overflow-hidden">
                   {Array.from({ length: numeroPeriodos }, (_, p) => {
-                    const val = Number(act.avancePorPeriodo[String(p)] || 0);
+                    const periodo = p + 1;
+                    const val = Number(act.avancePorPeriodo[String(periodo)] || 0);
                     const pct = total > 0 ? (val / total) * 100 : 0;
                     if (pct < 0.5) return null;
                     return (
