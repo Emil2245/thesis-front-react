@@ -25,7 +25,9 @@ async function setupCronogramaPage(version = "11") {
   await waitFor(() => expect(screen.getByText("Cronograma")).toBeInTheDocument());
   // La versión activa se resuelve de forma asíncrona (selector de la barra
   // superior): esperar a que el fixture esté pintado, no solo el encabezado.
-  await waitFor(() => expect(screen.getByText("Excavación a máquina")).toBeInTheDocument());
+  await waitFor(() =>
+    expect(screen.getAllByText("Excavación a máquina").length).toBeGreaterThan(0),
+  );
   return { user: result.user };
 }
 
@@ -45,8 +47,8 @@ describe("CronogramaPage", () => {
   it("muestra la tabla de actividades con datos del fixture", async () => {
     await setupCronogramaPage();
     await waitFor(() => {
-      expect(screen.getByText("Excavación a máquina")).toBeInTheDocument();
-      expect(screen.getByText("Hormigón simple")).toBeInTheDocument();
+      expect(screen.getAllByText("Excavación a máquina").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Hormigón simple").length).toBeGreaterThan(0);
     });
   });
 
@@ -96,7 +98,7 @@ describe("CronogramaPage", () => {
 
   it("abre diálogo de editar actividad al hacer click en una fila", async () => {
     const { user } = await setupCronogramaPage();
-    await user.click(screen.getByText("Excavación a máquina"));
+    await user.click(screen.getAllByText("Excavación a máquina")[0]);
     await waitFor(() => {
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });

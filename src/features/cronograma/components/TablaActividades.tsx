@@ -13,8 +13,8 @@ export function TablaActividades({
   onClickActividad,
 }: TablaActividadesProps) {
   return (
-    <div className="overflow-x-auto border rounded-lg">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto w-fit max-w-full border rounded-lg">
+      <table className="text-sm">
         <thead>
           <tr className="border-b bg-muted/50">
             <th className="text-left px-3 py-2 font-medium">Ítem</th>

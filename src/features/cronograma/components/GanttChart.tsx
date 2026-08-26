@@ -1,103 +1,183 @@
-import { cn } from "@/lib/utils";
 import { formatearMoneda, formatearPorcentaje } from "@/lib/decimal";
-import type { CronogramaResponse } from "@/api/contract";
+import type { CronogramaResponse, ActividadResponse } from "@/api/contract";
 
 interface GanttChartProps {
   cronograma: CronogramaResponse;
 }
 
-// Rampa monocroma: opacidades decrecientes del color de texto, así invierte
-// sola en modo oscuro y no depende de --chart-*, que son todos neutros.
-const COLORS = [
-  "bg-foreground/90",
-  "bg-foreground/75",
-  "bg-foreground/60",
-  "bg-foreground/45",
-  "bg-foreground/30",
-  "bg-foreground/15",
-];
+const COL_LABEL = 200;
+const COL_PERIOD = 64;
+
+function etiquetaPeriodo(unidad: string, periodo: number): string {
+  return unidad === "SEMANA" ? `S${periodo}` : `M${periodo}`;
+}
+
+function rangoActivo(act: ActividadResponse, periodos: number) {
+  let min = periodos + 1;
+  let max = 0;
+  for (let p = 1; p <= periodos; p++) {
+    if (Number(act.avancePorPeriodo[String(p)] || 0) > 0) {
+      if (p < min) min = p;
+      if (p > max) max = p;
+    }
+  }
+  return min <= max ? { desde: min, hasta: max } : null;
+}
 
 export function GanttChart({ cronograma }: GanttChartProps) {
-  const { actividades, numeroPeriodos, avancePorPeriodo, avanceAcumulado, totalGeneral } =
-    cronograma;
-  const maxAvance = Math.max(...avancePorPeriodo.map(Number), 1);
+  const {
+    actividades,
+    numeroPeriodos,
+    avancePorPeriodo,
+    avanceAcumulado,
+    totalGeneral,
+    unidadTiempo,
+  } = cronograma;
+  const total = Number(totalGeneral);
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-sm font-semibold">Diagrama de Gantt — Avance por período</h3>
-      <div className="overflow-x-auto">
-        <div className="min-w-[600px] space-y-1">
-          {actividades.map((act) => {
-            const total = Number(act.precioTotal);
-            return (
-              <div
-                key={act.id}
-                className="grid items-center gap-2 text-xs"
-                style={{ gridTemplateColumns: "120px 1fr" }}
-              >
-                <span className="truncate text-right text-muted-foreground" title={act.descripcion}>
-                  {act.item}
-                </span>
-                <div className="flex h-5 rounded-sm overflow-hidden">
-                  {Array.from({ length: numeroPeriodos }, (_, p) => {
-                    const periodo = p + 1;
-                    const val = Number(act.avancePorPeriodo[String(periodo)] || 0);
-                    const pct = total > 0 ? (val / total) * 100 : 0;
-                    if (pct < 0.5) return null;
-                    return (
-                      <div
-                        key={p}
-                        className={cn(COLORS[p % COLORS.length], "h-full")}
-                        style={{ width: `${pct}%` }}
-                        title={`P${p + 1}: ${formatearMoneda(val as never)}`}
-                      />
-                    );
-                  })}
+    <div className="space-y-1">
+      <h3 className="text-sm font-semibold">Diagrama de Gantt</h3>
+
+      <div className="overflow-x-auto w-fit max-w-full border rounded-lg">
+        <div style={{ minWidth: COL_LABEL + numeroPeriodos * COL_PERIOD }}>
+          {/* ── Header: timeline ── */}
+          <div className="flex border-b bg-muted/50 sticky top-0 z-10">
+            <div
+              className="shrink-0 px-3 py-2 text-xs font-medium border-r"
+              style={{ width: COL_LABEL }}
+            >
+              Actividad
+            </div>
+            {Array.from({ length: numeroPeriodos }, (_, i) => {
+              const p = i + 1;
+              return (
+                <div
+                  key={p}
+                  className="shrink-0 text-center py-2 text-xs font-medium border-r last:border-r-0"
+                  style={{ width: COL_PERIOD }}
+                >
+                  {etiquetaPeriodo(unidadTiempo, p)}
                 </div>
+              );
+            })}
+          </div>
+
+          {/* ── Activity rows with bars ── */}
+          {actividades.map((act) => {
+            const rango = rangoActivo(act, numeroPeriodos);
+            const actTotal = Number(act.precioTotal);
+
+            return (
+              <div key={act.id} className="flex border-b hover:bg-muted/20 group">
+                <div
+                  className="shrink-0 px-3 py-1.5 border-r flex flex-col justify-center"
+                  style={{ width: COL_LABEL }}
+                >
+                  <span className="text-xs font-mono text-muted-foreground">{act.item}</span>
+                  <span className="text-xs truncate" title={act.descripcion}>
+                    {act.descripcion}
+                  </span>
+                </div>
+                {Array.from({ length: numeroPeriodos }, (_, i) => {
+                  const p = i + 1;
+                  const val = Number(act.avancePorPeriodo[String(p)] || 0);
+                  const isActive = rango && p >= rango.desde && p <= rango.hasta;
+                  const isFirst = rango && p === rango.desde;
+                  const isLast = rango && p === rango.hasta;
+                  const intensity = actTotal > 0 ? Math.min(val / actTotal, 1) : 0;
+
+                  return (
+                    <div
+                      key={p}
+                      className="shrink-0 border-r last:border-r-0 relative flex items-center"
+                      style={{ width: COL_PERIOD, height: 40 }}
+                    >
+                      {/* Grid line */}
+                      <div className="absolute inset-0 border-r border-dashed border-border/30" />
+
+                      {isActive && (
+                        <div
+                          className="absolute inset-x-0 top-1/2 -translate-y-1/2 mx-0.5"
+                          style={{ height: 20 }}
+                        >
+                          <div
+                            className={[
+                              "h-full bg-foreground/70",
+                              isFirst && isLast ? "rounded" : "",
+                              isFirst && !isLast ? "rounded-l" : "",
+                              isLast && !isFirst ? "rounded-r" : "",
+                              !isFirst && !isLast ? "" : "",
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
+                            style={{ opacity: 0.3 + intensity * 0.7 }}
+                            title={`${etiquetaPeriodo(unidadTiempo, p)}: ${formatearMoneda(val as never)}`}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             );
           })}
-        </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-6 text-sm">
-        <div>
-          <h4 className="font-medium mb-2">Avance por período</h4>
-          <div className="space-y-1">
-            {avancePorPeriodo.map((val, i) => (
-              <div key={i} className="flex justify-between border-b py-0.5">
-                <span className="text-muted-foreground">Período {i + 1}</span>
-                <span className="font-mono tabular-nums">
-                  {formatearMoneda(val as never)} (
-                  {formatearPorcentaje(String(Number(val) / Number(totalGeneral)) as never)})
-                  <div className="inline-block ml-2 w-20 h-2.5 bg-muted rounded-sm align-middle overflow-hidden">
+          {/* ── Summary: avance por período ── */}
+          <div className="flex border-b bg-muted/30">
+            <div
+              className="shrink-0 px-3 py-1.5 border-r text-xs font-medium flex items-center"
+              style={{ width: COL_LABEL }}
+            >
+              Avance por período
+            </div>
+            {avancePorPeriodo.map((val, i) => {
+              const pct = total > 0 ? (Number(val) / total) * 100 : 0;
+              return (
+                <div
+                  key={i}
+                  className="shrink-0 border-r last:border-r-0 px-1 py-1.5 flex flex-col items-center justify-center"
+                  style={{ width: COL_PERIOD }}
+                >
+                  <span className="text-[10px] font-mono tabular-nums">
+                    {formatearPorcentaje(String(pct / 100) as never)}
+                  </span>
+                  <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mt-0.5">
                     <div
-                      className="bg-primary h-full rounded-sm"
-                      style={{ width: `${(Number(val) / maxAvance) * 100}%` }}
+                      className="bg-foreground/60 h-full rounded-full"
+                      style={{ width: `${pct}%` }}
                     />
                   </div>
-                </span>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
-        </div>
-        <div>
-          <h4 className="font-medium mb-2">Avance acumulado</h4>
-          <div className="space-y-1">
+
+          {/* ── Summary: avance acumulado ── */}
+          <div className="flex bg-muted/30">
+            <div
+              className="shrink-0 px-3 py-1.5 border-r text-xs font-medium flex items-center"
+              style={{ width: COL_LABEL }}
+            >
+              Avance acumulado
+            </div>
             {avanceAcumulado.map((val, i) => {
-              const pct = Number(totalGeneral) > 0 ? (Number(val) / Number(totalGeneral)) * 100 : 0;
+              const pct = total > 0 ? (Number(val) / total) * 100 : 0;
               return (
-                <div key={i} className="flex justify-between border-b py-0.5">
-                  <span className="text-muted-foreground">Período {i + 1}</span>
-                  <span className="font-mono tabular-nums">
+                <div
+                  key={i}
+                  className="shrink-0 border-r last:border-r-0 px-1 py-1.5 flex flex-col items-center justify-center"
+                  style={{ width: COL_PERIOD }}
+                >
+                  <span className="text-[10px] font-mono tabular-nums">
                     {formatearPorcentaje(String(pct / 100) as never)}
-                    <div className="inline-block ml-2 w-20 h-2.5 bg-muted rounded-sm align-middle overflow-hidden">
-                      <div
-                        className="bg-foreground h-full rounded-sm"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
                   </span>
+                  <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mt-0.5">
+                    <div
+                      className="bg-foreground h-full rounded-full"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
                 </div>
               );
             })}
