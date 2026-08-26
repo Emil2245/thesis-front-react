@@ -3,9 +3,11 @@ import { get, post, put, patch } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import type {
   CronogramaResponse,
+  CronogramaCrearRequest,
   CronogramaConfigurarRequest,
   ActividadAvanceRequest,
 } from "@/api/contract";
+import { ApiError } from "@/api/problem";
 import { toast } from "sonner";
 
 export function useCronograma(presupuestoId: number) {
@@ -19,7 +21,7 @@ export function useCronograma(presupuestoId: number) {
 export function useCrearCronograma(presupuestoId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: CronogramaConfigurarRequest) =>
+    mutationFn: (body: CronogramaCrearRequest) =>
       post<CronogramaResponse>(`/presupuestos/${presupuestoId}/cronograma`, body),
     onSuccess: (data) => {
       qc.setQueryData(qk.cronograma(presupuestoId), data);
@@ -29,16 +31,27 @@ export function useCrearCronograma(presupuestoId: number) {
   });
 }
 
-export function useConfigurarCronograma(presupuestoId: number) {
+export function useConfigurarCronograma(
+  cronogramaId: number,
+  presupuestoId: number,
+  on409?: (periodosAfectados: string[]) => void,
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CronogramaConfigurarRequest) =>
-      put<CronogramaResponse>(`/presupuestos/${presupuestoId}/cronograma`, body),
+      put<CronogramaResponse>(`/cronogramas/${cronogramaId}`, body),
     onSuccess: (data) => {
       qc.setQueryData(qk.cronograma(presupuestoId), data);
       toast.success("Cronograma actualizado");
     },
-    onError: () => toast.error("Error al configurar cronograma"),
+    onError: (err) => {
+      if (err instanceof ApiError && err.status === 409 && on409) {
+        const periodos = (err.problem as Record<string, unknown>).periodosAfectados;
+        on409(Array.isArray(periodos) ? (periodos as string[]) : []);
+      } else {
+        toast.error("Error al configurar cronograma");
+      }
+    },
   });
 }
 
@@ -46,7 +59,7 @@ export function useActualizarAvance(cronogramaId: number, presupuestoId: number)
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ actividadId, body }: { actividadId: number; body: ActividadAvanceRequest }) =>
-      patch<CronogramaResponse>(`/cronograma/${cronogramaId}/actividades/${actividadId}`, body),
+      patch<CronogramaResponse>(`/cronogramas/${cronogramaId}/actividades/${actividadId}`, body),
     onSuccess: (data) => {
       qc.setQueryData(qk.cronograma(presupuestoId), data);
       toast.success("Avance actualizado");
@@ -58,7 +71,7 @@ export function useActualizarAvance(cronogramaId: number, presupuestoId: number)
 export function useRevisarCronograma(cronogramaId: number, presupuestoId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => put<CronogramaResponse>(`/cronograma/${cronogramaId}/revisar`),
+    mutationFn: () => post<CronogramaResponse>(`/cronogramas/${cronogramaId}/revisado`),
     onSuccess: (data) => {
       qc.setQueryData(qk.cronograma(presupuestoId), data);
       toast.success("Cronograma revisado");

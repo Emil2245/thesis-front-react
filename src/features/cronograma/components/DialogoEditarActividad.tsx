@@ -29,7 +29,7 @@ export function DialogoEditarActividad({
 }: DialogoEditarActividadProps) {
   const [avances, setAvances] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
-    for (let i = 0; i < numeroPeriodos; i++) {
+    for (let i = 1; i <= numeroPeriodos; i++) {
       init[String(i)] = actividad.avancePorPeriodo[String(i)] || "0.000000";
     }
     return init;
@@ -48,18 +48,23 @@ export function DialogoEditarActividad({
             <span className="text-muted-foreground">Total</span>
             <span className="font-mono tabular-nums">{formatearMoneda(actividad.precioTotal)}</span>
           </div>
-          {Array.from({ length: numeroPeriodos }, (_, i) => (
-            <div key={i} className="space-y-1">
-              <Label htmlFor={`p${i}`}>Período {i + 1}</Label>
-              <Input
-                id={`p${i}`}
-                type="text"
-                className="text-right font-mono"
-                value={avances[String(i)]}
-                onChange={(e) => setAvances((prev) => ({ ...prev, [String(i)]: e.target.value }))}
-              />
-            </div>
-          ))}
+          {Array.from({ length: numeroPeriodos }, (_, i) => {
+            const periodo = i + 1;
+            return (
+              <div key={periodo} className="space-y-1">
+                <Label htmlFor={`p${periodo}`}>Período {periodo}</Label>
+                <Input
+                  id={`p${periodo}`}
+                  type="text"
+                  className="text-right font-mono"
+                  value={avances[String(periodo)]}
+                  onChange={(e) =>
+                    setAvances((prev) => ({ ...prev, [String(periodo)]: e.target.value }))
+                  }
+                />
+              </div>
+            );
+          })}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>

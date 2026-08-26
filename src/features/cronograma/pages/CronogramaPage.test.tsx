@@ -1,10 +1,15 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
+import { http, HttpResponse } from "msw";
 import { renderConProviders } from "@/test/render";
 import { Route, Routes } from "react-router-dom";
 import { useSesionStore } from "@/features/auth/sesion";
 import { usuarioFixture } from "@/test/fixtures/auth";
-import { CronogramaPage, CronogramaPageActiva } from "../pages/CronogramaPage";
+import { cronogramaFixture } from "@/test/fixtures/cronograma";
+import { server } from "@/test/server";
+import { CronogramaPage } from "../pages/CronogramaPage";
+
+const API = "*/api/v1";
 
 beforeEach(() => {
   useSesionStore.setState({ usuario: usuarioFixture, cargando: false });
@@ -13,7 +18,7 @@ beforeEach(() => {
 async function setupCronogramaPage(version = "11") {
   const result = renderConProviders(
     <Routes>
-      <Route path="/proyectos/:id/cronograma" element={<CronogramaPageActiva />} />
+      <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
     </Routes>,
     { ruta: `/proyectos/1/cronograma?v=${version}` },
   );
@@ -24,16 +29,11 @@ async function setupCronogramaPage(version = "11") {
   return { user: result.user };
 }
 
-// El backend no expone /presupuestos/{id}/cronograma todavía (plan 027): la
-// ruta real muestra CronogramaPage, que degrada a "todavía no disponible" sin
-// llamar al backend (ver más abajo). CronogramaPageActiva es la
-// implementación completa, conservada para reactivarla cuando el endpoint
-// exista: estos tests siguen probándola directamente.
-describe("CronogramaPageActiva", () => {
+describe("CronogramaPage", () => {
   it("muestra estado vacío cuando no hay cronograma", async () => {
     renderConProviders(
       <Routes>
-        <Route path="/proyectos/:id/cronograma" element={<CronogramaPageActiva />} />
+        <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
       </Routes>,
       { ruta: "/proyectos/1/cronograma?v=999" },
     );
@@ -93,22 +93,48 @@ describe("CronogramaPageActiva", () => {
     await setupCronogramaPage();
     expect(screen.queryByText("Desactualizado")).not.toBeInTheDocument();
   });
-});
 
-describe("CronogramaPage", () => {
-  it("explica que el módulo todavía no está disponible, sin pedir el cronograma al backend", async () => {
-    // MSW está configurado con onUnhandledRequest: "error": si esta pantalla
-    // llamara al hook real, el test fallaría por la petición no mockeada.
+  it("abre diálogo de editar actividad al hacer click en una fila", async () => {
+    const { user } = await setupCronogramaPage();
+    await user.click(screen.getByText("Excavación a máquina"));
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+  });
+
+  it("muestra 'Crear cronograma' cuando no existe uno", async () => {
+    renderConProviders(
+      <Routes>
+        <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
+      </Routes>,
+      { ruta: "/proyectos/1/cronograma?v=999" },
+    );
+    await waitFor(() => {
+      expect(screen.getByText(/no hay cronograma/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /crear cronograma/i })).toBeInTheDocument();
+    });
+  });
+
+  it("los períodos en la tabla usan índice 1-based", async () => {
+    await setupCronogramaPage();
+    expect(screen.getByText("P1")).toBeInTheDocument();
+    expect(screen.getByText("P4")).toBeInTheDocument();
+  });
+
+  it("muestra BadgeDesactualizado cuando desactualizado es true", async () => {
+    server.use(
+      http.get(`${API}/presupuestos/:id/cronograma`, () =>
+        HttpResponse.json({ ...cronogramaFixture, desactualizado: true }),
+      ),
+    );
     renderConProviders(
       <Routes>
         <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
       </Routes>,
       { ruta: "/proyectos/1/cronograma?v=11" },
     );
-
-    expect(screen.getByText("Cronograma")).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByText(/todavía no está disponible/i)).toBeInTheDocument();
+      expect(screen.getByText("Desactualizado")).toBeInTheDocument();
     });
   });
 });
