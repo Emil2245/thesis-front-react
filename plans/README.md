@@ -94,6 +94,12 @@ uno. Baseline al cerrar: **197 tests en 43 archivos** y `pnpm run e2e` en verde
 | 027 | [Degradar los módulos sin backend](027-degradar-modulos-sin-backend.md) | P1 | M | 019 | DONE (`2862321`) |
 | 028 | [Validar las respuestas con Zod en el seam](028-validar-respuestas-con-zod.md) | P1 | M | — | TODO |
 
+### Tercera tanda — cronograma (2026-08-25)
+
+| Plan | Título | Prioridad | Esfuerzo | Depende de | Estado |
+|---|---|---|---|---|---|
+| 029 | [Habilitar cronograma: alinear endpoints, índices 1-based, activar módulo](029-cronograma-enable-and-align.md) | P1 | M | 012 (impl original), 027 (degradación) | DONE (`90fc789`) |
+
 ### Trabajo fuera de plan (2026-08-25)
 
 Surgió al revisar los diffs y las capturas; no tenía plan propio porque se
