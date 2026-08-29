@@ -18,28 +18,53 @@ export const proyectoSchema = z.object({
     .optional(),
 });
 
-export const parametrosSchema = z
-  .object({
-    porcentajeHerramientaMenor: z.number().min(0, "Mínimo 0 %").max(20, "Máximo 20 %"),
-    porcentajeIndirecto: z.number().min(0, "Mínimo 0 %").max(100, "Máximo 100 %").nullable(),
-    iva: z.number().min(0, "Mínimo 0 %").max(30, "Máximo 30 %"),
-    moneda: z.string().min(1),
-    mostrarSeccionesVacias: z.boolean(),
-    sufijosSeccionActivos: z.boolean(),
-    mostrarSubtotalesSeccion: z.boolean(),
-    mostrarSubtotalesPie: z.boolean(),
-    mostrarNombreProyectoHeader: z.boolean(),
-    enumerarApus: z.boolean(),
-    mensajeFooter: z.string().max(200).optional(),
-    modoCodigoRubro: z.enum(["AUTOGENERADO", "MANUAL"]),
-  })
-  .transform((v) => ({
-    ...v,
-    porcentajeHerramientaMenor: Number((v.porcentajeHerramientaMenor / 100).toFixed(6)),
-    porcentajeIndirecto:
-      v.porcentajeIndirecto != null ? Number((v.porcentajeIndirecto / 100).toFixed(6)) : null,
-    iva: Number((v.iva / 100).toFixed(6)),
-  }));
+export interface RangosValidacion {
+  hmMax: number;
+  ciMax: number;
+  ivaMax: number;
+  descuentoMax: number;
+}
+
+const RANGOS_DEFAULT: RangosValidacion = {
+  hmMax: 20,
+  ciMax: 100,
+  ivaMax: 30,
+  descuentoMax: 50,
+};
+
+export function crearParametrosSchema(r: RangosValidacion = RANGOS_DEFAULT) {
+  return z
+    .object({
+      porcentajeHerramientaMenor: z.number().min(0, "Mínimo 0 %").max(r.hmMax, `Máximo ${r.hmMax} %`),
+      porcentajeIndirecto: z.number().min(0, "Mínimo 0 %").max(r.ciMax, `Máximo ${r.ciMax} %`).nullable(),
+      iva: z.number().min(0, "Mínimo 0 %").max(r.ivaMax, `Máximo ${r.ivaMax} %`),
+      moneda: z.string().min(1),
+      mostrarSeccionesVacias: z.boolean(),
+      sufijosSeccionActivos: z.boolean(),
+      mostrarSubtotalesSeccion: z.boolean(),
+      mostrarSubtotalesPie: z.boolean(),
+      mostrarNombreProyectoHeader: z.boolean(),
+      enumerarApus: z.boolean(),
+      mensajeFooter: z.string().max(200).optional(),
+      modoCodigoRubro: z.enum(["AUTOGENERADO", "MANUAL"]),
+    })
+    .transform((v) => ({
+      ...v,
+      porcentajeHerramientaMenor: Number((v.porcentajeHerramientaMenor / 100).toFixed(6)),
+      porcentajeIndirecto:
+        v.porcentajeIndirecto != null ? Number((v.porcentajeIndirecto / 100).toFixed(6)) : null,
+      iva: Number((v.iva / 100).toFixed(6)),
+    }));
+}
+
+export function crearDescuentoSchema(maxPorcentaje = 50) {
+  return z.object({
+    porcentaje: z.number().min(0, "Mínimo 0 %").max(maxPorcentaje, `Máximo ${maxPorcentaje} %`),
+  });
+}
+
+// Backwards-compatible defaults
+export const parametrosSchema = crearParametrosSchema();
 
 export const firmanteSchema = z.object({
   nombre: z.string().min(1, "El nombre es obligatorio").max(200),
@@ -48,9 +73,7 @@ export const firmanteSchema = z.object({
   orden: z.number().int().min(1),
 });
 
-export const descuentoSchema = z.object({
-  porcentaje: z.number().min(0, "Mínimo 0 %").max(50, "Máximo 50 %"),
-});
+export const descuentoSchema = crearDescuentoSchema();
 
 export type ProyectoFormData = z.input<typeof proyectoSchema>;
 export type ParametrosFormData = z.input<typeof parametrosSchema>;

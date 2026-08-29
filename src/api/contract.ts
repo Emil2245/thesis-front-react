@@ -563,6 +563,14 @@ export interface ParametrosSistemaResponse {
   porcentajeIndirecto?: Decimal | null;
   iva: Decimal;
   moneda: string;
+  rangoHmMin?: Decimal;
+  rangoHmMax?: Decimal;
+  rangoCiMin?: Decimal;
+  rangoCiMax?: Decimal;
+  rangoDescuentoMin?: Decimal;
+  rangoDescuentoMax?: Decimal;
+  rangoIvaMin?: Decimal;
+  rangoIvaMax?: Decimal;
 }
 
 export interface ParametrosSistemaActualizarRequest {

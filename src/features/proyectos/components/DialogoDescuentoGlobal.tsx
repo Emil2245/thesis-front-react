@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { descuentoSchema, type DescuentoFormData } from "../schemas";
+import { crearDescuentoSchema, type DescuentoFormData } from "../schemas";
 import { usePreviewDescuento, useAplicarDescuento } from "../hooks/useDescuentoGlobal";
+import { useParametrosSistema } from "@/features/admin/hooks/useParametrosSistema";
 import { asDecimal } from "@/lib/decimal";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,8 +36,12 @@ export function DialogoDescuentoGlobal({
   onClose: () => void;
   proyectoId: number;
 }) {
+  const { data: sistema } = useParametrosSistema();
+  const maxDesc = sistema?.rangoDescuentoMax ? Number(sistema.rangoDescuentoMax) * 100 : 50;
+  const schema = useMemo(() => crearDescuentoSchema(maxDesc), [maxDesc]);
+
   const form = useForm<DescuentoFormData>({
-    resolver: zodResolver(descuentoSchema),
+    resolver: zodResolver(schema),
     defaultValues: { porcentaje: 0 },
   });
 
@@ -59,7 +64,7 @@ export function DialogoDescuentoGlobal({
   const porcentaje = form.watch("porcentaje");
 
   useEffect(() => {
-    if (porcentaje > 0 && porcentaje <= 50) {
+    if (porcentaje > 0 && porcentaje <= maxDesc) {
       const timer = setTimeout(async () => {
         try {
           const data = await preview.mutateAsync(porcentaje);
@@ -72,7 +77,7 @@ export function DialogoDescuentoGlobal({
     } else {
       setPreviewData(null);
     }
-  }, [porcentaje, preview]);
+  }, [porcentaje, preview, maxDesc]);
 
   const handleAplicar = async () => {
     await aplicar.mutateAsync({
@@ -95,7 +100,7 @@ export function DialogoDescuentoGlobal({
 
         <div className="space-y-4">
           <Field>
-            <Label htmlFor="dcto-porcentaje">Porcentaje (0–50 %)</Label>
+            <Label htmlFor="dcto-porcentaje">{`Porcentaje (0–${maxDesc} %)`}</Label>
             <Input
               id="dcto-porcentaje"
               type="number"
