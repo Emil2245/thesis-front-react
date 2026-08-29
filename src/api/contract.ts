@@ -300,12 +300,17 @@ export interface ApuResponse {
   porcentajeIndirectoEfectivo: number;
   porcentajeDescuento: number;
   costoIndirecto: number;
+  especificacionTecnica?: string | null;
   secciones: Array<{
     tipo: SeccionTipo;
     orden: number;
     subtotal: number;
     detalles: ApuDetalleResponse[];
   }>;
+}
+
+export interface EspecificacionTecnicaRequest {
+  texto: string;
 }
 
 export interface ApuResumenResponse {

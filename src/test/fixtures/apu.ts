@@ -55,6 +55,7 @@ export const apuDetalleFixture: ApuResponse = {
   porcentajeIndirectoEfectivo: 0.15,
   porcentajeDescuento: 0,
   costoIndirecto: 120,
+  especificacionTecnica: null,
   secciones: [
     {
       tipo: "EQUIPO",

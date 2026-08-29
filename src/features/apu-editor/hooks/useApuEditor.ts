@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { get, patch, post, del } from "@/api/request";
+import { get, patch, post, put, del } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import { parsearEntradaDecimal } from "@/lib/decimal";
 import { celdaCantidadSchema, celdaRendimientoSchema, precioOverrideSchema } from "../schemas";
@@ -51,6 +51,7 @@ export interface UseApuEditor {
   editarEncabezado(patchReq: ApuPatchRequest): Promise<void>;
   editarPorcentajeCi(valor: string | null): Promise<void>;
   aplicarDescuento(porcentaje: string): Promise<void>;
+  guardarEspecificacionTecnica(texto: string): Promise<void>;
 }
 
 const ORDEN_SECCIONES: readonly SeccionTipo[] = [
@@ -307,6 +308,14 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
     [descuentoMutation],
   );
 
+  const guardarEspecificacionTecnica = useCallback(
+    async (texto: string) => {
+      await put(`/apus/${apuId}/especificacion-tecnica`, { texto });
+      qc.invalidateQueries({ queryKey: qk.apu(apuId) });
+    },
+    [apuId, qc],
+  );
+
   return {
     apu,
     secciones,
@@ -329,5 +338,6 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
     editarEncabezado,
     editarPorcentajeCi,
     aplicarDescuento,
+    guardarEspecificacionTecnica,
   };
 }
