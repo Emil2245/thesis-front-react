@@ -598,3 +598,9 @@ export interface LogActividadResponse {
   detalle: Record<string, unknown>;
   fecha: string;
 }
+
+// ————— Display config —————
+export interface DisplayConfigResponse {
+  precisionDinero: number;
+  precisionPorcentaje: number;
+}

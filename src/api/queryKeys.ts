@@ -31,4 +31,6 @@ export const qk = {
   adminParametros: () => ["admin", "parametros-sistema"] as const,
   adminValores: () => ["admin", "valores-referencia"] as const,
   adminLogs: (f?: Record<string, unknown>) => ["admin", "logs", f ?? {}] as const,
+
+  displayConfig: () => ["display-config"] as const,
 } as const;

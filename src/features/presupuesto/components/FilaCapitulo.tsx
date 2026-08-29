@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Moneda } from "@/components/comunes/Moneda";
 import type { CapituloResponse } from "@/api/contract";
 
 interface FilaCapituloProps {
@@ -54,9 +55,7 @@ export function FilaCapitulo({
       </Button>
       <span className="min-w-[4rem] text-sm font-mono text-muted-foreground">{capitulo.item}</span>
       <span className="flex-1 text-sm font-medium">{capitulo.descripcion}</span>
-      <span className="text-sm font-mono tabular-nums text-right min-w-[7rem]">
-        ${Number(capitulo.total).toFixed(2)}
-      </span>
+      <Moneda valor={capitulo.total} className="text-sm font-mono tabular-nums text-right min-w-[7rem]" />
       <div className="flex items-center gap-1">
         <Button
           variant="ghost"

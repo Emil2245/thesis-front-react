@@ -1,15 +1,17 @@
 import { formatearMoneda } from "@/lib/decimal";
 import type { Decimal } from "@/lib/decimal";
 import { cn } from "@/lib/utils";
+import { useDisplayPrecision } from "@/hooks/useDisplayConfig";
 
 export function Moneda({
   valor,
-  dp = 2,
+  dp,
   className,
 }: {
   valor: Decimal | number | null | undefined;
   dp?: number;
   className?: string;
 }) {
-  return <span className={cn("num", className)}>{formatearMoneda(valor, dp)}</span>;
+  const { precisionDinero } = useDisplayPrecision();
+  return <span className={cn("num", className)}>{formatearMoneda(valor, dp ?? precisionDinero)}</span>;
 }
