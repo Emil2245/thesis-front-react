@@ -136,6 +136,23 @@ export interface ProyectoDuplicarRequest {
   codigo: string;
 }
 
+export interface PlantillaProyectoResponse {
+  id: number;
+  nombre: string;
+  descripcion?: string;
+  fechaCreacion: string;
+}
+
+export interface PlantillaProyectoCrearRequest {
+  nombre: string;
+  descripcion?: string;
+  proyectoId: number;
+}
+
+export interface ProyectoDesdePlantillaRequest {
+  nombre: string;
+}
+
 export interface FirmanteResponse {
   id: number;
   nombre: string;

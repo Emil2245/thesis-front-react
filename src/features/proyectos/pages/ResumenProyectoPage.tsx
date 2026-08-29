@@ -25,9 +25,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { TriangleAlertIcon, PencilIcon, CopyIcon, Trash2Icon, PercentIcon } from "lucide-react";
+import {
+  TriangleAlertIcon,
+  PencilIcon,
+  CopyIcon,
+  Trash2Icon,
+  PercentIcon,
+  BookmarkIcon,
+} from "lucide-react";
 import { MoreHorizontalIcon } from "lucide-react";
 import { DialogoDescuentoGlobal } from "../components/DialogoDescuentoGlobal";
+import { DialogoGuardarComoPlantilla } from "../components/DialogoGuardarComoPlantilla";
 import { useVersionActiva } from "@/shell/contexto";
 import { MOTIVO_SIN_BACKEND } from "@/lib/disponibilidad";
 import { usePresupuesto, useResumen } from "@/features/presupuesto/hooks/usePresupuesto";
@@ -40,6 +48,7 @@ export function ResumenProyectoPage() {
   const navigate = useNavigate();
   const { data: proyecto, isPending } = useProyecto(proyectoId);
   const [descuentoAbierto, setDescuentoAbierto] = useState(false);
+  const [guardarPlantillaAbierto, setGuardarPlantillaAbierto] = useState(false);
   const eliminar = useEliminarProyecto();
   const { presupuestoId, activa } = useVersionActiva();
   const { data: presupuesto } = usePresupuesto(presupuestoId ?? 0);
@@ -104,6 +113,9 @@ export function ResumenProyectoPage() {
                   </TooltipTrigger>
                   <TooltipContent>{MOTIVO_SIN_BACKEND}</TooltipContent>
                 </Tooltip>
+                <DropdownMenuItem onClick={() => setGuardarPlantillaAbierto(true)}>
+                  <BookmarkIcon /> Guardar como plantilla
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setDescuentoAbierto(true)}>
                   <PercentIcon /> Descuento global
                 </DropdownMenuItem>
@@ -234,6 +246,12 @@ export function ResumenProyectoPage() {
       <DialogoDescuentoGlobal
         abierto={descuentoAbierto}
         onClose={() => setDescuentoAbierto(false)}
+        proyectoId={proyectoId}
+      />
+
+      <DialogoGuardarComoPlantilla
+        abierto={guardarPlantillaAbierto}
+        onClose={() => setGuardarPlantillaAbierto(false)}
         proyectoId={proyectoId}
       />
     </>

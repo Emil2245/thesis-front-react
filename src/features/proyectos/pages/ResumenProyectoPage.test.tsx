@@ -39,4 +39,26 @@ describe("ResumenProyectoPage", () => {
       expect(screen.getByText("Puente Ambato")).toBeInTheDocument();
     });
   });
+
+  it("abre el diálogo de guardar como plantilla desde el menú de más acciones", async () => {
+    const { user } = renderConProviders(
+      <Routes>
+        <Route path="/proyectos/:id" element={<ResumenProyectoPage />} />
+      </Routes>,
+      { ruta: "/proyectos/1" },
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Puente Ambato")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByLabelText("Más acciones"));
+    await user.click(screen.getByText("Guardar como plantilla"));
+
+    expect(
+      screen.getByText(
+        "Guarda este proyecto como plantilla para crear nuevos proyectos a partir de él.",
+      ),
+    ).toBeInTheDocument();
+  });
 });
