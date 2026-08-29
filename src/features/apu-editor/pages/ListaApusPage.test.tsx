@@ -19,13 +19,6 @@ function renderLista(ruta = "/proyectos/1/apus") {
 }
 
 describe("ListaApusPage", () => {
-  it("renders auxiliary badge", async () => {
-    renderLista();
-    await waitFor(() => {
-      expect(screen.getByText("Auxiliar")).toBeInTheDocument();
-    });
-  });
-
   it("shows search input", async () => {
     renderLista();
     await waitFor(() => {

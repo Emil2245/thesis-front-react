@@ -36,6 +36,6 @@ describe("ApiError", () => {
   });
 
   it("el catálogo de types coincide con architecture/07 §1", () => {
-    expect(PROBLEM_TYPES).toHaveLength(16);
+    expect(PROBLEM_TYPES).toHaveLength(15);
   });
 });

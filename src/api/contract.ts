@@ -280,7 +280,6 @@ export interface ApuDetalleResponse {
   descripcion: string;
   esHerramientaMenor: boolean;
   insumoId?: number | null;
-  apuAuxiliarId?: number | null;
   cantidad?: number | null;
   rendimiento?: number | null;
   unidad?: string | null;
@@ -295,7 +294,6 @@ export interface ApuResponse {
   codigo: string;
   descripcion: string;
   unidad: string;
-  esAuxiliar: boolean;
   costoDirecto: number;
   costoTotal: number;
   porcentajeIndirecto?: number | null;
@@ -315,7 +313,6 @@ export interface ApuResumenResponse {
   codigo: string;
   descripcion: string;
   unidad: string;
-  esAuxiliar: boolean;
   costoDirecto: number;
   costoTotal: number;
   vinculado: boolean;
@@ -326,20 +323,17 @@ export interface ApuCrearRequest {
   descripcion: string;
   unidad: string;
   plantillaId?: number;
-  esAuxiliar?: boolean;
 }
 
 export interface ApuPatchRequest {
   codigo?: string;
   descripcion?: string;
   unidad?: string;
-  esAuxiliar?: boolean;
   porcentajeIndirecto?: Decimal | null;
 }
 
 export interface ApuDetalleCrearRequest {
   insumoId?: number;
-  apuAuxiliarId?: number;
   cantidad?: Decimal;
   rendimiento?: Decimal;
 }
@@ -348,6 +342,7 @@ export interface ApuDetallePatchRequest {
   cantidad?: Decimal;
   rendimiento?: Decimal;
   precioOverride?: Decimal | null;
+  orden?: number;
 }
 
 export interface DescuentoRubroRequest {

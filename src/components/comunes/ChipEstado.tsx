@@ -7,7 +7,6 @@ const VARIANTES: Record<string, string> = {
   "en-proceso": "bg-advertencia/15 text-advertencia-texto border-advertencia/30",
   finalizado: "bg-exito/15 text-exito-texto border-exito/30",
   vigente: "bg-primary/15 text-primary border-primary/30",
-  auxiliar: "bg-secondary text-secondary-foreground border-border",
   desactualizado: "bg-advertencia/15 text-advertencia-texto border-advertencia/30",
 };
 
@@ -18,7 +17,6 @@ const ETIQUETAS: Record<string, string> = {
   "en-proceso": "En proceso",
   finalizado: "Finalizado",
   vigente: "Vigente",
-  auxiliar: "Auxiliar",
   desactualizado: "Desactualizado",
 };
 

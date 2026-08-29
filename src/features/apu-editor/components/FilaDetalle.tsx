@@ -1,7 +1,6 @@
 import type { FilaEditor } from "../hooks/useApuEditor";
 import { CeldaEditable } from "./CeldaEditable";
 import { BadgeHerencia } from "./BadgeHerencia";
-import { BadgeAuxiliar } from "./BadgeAuxiliar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Trash2Icon, TriangleAlertIcon } from "lucide-react";
@@ -27,8 +26,7 @@ export function FilaDetalle({
   onRestaurarHerencia,
   onEliminarFila,
 }: FilaDetalleProps) {
-  const { detalle, protegida, heredado, esAuxiliar, estado } = fila;
-  const esAuxiliarRow = esAuxiliar;
+  const { detalle, protegida, heredado, estado } = fila;
 
   if (protegida) {
     return (
@@ -68,10 +66,7 @@ export function FilaDetalle({
       )}
     >
       <td className="px-2.5">
-        <div className="flex items-center gap-2">
-          <span className="font-medium">{detalle.descripcion}</span>
-          <BadgeAuxiliar esAuxiliar={esAuxiliarRow} />
-        </div>
+        <span className="font-medium">{detalle.descripcion}</span>
       </td>
       <td className="px-2.5">{detalle.unidad ?? "—"}</td>
       <td className="px-2.5 num">
@@ -101,14 +96,12 @@ export function FilaDetalle({
             <CeldaEditable
               value={String(detalle.precioEfectivo)}
               onCommit={(v) => onEditarCelda(detalle.id, "precioOverride", v)}
-              editable={!esAuxiliarRow && !protegida}
+              editable={!protegida}
             />
-            {!esAuxiliarRow && (
-              <BadgeHerencia
-                heredero={heredado}
-                onRestaurar={heredado ? undefined : () => onRestaurarHerencia(detalle.id)}
-              />
-            )}
+            <BadgeHerencia
+              heredero={heredado}
+              onRestaurar={heredado ? undefined : () => onRestaurarHerencia(detalle.id)}
+            />
           </div>
         </td>
       )}
