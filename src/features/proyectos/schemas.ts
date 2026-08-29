@@ -35,8 +35,15 @@ const RANGOS_DEFAULT: RangosValidacion = {
 export function crearParametrosSchema(r: RangosValidacion = RANGOS_DEFAULT) {
   return z
     .object({
-      porcentajeHerramientaMenor: z.number().min(0, "Mínimo 0 %").max(r.hmMax, `Máximo ${r.hmMax} %`),
-      porcentajeIndirecto: z.number().min(0, "Mínimo 0 %").max(r.ciMax, `Máximo ${r.ciMax} %`).nullable(),
+      porcentajeHerramientaMenor: z
+        .number()
+        .min(0, "Mínimo 0 %")
+        .max(r.hmMax, `Máximo ${r.hmMax} %`),
+      porcentajeIndirecto: z
+        .number()
+        .min(0, "Mínimo 0 %")
+        .max(r.ciMax, `Máximo ${r.ciMax} %`)
+        .nullable(),
       iva: z.number().min(0, "Mínimo 0 %").max(r.ivaMax, `Máximo ${r.ivaMax} %`),
       moneda: z.string().min(1),
       mostrarSeccionesVacias: z.boolean(),

@@ -13,5 +13,7 @@ export function Moneda({
   className?: string;
 }) {
   const { precisionDinero } = useDisplayPrecision();
-  return <span className={cn("num", className)}>{formatearMoneda(valor, dp ?? precisionDinero)}</span>;
+  return (
+    <span className={cn("num", className)}>{formatearMoneda(valor, dp ?? precisionDinero)}</span>
+  );
 }

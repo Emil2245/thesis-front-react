@@ -55,7 +55,10 @@ export function FilaCapitulo({
       </Button>
       <span className="min-w-[4rem] text-sm font-mono text-muted-foreground">{capitulo.item}</span>
       <span className="flex-1 text-sm font-medium">{capitulo.descripcion}</span>
-      <Moneda valor={capitulo.total} className="text-sm font-mono tabular-nums text-right min-w-[7rem]" />
+      <Moneda
+        valor={capitulo.total}
+        className="text-sm font-mono tabular-nums text-right min-w-[7rem]"
+      />
       <div className="flex items-center gap-1">
         <Button
           variant="ghost"

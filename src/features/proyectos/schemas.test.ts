@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { parametrosSchema, descuentoSchema, firmanteSchema, crearParametrosSchema, crearDescuentoSchema } from "./schemas";
+import {
+  parametrosSchema,
+  descuentoSchema,
+  firmanteSchema,
+  crearParametrosSchema,
+  crearDescuentoSchema,
+} from "./schemas";
 
 describe("parametrosSchema", () => {
   it("rechaza %HM > 20", () => {

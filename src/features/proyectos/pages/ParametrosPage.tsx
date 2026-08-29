@@ -49,12 +49,15 @@ export function ParametrosPage() {
   const { data: sistema } = useParametrosSistema();
   const actualizar = useActualizarParametros(proyectoId);
 
-  const rangos = useMemo<RangosValidacion>(() => ({
-    hmMax: sistema?.rangoHmMax ? Number(sistema.rangoHmMax) * 100 : 20,
-    ciMax: sistema?.rangoCiMax ? Number(sistema.rangoCiMax) * 100 : 100,
-    ivaMax: sistema?.rangoIvaMax ? Number(sistema.rangoIvaMax) * 100 : 30,
-    descuentoMax: sistema?.rangoDescuentoMax ? Number(sistema.rangoDescuentoMax) * 100 : 50,
-  }), [sistema]);
+  const rangos = useMemo<RangosValidacion>(
+    () => ({
+      hmMax: sistema?.rangoHmMax ? Number(sistema.rangoHmMax) * 100 : 20,
+      ciMax: sistema?.rangoCiMax ? Number(sistema.rangoCiMax) * 100 : 100,
+      ivaMax: sistema?.rangoIvaMax ? Number(sistema.rangoIvaMax) * 100 : 30,
+      descuentoMax: sistema?.rangoDescuentoMax ? Number(sistema.rangoDescuentoMax) * 100 : 50,
+    }),
+    [sistema],
+  );
 
   const schema = useMemo(() => crearParametrosSchema(rangos), [rangos]);
 

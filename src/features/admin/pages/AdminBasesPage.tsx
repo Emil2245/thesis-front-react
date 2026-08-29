@@ -13,7 +13,12 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { useAdminBases, useCrearBase, useEliminarBase, useArchivarBase } from "../hooks/useAdminBases";
+import {
+  useAdminBases,
+  useCrearBase,
+  useEliminarBase,
+  useArchivarBase,
+} from "../hooks/useAdminBases";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
 import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
@@ -60,7 +65,11 @@ export function AdminBasesPageActiva() {
         }
       />
       <div className="flex items-center gap-2 mb-4">
-        <Switch id="incluir-archivadas" checked={incluirArchivadas} onCheckedChange={setIncluirArchivadas} />
+        <Switch
+          id="incluir-archivadas"
+          checked={incluirArchivadas}
+          onCheckedChange={setIncluirArchivadas}
+        />
         <Label htmlFor="incluir-archivadas">Incluir archivadas</Label>
       </div>
       <TarjetaTabla>
@@ -78,7 +87,11 @@ export function AdminBasesPageActiva() {
               <TableRow key={b.id} className={cn(b.archivada && "opacity-50")}>
                 <TableCell className="font-medium">
                   {b.nombre}
-                  {b.archivada && <Badge variant="outline" className="ml-2">Archivada</Badge>}
+                  {b.archivada && (
+                    <Badge variant="outline" className="ml-2">
+                      Archivada
+                    </Badge>
+                  )}
                 </TableCell>
                 <TableCell>{b.archivada ? "Archivada" : "Activa"}</TableCell>
                 <TableCell className="font-mono text-sm">{b.totalInsumos}</TableCell>

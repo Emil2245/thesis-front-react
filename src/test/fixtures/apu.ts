@@ -6,7 +6,7 @@ export const apuResumenFixture: ApuResumenResponse[] = [
     codigo: "APU-001",
     descripcion: "Excavación a máquina",
     unidad: "m3",
-    
+
     costoDirecto: 800,
     costoTotal: 920,
     vinculado: false,
@@ -16,7 +16,7 @@ export const apuResumenFixture: ApuResumenResponse[] = [
     codigo: "APU-002",
     descripcion: "Relleno compactado",
     unidad: "m3",
-    
+
     costoDirecto: 450,
     costoTotal: 517.5,
     vinculado: true,
@@ -26,7 +26,7 @@ export const apuResumenFixture: ApuResumenResponse[] = [
     codigo: "APU-003",
     descripcion: "Transporte material",
     unidad: "m3-km",
-    
+
     costoDirecto: 120,
     costoTotal: 120,
     vinculado: false,
@@ -36,7 +36,7 @@ export const apuResumenFixture: ApuResumenResponse[] = [
     codigo: "APU-004",
     descripcion: "Hormigón simple",
     unidad: "m3",
-    
+
     costoDirecto: 2100,
     costoTotal: 2415,
     vinculado: true,
@@ -48,7 +48,7 @@ export const apuDetalleFixture: ApuResponse = {
   codigo: "APU-001",
   descripcion: "Excavación a máquina",
   unidad: "m3",
-  
+
   costoDirecto: 800,
   costoTotal: 920,
   porcentajeIndirecto: null,
@@ -67,7 +67,7 @@ export const apuDetalleFixture: ApuResponse = {
           descripcion: "Retroexcavadora",
           esHerramientaMenor: false,
           insumoId: 15,
-          
+
           cantidad: 1,
           rendimiento: 0.05,
           unidad: "h",
@@ -89,7 +89,7 @@ export const apuDetalleFixture: ApuResponse = {
           descripcion: "Albañil",
           esHerramientaMenor: false,
           insumoId: 13,
-          
+
           cantidad: 1,
           rendimiento: 0.1,
           unidad: "h",
@@ -104,7 +104,7 @@ export const apuDetalleFixture: ApuResponse = {
           descripcion: "Peón",
           esHerramientaMenor: false,
           insumoId: 14,
-          
+
           cantidad: 2,
           rendimiento: 0.1,
           unidad: "h",
@@ -143,7 +143,7 @@ export const apuConHmFixture: ApuResponse = {
           descripcion: "Herramienta Menor (%HM × Subtotal N)",
           esHerramientaMenor: true,
           insumoId: null,
-          
+
           cantidad: null,
           rendimiento: null,
           unidad: null,

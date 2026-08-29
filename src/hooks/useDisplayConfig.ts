@@ -4,7 +4,10 @@ import { get } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import type { DisplayConfigResponse } from "@/api/contract";
 
-export const DISPLAY_DEFAULTS: DisplayConfigResponse = { precisionDinero: 2, precisionPorcentaje: 4 };
+export const DISPLAY_DEFAULTS: DisplayConfigResponse = {
+  precisionDinero: 2,
+  precisionPorcentaje: 4,
+};
 
 export const DisplayConfigCtx = createContext<DisplayConfigResponse>(DISPLAY_DEFAULTS);
 

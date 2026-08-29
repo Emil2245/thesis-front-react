@@ -13,5 +13,9 @@ export function Porcentaje({
   className?: string;
 }) {
   const { precisionPorcentaje } = useDisplayPrecision();
-  return <span className={cn("num", className)}>{formatearPorcentaje(valor, dp ?? precisionPorcentaje)}</span>;
+  return (
+    <span className={cn("num", className)}>
+      {formatearPorcentaje(valor, dp ?? precisionPorcentaje)}
+    </span>
+  );
 }
