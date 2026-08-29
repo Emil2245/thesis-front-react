@@ -25,7 +25,7 @@ interface SelectorInsumoProps {
   onClose: () => void;
   proyectoId: number;
   tipo: SeccionTipo;
-  onSeleccionar: (sel: { insumoId?: number; apuAuxiliarId?: number }) => void;
+  onSeleccionar: (sel: { insumoId: number }) => void;
 }
 
 export function SelectorInsumo({

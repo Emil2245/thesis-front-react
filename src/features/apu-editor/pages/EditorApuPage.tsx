@@ -31,7 +31,6 @@ export function EditorApuPage() {
     editarEncabezado,
     editarPorcentajeCi,
     aplicarDescuento,
-    alternarAuxiliar,
   } = useApuEditor(parsedApuId, presupuestoId || undefined);
 
   const [descuentoDialogAbierto, setDescuentoDialogAbierto] = useState(false);
@@ -64,7 +63,7 @@ export function EditorApuPage() {
 
   return (
     <>
-      <EncabezadoApu apu={apu} onEditar={editarEncabezado} onAlternarAuxiliar={alternarAuxiliar} />
+      <EncabezadoApu apu={apu} onEditar={editarEncabezado} />
 
       <div className="flex flex-col gap-5 xl:flex-row xl:items-start">
         {/* Las secciones se editan a la izquierda; los totales quedan a la vista

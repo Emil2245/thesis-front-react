@@ -3,7 +3,6 @@ import { useNavigate, Link } from "react-router-dom";
 import { useVersionActiva, useProyectoActivoId } from "@/shell/contexto";
 import { useApus, useEliminarApu, useDuplicarApu } from "../hooks/useApus";
 import { DialogoNuevoApu } from "../components/DialogoNuevoApu";
-import { BadgeAuxiliar } from "../components/BadgeAuxiliar";
 import { CargandoTabla } from "@/components/comunes/CargandoTabla";
 import { EstadoVacio } from "@/components/comunes/EstadoVacio";
 import { ConfirmarDestructivo } from "@/components/comunes/ConfirmarDestructivo";
@@ -142,10 +141,7 @@ export function ListaApusPage() {
                   <TableCell className="num">{formatearMoneda(apu.costoDirecto)}</TableCell>
                   <TableCell className="num">{formatearMoneda(apu.costoTotal)}</TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1">
-                      <BadgeAuxiliar esAuxiliar={apu.esAuxiliar} />
-                      {apu.vinculado && <LinkIcon className="size-3 text-muted-foreground" />}
-                    </div>
+                    {apu.vinculado && <LinkIcon className="size-3 text-muted-foreground" />}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>

@@ -61,85 +61,73 @@ export function PieTotales({
   return (
     <div className="flex flex-col gap-3">
       <TarjetaTabla titulo="Costo unitario">
-        {apu.esAuxiliar && (
-          <p className="border-b bg-muted/50 px-4 py-2 text-xs text-muted-foreground">
-            Rubro auxiliar — el CI se aplica en el APU principal
-          </p>
-        )}
-
         <div className="flex flex-col gap-2.5 p-4 text-sm">
           <Linea etiqueta="Costo Directo" valor={formatearMoneda(apu.costoDirecto)} />
 
-          {!apu.esAuxiliar && (
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between gap-3">
-                <span className="flex items-center gap-1 text-muted-foreground">
-                  % CI
-                  <button
-                    type="button"
-                    aria-label="Editar porcentaje de indirectos"
-                    onClick={iniciarEdicionCi}
-                    className="text-primary hover:underline"
-                  >
-                    <Edit2Icon className="size-3" />
-                  </button>
-                </span>
-                {editandoCi ? (
-                  <div className="flex items-center gap-1">
-                    <Input
-                      className="h-7 w-20 text-right text-xs"
-                      type="number"
-                      step="0.01"
-                      value={ciValor}
-                      onChange={(e) => setCiValor(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") guardarCi();
-                        if (e.key === "Escape") cancelarEdicionCi();
-                      }}
-                      // oxlint-disable-next-line jsx-a11y/no-autofocus -- inline edit triggered by user click
-                      autoFocus
-                    />
-                    <Button size="xs" variant="ghost" onClick={guardarCi}>
-                      OK
-                    </Button>
-                    <Button size="xs" variant="ghost" onClick={cancelarEdicionCi}>
-                      X
-                    </Button>
-                  </div>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <span className="num font-medium">
-                      {formatearPorcentaje(apu.porcentajeIndirectoEfectivo)}
-                    </span>
-                    {apu.porcentajeIndirecto !== null && (
-                      <Badge variant="secondary">Valor propio</Badge>
-                    )}
-                  </span>
-                )}
-              </div>
-              {!editandoCi && apu.porcentajeIndirecto !== null && (
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  className="self-end text-muted-foreground"
-                  onClick={() => onEditarPorcentajeCi(null)}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-1 text-muted-foreground">
+                % CI
+                <button
+                  type="button"
+                  aria-label="Editar porcentaje de indirectos"
+                  onClick={iniciarEdicionCi}
+                  className="text-primary hover:underline"
                 >
-                  Usar valor del proyecto ({formatearPorcentaje(apu.porcentajeIndirectoEfectivo)})
-                </Button>
+                  <Edit2Icon className="size-3" />
+                </button>
+              </span>
+              {editandoCi ? (
+                <div className="flex items-center gap-1">
+                  <Input
+                    className="h-7 w-20 text-right text-xs"
+                    type="number"
+                    step="0.01"
+                    value={ciValor}
+                    onChange={(e) => setCiValor(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") guardarCi();
+                      if (e.key === "Escape") cancelarEdicionCi();
+                    }}
+                    // oxlint-disable-next-line jsx-a11y/no-autofocus -- inline edit triggered by user click
+                    autoFocus
+                  />
+                  <Button size="xs" variant="ghost" onClick={guardarCi}>
+                    OK
+                  </Button>
+                  <Button size="xs" variant="ghost" onClick={cancelarEdicionCi}>
+                    X
+                  </Button>
+                </div>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <span className="num font-medium">
+                    {formatearPorcentaje(apu.porcentajeIndirectoEfectivo)}
+                  </span>
+                  {apu.porcentajeIndirecto !== null && (
+                    <Badge variant="secondary">Valor propio</Badge>
+                  )}
+                </span>
               )}
             </div>
-          )}
+            {!editandoCi && apu.porcentajeIndirecto !== null && (
+              <Button
+                variant="ghost"
+                size="xs"
+                className="self-end text-muted-foreground"
+                onClick={() => onEditarPorcentajeCi(null)}
+              >
+                Usar valor del proyecto ({formatearPorcentaje(apu.porcentajeIndirectoEfectivo)})
+              </Button>
+            )}
+          </div>
 
-          {!apu.esAuxiliar && (
-            <Linea etiqueta="Costo Indirecto" valor={formatearMoneda(apu.costoIndirecto)} />
-          )}
+          <Linea etiqueta="Costo Indirecto" valor={formatearMoneda(apu.costoIndirecto)} />
         </div>
 
         <div className="flex items-baseline justify-between gap-3 border-t bg-muted/60 px-4 py-3.5">
           <span className="flex flex-col gap-0.5">
-            <span className="text-sm font-semibold">
-              {apu.esAuxiliar ? "Costo total (CT = CD)" : "Costo Total"}
-            </span>
+            <span className="text-sm font-semibold">Costo Total</span>
             <span className="text-xs font-normal text-muted-foreground">por {apu.unidad}</span>
           </span>
           <span className="num text-2xl font-semibold tracking-tight">

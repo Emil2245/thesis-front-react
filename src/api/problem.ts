@@ -28,7 +28,6 @@ export const PROBLEM_TYPES = [
   "reduccion-periodos-requiere-confirmacion",
   "export-bloqueado",
   "csv-invalido",
-  "flag-auxiliar-bloqueado",
   "fila-protegida",
   "no-encontrado",
 ] as const;

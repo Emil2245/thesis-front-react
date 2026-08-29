@@ -21,7 +21,6 @@ export interface FilaEditor {
   detalle: ApuDetalleResponse;
   protegida: boolean;
   heredado: boolean;
-  esAuxiliar: boolean;
   estado: EstadoCelda;
 }
 
@@ -46,12 +45,11 @@ export interface UseApuEditor {
     valor: string,
   ): Promise<void>;
   restaurarHerencia(detalleId: number): Promise<void>;
-  agregarFila(sel: { insumoId?: number; apuAuxiliarId?: number }): Promise<void>;
+  agregarFila(sel: { insumoId: number }): Promise<void>;
   eliminarFila(detalleId: number): Promise<void>;
   editarEncabezado(patchReq: ApuPatchRequest): Promise<void>;
   editarPorcentajeCi(valor: string | null): Promise<void>;
   aplicarDescuento(porcentaje: string): Promise<void>;
-  alternarAuxiliar(esAuxiliar: boolean): Promise<void>;
 }
 
 const ORDEN_SECCIONES: readonly SeccionTipo[] = [
@@ -99,7 +97,6 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
           detalle: d,
           protegida: d.esHerramientaMenor,
           heredado: d.precioHeredado,
-          esAuxiliar: d.apuAuxiliarId != null,
           estado: estadoCeldas.get(d.id) ?? "estable",
         })),
       };
@@ -246,7 +243,7 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
   );
 
   const agregarFila = useCallback(
-    async (sel: { insumoId?: number; apuAuxiliarId?: number }) => {
+    async (sel: { insumoId: number }) => {
       try {
         await agregarMutation.mutateAsync(sel);
       } catch {
@@ -296,13 +293,6 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
     [descuentoMutation],
   );
 
-  const alternarAuxiliar = useCallback(
-    async (esAuxiliar: boolean) => {
-      await encabezadoMutation.mutateAsync({ esAuxiliar });
-    },
-    [encabezadoMutation],
-  );
-
   return {
     apu,
     secciones,
@@ -324,6 +314,5 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
     editarEncabezado,
     editarPorcentajeCi,
     aplicarDescuento,
-    alternarAuxiliar,
   };
 }

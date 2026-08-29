@@ -5,10 +5,6 @@ import { PieTotales } from "./PieTotales";
 import { apuDetalleFixture } from "@/test/fixtures/apu";
 import type { ApuResponse } from "@/api/contract";
 
-function apuAuxiliar(): ApuResponse {
-  return { ...apuDetalleFixture, esAuxiliar: true, costoTotal: 800 };
-}
-
 function apuConPorcentajePropio(): ApuResponse {
   return {
     ...apuDetalleFixture,
@@ -30,20 +26,6 @@ describe("PieTotales", () => {
     expect(screen.getByText("Costo Directo")).toBeInTheDocument();
     expect(screen.getByText("Costo Indirecto")).toBeInTheDocument();
     expect(screen.getByText("Costo Total")).toBeInTheDocument();
-  });
-
-  it("cuando esAuxiliar=true, oculta fila CI y CT label dice CT = CD", () => {
-    renderConProviders(
-      <PieTotales
-        apu={apuAuxiliar()}
-        onEditarPorcentajeCi={() => Promise.resolve()}
-        onAbrirDescuento={() => {}}
-        onAbrirDesglose={() => {}}
-      />,
-    );
-    expect(screen.queryByText("Costo Indirecto")).not.toBeInTheDocument();
-    expect(screen.queryByText("% CI")).not.toBeInTheDocument();
-    expect(screen.getByText("Costo total (CT = CD)")).toBeInTheDocument();
   });
 
   it("nunca muestra CD Ajustado (el backend no expone ese campo)", () => {
