@@ -27,6 +27,7 @@ export function EditorApuPage() {
     cargando,
     editarCelda,
     restaurarHerencia,
+    reordenarFila,
     eliminarFila,
     editarEncabezado,
     editarPorcentajeCi,
@@ -77,6 +78,7 @@ export function EditorApuPage() {
               onEditarCelda={editarCelda}
               onRestaurarHerencia={restaurarHerencia}
               onEliminarFila={eliminarFila}
+              onReordenarFila={reordenarFila}
             />
           ))}
 

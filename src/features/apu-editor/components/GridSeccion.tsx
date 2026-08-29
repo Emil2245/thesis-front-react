@@ -12,6 +12,7 @@ interface GridSeccionProps {
   ) => Promise<void>;
   onRestaurarHerencia: (detalleId: number) => Promise<void>;
   onEliminarFila: (detalleId: number) => Promise<void>;
+  onReordenarFila: (detalleId: number, nuevoOrden: number) => Promise<void>;
 }
 
 export function GridSeccion({
@@ -19,6 +20,7 @@ export function GridSeccion({
   onEditarCelda,
   onRestaurarHerencia,
   onEliminarFila,
+  onReordenarFila,
 }: GridSeccionProps) {
   if (!seccion.filas.length) return null;
 
@@ -79,7 +81,7 @@ export function GridSeccion({
             </tr>
           </thead>
           <tbody>
-            {seccion.filas.map((fila) => (
+            {seccion.filas.map((fila, indice) => (
               <FilaDetalle
                 key={fila.detalle.id}
                 fila={fila}
@@ -87,6 +89,9 @@ export function GridSeccion({
                 onEditarCelda={onEditarCelda}
                 onRestaurarHerencia={onRestaurarHerencia}
                 onEliminarFila={onEliminarFila}
+                onReordenarFila={onReordenarFila}
+                indice={indice}
+                totalFilas={seccion.filas.length}
               />
             ))}
           </tbody>

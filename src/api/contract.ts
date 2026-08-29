@@ -348,6 +348,7 @@ export interface ApuDetallePatchRequest {
   cantidad?: Decimal;
   rendimiento?: Decimal;
   precioOverride?: Decimal | null;
+  orden?: number;
 }
 
 export interface DescuentoRubroRequest {

@@ -46,6 +46,7 @@ export interface UseApuEditor {
     valor: string,
   ): Promise<void>;
   restaurarHerencia(detalleId: number): Promise<void>;
+  reordenarFila(detalleId: number, nuevoOrden: number): Promise<void>;
   agregarFila(sel: { insumoId?: number; apuAuxiliarId?: number }): Promise<void>;
   eliminarFila(detalleId: number): Promise<void>;
   editarEncabezado(patchReq: ApuPatchRequest): Promise<void>;
@@ -95,13 +96,15 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
         bloque: BLOQUE[tipo],
         subtotal: s?.subtotal ?? 0,
         muestraRendimiento: tipo === "EQUIPO" || tipo === "MANO_OBRA",
-        filas: (s?.detalles ?? []).map((d) => ({
-          detalle: d,
-          protegida: d.esHerramientaMenor,
-          heredado: d.precioHeredado,
-          esAuxiliar: d.apuAuxiliarId != null,
-          estado: estadoCeldas.get(d.id) ?? "estable",
-        })),
+        filas: (s?.detalles ?? [])
+          .toSorted((a, b) => a.orden - b.orden)
+          .map((d) => ({
+            detalle: d,
+            protegida: d.esHerramientaMenor,
+            heredado: d.precioHeredado,
+            esAuxiliar: d.apuAuxiliarId != null,
+            estado: estadoCeldas.get(d.id) ?? "estable",
+          })),
       };
     });
   }, [apu, estadoCeldas]);
@@ -245,6 +248,17 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
     [editMutation],
   );
 
+  const reordenarFila = useCallback(
+    async (detalleId: number, nuevoOrden: number) => {
+      try {
+        await editMutation.mutateAsync({ detalleId, body: { orden: nuevoOrden } });
+      } catch {
+        // handled by react-query
+      }
+    },
+    [editMutation],
+  );
+
   const agregarFila = useCallback(
     async (sel: { insumoId?: number; apuAuxiliarId?: number }) => {
       try {
@@ -319,6 +333,7 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
       encabezadoMutation.error) as ApiError | null,
     editarCelda,
     restaurarHerencia,
+    reordenarFila,
     agregarFila,
     eliminarFila,
     editarEncabezado,
