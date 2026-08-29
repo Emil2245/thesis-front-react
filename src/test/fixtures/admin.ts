@@ -41,6 +41,14 @@ export const parametrosSistemaFixture: ParametrosSistemaResponse = {
   porcentajeIndirecto: "0.150000" as never,
   iva: "0.120000" as never,
   moneda: "USD",
+  rangoHmMin: "0.0000" as never,
+  rangoHmMax: "0.2000" as never,
+  rangoCiMin: "0.0000" as never,
+  rangoCiMax: "1.0000" as never,
+  rangoDescuentoMin: "0.0000" as never,
+  rangoDescuentoMax: "0.5000" as never,
+  rangoIvaMin: "0.0000" as never,
+  rangoIvaMax: "0.3000" as never,
 };
 
 export const valoresReferenciaFixture: ValorReferenciaResponse[] = [

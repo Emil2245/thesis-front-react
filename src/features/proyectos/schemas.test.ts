@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parametrosSchema, descuentoSchema, firmanteSchema } from "./schemas";
+import { parametrosSchema, descuentoSchema, firmanteSchema, crearParametrosSchema, crearDescuentoSchema } from "./schemas";
 
 describe("parametrosSchema", () => {
   it("rechaza %HM > 20", () => {
@@ -122,6 +122,42 @@ describe("descuentoSchema", () => {
   it("acepta 0 % (reversión)", () => {
     const r = descuentoSchema.safeParse({ porcentaje: 0 });
     expect(r.success).toBe(true);
+  });
+});
+
+describe("crearParametrosSchema con rangos custom", () => {
+  const schema = crearParametrosSchema({ hmMax: 10, ciMax: 50, ivaMax: 15, descuentoMax: 25 });
+  const base = {
+    porcentajeIndirecto: 5,
+    iva: 10,
+    moneda: "USD",
+    mostrarSeccionesVacias: false,
+    sufijosSeccionActivos: false,
+    mostrarSubtotalesSeccion: false,
+    mostrarSubtotalesPie: false,
+    mostrarNombreProyectoHeader: false,
+    enumerarApus: false,
+    modoCodigoRubro: "AUTOGENERADO" as const,
+  };
+
+  it("rechaza %HM > hmMax custom", () => {
+    expect(schema.safeParse({ ...base, porcentajeHerramientaMenor: 11 }).success).toBe(false);
+  });
+
+  it("acepta %HM = hmMax custom", () => {
+    expect(schema.safeParse({ ...base, porcentajeHerramientaMenor: 10 }).success).toBe(true);
+  });
+});
+
+describe("crearDescuentoSchema con max custom", () => {
+  const schema = crearDescuentoSchema(25);
+
+  it("rechaza > max custom", () => {
+    expect(schema.safeParse({ porcentaje: 26 }).success).toBe(false);
+  });
+
+  it("acepta = max custom", () => {
+    expect(schema.safeParse({ porcentaje: 25 }).success).toBe(true);
   });
 });
 

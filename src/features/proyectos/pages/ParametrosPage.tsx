@@ -1,9 +1,11 @@
+import { useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { parametrosSchema } from "../schemas";
+import { crearParametrosSchema, type RangosValidacion } from "../schemas";
 import { useParametros, useActualizarParametros } from "../hooks/useParametros";
+import { useParametrosSistema } from "@/features/admin/hooks/useParametrosSistema";
 import { CargandoTabla } from "@/components/comunes/CargandoTabla";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { Button } from "@/components/ui/button";
@@ -44,10 +46,20 @@ export function ParametrosPage() {
   const proyectoId = Number(id);
   const navigate = useNavigate();
   const { data: params, isPending } = useParametros(proyectoId);
+  const { data: sistema } = useParametrosSistema();
   const actualizar = useActualizarParametros(proyectoId);
 
+  const rangos = useMemo<RangosValidacion>(() => ({
+    hmMax: sistema?.rangoHmMax ? Number(sistema.rangoHmMax) * 100 : 20,
+    ciMax: sistema?.rangoCiMax ? Number(sistema.rangoCiMax) * 100 : 100,
+    ivaMax: sistema?.rangoIvaMax ? Number(sistema.rangoIvaMax) * 100 : 30,
+    descuentoMax: sistema?.rangoDescuentoMax ? Number(sistema.rangoDescuentoMax) * 100 : 50,
+  }), [sistema]);
+
+  const schema = useMemo(() => crearParametrosSchema(rangos), [rangos]);
+
   const form = useForm({
-    resolver: zodResolver(parametrosSchema),
+    resolver: zodResolver(schema),
     values: params
       ? {
           porcentajeHerramientaMenor: Number(params.porcentajeHerramientaMenor) * 100,
@@ -100,7 +112,7 @@ export function ParametrosPage() {
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
             <Field>
-              <Label>% Herramienta menor (0–20 %)</Label>
+              <Label>{`% Herramienta menor (0–${rangos.hmMax} %)`}</Label>
               <Input
                 type="number"
                 step="0.01"
@@ -109,7 +121,7 @@ export function ParametrosPage() {
               <FieldError>{form.formState.errors.porcentajeHerramientaMenor?.message}</FieldError>
             </Field>
             <Field>
-              <Label>% Indirectos (0–100 %)</Label>
+              <Label>{`% Indirectos (0–${rangos.ciMax} %)`}</Label>
               <Input
                 type="number"
                 step="0.01"
@@ -121,7 +133,7 @@ export function ParametrosPage() {
               <FieldError>{form.formState.errors.porcentajeIndirecto?.message}</FieldError>
             </Field>
             <Field>
-              <Label>IVA (0–30 %)</Label>
+              <Label>{`IVA (0–${rangos.ivaMax} %)`}</Label>
               <Input type="number" step="0.01" {...form.register("iva", { valueAsNumber: true })} />
               <FieldError>{form.formState.errors.iva?.message}</FieldError>
             </Field>
