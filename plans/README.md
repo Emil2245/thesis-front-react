@@ -100,6 +100,47 @@ uno. Baseline al cerrar: **197 tests en 43 archivos** y `pnpm run e2e` en verde
 |---|---|---|---|---|---|
 | 029 | [Habilitar cronograma: alinear endpoints, índices 1-based, activar módulo](029-cronograma-enable-and-align.md) | P1 | M | 012 (impl original), 027 (degradación) | DONE (`90fc789`) |
 
+### Cuarta tanda — v1.3 alignment (2026-08-29)
+
+Plans written to close the gap between the current frontend and the new v1.3
+functional requirements added in `thesis-docs` since commit `053ebc1`. Backend
+endpoints assumed done per API contract. Written against `7d6223c`.
+
+```
+030 remove esAuxiliar / no-links ─── (independent, do first — touches contract.ts)
+ │
+ ├─► 032 APU row reordering
+ ├─► 033 especificaciones tecnicas
+ └─► 034 plantilla APU updates
+
+031 display config from API ─────── (independent of 030)
+
+035 project templates ───────────── (independent)
+
+036 parametrizable ranges ───────── (independent)
+
+037 archive central bases ───────── (independent)
+```
+
+**Hard ordering**: 030 before 032, 033, 034 (all touch `contract.ts`/`useApuEditor` cleaned by 030).
+Plans 031, 035, 036, 037 are independent and can execute in parallel with anything.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---|---|---|---|
+| 030 | [Remove esAuxiliar / no-links (N04 §2)](030-remove-es-auxiliar-no-links.md) | P1 | S | — | TODO |
+| 031 | [Display config from API](031-display-config-from-api.md) | P2 | S | — | TODO |
+| 032 | [APU row reordering (N04 §A3)](032-apu-row-reordering.md) | P2 | S-M | 030 | TODO |
+| 033 | [Especificaciones Tecnicas (P-45)](033-especificaciones-tecnicas.md) | P2 | M | 030 | TODO |
+| 034 | [PlantillaAPU updates (Plan 04 / UUIDv7)](034-plantilla-apu-updates.md) | P1 | M | 030 | TODO |
+| 035 | [Project Templates (P-46)](035-project-templates.md) | P3 | M | — | TODO |
+| 036 | [Parametrizable ranges (N04 §A6)](036-parametrizable-ranges.md) | P2 | S | — | TODO |
+| 037 | [Archive central bases (N04 §D-12)](037-archive-central-bases.md) | P3 | S | — | TODO |
+
+**Execution recommendation (3 tandas):**
+- **Tanda A**: 030 + 031 + 036 + 037 in parallel (4 agents; 030 is the only one touching shared files, 031/036/037 are fully independent)
+- **Tanda B**: 032 + 033 + 034 + 035 in parallel (all depend on 030 being done; they touch different files)
+- **Verify all**: `pnpm run verify` after each tanda
+
 ### Trabajo fuera de plan (2026-08-25)
 
 Surgió al revisar los diffs y las capturas; no tenía plan propio porque se
