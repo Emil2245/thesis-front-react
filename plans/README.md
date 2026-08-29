@@ -141,6 +141,51 @@ Plans 031, 035, 036, 037 are independent and can execute in parallel with anythi
 - **Tanda B**: 032 + 033 + 034 + 035 in parallel (all depend on 030 being done; they touch different files)
 - **Verify all**: `pnpm run verify` after each tanda
 
+### Quinta tanda — backend v1.3 (2026-08-29)
+
+Plans for the Quarkus backend (`thesis-back-quarkus`). **Written as plans only --
+not executed.** Written against backend commit `97280ab`. These close the gap between
+the backend's current 9 JAX-RS resources and the full API contract (§2-§9).
+
+```
+038 remove esAuxiliar (backend) ─── P0, do first
+ │
+ ├─► 039 presupuesto + versiones ─── P0, highest leverage
+ │     │
+ │     ├─► 040 cronograma
+ │     ├─► 041 document export + display config + ET endpoint
+ │     └─► 042 APU advanced (duplicar, descuento, calculo, plantillas)
+ │
+ ├─► 043 project operations (duplicar, logo, uso, plantilla proyecto)
+ │
+ └─► 044 admin module
+ 
+045 bases personales ───────────── independent (light)
+```
+
+**Hard ordering**: 038 before everything (cleans the model). 039 before 040, 041, 042
+(they need presupuesto entities and RecalculoService). 043 depends on 039 for deep
+copy logic. 044 depends on 038 for clean model.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---|---|---|---|
+| 038 | [Backend: remove esAuxiliar (N04 §2)](038-backend-v1.3-remove-es-auxiliar.md) | P0 | S-M | — | TODO |
+| 039 | [Backend: presupuesto, versiones (P-28..P-32)](039-backend-presupuesto-versiones.md) | P0 | L | 038 | TODO |
+| 040 | [Backend: cronograma (P-33..P-36)](040-backend-cronograma.md) | P1 | M | 039 | TODO |
+| 041 | [Backend: document export (P-37, P-45)](041-backend-document-export.md) | P2 | L | 039, 040 | TODO |
+| 042 | [Backend: APU advanced (P-19, P-24, P-26, P-27)](042-backend-apu-advanced.md) | P1 | M | 038, 039 | TODO |
+| 043 | [Backend: project operations (P-09, P-46)](043-backend-project-operations.md) | P2 | M | 039 | TODO |
+| 044 | [Backend: admin module (P-38..P-42)](044-backend-admin-module.md) | P2 | L | 038, 039 | TODO |
+| 045 | [Backend: bases personales (N04 §A9)](045-backend-bases-personales.md) | P3 | S | 038 | TODO |
+
+**Execution recommendation:**
+- **Phase 1**: 038 alone (quick, unblocks everything)
+- **Phase 2**: 039 (large but critical -- creates the presupuesto module)
+- **Phase 3**: 040 + 042 + 045 in parallel (independent after 039)
+- **Phase 4**: 041 + 043 in parallel (need presupuesto + cronograma)
+- **Phase 5**: 044 (admin is self-contained after 038)
+- **Verify each phase**: `./gradlew test`
+
 ### Trabajo fuera de plan (2026-08-25)
 
 Surgió al revisar los diffs y las capturas; no tenía plan propio porque se
