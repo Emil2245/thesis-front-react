@@ -45,6 +45,7 @@ import {
   FileSpreadsheetIcon,
   DatabaseIcon,
   BookTemplateIcon,
+  LayoutTemplateIcon,
   ScrollTextIcon,
   ActivityIcon,
   UserIcon,
@@ -157,6 +158,20 @@ export function AppSidebar() {
                     <FileSpreadsheetIcon />
                     <span>Plantillas APU</span>
                     {MODULOS_SIN_BACKEND.has("plantillas") && <InsigniaPronto />}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={estaActivo(pathname, "/plantillas-proyecto")}
+                  className={MODULOS_SIN_BACKEND.has("plantillas-proyecto") ? "opacity-60" : ""}
+                  tooltip="Plantillas de proyecto"
+                >
+                  <Link to="/plantillas-proyecto">
+                    <LayoutTemplateIcon />
+                    <span>Plantillas de proyecto</span>
+                    {MODULOS_SIN_BACKEND.has("plantillas-proyecto") && <InsigniaPronto />}
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

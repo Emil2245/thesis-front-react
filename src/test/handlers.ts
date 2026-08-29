@@ -104,6 +104,31 @@ export const handlers = [
   http.delete(`${API}/proyectos/:id`, () => HttpResponse.json(null, { status: 204 })),
   http.put(`${API}/proyectos/:id/logo`, () => HttpResponse.json(null, { status: 204 })),
 
+  // ———— Plantillas de proyecto (plan 035, sin backend real) ————
+  http.get(`${API}/plantillas-proyecto`, () =>
+    HttpResponse.json([
+      {
+        id: 1,
+        nombre: "Plantilla proyecto",
+        descripcion: "Plantilla de prueba",
+        fechaCreacion: "2026-01-01T00:00:00Z",
+      },
+    ]),
+  ),
+  http.post(`${API}/plantillas-proyecto`, () =>
+    HttpResponse.json(
+      { id: 2, nombre: "Nueva plantilla", fechaCreacion: "2026-01-02T00:00:00Z" },
+      { status: 201 },
+    ),
+  ),
+  http.delete(`${API}/plantillas-proyecto/:id`, () => HttpResponse.json(null, { status: 204 })),
+  http.post(`${API}/proyectos/desde-plantilla/:id`, () =>
+    HttpResponse.json(
+      { ...proyectoDetalleFixture, id: 99, nombreProyecto: "Nuevo desde plantilla" },
+      { status: 201 },
+    ),
+  ),
+
   http.get(`${API}/proyectos/:id/firmantes`, () => HttpResponse.json(firmantesFixture)),
   http.post(`${API}/proyectos/:id/firmantes`, () =>
     HttpResponse.json(firmantesFixture[0], { status: 201 }),

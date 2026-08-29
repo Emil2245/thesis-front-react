@@ -16,6 +16,7 @@ const NOMBRES: Record<string, string> = {
   proyectos: "Proyectos",
   perfil: "Perfil",
   plantillas: "Plantillas",
+  "plantillas-proyecto": "Plantillas de proyecto",
   parametros: "Parámetros",
   insumos: "Insumos",
   versiones: "Versiones",

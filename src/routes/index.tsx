@@ -74,6 +74,13 @@ export const router = createBrowserRouter([
                 ),
               },
               {
+                path: "/plantillas-proyecto",
+                lazy: lazyPage(
+                  () => import("@/features/plantillas-proyecto/pages/PlantillasProyectoPage"),
+                  "PlantillasProyectoPage",
+                ),
+              },
+              {
                 path: "/proyectos/:id",
                 lazy: lazyPage(
                   () => import("@/features/proyectos/pages/ResumenProyectoPage"),

@@ -3,6 +3,7 @@ export const qk = {
 
   proyectos: (filtros?: Record<string, unknown>) => ["proyectos", filtros ?? {}] as const,
   proyecto: (id: number) => ["proyecto", id] as const,
+  plantillasProyecto: () => ["plantillas-proyecto"] as const,
   parametrosProyecto: (id: number) => ["proyecto", id, "parametros"] as const,
   firmantes: (id: number) => ["proyecto", id, "firmantes"] as const,
 
