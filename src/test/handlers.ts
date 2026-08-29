@@ -342,6 +342,11 @@ export const handlers = [
     HttpResponse.json(presupuestoFixture),
   ),
 
+  // ———— Display config ————
+  http.get(`${API}/config/display`, () =>
+    HttpResponse.json({ precisionDinero: 2, precisionPorcentaje: 4 }),
+  ),
+
   // ———— Cronograma (Plan 012) ————
   http.get(`${API}/presupuestos/:id/cronograma`, ({ params }) => {
     if (Number(params.id) !== cronogramaFixture.presupuestoId) {

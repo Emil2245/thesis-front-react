@@ -4,21 +4,24 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { LimiteDeError } from "@/components/comunes/LimiteDeError";
+import { DisplayConfigProvider } from "@/contexts/DisplayConfigContext";
 
 export function AppShell() {
   return (
-    <TooltipProvider>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset className="min-w-0">
-          <Topbar />
-          <main className="flex flex-1 flex-col gap-5 p-6">
-            <LimiteDeError>
-              <Outlet />
-            </LimiteDeError>
-          </main>
-        </SidebarInset>
-      </SidebarProvider>
-    </TooltipProvider>
+    <DisplayConfigProvider>
+      <TooltipProvider>
+        <SidebarProvider>
+          <AppSidebar />
+          <SidebarInset className="min-w-0">
+            <Topbar />
+            <main className="flex flex-1 flex-col gap-5 p-6">
+              <LimiteDeError>
+                <Outlet />
+              </LimiteDeError>
+            </main>
+          </SidebarInset>
+        </SidebarProvider>
+      </TooltipProvider>
+    </DisplayConfigProvider>
   );
 }
