@@ -77,12 +77,14 @@ export function AdminPlantillasPageActiva() {
             {data?.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.nombre}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">{p.descripcion}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {p.descripcionRubro}
+                </TableCell>
                 <TableCell>
                   <Badge variant="secondary">{p.tipo}</Badge>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {new Date(p.fechaCreacion).toLocaleDateString()}
+                  {new Date(p.createdAt).toLocaleDateString()}
                 </TableCell>
                 <TableCell className="text-right">
                   <Button

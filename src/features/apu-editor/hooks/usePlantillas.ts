@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, put, del, post } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import type {
-  PlantillaApuResponse,
+  PlantillaApuResumenResponse,
   PlantillaApuDetalleResponse,
   PlantillaApuCrearRequest,
   PlantillaApuEditarRequest,
@@ -13,24 +13,24 @@ export function usePlantillas(tipo?: string) {
     queryKey: qk.plantillas(tipo ? { tipo } : undefined),
     queryFn: () => {
       const params = tipo ? `?tipo=${tipo}` : "";
-      return get<PlantillaApuResponse[]>(`/plantillas-apu${params}`);
+      return get<PlantillaApuResumenResponse[]>(`/plantillas-apu${params}`);
     },
   });
 }
 
-export function usePlantillaDetalle(id: number) {
+export function usePlantillaDetalle(id: string | null) {
   return useQuery({
     queryKey: ["plantilla-apu", id],
     queryFn: () => get<PlantillaApuDetalleResponse>(`/plantillas-apu/${id}`),
-    enabled: id > 0,
+    enabled: !!id,
   });
 }
 
 export function useRenombrarPlantilla() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, body }: { id: number; body: PlantillaApuEditarRequest }) =>
-      put<PlantillaApuResponse>(`/plantillas-apu/${id}`, body),
+    mutationFn: ({ id, body }: { id: string; body: PlantillaApuEditarRequest }) =>
+      put<PlantillaApuResumenResponse>(`/plantillas-apu/${id}`, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["plantillas-apu"] });
     },
@@ -40,7 +40,7 @@ export function useRenombrarPlantilla() {
 export function useEliminarPlantilla() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => del(`/plantillas-apu/${id}`),
+    mutationFn: (id: string) => del(`/plantillas-apu/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["plantillas-apu"] });
     },
@@ -51,7 +51,7 @@ export function useGuardarPlantilla(apuId: number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: PlantillaApuCrearRequest) =>
-      post<PlantillaApuResponse>(`/apus/${apuId}/guardar-plantilla`, body),
+      post<PlantillaApuResumenResponse>(`/apus/${apuId}/guardar-plantilla`, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["plantillas-apu"] });
     },

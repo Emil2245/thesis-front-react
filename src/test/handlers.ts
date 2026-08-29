@@ -231,7 +231,13 @@ export const handlers = [
   ),
   http.post(`${API}/apus/:id/guardar-plantilla`, () =>
     HttpResponse.json(
-      { id: 99, nombre: "Mi plantilla", tipo: "PERSONAL", fechaCreacion: "2026-07-23T00:00:00" },
+      {
+        id: "018f8a1e-0000-7000-8000-000000000099",
+        nombre: "Mi plantilla",
+        tipo: "PERSONAL",
+        createdAt: "2026-07-23T00:00:00",
+        updatedAt: "2026-07-23T00:00:00",
+      },
       { status: 201 },
     ),
   ),
@@ -242,11 +248,12 @@ export const handlers = [
     if (tipo === "PERSONAL") {
       return HttpResponse.json([
         {
-          id: 2,
+          id: "018f8a1e-0000-7000-8000-000000000002",
           nombre: "Mi plantilla",
-          descripcion: "Plantilla personal",
+          descripcionRubro: "Plantilla personal",
           tipo: "PERSONAL",
-          fechaCreacion: "2026-07-20T00:00:00",
+          createdAt: "2026-07-20T00:00:00",
+          updatedAt: "2026-07-20T00:00:00",
         },
       ]);
     }
@@ -254,19 +261,22 @@ export const handlers = [
       {
         id: plantillaDetalleFixture.id,
         nombre: plantillaDetalleFixture.nombre,
-        descripcion: plantillaDetalleFixture.descripcion,
+        descripcionRubro: plantillaDetalleFixture.descripcionRubro,
+        unidad: plantillaDetalleFixture.unidad,
         tipo: plantillaDetalleFixture.tipo,
-        fechaCreacion: "2026-07-01T00:00:00",
+        createdAt: "2026-07-01T00:00:00",
+        updatedAt: "2026-07-01T00:00:00",
       },
     ]);
   }),
   http.get(`${API}/plantillas-apu/:id`, () => HttpResponse.json(plantillaDetalleFixture)),
   http.put(`${API}/plantillas-apu/:id`, () =>
     HttpResponse.json({
-      id: 2,
+      id: "018f8a1e-0000-7000-8000-000000000002",
       nombre: "Renombrada",
       tipo: "PERSONAL",
-      fechaCreacion: "2026-07-20T00:00:00",
+      createdAt: "2026-07-20T00:00:00",
+      updatedAt: "2026-07-20T00:00:00",
     }),
   ),
   http.delete(`${API}/plantillas-apu/:id`, () => HttpResponse.json(null, { status: 204 })),

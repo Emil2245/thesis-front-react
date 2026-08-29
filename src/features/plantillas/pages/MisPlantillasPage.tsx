@@ -51,19 +51,19 @@ export function MisPlantillasPageActiva() {
   const eliminar = useEliminarPlantilla();
   const renombrar = useRenombrarPlantilla();
 
-  const [previewId, setPreviewId] = useState(0);
-  const [renombrarId, setRenombrarId] = useState(0);
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const [renombrarId, setRenombrarId] = useState<string | null>(null);
   const [nuevoNombre, setNuevoNombre] = useState("");
 
   const { data: previewData } = usePlantillaDetalle(previewId);
 
   const handleRenombrar = async () => {
-    if (!nuevoNombre.trim()) return;
+    if (!nuevoNombre.trim() || !renombrarId) return;
     await renombrar.mutateAsync({
       id: renombrarId,
       body: { nombre: nuevoNombre.trim() },
     });
-    setRenombrarId(0);
+    setRenombrarId(null);
     setNuevoNombre("");
   };
 
@@ -102,7 +102,7 @@ export function MisPlantillasPageActiva() {
                           onKeyDown={(e) => {
                             if (e.key === "Enter") handleRenombrar();
                             if (e.key === "Escape") {
-                              setRenombrarId(0);
+                              setRenombrarId(null);
                               setNuevoNombre("");
                             }
                           }}
@@ -116,7 +116,7 @@ export function MisPlantillasPageActiva() {
                           variant="ghost"
                           size="icon-sm"
                           onClick={() => {
-                            setRenombrarId(0);
+                            setRenombrarId(null);
                             setNuevoNombre("");
                           }}
                         >
@@ -128,10 +128,10 @@ export function MisPlantillasPageActiva() {
                     )}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {p.descripcion ?? "—"}
+                    {p.descripcionRubro ?? "—"}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {new Date(p.fechaCreacion).toLocaleDateString()}
+                    {new Date(p.createdAt).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
@@ -167,33 +167,21 @@ export function MisPlantillasPageActiva() {
         </TarjetaTabla>
       )}
 
-      <Dialog open={previewId > 0} onOpenChange={(o) => !o && setPreviewId(0)}>
+      <Dialog open={previewId != null} onOpenChange={(o) => !o && setPreviewId(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{previewData?.nombre ?? "Vista previa"}</DialogTitle>
-            <DialogDescription>{previewData?.descripcion}</DialogDescription>
+            <DialogDescription>{previewData?.descripcionRubro}</DialogDescription>
           </DialogHeader>
           {previewData && (
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Código</span>
-                <span className="font-mono">{previewData.snapshot.codigo}</span>
-              </div>
-              <div className="flex justify-between">
                 <span className="text-muted-foreground">Descripción</span>
-                <span>{previewData.snapshot.descripcion}</span>
+                <span>{previewData.descripcionRubro ?? "—"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Unidad</span>
-                <span>{previewData.snapshot.unidad}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">CD</span>
-                <span className="num">{previewData.snapshot.costoDirecto}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">CT</span>
-                <span className="num">{previewData.snapshot.costoTotal}</span>
+                <span>{previewData.unidad ?? "—"}</span>
               </div>
             </div>
           )}

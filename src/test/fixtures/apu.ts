@@ -162,9 +162,12 @@ export const apuConHmFixture: ApuResponse = {
 };
 
 export const plantillaDetalleFixture: PlantillaApuDetalleResponse = {
-  id: 1,
+  id: "018f8a1e-0000-7000-8000-000000000001",
   nombre: "Excavación típica",
-  descripcion: "Plantilla base para excavaciones",
+  descripcionRubro: "Plantilla base para excavaciones",
+  unidad: "m3",
   tipo: "SISTEMA",
-  snapshot: apuDetalleFixture,
+  createdAt: "2026-07-23T00:00:00",
+  updatedAt: "2026-07-23T00:00:00",
+  snapshotSecciones: apuDetalleFixture.secciones,
 };

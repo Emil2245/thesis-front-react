@@ -101,17 +101,21 @@ export const basesCentralesFixtureAdmin: BaseInsumosResponse[] = [
 
 export const plantillasSistemaFixture = [
   {
-    id: 1,
+    id: "018f8a1e-0000-7000-8000-000000000101",
     nombre: "APU Tipo A",
-    descripcion: "Plantilla base para movimientos de tierra",
+    descripcionRubro: "Plantilla base para movimientos de tierra",
+    unidad: "m3",
     tipo: "SISTEMA" as const,
-    fechaCreacion: "2026-04-01T00:00:00",
+    createdAt: "2026-04-01T00:00:00",
+    updatedAt: "2026-04-01T00:00:00",
   },
   {
-    id: 2,
+    id: "018f8a1e-0000-7000-8000-000000000102",
     nombre: "APU Tipo B",
-    descripcion: "Plantilla base para estructuras",
+    descripcionRubro: "Plantilla base para estructuras",
+    unidad: "m3",
     tipo: "SISTEMA" as const,
-    fechaCreacion: "2026-04-15T00:00:00",
+    createdAt: "2026-04-15T00:00:00",
+    updatedAt: "2026-04-15T00:00:00",
   },
 ];

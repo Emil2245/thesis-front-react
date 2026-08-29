@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Spinner } from "@/components/ui/spinner";
 import { ApiError } from "@/api/problem";
+import { toast } from "sonner";
 
 interface DialogoNuevoApuProps {
   abierto: boolean;
@@ -35,18 +36,18 @@ export function DialogoNuevoApu({
   const [codigo, setCodigo] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [unidad, setUnidad] = useState("");
-  const [plantillaId, setPlantillaId] = useState<number | undefined>();
+  const [plantillaId, setPlantillaId] = useState<string | null>(null);
   const [codigoError, setCodigoError] = useState<string | null>(null);
 
   const { data: parametros } = useParametros(proyectoId);
 
   const { data: plantillas } = usePlantillas();
-  const { data: detalle } = usePlantillaDetalle(plantillaId ?? 0);
+  const { data: detalle } = usePlantillaDetalle(plantillaId);
 
   useEffect(() => {
     if (!detalle) return;
-    setDescripcion(detalle.snapshot.descripcion);
-    setUnidad(detalle.snapshot.unidad);
+    setDescripcion(detalle.descripcionRubro ?? "");
+    setUnidad(detalle.unidad ?? "");
   }, [detalle]);
 
   const modoAuto = parametros?.modoCodigoRubro === "AUTOGENERADO";
@@ -58,8 +59,13 @@ export function DialogoNuevoApu({
         codigo,
         descripcion,
         unidad,
-        plantillaId,
+        plantillaId: plantillaId ?? undefined,
       });
+      if (result.advertencias?.length) {
+        toast.warning(`Plantilla aplicada con ${result.advertencias.length} advertencia(s)`, {
+          description: result.advertencias.map((a) => a.mensaje).join(" · "),
+        });
+      }
       onCreate(result.id);
     } catch (e) {
       if (e instanceof ApiError && e.is("codigo-duplicado")) {

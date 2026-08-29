@@ -140,7 +140,7 @@ describe("DialogoNuevoApu", () => {
     await user.click(screen.getByText(/Desde plantilla/));
     await user.click(await screen.findByText(/Excavación típica/));
 
-    expect(await screen.findByDisplayValue("Excavación a máquina")).toBeInTheDocument();
+    expect(await screen.findByDisplayValue("Plantilla base para excavaciones")).toBeInTheDocument();
     expect(await screen.findByDisplayValue("m3")).toBeInTheDocument();
   });
 

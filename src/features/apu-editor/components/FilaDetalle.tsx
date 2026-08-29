@@ -3,6 +3,7 @@ import { CeldaEditable } from "./CeldaEditable";
 import { BadgeHerencia } from "./BadgeHerencia";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ArrowDownIcon, ArrowUpIcon, Trash2Icon, TriangleAlertIcon } from "lucide-react";
 import { formatearMoneda } from "@/lib/decimal";
 import { cn } from "@/lib/utils";
@@ -99,7 +100,14 @@ export function FilaDetalle({
       )}
     >
       <td className="px-2.5">
-        <span className="font-medium">{detalle.descripcion}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-medium">{detalle.descripcion}</span>
+          {detalle.insumoId === null && (
+            <Badge variant="outline" className="text-amber-600 border-amber-300">
+              Pendiente
+            </Badge>
+          )}
+        </div>
       </td>
       <td className="px-2.5">{detalle.unidad ?? "—"}</td>
       <td className="px-2.5 num">
