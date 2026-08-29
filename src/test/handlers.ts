@@ -427,6 +427,9 @@ export const handlers = [
   http.get(`${API}/admin/bases/:id`, () => HttpResponse.json(basesCentralesFixtureAdmin[0])),
   http.put(`${API}/admin/bases/:id`, () => HttpResponse.json(basesCentralesFixtureAdmin[0])),
   http.delete(`${API}/admin/bases/:id`, () => HttpResponse.json(null, { status: 204 })),
+  http.post(`${API}/admin/bases/:id/archivar`, ({ params }) =>
+    HttpResponse.json({ id: Number(params.id), nombre: "Base test", tipo: "CENTRAL", archivada: true, totalInsumos: 10 }),
+  ),
 
   http.get(`${API}/admin/plantillas`, () => HttpResponse.json(plantillasSistemaFixture)),
   http.post(`${API}/admin/plantillas`, () =>
