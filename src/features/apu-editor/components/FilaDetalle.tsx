@@ -3,7 +3,7 @@ import { CeldaEditable } from "./CeldaEditable";
 import { BadgeHerencia } from "./BadgeHerencia";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import { Trash2Icon, TriangleAlertIcon } from "lucide-react";
+import { ArrowDownIcon, ArrowUpIcon, Trash2Icon, TriangleAlertIcon } from "lucide-react";
 import { formatearMoneda } from "@/lib/decimal";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,9 @@ interface FilaDetalleProps {
   ) => Promise<void>;
   onRestaurarHerencia: (detalleId: number) => Promise<void>;
   onEliminarFila: (detalleId: number) => Promise<void>;
+  onReordenarFila: (detalleId: number, nuevoOrden: number) => Promise<void>;
+  indice: number;
+  totalFilas: number;
 }
 
 export function FilaDetalle({
@@ -25,8 +28,36 @@ export function FilaDetalle({
   onEditarCelda,
   onRestaurarHerencia,
   onEliminarFila,
+  onReordenarFila,
+  indice,
+  totalFilas,
 }: FilaDetalleProps) {
   const { detalle, protegida, heredado, estado } = fila;
+  const esPrimera = indice === 0;
+  const esUltima = indice === totalFilas - 1;
+
+  const botonesOrden = (
+    <>
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        disabled={esPrimera}
+        onClick={() => onReordenarFila(detalle.id, detalle.orden - 1)}
+        aria-label="Subir fila"
+      >
+        <ArrowUpIcon className="size-3" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        disabled={esUltima}
+        onClick={() => onReordenarFila(detalle.id, detalle.orden + 1)}
+        aria-label="Bajar fila"
+      >
+        <ArrowDownIcon className="size-3" />
+      </Button>
+    </>
+  );
 
   if (protegida) {
     return (
@@ -51,7 +82,9 @@ export function FilaDetalle({
           {muestraRendimiento && <td className="px-2.5 num">—</td>}
           {!muestraRendimiento && <td className="px-2.5 num">—</td>}
           <td className="px-2.5 num">{formatearMoneda(detalle.costo)}</td>
-          <td className="px-2.5" />
+          <td className="px-2.5">
+            <div className="flex items-center">{botonesOrden}</div>
+          </td>
         </tr>
       </TooltipProvider>
     );
@@ -107,11 +140,12 @@ export function FilaDetalle({
       )}
       <td className="px-2.5 num">{formatearMoneda(detalle.costo)}</td>
       <td className="px-2.5">
-        {!protegida && (
+        <div className="flex items-center">
+          {botonesOrden}
           <Button variant="ghost" size="icon-xs" onClick={() => onEliminarFila(detalle.id)}>
             <Trash2Icon className="size-3" />
           </Button>
-        )}
+        </div>
       </td>
     </tr>
   );
