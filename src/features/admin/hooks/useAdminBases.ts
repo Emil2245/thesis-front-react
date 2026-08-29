@@ -34,3 +34,16 @@ export function useEliminarBase() {
     onError: () => toast.error("Error al eliminar base"),
   });
 }
+
+export function useArchivarBase() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      post<BaseInsumosResponse>(`/admin/bases/${id}/archivar`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.adminBases() });
+      toast.success("Base archivada/restaurada");
+    },
+    onError: () => toast.error("Error al archivar/restaurar base"),
+  });
+}
