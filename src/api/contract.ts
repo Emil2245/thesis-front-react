@@ -308,6 +308,7 @@ export interface ApuResponse {
     subtotal: number;
     detalles: ApuDetalleResponse[];
   }>;
+  advertencias?: AdvertenciaPlantillaResponse[];
 }
 
 export interface ApuResumenResponse {
@@ -325,7 +326,7 @@ export interface ApuCrearRequest {
   codigo: string;
   descripcion: string;
   unidad: string;
-  plantillaId?: number;
+  plantillaId?: string;
   esAuxiliar?: boolean;
 }
 
@@ -363,17 +364,25 @@ export interface ApuCalculoResponse {
   ct: string;
 }
 
-export interface PlantillaApuResponse {
-  id: number;
+export interface PlantillaApuResumenResponse {
+  id: string;
   nombre: string;
-  descripcion?: string;
   tipo: "SISTEMA" | "PERSONAL";
-  fechaCreacion: string;
+  descripcionRubro?: string;
+  unidad?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdvertenciaPlantillaResponse {
+  insumoCodigo: string;
+  motivo: string;
+  mensaje: string;
 }
 
 export interface PlantillaApuCrearRequest {
   nombre: string;
-  descripcion?: string;
+  descripcionRubro?: string;
 }
 
 export interface PlantillaApuEditarRequest {
@@ -381,12 +390,9 @@ export interface PlantillaApuEditarRequest {
   descripcion?: string;
 }
 
-export interface PlantillaApuDetalleResponse {
-  id: number;
-  nombre: string;
-  descripcion?: string;
-  tipo: "SISTEMA" | "PERSONAL";
-  snapshot: ApuResponse;
+export interface PlantillaApuDetalleResponse extends PlantillaApuResumenResponse {
+  snapshotSecciones: unknown;
+  advertencias?: AdvertenciaPlantillaResponse[];
 }
 
 export interface PlantillaSistemaCrearRequest {

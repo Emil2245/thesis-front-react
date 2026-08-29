@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { post } from "@/api/request";
-import type { PlantillaApuCrearRequest, PlantillaApuResponse } from "@/api/contract";
+import type { PlantillaApuCrearRequest, PlantillaApuResumenResponse } from "@/api/contract";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,9 +37,9 @@ export function DialogoGuardarPlantilla({ abierto, onClose, apuId }: DialogoGuar
     try {
       const body: PlantillaApuCrearRequest = {
         nombre: nombre.trim(),
-        descripcion: descripcion.trim() || undefined,
+        descripcionRubro: descripcion.trim() || undefined,
       };
-      await post<PlantillaApuResponse>(`/apus/${apuId}/guardar-plantilla`, body);
+      await post<PlantillaApuResumenResponse>(`/apus/${apuId}/guardar-plantilla`, body);
       toast.success("Plantilla guardada. Puedes verla en Mis plantillas.");
       setNombre("");
       setDescripcion("");
