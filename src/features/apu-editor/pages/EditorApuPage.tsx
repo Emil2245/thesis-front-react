@@ -8,6 +8,7 @@ import { PieTotales } from "../components/PieTotales";
 import { DialogoDescuentoRubro } from "../components/DialogoDescuentoRubro";
 import { DialogoGuardarPlantilla } from "../components/DialogoGuardarPlantilla";
 import { PopoverDesglose } from "../components/PopoverDesglose";
+import { PanelEspecificacionTecnica } from "../components/PanelEspecificacionTecnica";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -32,6 +33,7 @@ export function EditorApuPage() {
     editarPorcentajeCi,
     aplicarDescuento,
     alternarAuxiliar,
+    guardarEspecificacionTecnica,
   } = useApuEditor(parsedApuId, presupuestoId || undefined);
 
   const [descuentoDialogAbierto, setDescuentoDialogAbierto] = useState(false);
@@ -79,6 +81,11 @@ export function EditorApuPage() {
               onEliminarFila={eliminarFila}
             />
           ))}
+
+          <PanelEspecificacionTecnica
+            texto={apu.especificacionTecnica}
+            onGuardar={guardarEspecificacionTecnica}
+          />
 
           <div className="flex justify-end">
             <Tooltip>

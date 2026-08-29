@@ -183,6 +183,7 @@ export const handlers = [
   ),
   http.get(`${API}/apus/:id`, () => HttpResponse.json(apuConHmFixture)),
   http.patch(`${API}/apus/:id`, () => HttpResponse.json(apuConHmFixture)),
+  http.put(`${API}/apus/:id/especificacion-tecnica`, () => HttpResponse.json(apuDetalleFixture)),
   http.delete(`${API}/apus/:id`, ({ params }) => {
     if (Number(params.id) === 2) {
       return problema(409, "apu-referenciado", "El APU está referenciado por otros elementos");
