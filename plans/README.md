@@ -129,10 +129,10 @@ Plans 031, 035, 036, 037 are independent and can execute in parallel with anythi
 |---|---|---|---|---|---|
 | 030 | [Remove esAuxiliar / no-links (N04 §2)](030-remove-es-auxiliar-no-links.md) | P1 | S | — | DONE (`547ea5b`) |
 | 031 | [Display config from API](031-display-config-from-api.md) | P2 | S | — | DONE (`6d98820`) |
-| 032 | [APU row reordering (N04 §A3)](032-apu-row-reordering.md) | P2 | S-M | 030 | IN PROGRESS |
-| 033 | [Especificaciones Tecnicas (P-45)](033-especificaciones-tecnicas.md) | P2 | M | 030 | IN PROGRESS |
-| 034 | [PlantillaAPU updates (Plan 04 / UUIDv7)](034-plantilla-apu-updates.md) | P1 | M | 030 | IN PROGRESS |
-| 035 | [Project Templates (P-46)](035-project-templates.md) | P3 | M | — | IN PROGRESS |
+| 032 | [APU row reordering (N04 §A3)](032-apu-row-reordering.md) | P2 | S-M | 030 | DONE (`81e99ba`) |
+| 033 | [Especificaciones Tecnicas (P-45)](033-especificaciones-tecnicas.md) | P2 | M | 030 | DONE (`fd36e93`) |
+| 034 | [PlantillaAPU updates (Plan 04 / UUIDv7)](034-plantilla-apu-updates.md) | P1 | M | 030 | DONE (`5a52785`) |
+| 035 | [Project Templates (P-46)](035-project-templates.md) | P3 | M | — | DONE (`5e2668e`) |
 | 036 | [Parametrizable ranges (N04 §A6)](036-parametrizable-ranges.md) | P2 | S | — | DONE (`a21a5e0`) |
 | 037 | [Archive central bases (N04 §D-12)](037-archive-central-bases.md) | P3 | S | — | DONE (`3dd4e45`) |
 
