@@ -192,21 +192,20 @@ export interface ParametrosProyectoActualizarRequest {
 }
 
 export interface DescuentoGlobalPreviewResponse {
-  apus: Array<{
+  porcentaje: Decimal;
+  porApu: Array<{
     apuId: number;
     codigo: string;
-    descripcion: string;
     cd: Decimal;
     cdAjustado: Decimal;
     ci: Decimal;
     ct: Decimal;
   }>;
   totalGeneralActual: Decimal;
-  totalGeneralNuevo: Decimal;
+  totalGeneralProyectado: Decimal;
 }
 
 export interface DescuentoGlobalRequest {
-  presupuestoId: number;
   porcentaje: Decimal;
 }
 
@@ -420,17 +419,17 @@ export interface PlantillaSistemaCrearRequest {
 
 // ————— Presupuesto y versiones (§11) —————
 export interface PresupuestoVersionResponse {
-  id: number;
-  numero: number;
+  presupuestoId: number;
+  version: number;
+  esVigente: boolean;
+  origenId: number;
   notas?: string;
-  vigente: boolean;
-  totalGeneral: Decimal;
   fechaCreacion: string;
+  totalGeneral: Decimal;
 }
 
 export interface PresupuestoVersionCrearRequest {
-  proyectoId: number;
-  versionOrigenId: number;
+  origenId: number;
   notas?: string;
 }
 
@@ -438,9 +437,10 @@ export interface CapituloResponse {
   id: number;
   item: string;
   descripcion: string;
+  orden: number;
+  total: Decimal;
   subcapitulos: CapituloResponse[];
   rubros: RubroResponse[];
-  total: Decimal;
 }
 
 export interface RubroResponse {
@@ -457,15 +457,17 @@ export interface RubroResponse {
 }
 
 export interface PresupuestoResponse {
-  id: number;
+  presupuestoId: number;
   version: number;
-  capitulos: CapituloResponse[];
+  esVigente: boolean;
   totalGeneral: Decimal;
+  capitulos: CapituloResponse[];
 }
 
 export interface CapituloCrearRequest {
   descripcion: string;
-  padreId?: number;
+  parentId?: number;
+  orden?: number;
 }
 
 export interface CapituloEditarRequest {
@@ -473,7 +475,7 @@ export interface CapituloEditarRequest {
 }
 
 export interface CapituloMoverRequest {
-  nuevoPadreId?: number | null;
+  parentId?: number | null;
   orden: number;
 }
 
@@ -487,23 +489,27 @@ export interface RubroPatchRequest {
 }
 
 export interface ResumenComponentesResponse {
-  equipo: { total: Decimal; porcentaje: Decimal };
-  manoObra: { total: Decimal; porcentaje: Decimal };
-  material: { total: Decimal; porcentaje: Decimal };
-  transporte: { total: Decimal; porcentaje: Decimal };
+  porComponente: Record<string, Decimal>;
   totalGeneral: Decimal;
+  ivaReferencial: Decimal;
+  totalConIva: Decimal;
+}
+
+export interface CapituloComparacionItem {
+  item: string;
+  descripcion: string;
+  total: Decimal;
+}
+
+export interface PresupuestoComparacionItem {
+  presupuestoId: number;
+  version: number;
+  totalGeneral: Decimal;
+  porCapituloRaiz: CapituloComparacionItem[];
 }
 
 export interface ComparacionVersionesResponse {
-  versionA: { id: number; numero: number; totalGeneral: Decimal };
-  versionB: { id: number; numero: number; totalGeneral: Decimal };
-  capitulos: Array<{
-    item: string;
-    descripcion: string;
-    totalA: Decimal;
-    totalB: Decimal;
-    diferencia: Decimal;
-  }>;
+  versiones: PresupuestoComparacionItem[];
 }
 
 export interface RubroRefResponse {
@@ -544,8 +550,8 @@ export interface CronogramaResponse {
   fechaRevision?: string;
   desactualizado: boolean;
   actividades: ActividadResponse[];
-  avancePorPeriodo: Decimal[];
-  avanceAcumulado: Decimal[];
+  avancePorPeriodo: Record<string, Decimal>;
+  avanceAcumulado: Record<string, Decimal>;
 }
 
 export interface CronogramaCrearRequest {

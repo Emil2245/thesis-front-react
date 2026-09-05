@@ -61,18 +61,20 @@ export const pagina = <T>(items: T[]) => ({
 
 const versionesStub: PresupuestoVersionResponse[] = [
   {
-    id: 10,
-    numero: 1,
+    presupuestoId: 10,
+    version: 1,
+    esVigente: false,
+    origenId: 0,
     notas: "Primera versión",
-    vigente: false,
     totalGeneral: "1000.000000" as never,
     fechaCreacion: "2026-02-01T00:00:00",
   },
   {
-    id: 11,
-    numero: 2,
+    presupuestoId: 11,
+    version: 2,
+    esVigente: true,
+    origenId: 10,
     notas: "Segunda versión",
-    vigente: true,
     totalGeneral: "1200.000000" as never,
     fechaCreacion: "2026-03-01T00:00:00",
   },
@@ -144,11 +146,11 @@ export const handlers = [
   // ———— Descuento global ————
   http.get(`${API}/presupuestos/:id/descuento-global/preview`, () =>
     HttpResponse.json({
-      apus: [
+      porcentaje: "0.0500" as never,
+      porApu: [
         {
           apuId: 1,
           codigo: "APU-001",
-          descripcion: "Excavación",
           cd: "100.000000" as never,
           cdAjustado: "95.000000" as never,
           ci: "15.000000" as never,
@@ -156,7 +158,7 @@ export const handlers = [
         },
       ],
       totalGeneralActual: "1000.000000" as never,
-      totalGeneralNuevo: "950.000000" as never,
+      totalGeneralProyectado: "950.000000" as never,
     }),
   ),
   http.post(`${API}/presupuestos/:id/descuento-global`, () =>
@@ -310,10 +312,11 @@ export const handlers = [
   http.post(`${API}/proyectos/:id/presupuestos`, () =>
     HttpResponse.json(
       {
-        id: 12,
-        numero: 3,
+        presupuestoId: 12,
+        version: 3,
+        esVigente: false,
+        origenId: 11,
         notas: "Nueva versión",
-        vigente: false,
         totalGeneral: "18500.000000" as never,
         fechaCreacion: "2026-07-23T00:00:00",
       },
@@ -322,10 +325,11 @@ export const handlers = [
   ),
   http.post(`${API}/presupuestos/:id/vigente`, () =>
     HttpResponse.json({
-      id: 11,
-      numero: 2,
+      presupuestoId: 11,
+      version: 2,
+      esVigente: true,
+      origenId: 10,
       notas: "Corrección APU hormigón",
-      vigente: true,
       totalGeneral: "18500.000000" as never,
       fechaCreacion: "2026-07-01T00:00:00",
     }),

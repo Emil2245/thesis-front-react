@@ -78,8 +78,8 @@ export function ResumenProyectoPage() {
               <>
                 <PuntoMeta />
                 <span>
-                  Versión {activa.numero}
-                  {activa.vigente ? " · vigente" : ""}
+                  Versión {activa.version}
+                  {activa.esVigente ? " · vigente" : ""}
                 </span>
               </>
             ) : null}

@@ -15,25 +15,10 @@ import { DialogoMoverCapitulo } from "../components/DialogoMoverCapitulo";
 import { ResumenComponentes } from "../components/ResumenComponentes";
 import { BannerIntegridad } from "../components/BannerIntegridad";
 import { ConfirmarDestructivo } from "@/components/comunes/ConfirmarDestructivo";
-import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
 import type { CapituloResponse } from "@/api/contract";
+import { DECIMAL_ZERO } from "@/lib/decimal";
 
-// El backend no expone /proyectos/{id}/presupuestos ni /presupuestos/{id}
-// todavía (plan 027). Para reactivar: borra este bloque, quita "presupuesto"
-// de MODULOS_SIN_BACKEND y exporta PresupuestoPageActiva como PresupuestoPage.
 export function PresupuestoPage() {
-  return (
-    <>
-      <EncabezadoPagina titulo="Presupuesto" />
-      <ModuloNoDisponible
-        modulo="El presupuesto"
-        descripcion="El servidor todavía no expone las versiones de presupuesto. La pantalla está construida y se activará cuando el endpoint exista."
-      />
-    </>
-  );
-}
-
-export function PresupuestoPageActiva() {
   // La versión la manda el selector de la barra superior, que ya cae en la
   // vigente cuando la URL no trae `?v=`; leer el parámetro en crudo dejaba la
   // pantalla vacía en la primera carga.
@@ -81,9 +66,9 @@ export function PresupuestoPageActiva() {
   }, []);
 
   const handleConfirmarMover = useCallback(
-    (nuevoPadreId: number | null, orden: number) => {
+    (parentId: number | null, orden: number) => {
       if (dialogo?.type === "mover" && dialogo.capitulo) {
-        mover.mutate({ capituloId: dialogo.capitulo.id, body: { nuevoPadreId, orden } });
+        mover.mutate({ capituloId: dialogo.capitulo.id, body: { parentId, orden } });
       }
       setDialogo(null);
     },
@@ -106,9 +91,9 @@ export function PresupuestoPageActiva() {
 
   const handleConfirmarAgregarSub = useCallback(
     (descripcion: string) => {
-      const payload: { descripcion: string; padreId?: number } = { descripcion };
+      const payload: { descripcion: string; parentId?: number } = { descripcion };
       if (dialogo?.type === "crear" && dialogo.padreId) {
-        payload.padreId = dialogo.padreId;
+        payload.parentId = dialogo.padreId;
       }
       crear.mutate(payload);
       setDialogo(null);
@@ -214,7 +199,7 @@ export function PresupuestoPageActiva() {
                 descripcion: "",
                 subcapitulos: [],
                 rubros: [],
-                total: "0" as never,
+                total: DECIMAL_ZERO,
               }
         }
         capitulos={presupuesto.capitulos}

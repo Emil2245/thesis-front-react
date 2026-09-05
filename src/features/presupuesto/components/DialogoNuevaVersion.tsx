@@ -49,8 +49,8 @@ export function DialogoNuevaVersion({
               </SelectTrigger>
               <SelectContent>
                 {versiones.map((v) => (
-                  <SelectItem key={v.id} value={String(v.id)}>
-                    v{v.numero} {v.vigente ? "(vigente)" : ""} —{" "}
+                  <SelectItem key={v.presupuestoId} value={String(v.presupuestoId)}>
+                    v{v.version} {v.esVigente ? "(vigente)" : ""} —{" "}
                     {new Date(v.fechaCreacion).toLocaleDateString()}
                   </SelectItem>
                 ))}

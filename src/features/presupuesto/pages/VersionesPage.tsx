@@ -18,27 +18,9 @@ import { ComparadorVersiones } from "../components/ComparadorVersiones";
 import { ConfirmarDestructivo } from "@/components/comunes/ConfirmarDestructivo";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
-import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
 import { formatearMoneda } from "@/lib/decimal";
 
-// El backend no expone /proyectos/{id}/presupuestos todavía (plan 027). Es el
-// desbloqueo de mayor apalancamiento: sin él, el módulo APU del backend queda
-// inalcanzable desde la interfaz. Para reactivar: borra este bloque, quita
-// "versiones" de MODULOS_SIN_BACKEND y exporta VersionesPageActiva como
-// VersionesPage.
 export function VersionesPage() {
-  return (
-    <>
-      <EncabezadoPagina titulo="Versiones del presupuesto" />
-      <ModuloNoDisponible
-        modulo="La lista de versiones del presupuesto"
-        descripcion="El servidor todavía no expone la lista de versiones de un proyecto. La pantalla está construida y se activará cuando el endpoint exista."
-      />
-    </>
-  );
-}
-
-export function VersionesPageActiva() {
   const { id: proyectoId } = useParams<{ id: string }>();
   const pid = Number(proyectoId);
 
@@ -49,7 +31,11 @@ export function VersionesPageActiva() {
   const [compararId, setCompararId] = useState<number | null>(null);
   const [versionAEliminar, setVersionAEliminar] = useState<number | null>(null);
 
-  const { data: comparacion, isLoading: compLoading } = useComparacion(compararId ?? 0, undefined);
+  const vigente = versiones?.find((v) => v.esVigente);
+  const { data: comparacion, isLoading: compLoading } = useComparacion(
+    vigente?.presupuestoId ?? 0,
+    compararId ?? undefined,
+  );
 
   const handleMarcarVigente = useCallback(
     (versionId: number) => {
@@ -94,8 +80,8 @@ export function VersionesPageActiva() {
             </TableHeader>
             <TableBody>
               {versiones.map((v) => (
-                <TableRow key={v.id} className={v.vigente ? "bg-muted/50" : ""}>
-                  <TableCell className="font-mono">v{v.numero}</TableCell>
+                <TableRow key={v.presupuestoId} className={v.esVigente ? "bg-muted/50" : ""}>
+                  <TableCell className="font-mono">v{v.version}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{v.notas || "—"}</TableCell>
                   <TableCell className="font-mono tabular-nums">
                     {formatearMoneda(v.totalGeneral)}
@@ -104,7 +90,7 @@ export function VersionesPageActiva() {
                     {new Date(v.fechaCreacion).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    {v.vigente ? (
+                    {v.esVigente ? (
                       <Badge>Vigente</Badge>
                     ) : (
                       <Badge variant="outline">Histórica</Badge>
@@ -112,23 +98,23 @@ export function VersionesPageActiva() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      {!v.vigente && (
+                      {!v.esVigente && (
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleMarcarVigente(v.id)}
+                          onClick={() => handleMarcarVigente(v.presupuestoId)}
                         >
                           Marcar vigente
                         </Button>
                       )}
-                      <Button variant="outline" size="sm" onClick={() => setCompararId(v.id)}>
+                      <Button variant="outline" size="sm" onClick={() => setCompararId(v.presupuestoId)}>
                         Comparar
                       </Button>
-                      {!v.vigente && (
+                      {!v.esVigente && (
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => handleEliminar(v.id)}
+                          onClick={() => handleEliminar(v.presupuestoId)}
                         >
                           Eliminar
                         </Button>
@@ -147,8 +133,8 @@ export function VersionesPageActiva() {
       <DialogoNuevaVersion
         open={nuevaDialog}
         onOpenChange={setNuevaDialog}
-        onConfirm={(versionOrigenId, notas) => {
-          crear.mutate({ versionOrigenId, notas });
+        onConfirm={(origenId, notas) => {
+          crear.mutate({ origenId, notas });
           setNuevaDialog(false);
         }}
         versiones={versiones ?? []}

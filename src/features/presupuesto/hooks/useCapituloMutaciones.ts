@@ -12,7 +12,7 @@ export function useCapituloMutaciones(presupuestoId: number) {
   };
 
   const crear = useMutation({
-    mutationFn: (body: { descripcion: string; padreId?: number }) =>
+    mutationFn: (body: { descripcion: string; parentId?: number }) =>
       post<PresupuestoResponse>(`/presupuestos/${presupuestoId}/capitulos`, body),
     onSuccess: (data) => {
       onSuccess(data);

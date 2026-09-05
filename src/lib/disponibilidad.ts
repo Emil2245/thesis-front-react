@@ -7,8 +7,6 @@
  * /proyectos/desde-plantilla en el backend (verificado igual que el resto).
  */
 export const MODULOS_SIN_BACKEND = new Set([
-  "presupuesto",
-  "versiones",
   "documentos",
   "plantillas",
   "plantillas-proyecto",

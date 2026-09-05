@@ -21,7 +21,7 @@ import type { CapituloResponse } from "@/api/contract";
 interface DialogoMoverCapituloProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (nuevoPadreId: number | null, orden: number) => void;
+  onConfirm: (parentId: number | null, orden: number) => void;
   capitulo: CapituloResponse;
   capitulos: CapituloResponse[];
 }

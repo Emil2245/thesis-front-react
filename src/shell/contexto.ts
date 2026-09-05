@@ -34,8 +34,8 @@ export function useVersionActiva() {
   const { data: versiones, isPending } = useVersiones(proyectoId);
 
   const pedida = Number(params.get("v"));
-  const encontrada = versiones?.find((x) => x.id === pedida);
-  const vigente = versiones?.find((x) => x.vigente) ?? versiones?.[0] ?? null;
+  const encontrada = versiones?.find((x) => x.presupuestoId === pedida);
+  const vigente = versiones?.find((x) => x.esVigente) ?? versiones?.[0] ?? null;
   const activa = encontrada ?? vigente;
 
   const cambiar = (id: number) => {
@@ -46,15 +46,14 @@ export function useVersionActiva() {
 
   useEffect(() => {
     if (encontrada == null && vigente != null && params.has("v")) {
-      cambiar(vigente.id);
+      cambiar(vigente.presupuestoId);
     }
-    // `cambiar` se recrea en cada render: depende de los valores, no de la función.
   }, [encontrada, vigente, params]);
 
   return {
     versiones: versiones ?? [],
     activa,
-    presupuestoId: activa?.id ?? null,
+    presupuestoId: activa?.presupuestoId ?? null,
     cambiar,
     isPending,
   };

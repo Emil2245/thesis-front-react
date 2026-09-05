@@ -12,10 +12,9 @@ export function useVersionMutaciones(proyectoId: number) {
   };
 
   const crear = useMutation({
-    mutationFn: ({ versionOrigenId, notas }: { versionOrigenId: number; notas?: string }) =>
+    mutationFn: ({ origenId, notas }: { origenId: number; notas?: string }) =>
       post<PresupuestoVersionResponse>(`/proyectos/${proyectoId}/presupuestos`, {
-        proyectoId,
-        versionOrigenId,
+        origenId,
         notas,
       }),
     onSuccess: () => {

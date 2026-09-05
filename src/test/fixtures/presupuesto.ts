@@ -7,14 +7,16 @@ import type {
 } from "@/api/contract";
 
 export const presupuestoFixture: PresupuestoResponse = {
-  id: 1,
+  presupuestoId: 1,
   version: 2,
+  esVigente: true,
   totalGeneral: "18500.000000" as never,
   capitulos: [
     {
       id: 10,
       item: "1",
       descripcion: "Preliminares",
+      orden: 1,
       total: "4500.000000" as never,
       rubros: [],
       subcapitulos: [
@@ -22,6 +24,7 @@ export const presupuestoFixture: PresupuestoResponse = {
           id: 11,
           item: "1.1",
           descripcion: "Instalación de campamento",
+          orden: 1,
           total: "2500.000000" as never,
           subcapitulos: [],
           rubros: [
@@ -55,6 +58,7 @@ export const presupuestoFixture: PresupuestoResponse = {
           id: 12,
           item: "1.2",
           descripcion: "Cerramiento provisional",
+          orden: 2,
           total: "2000.000000" as never,
           subcapitulos: [],
           rubros: [
@@ -78,6 +82,7 @@ export const presupuestoFixture: PresupuestoResponse = {
       id: 20,
       item: "2",
       descripcion: "Obra civil",
+      orden: 2,
       total: "14000.000000" as never,
       subcapitulos: [],
       rubros: [
@@ -100,18 +105,20 @@ export const presupuestoFixture: PresupuestoResponse = {
 
 export const versionesFixture: PresupuestoVersionResponse[] = [
   {
-    id: 10,
-    numero: 1,
+    presupuestoId: 10,
+    version: 1,
+    esVigente: false,
+    origenId: 0,
     notas: "Versión inicial",
-    vigente: false,
     totalGeneral: "18000.000000" as never,
     fechaCreacion: "2026-06-01T00:00:00",
   },
   {
-    id: 11,
-    numero: 2,
+    presupuestoId: 11,
+    version: 2,
+    esVigente: true,
+    origenId: 10,
     notas: "Corrección APU hormigón",
-    vigente: true,
     totalGeneral: "18500.000000" as never,
     fechaCreacion: "2026-07-01T00:00:00",
   },
@@ -131,30 +138,36 @@ export const validacionFixture: ValidacionPresupuestoResponse = {
 };
 
 export const resumenComponentesFixture: ResumenComponentesResponse = {
-  equipo: { total: "4000.000000" as never, porcentaje: "0.2830" as never },
-  manoObra: { total: "6000.000000" as never, porcentaje: "0.4250" as never },
-  material: { total: "3000.000000" as never, porcentaje: "0.2120" as never },
-  transporte: { total: "1000.000000" as never, porcentaje: "0.0800" as never },
+  porComponente: {
+    EQUIPO: "4000.000000" as never,
+    MANO_OBRA: "6000.000000" as never,
+    MATERIAL: "3000.000000" as never,
+    TRANSPORTE: "1000.000000" as never,
+  },
   totalGeneral: "14000.000000" as never,
+  ivaReferencial: "1680.000000" as never,
+  totalConIva: "15680.000000" as never,
 };
 
 export const comparacionFixture: ComparacionVersionesResponse = {
-  versionA: { id: 10, numero: 1, totalGeneral: "18000.000000" as never },
-  versionB: { id: 11, numero: 2, totalGeneral: "18500.000000" as never },
-  capitulos: [
+  versiones: [
     {
-      item: "1",
-      descripcion: "Preliminares",
-      totalA: "4500.000000" as never,
-      totalB: "4500.000000" as never,
-      diferencia: "0.000000" as never,
+      presupuestoId: 10,
+      version: 1,
+      totalGeneral: "18000.000000" as never,
+      porCapituloRaiz: [
+        { item: "1", descripcion: "Preliminares", total: "4500.000000" as never },
+        { item: "2", descripcion: "Obra civil", total: "13500.000000" as never },
+      ],
     },
     {
-      item: "2",
-      descripcion: "Obra civil",
-      totalA: "13500.000000" as never,
-      totalB: "14000.000000" as never,
-      diferencia: "500.000000" as never,
+      presupuestoId: 11,
+      version: 2,
+      totalGeneral: "18500.000000" as never,
+      porCapituloRaiz: [
+        { item: "1", descripcion: "Preliminares", total: "4500.000000" as never },
+        { item: "2", descripcion: "Obra civil", total: "14000.000000" as never },
+      ],
     },
   ],
 };

@@ -50,14 +50,14 @@ export function useVersiones(proyectoId: number) {
   });
 }
 
-export function useComparacion(presupuestoId: number, versionBId?: number) {
+export function useComparacion(presupuestoId: number, conPresupuestoId?: number) {
   return useQuery({
-    queryKey: [...qk.presupuesto(presupuestoId), "comparar", versionBId] as const,
+    queryKey: [...qk.presupuesto(presupuestoId), "comparar", conPresupuestoId] as const,
     queryFn: () =>
       get<ComparacionVersionesResponse>(
         `/presupuestos/${presupuestoId}/comparar`,
-        versionBId ? { versionBId } : undefined,
+        { con: conPresupuestoId },
       ),
-    enabled: presupuestoId > 0 && !!versionBId,
+    enabled: presupuestoId > 0 && !!conPresupuestoId,
   });
 }

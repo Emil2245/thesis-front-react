@@ -15,19 +15,34 @@ export function ComparadorVersiones({ data, isLoading }: ComparadorVersionesProp
         <Loader2 className="size-5 animate-spin" />
       </div>
     );
-  if (!data) return null;
+  if (!data || data.versiones.length < 2) return null;
 
-  const difTotal = Number(data.versionB.totalGeneral) - Number(data.versionA.totalGeneral);
+  const [vA, vB] = data.versiones;
+  const difTotal = Number(vB.totalGeneral) - Number(vA.totalGeneral);
+
+  const capitulosMap = new Map<string, { item: string; descripcion: string; totalA: number; totalB: number }>();
+  for (const cap of vA.porCapituloRaiz) {
+    capitulosMap.set(cap.item, { item: cap.item, descripcion: cap.descripcion, totalA: Number(cap.total), totalB: 0 });
+  }
+  for (const cap of vB.porCapituloRaiz) {
+    const existing = capitulosMap.get(cap.item);
+    if (existing) {
+      existing.totalB = Number(cap.total);
+    } else {
+      capitulosMap.set(cap.item, { item: cap.item, descripcion: cap.descripcion, totalA: 0, totalB: Number(cap.total) });
+    }
+  }
+  const capitulos = [...capitulosMap.values()];
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between text-sm border-b pb-2">
         <span className="text-muted-foreground">
-          v{data.versionA.numero} → v{data.versionB.numero}
+          v{vA.version} → v{vB.version}
         </span>
         <span className="font-mono tabular-nums font-semibold">
-          {formatearMoneda(data.versionA.totalGeneral)} →{" "}
-          {formatearMoneda(data.versionB.totalGeneral)}
+          {formatearMoneda(vA.totalGeneral)} →{" "}
+          {formatearMoneda(vB.totalGeneral)}
           <span
             className={cn(
               "ml-2 inline-flex items-center",
@@ -41,13 +56,13 @@ export function ComparadorVersiones({ data, isLoading }: ComparadorVersionesProp
             ) : (
               <Minus className="size-3" />
             )}
-            {formatearMoneda(String(Math.abs(difTotal)) as never)}
+            {formatearMoneda(Math.abs(difTotal))}
           </span>
         </span>
       </div>
       <div className="space-y-1 text-sm">
-        {data.capitulos.map((cap) => {
-          const dif = Number(cap.diferencia);
+        {capitulos.map((cap) => {
+          const dif = cap.totalB - cap.totalA;
           return (
             <div key={cap.item} className="flex items-center justify-between border-b py-1.5">
               <span className="font-mono text-xs text-muted-foreground w-12">{cap.item}</span>
@@ -65,7 +80,7 @@ export function ComparadorVersiones({ data, isLoading }: ComparadorVersionesProp
                 )}
               >
                 {dif > 0 ? "+" : ""}
-                {formatearMoneda(cap.diferencia)}
+                {formatearMoneda(dif)}
               </span>
             </div>
           );

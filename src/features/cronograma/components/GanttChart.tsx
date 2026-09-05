@@ -131,8 +131,9 @@ export function GanttChart({ cronograma }: GanttChartProps) {
             >
               Avance por período
             </div>
-            {avancePorPeriodo.map((val, i) => {
-              const pct = total > 0 ? (Number(val) / total) * 100 : 0;
+            {Array.from({ length: numeroPeriodos }, (_, i) => {
+              const val = Number(avancePorPeriodo[String(i + 1)] || 0);
+              const pct = total > 0 ? (val / total) * 100 : 0;
               return (
                 <div
                   key={i}
@@ -161,8 +162,9 @@ export function GanttChart({ cronograma }: GanttChartProps) {
             >
               Avance acumulado
             </div>
-            {avanceAcumulado.map((val, i) => {
-              const pct = total > 0 ? (Number(val) / total) * 100 : 0;
+            {Array.from({ length: numeroPeriodos }, (_, i) => {
+              const val = Number(avanceAcumulado[String(i + 1)] || 0);
+              const pct = total > 0 ? (val / total) * 100 : 0;
               return (
                 <div
                   key={i}

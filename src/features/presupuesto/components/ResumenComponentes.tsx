@@ -8,32 +8,24 @@ interface ResumenComponentesProps {
   isLoading: boolean;
 }
 
+const COMPONENTE_META: Record<string, { label: string; color: string }> = {
+  EQUIPO: { label: "Equipo", color: "bg-chart-1" },
+  MANO_OBRA: { label: "Mano de obra", color: "bg-exito" },
+  MATERIAL: { label: "Material", color: "bg-advertencia" },
+  TRANSPORTE: { label: "Transporte", color: "bg-muted-foreground" },
+};
+
 export function ResumenComponentes({ data, isLoading }: ResumenComponentesProps) {
   if (isLoading) return <Skeleton className="h-28 w-full" />;
   if (!data) return null;
 
-  // Tokens del tema, no colores crudos: el desglose debe seguir la paleta.
-  const items = [
-    { label: "Equipo", total: data.equipo.total, pct: data.equipo.porcentaje, color: "bg-chart-1" },
-    {
-      label: "Mano de obra",
-      total: data.manoObra.total,
-      pct: data.manoObra.porcentaje,
-      color: "bg-exito",
-    },
-    {
-      label: "Material",
-      total: data.material.total,
-      pct: data.material.porcentaje,
-      color: "bg-advertencia",
-    },
-    {
-      label: "Transporte",
-      total: data.transporte.total,
-      pct: data.transporte.porcentaje,
-      color: "bg-muted-foreground",
-    },
-  ];
+  const total = Number(data.totalGeneral);
+  const items = Object.entries(data.porComponente).map(([key, val]) => {
+    const meta = COMPONENTE_META[key] ?? { label: key, color: "bg-muted-foreground" };
+    const numVal = Number(val);
+    const pct = total > 0 ? numVal / total : 0;
+    return { ...meta, total: val, pct };
+  });
 
   return (
     <TarjetaTabla titulo="Desglose por componente">
@@ -45,13 +37,12 @@ export function ResumenComponentes({ data, isLoading }: ResumenComponentesProps)
           </span>
         </div>
 
-        {/* Decorativa: las mismas cifras están en la lista de abajo. */}
         <div aria-hidden className="flex h-2 gap-0.5 overflow-hidden rounded-full bg-muted">
           {items.map((item) => (
             <div
               key={item.label}
               className={item.color}
-              style={{ width: `${Number(item.pct) * 100}%` }}
+              style={{ width: `${item.pct * 100}%` }}
             />
           ))}
         </div>
@@ -72,6 +63,15 @@ export function ResumenComponentes({ data, isLoading }: ResumenComponentesProps)
             </div>
           ))}
         </dl>
+
+        <div className="flex items-baseline justify-between gap-4 border-t pt-3 text-sm">
+          <span className="text-muted-foreground">IVA referencial</span>
+          <span className="num font-medium">{formatearMoneda(data.ivaReferencial)}</span>
+        </div>
+        <div className="flex items-baseline justify-between gap-4 text-sm">
+          <span className="text-muted-foreground">Total con IVA</span>
+          <span className="num font-semibold">{formatearMoneda(data.totalConIva)}</span>
+        </div>
       </div>
     </TarjetaTabla>
   );

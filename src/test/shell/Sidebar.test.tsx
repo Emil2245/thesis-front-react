@@ -38,7 +38,7 @@ describe("AppSidebar", () => {
     expect(screen.getByText("Usuarios")).toBeInTheDocument();
   });
 
-  it("marca Presupuesto como pendiente y deja Cronograma e Insumos sin insignia", async () => {
+  it("Presupuesto, Cronograma e Insumos no tienen insignia pendiente", async () => {
     useSesionStore.setState({ usuario: usuarioFixture, cargando: false });
     renderConProviders(
       <SidebarProvider>
@@ -51,7 +51,7 @@ describe("AppSidebar", () => {
 
     const presupuesto = await screen.findByText("Presupuesto");
     const filaPresupuesto = presupuesto.closest("a")!;
-    expect(within(filaPresupuesto).getByText("pronto")).toBeInTheDocument();
+    expect(within(filaPresupuesto).queryByText("pronto")).not.toBeInTheDocument();
 
     const cronograma = await screen.findByText("Cronograma");
     const filaCronograma = cronograma.closest("a")!;

@@ -52,16 +52,16 @@ export const cronogramaFixture: CronogramaResponse = {
   fechaRevision: "2026-07-15T00:00:00",
   desactualizado: false,
   actividades: actividadesFixture,
-  avancePorPeriodo: [
-    "3750.000000" as never,
-    "6250.000000" as never,
-    "4500.000000" as never,
-    "2000.000000" as never,
-  ],
-  avanceAcumulado: [
-    "3750.000000" as never,
-    "10000.000000" as never,
-    "14500.000000" as never,
-    "16500.000000" as never,
-  ],
+  avancePorPeriodo: {
+    "1": "3750.000000" as never,
+    "2": "6250.000000" as never,
+    "3": "4500.000000" as never,
+    "4": "2000.000000" as never,
+  },
+  avanceAcumulado: {
+    "1": "3750.000000" as never,
+    "2": "10000.000000" as never,
+    "3": "14500.000000" as never,
+    "4": "16500.000000" as never,
+  },
 };
