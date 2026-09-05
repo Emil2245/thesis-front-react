@@ -54,16 +54,16 @@ export function PlantillasProyectoPageActiva() {
   const crearDesdePlantilla = useCrearDesdePlantilla();
   const navigate = useNavigate();
 
-  const [usarId, setUsarId] = useState(0);
+  const [usarId, setUsarId] = useState<string | null>(null);
   const [nombreNuevo, setNombreNuevo] = useState("");
 
   const handleCrear = async () => {
     if (!nombreNuevo.trim()) return;
     const proyecto = await crearDesdePlantilla.mutateAsync({
-      plantillaId: usarId,
+      plantillaId: usarId ?? "",
       body: { nombre: nombreNuevo.trim() },
     });
-    setUsarId(0);
+    setUsarId(null);
     setNombreNuevo("");
     navigate(`/proyectos/${proyecto.id}`);
   };
@@ -129,7 +129,7 @@ export function PlantillasProyectoPageActiva() {
         </TarjetaTabla>
       )}
 
-      <Dialog open={usarId > 0} onOpenChange={(o) => !o && setUsarId(0)}>
+      <Dialog open={usarId != null} onOpenChange={(o) => !o && setUsarId(null)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Crear proyecto desde plantilla</DialogTitle>

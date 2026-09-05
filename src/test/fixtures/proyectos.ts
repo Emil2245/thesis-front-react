@@ -5,9 +5,14 @@ import type {
   FirmanteResponse,
 } from "@/api/contract";
 
+// UUIDv7 públicos (backend Plan 07 — columna public_id).
+export const PROYECTO_1 = "01927f4e-1a2b-7c3d-8e4f-000000000001";
+export const PROYECTO_2 = "01927f4e-1a2b-7c3d-8e4f-000000000002";
+export const PROYECTO_3 = "01927f4e-1a2b-7c3d-8e4f-000000000003";
+
 export const proyectosFixture: ProyectoResponse[] = [
   {
-    id: 1,
+    id: PROYECTO_1,
     nombreProyecto: "Puente Ambato",
     codigo: "AMB-001",
     estado: "EN_PROCESO",
@@ -22,7 +27,7 @@ export const proyectosFixture: ProyectoResponse[] = [
     updatedAt: "2026-01-15T00:00:00Z",
   },
   {
-    id: 2,
+    id: PROYECTO_2,
     nombreProyecto: "Vía Quito Sur",
     codigo: "UIO-002",
     estado: "BORRADOR",
@@ -37,7 +42,7 @@ export const proyectosFixture: ProyectoResponse[] = [
     updatedAt: "2026-03-20T00:00:00Z",
   },
   {
-    id: 3,
+    id: PROYECTO_3,
     nombreProyecto: "Escuela Milagro",
     codigo: "MIL-003",
     estado: "FINALIZADO",
@@ -54,7 +59,7 @@ export const proyectosFixture: ProyectoResponse[] = [
 ];
 
 export const proyectoDetalleFixture: ProyectoDetalleResponse = {
-  id: 1,
+  id: PROYECTO_1,
   nombreProyecto: "Puente Ambato",
   codigo: "AMB-001",
   estado: "EN_PROCESO",
@@ -85,7 +90,10 @@ export const parametrosFixture: ParametrosProyectoResponse = {
   modoCodigoRubro: "AUTOGENERADO",
 };
 
+export const FIRMANTE_1 = "01927f50-1a2b-7c3d-8e4f-000000000001";
+export const FIRMANTE_2 = "01927f50-1a2b-7c3d-8e4f-000000000002";
+
 export const firmantesFixture: FirmanteResponse[] = [
-  { id: 1, nombre: "Ing. Juan Pérez", cargo: "Director de Obra", rol: "CONSOLIDADO", orden: 1 },
-  { id: 2, nombre: "Arq. María López", cargo: "Supervisora", rol: "APROBADO", orden: 1 },
+  { id: FIRMANTE_1, nombre: "Ing. Juan Pérez", cargo: "Director de Obra", rol: "CONSOLIDADO", orden: 1 },
+  { id: FIRMANTE_2, nombre: "Arq. María López", cargo: "Supervisora", rol: "APROBADO", orden: 1 },
 ];

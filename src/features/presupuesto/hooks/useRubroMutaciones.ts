@@ -19,7 +19,7 @@ export function useRubroMutaciones(presupuestoId: number) {
       cantidad,
     }: {
       capituloId: number;
-      apuId: number;
+      apuId: string;
       cantidad: string;
     }) =>
       post<PresupuestoResponse>(`/presupuestos/${presupuestoId}/capitulos/${capituloId}/rubros`, {

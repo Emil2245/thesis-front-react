@@ -20,7 +20,7 @@ export function EditorApuPage() {
   const { apuId } = useParams<{ apuId: string }>();
   const { presupuestoId: versionActiva } = useVersionActiva();
   const presupuestoId = versionActiva ?? 0;
-  const parsedApuId = Number(apuId);
+  const parsedApuId = apuId ?? "";
 
   const {
     apu,

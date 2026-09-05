@@ -80,7 +80,7 @@ export function PresupuestoPage() {
   }, []);
 
   const handleConfirmarAgregarRubro = useCallback(
-    (apuId: number, cantidad: string) => {
+    (apuId: string, cantidad: string) => {
       if (dialogo?.type === "agregar" && dialogo.padreId) {
         agregar.mutate({ capituloId: dialogo.padreId, apuId, cantidad });
       }

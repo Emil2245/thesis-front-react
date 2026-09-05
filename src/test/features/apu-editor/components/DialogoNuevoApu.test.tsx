@@ -17,7 +17,7 @@ describe("DialogoNuevoApu", () => {
         abierto
         onClose={onClose}
         presupuestoId={1}
-        proyectoId={1}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
         onCreate={onCreate}
       />,
     );
@@ -32,7 +32,7 @@ describe("DialogoNuevoApu", () => {
         abierto
         onClose={onClose}
         presupuestoId={1}
-        proyectoId={1}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
         onCreate={onCreate}
       />,
     );
@@ -48,7 +48,7 @@ describe("DialogoNuevoApu", () => {
         abierto
         onClose={onClose}
         presupuestoId={1}
-        proyectoId={1}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
         onCreate={onCreate}
       />,
     );
@@ -65,7 +65,7 @@ describe("DialogoNuevoApu", () => {
         abierto
         onClose={onClose}
         presupuestoId={1}
-        proyectoId={1}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
         onCreate={onCreate}
       />,
     );
@@ -98,7 +98,7 @@ describe("DialogoNuevoApu", () => {
         abierto
         onClose={onClose}
         presupuestoId={1}
-        proyectoId={1}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
         onCreate={onCreate}
       />,
     );
@@ -117,7 +117,7 @@ describe("DialogoNuevoApu", () => {
         abierto
         onClose={onClose}
         presupuestoId={1}
-        proyectoId={1}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
         onCreate={onCreate}
       />,
     );
@@ -132,7 +132,7 @@ describe("DialogoNuevoApu", () => {
         abierto
         onClose={onClose}
         presupuestoId={1}
-        proyectoId={1}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
         onCreate={onCreate}
       />,
     );
@@ -150,7 +150,7 @@ describe("DialogoNuevoApu", () => {
         abierto
         onClose={onClose}
         presupuestoId={1}
-        proyectoId={1}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
         onCreate={onCreate}
       />,
     );
@@ -183,7 +183,7 @@ describe("DialogoNuevoApu", () => {
         abierto
         onClose={onClose}
         presupuestoId={1}
-        proyectoId={1}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
         onCreate={onCreate}
       />,
     );
@@ -216,7 +216,7 @@ describe("DialogoNuevoApu", () => {
         abierto
         onClose={onClose}
         presupuestoId={1}
-        proyectoId={1}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
         onCreate={onCreate}
       />,
     );

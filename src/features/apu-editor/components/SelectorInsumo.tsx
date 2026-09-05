@@ -23,9 +23,9 @@ import { formatearMoneda } from "@/lib/decimal";
 interface SelectorInsumoProps {
   abierto: boolean;
   onClose: () => void;
-  proyectoId: number;
+  proyectoId: string;
   tipo: SeccionTipo;
-  onSeleccionar: (sel: { insumoId: number }) => void;
+  onSeleccionar: (sel: { insumoId: string }) => void;
 }
 
 export function SelectorInsumo({

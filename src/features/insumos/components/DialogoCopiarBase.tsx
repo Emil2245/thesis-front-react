@@ -32,7 +32,7 @@ export function DialogoCopiarBase({
 }: {
   abierto: boolean;
   onClose: () => void;
-  proyectoId: number;
+  proyectoId: string;
 }) {
   const { data: bases } = useBasesCentrales();
   const [baseId, setBaseId] = useState<string>("");

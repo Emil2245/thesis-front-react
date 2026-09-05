@@ -79,7 +79,7 @@ const TIPO_TABS = [
 
 const columnHelper = createColumnHelper<InsumoResponse>();
 
-export function TablaInsumos({ proyectoId }: { proyectoId: number }) {
+export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
   const [tipo, setTipo] = useState("");
   const [q, setQ] = useState("");
   const [soloDesactualizados, setSoloDesactualizados] = useState(false);
@@ -92,9 +92,9 @@ export function TablaInsumos({ proyectoId }: { proyectoId: number }) {
   const [copiarAbierto, setCopiarAbierto] = useState(false);
   const [usoDialogo, setUsoDialogo] = useState<{
     abierto: boolean;
-    insumoId: number;
+    insumoId: string;
     usosPrecargados?: InsumoUsoResponse[];
-  }>({ abierto: false, insumoId: 0 });
+  }>({ abierto: false, insumoId: "" });
 
   const filtros = useMemo(() => {
     const f: Record<string, unknown> = {};
@@ -409,7 +409,7 @@ export function TablaInsumos({ proyectoId }: { proyectoId: number }) {
 
       <DialogoUsoInsumo
         abierto={usoDialogo.abierto}
-        onClose={() => setUsoDialogo({ abierto: false, insumoId: 0 })}
+        onClose={() => setUsoDialogo({ abierto: false, insumoId: "" })}
         proyectoId={proyectoId}
         insumoId={usoDialogo.insumoId}
         usosPrecargados={usoDialogo.usosPrecargados}

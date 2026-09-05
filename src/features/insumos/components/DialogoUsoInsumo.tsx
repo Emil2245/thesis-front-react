@@ -31,8 +31,8 @@ export function DialogoUsoInsumo({
 }: {
   abierto: boolean;
   onClose: () => void;
-  proyectoId: number;
-  insumoId: number;
+  proyectoId: string;
+  insumoId: string;
   usosPrecargados?: InsumoUsoResponse[];
 }) {
   const { data: usos, isPending } = useQuery({

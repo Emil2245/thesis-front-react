@@ -57,7 +57,7 @@ export function ListaApusPage() {
   const eliminar = useEliminarApu(presupuestoId);
   const duplicar = useDuplicarApu(presupuestoId);
 
-  const manejarEliminar = async (apuId: number) => {
+  const manejarEliminar = async (apuId: string) => {
     try {
       await eliminar.mutateAsync(apuId);
     } catch (e) {
@@ -195,7 +195,7 @@ export function ListaApusPage() {
         abierto={crearAbierto}
         onClose={() => setCrearAbierto(false)}
         presupuestoId={presupuestoId}
-        proyectoId={proyectoId ?? 0}
+        proyectoId={proyectoId ?? ""}
         onCreate={(apuId) => {
           setCrearAbierto(false);
           navigate(`/proyectos/${proyectoId}/apus/${apuId}`);

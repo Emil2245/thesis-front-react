@@ -34,7 +34,7 @@ export function useValidacion(presupuestoId: number) {
   });
 }
 
-export function useVersiones(proyectoId: number) {
+export function useVersiones(proyectoId: string) {
   return useQuery({
     queryKey: qk.versiones(proyectoId),
     queryFn: async () => {
@@ -46,7 +46,7 @@ export function useVersiones(proyectoId: number) {
         throw e;
       }
     },
-    enabled: proyectoId > 0,
+    enabled: !!proyectoId,
   });
 }
 

@@ -46,7 +46,7 @@ describe("AppSidebar", () => {
           <Route path="/proyectos/:id" element={<AppSidebar />} />
         </Routes>
       </SidebarProvider>,
-      { ruta: "/proyectos/1" },
+      { ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001" },
     );
 
     const presupuesto = await screen.findByText("Presupuesto");

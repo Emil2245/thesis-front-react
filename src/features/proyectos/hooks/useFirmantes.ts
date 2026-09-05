@@ -3,15 +3,15 @@ import { get, post, put, del } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import type { FirmanteResponse } from "@/api/contract";
 
-export function useFirmantes(proyectoId: number | null) {
+export function useFirmantes(proyectoId: string | null) {
   return useQuery({
-    queryKey: qk.firmantes(proyectoId ?? 0),
+    queryKey: qk.firmantes(proyectoId ?? ""),
     queryFn: () => get<FirmanteResponse[]>(`/proyectos/${proyectoId}/firmantes`),
     enabled: proyectoId != null,
   });
 }
 
-export function useCrearFirmante(proyectoId: number) {
+export function useCrearFirmante(proyectoId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: {
@@ -26,7 +26,7 @@ export function useCrearFirmante(proyectoId: number) {
   });
 }
 
-export function useEditarFirmante(proyectoId: number, firmanteId: number) {
+export function useEditarFirmante(proyectoId: string, firmanteId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: {
@@ -41,10 +41,10 @@ export function useEditarFirmante(proyectoId: number, firmanteId: number) {
   });
 }
 
-export function useEliminarFirmante(proyectoId: number) {
+export function useEliminarFirmante(proyectoId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (firmanteId: number) => del(`/proyectos/${proyectoId}/firmantes/${firmanteId}`),
+    mutationFn: (firmanteId: string) => del(`/proyectos/${proyectoId}/firmantes/${firmanteId}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.firmantes(proyectoId) });
     },

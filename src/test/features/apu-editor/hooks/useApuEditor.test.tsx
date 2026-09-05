@@ -11,7 +11,7 @@ import { http, HttpResponse } from "msw";
 import type { ApuResponse } from "@/api/contract";
 
 const API = "*/api/v1";
-const APU_ID = 1;
+const APU_ID = "018f8a40-0000-7000-8000-000000000001";
 const PRESUPUESTO_ID = 1;
 
 function crearConHmEnCache() {

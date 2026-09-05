@@ -94,7 +94,7 @@ export const handlers = [
     return HttpResponse.json(pagina<ProyectoResponse>(filtrados));
   }),
   http.get(`${API}/proyectos/:id`, ({ params }) => {
-    const p = proyectosFixture.find((x) => x.id === Number(params.id));
+    const p = proyectosFixture.find((x) => x.id === params.id);
     if (!p) return HttpResponse.json(null, { status: 404 });
     return HttpResponse.json({ ...proyectoDetalleFixture, ...p });
   }),

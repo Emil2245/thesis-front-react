@@ -12,13 +12,13 @@ interface FilaDetalleProps {
   fila: FilaEditor;
   muestraRendimiento: boolean;
   onEditarCelda: (
-    detalleId: number,
+    detalleId: string,
     campo: "cantidad" | "rendimiento" | "precioOverride",
     valor: string,
   ) => Promise<void>;
-  onRestaurarHerencia: (detalleId: number) => Promise<void>;
-  onEliminarFila: (detalleId: number) => Promise<void>;
-  onReordenarFila: (detalleId: number, nuevoOrden: number) => Promise<void>;
+  onRestaurarHerencia: (detalleId: string) => Promise<void>;
+  onEliminarFila: (detalleId: string) => Promise<void>;
+  onReordenarFila: (detalleId: string, nuevoOrden: number) => Promise<void>;
   indice: number;
   totalFilas: number;
 }

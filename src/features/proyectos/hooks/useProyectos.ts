@@ -18,9 +18,9 @@ export function useProyectos(filtros?: Record<string, unknown>) {
   });
 }
 
-export function useProyecto(id: number | null) {
+export function useProyecto(id: string | null) {
   return useQuery({
-    queryKey: qk.proyecto(id ?? 0),
+    queryKey: qk.proyecto(id ?? ""),
     queryFn: () => get<ProyectoDetalleResponse>(`/proyectos/${id}`),
     enabled: id != null,
   });
@@ -36,7 +36,7 @@ export function useCrearProyecto() {
   });
 }
 
-export function useEditarProyecto(id: number) {
+export function useEditarProyecto(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: ProyectoEditarRequest) =>
@@ -51,7 +51,7 @@ export function useEditarProyecto(id: number) {
 export function useEliminarProyecto() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => del(`/proyectos/${id}`),
+    mutationFn: (id: string) => del(`/proyectos/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.proyectos() });
     },
@@ -61,7 +61,7 @@ export function useEliminarProyecto() {
 export function useDuplicarProyecto() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, body }: { id: number; body: ProyectoDuplicarRequest }) =>
+    mutationFn: ({ id, body }: { id: string; body: ProyectoDuplicarRequest }) =>
       post<ProyectoDetalleResponse>(`/proyectos/${id}/duplicar`, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.proyectos() });

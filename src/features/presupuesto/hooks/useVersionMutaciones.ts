@@ -4,7 +4,7 @@ import { qk } from "@/api/queryKeys";
 import type { PresupuestoVersionResponse } from "@/api/contract";
 import { toast } from "sonner";
 
-export function useVersionMutaciones(proyectoId: number) {
+export function useVersionMutaciones(proyectoId: string) {
   const queryClient = useQueryClient();
 
   const invalidateVersiones = () => {

@@ -13,7 +13,7 @@ import {
 interface PopoverDesgloseProps {
   abierto: boolean;
   onClose: () => void;
-  apuId: number;
+  apuId: string;
 }
 
 export function PopoverDesglose({ abierto, onClose, apuId }: PopoverDesgloseProps) {

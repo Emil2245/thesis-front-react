@@ -47,7 +47,7 @@ export function useEliminarPlantilla() {
   });
 }
 
-export function useGuardarPlantilla(apuId: number) {
+export function useGuardarPlantilla(apuId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: PlantillaApuCrearRequest) =>

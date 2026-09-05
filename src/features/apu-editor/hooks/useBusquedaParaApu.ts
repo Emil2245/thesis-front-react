@@ -4,7 +4,7 @@ import { qk } from "@/api/queryKeys";
 import type { InsumoBusquedaResponse, Page } from "@/api/contract";
 
 interface BusquedaParams {
-  proyectoId: number;
+  proyectoId: string;
   fuente?: string;
   q?: string;
 }
@@ -18,6 +18,6 @@ export function useBusquedaParaApu({ proyectoId, fuente, q }: BusquedaParams) {
     queryKey: [...qk.insumos(proyectoId, params), "selector"],
     queryFn: () =>
       get<Page<InsumoBusquedaResponse>>(`/proyectos/${proyectoId}/insumos/selector`, params),
-    enabled: proyectoId > 0,
+    enabled: !!proyectoId,
   });
 }

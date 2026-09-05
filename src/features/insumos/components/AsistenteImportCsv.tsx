@@ -27,7 +27,7 @@ export function AsistenteImportCsv({
 }: {
   abierto: boolean;
   onClose: () => void;
-  proyectoId: number;
+  proyectoId: string;
 }) {
   const [paso, setPaso] = useState(0);
   const [archivo, setArchivo] = useState<File | null>(null);

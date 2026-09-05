@@ -46,7 +46,7 @@ export function DialogoEditarProyecto({
   onClose: () => void;
 }) {
   const { id } = useParams();
-  const proyectoId = Number(id);
+  const proyectoId = id ?? "";
   const navigate = useNavigate();
   const { data: proyecto } = useProyecto(proyectoId);
   const editar = useEditarProyecto(proyectoId);

@@ -18,7 +18,7 @@ import { Field, FieldError } from "@/components/ui/field";
 interface DialogoGuardarPlantillaProps {
   abierto: boolean;
   onClose: () => void;
-  apuId: number;
+  apuId: string;
 }
 
 export function DialogoGuardarPlantilla({ abierto, onClose, apuId }: DialogoGuardarPlantillaProps) {

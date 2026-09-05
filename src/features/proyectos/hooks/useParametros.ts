@@ -3,15 +3,15 @@ import { get, put } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import type { ParametrosProyectoResponse } from "@/api/contract";
 
-export function useParametros(proyectoId: number | null) {
+export function useParametros(proyectoId: string | null) {
   return useQuery({
-    queryKey: qk.parametrosProyecto(proyectoId ?? 0),
+    queryKey: qk.parametrosProyecto(proyectoId ?? ""),
     queryFn: () => get<ParametrosProyectoResponse>(`/proyectos/${proyectoId}/parametros`),
     enabled: proyectoId != null,
   });
 }
 
-export function useActualizarParametros(proyectoId: number) {
+export function useActualizarParametros(proyectoId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: Record<string, unknown>) =>

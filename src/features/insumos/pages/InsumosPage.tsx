@@ -8,7 +8,7 @@ import { VistaBasesCentrales } from "../components/VistaBasesCentrales";
 
 export function InsumosPage() {
   const { id } = useParams();
-  const proyectoId = Number(id);
+  const proyectoId = id ?? "";
   const cargando = useSesionStore((s) => s.cargando);
 
   if (cargando) return <CargandoTabla />;

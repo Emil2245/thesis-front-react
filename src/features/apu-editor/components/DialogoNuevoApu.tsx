@@ -21,8 +21,8 @@ interface DialogoNuevoApuProps {
   abierto: boolean;
   onClose: () => void;
   presupuestoId: number;
-  proyectoId: number;
-  onCreate: (apuId: number) => void;
+  proyectoId: string;
+  onCreate: (apuId: string) => void;
 }
 
 export function DialogoNuevoApu({

@@ -20,7 +20,7 @@ export function DialogoGuardarComoPlantilla({
 }: {
   abierto: boolean;
   onClose: () => void;
-  proyectoId: number;
+  proyectoId: string;
 }) {
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");

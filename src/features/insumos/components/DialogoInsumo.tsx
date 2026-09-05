@@ -49,7 +49,7 @@ export function DialogoInsumo({
 }: {
   abierto: boolean;
   onClose: () => void;
-  proyectoId: number;
+  proyectoId: string;
   insumo?: InsumoResponse;
 }) {
   const esEditar = !!insumo;

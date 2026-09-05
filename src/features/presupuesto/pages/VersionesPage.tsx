@@ -22,7 +22,7 @@ import { formatearMoneda } from "@/lib/decimal";
 
 export function VersionesPage() {
   const { id: proyectoId } = useParams<{ id: string }>();
-  const pid = Number(proyectoId);
+  const pid = proyectoId ?? "";
 
   const { data: versiones, isLoading } = useVersiones(pid);
   const { crear, marcarVigente, eliminar } = useVersionMutaciones(pid);

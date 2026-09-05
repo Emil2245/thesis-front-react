@@ -17,7 +17,7 @@ import { Search, Loader2 } from "lucide-react";
 interface DialogoAgregarItemProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (apuId: number, cantidad: string) => void;
+  onConfirm: (apuId: string, cantidad: string) => void;
   presupuestoId: number;
 }
 

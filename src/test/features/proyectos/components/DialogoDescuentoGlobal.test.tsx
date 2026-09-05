@@ -5,7 +5,7 @@ import { DialogoDescuentoGlobal } from "@/features/proyectos/components/DialogoD
 
 describe("DialogoDescuentoGlobal", () => {
   it("renderiza el diálogo", () => {
-    renderConProviders(<DialogoDescuentoGlobal abierto onClose={() => {}} proyectoId={1} />);
+    renderConProviders(<DialogoDescuentoGlobal abierto onClose={() => {}} presupuestoId={1} />);
     expect(screen.getByText(/descuento global/i)).toBeInTheDocument();
   });
 });

@@ -95,8 +95,8 @@ export const logsFixture: LogActividadResponse[] = [
 ];
 
 export const basesCentralesFixtureAdmin: BaseInsumosResponse[] = [
-  { id: 1, nombre: "Base Cámara 2026", tipo: "CENTRAL", archivada: false, totalInsumos: 150 },
-  { id: 2, nombre: "Base MOP 2025", tipo: "CENTRAL", archivada: false, totalInsumos: 300 },
+  { id: "018f8a30-0000-7000-8000-000000000001", nombre: "Base Cámara 2026", tipo: "CENTRAL", archivada: false, totalInsumos: 150 },
+  { id: "018f8a30-0000-7000-8000-000000000002", nombre: "Base MOP 2025", tipo: "CENTRAL", archivada: false, totalInsumos: 300 },
 ];
 
 export const plantillasSistemaFixture = [

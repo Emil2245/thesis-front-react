@@ -16,14 +16,14 @@ describe("ResumenProyectoPage", () => {
       <Routes>
         <Route path="/proyectos/:id" element={<ResumenProyectoPage />} />
       </Routes>,
-      { ruta: "/proyectos/1" },
+      { ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001" },
     );
 
     await waitFor(() => {
       expect(screen.getByText(/indirectos no configurado/i)).toBeInTheDocument();
       const link = screen.getByText(/configurar ahora/i);
       expect(link).toBeInTheDocument();
-      expect(link.closest("a")).toHaveAttribute("href", "/proyectos/1/parametros");
+      expect(link.closest("a")).toHaveAttribute("href", "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/parametros");
     });
   });
 
@@ -32,7 +32,7 @@ describe("ResumenProyectoPage", () => {
       <Routes>
         <Route path="/proyectos/:id" element={<ResumenProyectoPage />} />
       </Routes>,
-      { ruta: "/proyectos/1" },
+      { ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001" },
     );
 
     await waitFor(() => {
@@ -45,7 +45,7 @@ describe("ResumenProyectoPage", () => {
       <Routes>
         <Route path="/proyectos/:id" element={<ResumenProyectoPage />} />
       </Routes>,
-      { ruta: "/proyectos/1" },
+      { ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001" },
     );
 
     await waitFor(() => {

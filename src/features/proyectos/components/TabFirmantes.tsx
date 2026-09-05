@@ -97,7 +97,7 @@ function DialogoFirmante({
   );
 }
 
-export function TabFirmantes({ proyectoId }: { proyectoId: number }) {
+export function TabFirmantes({ proyectoId }: { proyectoId: string }) {
   const { data: firmantes } = useFirmantes(proyectoId);
   const crear = useCrearFirmante(proyectoId);
   const eliminar = useEliminarFirmante(proyectoId);

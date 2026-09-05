@@ -4,7 +4,7 @@ import { qk } from "@/api/queryKeys";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ProyectoDetalleResponse } from "@/api/contract";
 
-export function useSubirLogo(proyectoId: number) {
+export function useSubirLogo(proyectoId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (file: File) => {

@@ -26,7 +26,7 @@ export function useCrearApu(presupuestoId: number) {
 export function useEliminarApu(presupuestoId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (apuId: number) => del(`/apus/${apuId}`),
+    mutationFn: (apuId: string) => del(`/apus/${apuId}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.apus(presupuestoId) });
     },
@@ -36,7 +36,7 @@ export function useEliminarApu(presupuestoId: number) {
 export function useDuplicarApu(presupuestoId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (apuId: number) => post<ApuResponse>(`/apus/${apuId}/duplicar`),
+    mutationFn: (apuId: string) => post<ApuResponse>(`/apus/${apuId}/duplicar`),
     onSuccess: (data) => {
       qc.setQueryData(qk.apu(data.id), data);
       qc.invalidateQueries({ queryKey: qk.apus(presupuestoId) });

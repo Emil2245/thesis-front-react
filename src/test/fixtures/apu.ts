@@ -2,7 +2,7 @@ import type { ApuResponse, ApuResumenResponse, PlantillaApuDetalleResponse } fro
 
 export const apuResumenFixture: ApuResumenResponse[] = [
   {
-    id: 1,
+    id: "018f8a40-0000-7000-8000-000000000001",
     codigo: "APU-001",
     descripcion: "Excavación a máquina",
     unidad: "m3",
@@ -12,7 +12,7 @@ export const apuResumenFixture: ApuResumenResponse[] = [
     vinculado: false,
   },
   {
-    id: 2,
+    id: "018f8a40-0000-7000-8000-000000000002",
     codigo: "APU-002",
     descripcion: "Relleno compactado",
     unidad: "m3",
@@ -22,7 +22,7 @@ export const apuResumenFixture: ApuResumenResponse[] = [
     vinculado: true,
   },
   {
-    id: 3,
+    id: "018f8a40-0000-7000-8000-000000000003",
     codigo: "APU-003",
     descripcion: "Transporte material",
     unidad: "m3-km",
@@ -32,7 +32,7 @@ export const apuResumenFixture: ApuResumenResponse[] = [
     vinculado: false,
   },
   {
-    id: 4,
+    id: "018f8a40-0000-7000-8000-000000000004",
     codigo: "APU-004",
     descripcion: "Hormigón simple",
     unidad: "m3",
@@ -44,7 +44,7 @@ export const apuResumenFixture: ApuResumenResponse[] = [
 ];
 
 export const apuDetalleFixture: ApuResponse = {
-  id: 1,
+  id: "018f8a40-0000-7000-8000-000000000001",
   codigo: "APU-001",
   descripcion: "Excavación a máquina",
   unidad: "m3",
@@ -63,11 +63,11 @@ export const apuDetalleFixture: ApuResponse = {
       subtotal: 400,
       detalles: [
         {
-          id: 100,
+          id: "018f8a50-0000-7000-8000-000000000100",
           orden: 1,
           descripcion: "Retroexcavadora",
           esHerramientaMenor: false,
-          insumoId: 15,
+          insumoId: "018f8a20-0000-7000-8000-000000000015",
 
           cantidad: 1,
           rendimiento: 0.05,
@@ -85,11 +85,11 @@ export const apuDetalleFixture: ApuResponse = {
       subtotal: 400,
       detalles: [
         {
-          id: 101,
+          id: "018f8a50-0000-7000-8000-000000000101",
           orden: 1,
           descripcion: "Albañil",
           esHerramientaMenor: false,
-          insumoId: 13,
+          insumoId: "018f8a20-0000-7000-8000-000000000013",
 
           cantidad: 1,
           rendimiento: 0.1,
@@ -100,11 +100,11 @@ export const apuDetalleFixture: ApuResponse = {
           costo: 200,
         },
         {
-          id: 102,
+          id: "018f8a50-0000-7000-8000-000000000102",
           orden: 2,
           descripcion: "Peón",
           esHerramientaMenor: false,
-          insumoId: 14,
+          insumoId: "018f8a20-0000-7000-8000-000000000014",
 
           cantidad: 2,
           rendimiento: 0.1,
@@ -139,7 +139,7 @@ export const apuConHmFixture: ApuResponse = {
       ...apuDetalleFixture.secciones[0],
       detalles: [
         {
-          id: 200,
+          id: "018f8a50-0000-7000-8000-000000000200",
           orden: 1,
           descripcion: "Herramienta Menor (%HM × Subtotal N)",
           esHerramientaMenor: true,

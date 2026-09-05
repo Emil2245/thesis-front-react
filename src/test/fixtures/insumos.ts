@@ -9,7 +9,7 @@ import type {
 
 export const insumosFixture: InsumoResponse[] = [
   {
-    id: 10,
+    id: "018f8a20-0000-7000-8000-000000000010",
     codigo: "M-001",
     descripcion: "Cemento Portland Tipo I",
     tipo: "MATERIAL",
@@ -20,7 +20,7 @@ export const insumosFixture: InsumoResponse[] = [
     fuente: "LOCAL",
   },
   {
-    id: 11,
+    id: "018f8a20-0000-7000-8000-000000000011",
     codigo: "M-002",
     descripcion: "Arena fina",
     tipo: "MATERIAL",
@@ -31,7 +31,7 @@ export const insumosFixture: InsumoResponse[] = [
     fuente: "LOCAL",
   },
   {
-    id: 12,
+    id: "018f8a20-0000-7000-8000-000000000012",
     codigo: "M-003",
     descripcion: "Ripio triturado",
     tipo: "MATERIAL",
@@ -42,7 +42,7 @@ export const insumosFixture: InsumoResponse[] = [
     fuente: "LOCAL",
   },
   {
-    id: 13,
+    id: "018f8a20-0000-7000-8000-000000000013",
     codigo: "MO-001",
     descripcion: "Albañil",
     tipo: "MANO_OBRA",
@@ -53,7 +53,7 @@ export const insumosFixture: InsumoResponse[] = [
     fuente: "LOCAL",
   },
   {
-    id: 14,
+    id: "018f8a20-0000-7000-8000-000000000014",
     codigo: "MO-002",
     descripcion: "Peón",
     tipo: "MANO_OBRA",
@@ -64,7 +64,7 @@ export const insumosFixture: InsumoResponse[] = [
     fuente: "LOCAL",
   },
   {
-    id: 15,
+    id: "018f8a20-0000-7000-8000-000000000015",
     codigo: "EQ-001",
     descripcion: "Retroexcavadora",
     tipo: "EQUIPO",
@@ -75,7 +75,7 @@ export const insumosFixture: InsumoResponse[] = [
     fuente: "LOCAL",
   },
   {
-    id: 16,
+    id: "018f8a20-0000-7000-8000-000000000016",
     codigo: "EQ-002",
     descripcion: "Compactador",
     tipo: "EQUIPO",
@@ -86,7 +86,7 @@ export const insumosFixture: InsumoResponse[] = [
     fuente: "LOCAL",
   },
   {
-    id: 17,
+    id: "018f8a20-0000-7000-8000-000000000017",
     codigo: "T-001",
     descripcion: "Volqueta 8 m3",
     tipo: "TRANSPORTE",
@@ -99,14 +99,32 @@ export const insumosFixture: InsumoResponse[] = [
 ];
 
 export const basesCentralesFixture: BaseInsumosResponse[] = [
-  { id: 1, nombre: "Base IESS 2026", tipo: "CENTRAL", archivada: false, totalInsumos: 93 },
-  { id: 2, nombre: "Base MTOP 2025", tipo: "CENTRAL", archivada: false, totalInsumos: 45 },
-  { id: 3, nombre: "Base Antigua 2024", tipo: "CENTRAL", archivada: true, totalInsumos: 120 },
+  {
+    id: "018f8a30-0000-7000-8000-000000000001",
+    nombre: "Base IESS 2026",
+    tipo: "CENTRAL",
+    archivada: false,
+    totalInsumos: 93,
+  },
+  {
+    id: "018f8a30-0000-7000-8000-000000000002",
+    nombre: "Base MTOP 2025",
+    tipo: "CENTRAL",
+    archivada: false,
+    totalInsumos: 45,
+  },
+  {
+    id: "018f8a30-0000-7000-8000-000000000003",
+    nombre: "Base Antigua 2024",
+    tipo: "CENTRAL",
+    archivada: true,
+    totalInsumos: 120,
+  },
 ];
 
 export const insumosBusquedaFixture: InsumoBusquedaResponse[] = [
   {
-    id: 10,
+    id: "018f8a20-0000-7000-8000-000000000010",
     codigo: "M-001",
     descripcion: "Cemento Portland Tipo I",
     tipo: "MATERIAL",
@@ -115,7 +133,7 @@ export const insumosBusquedaFixture: InsumoBusquedaResponse[] = [
     fuente: "LOCAL",
   },
   {
-    id: 13,
+    id: "018f8a20-0000-7000-8000-000000000013",
     codigo: "MO-001",
     descripcion: "Albañil",
     tipo: "MANO_OBRA",
@@ -124,7 +142,7 @@ export const insumosBusquedaFixture: InsumoBusquedaResponse[] = [
     fuente: "LOCAL",
   },
   {
-    id: 100,
+    id: "018f8a20-0000-7000-8000-000000000100",
     codigo: "C-001",
     descripcion: "Cemento IESS",
     tipo: "MATERIAL",
@@ -157,17 +175,17 @@ export const importResultadoConErroresFixture: ImportResultadoResponse = {
 
 export const insumoUsoFixture: InsumoUsoResponse[] = [
   {
-    apuId: 1,
+    apuId: "018f8a40-0000-7000-8000-000000000001",
     apuCodigo: "APU-001",
     apuDescripcion: "Excavación",
-    detalleId: 100,
+    detalleId: "018f8a50-0000-7000-8000-000000000100",
     cantidad: "2.000000" as never,
   },
   {
-    apuId: 2,
+    apuId: "018f8a40-0000-7000-8000-000000000002",
     apuCodigo: "APU-002",
     apuDescripcion: "Relleno compactado",
-    detalleId: 101,
+    detalleId: "018f8a50-0000-7000-8000-000000000101",
     cantidad: "1.500000" as never,
   },
 ];

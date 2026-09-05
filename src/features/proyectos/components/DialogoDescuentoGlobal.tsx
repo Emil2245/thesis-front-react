@@ -31,11 +31,11 @@ import {
 export function DialogoDescuentoGlobal({
   abierto,
   onClose,
-  proyectoId,
+  presupuestoId,
 }: {
   abierto: boolean;
   onClose: () => void;
-  proyectoId: number;
+  presupuestoId: number | null;
 }) {
   const { data: sistema } = useParametrosSistema();
   const maxDesc = sistema?.rangoDescuentoMax ? Number(sistema.rangoDescuentoMax) * 100 : 50;
@@ -46,7 +46,7 @@ export function DialogoDescuentoGlobal({
     defaultValues: { porcentaje: 0 },
   });
 
-  const preview = usePreviewDescuento(null);
+  const preview = usePreviewDescuento(presupuestoId);
   const aplicar = useAplicarDescuento();
   const [previewData, setPreviewData] = useState<DescuentoGlobalPreviewResponse | null>(null);
 
@@ -69,8 +69,9 @@ export function DialogoDescuentoGlobal({
   }, [porcentaje, preview, maxDesc]);
 
   const handleAplicar = async () => {
+    if (presupuestoId == null) return;
     await aplicar.mutateAsync({
-      presupuestoId: proyectoId,
+      presupuestoId,
       porcentaje: asDecimal((porcentaje / 100).toFixed(6)),
     });
     toast.success("Descuento aplicado");

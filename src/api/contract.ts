@@ -89,7 +89,7 @@ export interface PasswordCambiarRequest {
 
 // ————— Proyectos, firmantes y parámetros (§11) —————
 export interface ProyectoResponse {
-  id: number;
+  id: string;
   nombreProyecto: string;
   codigo: string;
   estado: "BORRADOR" | "EN_PROCESO" | "FINALIZADO";
@@ -137,7 +137,7 @@ export interface ProyectoDuplicarRequest {
 }
 
 export interface PlantillaProyectoResponse {
-  id: number;
+  id: string;
   nombre: string;
   descripcion?: string;
   fechaCreacion: string;
@@ -146,7 +146,7 @@ export interface PlantillaProyectoResponse {
 export interface PlantillaProyectoCrearRequest {
   nombre: string;
   descripcion?: string;
-  proyectoId: number;
+  proyectoId: string;
 }
 
 export interface ProyectoDesdePlantillaRequest {
@@ -154,7 +154,7 @@ export interface ProyectoDesdePlantillaRequest {
 }
 
 export interface FirmanteResponse {
-  id: number;
+  id: string;
   nombre: string;
   cargo: string;
   rol: "CONSOLIDADO" | "APROBADO";
@@ -169,7 +169,7 @@ export interface FirmanteCrearRequest {
 }
 
 export interface ParametrosProyectoResponse {
-  proyectoId?: number;
+  proyectoId?: string;
   porcentajeHerramientaMenor: number;
   porcentajeIndirecto?: number | null;
   iva: number;
@@ -194,7 +194,7 @@ export interface ParametrosProyectoActualizarRequest {
 export interface DescuentoGlobalPreviewResponse {
   porcentaje: Decimal;
   porApu: Array<{
-    apuId: number;
+    apuId: string;
     codigo: string;
     cd: Decimal;
     cdAjustado: Decimal;
@@ -213,7 +213,7 @@ export interface DescuentoGlobalRequest {
 export type TipoInsumo = "EQUIPO" | "MANO_OBRA" | "MATERIAL" | "TRANSPORTE";
 
 export interface InsumoResponse {
-  id: number;
+  id: string;
   codigo: string;
   tipo: TipoInsumo;
   descripcion: string;
@@ -240,15 +240,15 @@ export interface InsumoEditarRequest {
 }
 
 export interface InsumoUsoResponse {
-  apuId: number;
+  apuId: string;
   apuCodigo: string;
   apuDescripcion: string;
-  detalleId: number;
+  detalleId: string;
   cantidad: Decimal;
 }
 
 export interface InsumoBusquedaResponse {
-  id: number;
+  id: string;
   codigo: string;
   descripcion: string;
   tipo: TipoInsumo;
@@ -266,8 +266,8 @@ export interface ImportResultadoResponse {
 
 export interface CopiarBaseRequest {
   fuenteTipo: "CENTRAL" | "PROYECTO";
-  baseId?: number;
-  proyectoId?: number;
+  baseId?: string;
+  proyectoId?: string;
 }
 
 export interface CopiaBaseResultadoResponse {
@@ -276,7 +276,7 @@ export interface CopiaBaseResultadoResponse {
 }
 
 export interface BaseInsumosResponse {
-  id: number;
+  id: string;
   nombre: string;
   tipo: "CENTRAL";
   archivada: boolean;
@@ -291,11 +291,11 @@ export interface BaseInsumosCrearRequest {
 export type SeccionTipo = "EQUIPO" | "MANO_OBRA" | "MATERIAL" | "TRANSPORTE";
 
 export interface ApuDetalleResponse {
-  id: number;
+  id: string;
   orden: number;
   descripcion: string;
   esHerramientaMenor: boolean;
-  insumoId?: number | null;
+  insumoId?: string | null;
   cantidad?: number | null;
   rendimiento?: number | null;
   unidad?: string | null;
@@ -306,7 +306,7 @@ export interface ApuDetalleResponse {
 }
 
 export interface ApuResponse {
-  id: number;
+  id: string;
   codigo: string;
   descripcion: string;
   unidad: string;
@@ -331,7 +331,7 @@ export interface EspecificacionTecnicaRequest {
 }
 
 export interface ApuResumenResponse {
-  id: number;
+  id: string;
   codigo: string;
   descripcion: string;
   unidad: string;
@@ -355,7 +355,7 @@ export interface ApuPatchRequest {
 }
 
 export interface ApuDetalleCrearRequest {
-  insumoId?: number;
+  insumoId?: string;
   cantidad?: Decimal;
   rendimiento?: Decimal;
 }
@@ -414,7 +414,7 @@ export interface PlantillaApuDetalleResponse extends PlantillaApuResumenResponse
 export interface PlantillaSistemaCrearRequest {
   nombre: string;
   descripcion?: string;
-  desdeApuId: number;
+  desdeApuId: string;
 }
 
 // ————— Presupuesto y versiones (§11) —————
@@ -480,7 +480,10 @@ export interface CapituloMoverRequest {
 }
 
 export interface RubroCrearRequest {
-  apuId: number;
+  // TODO(047): el backend declara apuId como Long, pero /presupuestos/{id}/apus
+  // devuelve UUIDv7. El frontend sólo dispone del UUID, así que agregar un rubro
+  // no funciona hasta que el backend unifique el tipo.
+  apuId: string;
   cantidad: Decimal;
 }
 

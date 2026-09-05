@@ -12,8 +12,8 @@ describe("DialogoUsoInsumo", () => {
       <DialogoUsoInsumo
         abierto={true}
         onClose={onClose}
-        proyectoId={1}
-        insumoId={10}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+        insumoId={"018f8a20-0000-7000-8000-000000000010"}
         usosPrecargados={insumoUsoFixture}
       />,
     );
@@ -36,8 +36,8 @@ describe("DialogoUsoInsumo", () => {
       <DialogoUsoInsumo
         abierto={true}
         onClose={onClose}
-        proyectoId={1}
-        insumoId={99}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+        insumoId={"018f8a20-0000-7000-8000-000000000099"}
         usosPrecargados={insumoUsoFixture}
       />,
     );

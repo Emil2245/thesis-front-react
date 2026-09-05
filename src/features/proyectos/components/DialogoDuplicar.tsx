@@ -31,7 +31,7 @@ export function DialogoDuplicar({ abierto, onClose }: { abierto: boolean; onClos
   });
 
   const handleSubmit = form.handleSubmit(async (data) => {
-    const res = await duplicar.mutateAsync({ id: Number(id), body: data });
+    const res = await duplicar.mutateAsync({ id: id ?? "", body: data });
     toast.success("Proyecto duplicado");
     onClose();
     navigate(`/proyectos/${res.id}`);

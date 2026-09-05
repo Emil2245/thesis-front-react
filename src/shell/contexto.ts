@@ -6,17 +6,18 @@ import { ApiError } from "@/api/problem";
 import { qk } from "@/api/queryKeys";
 import type { PresupuestoVersionResponse } from "@/api/contract";
 
-export function useProyectoActivoId(): number | null {
+export function useProyectoActivoId(): string | null {
   const { id } = useParams();
-  const n = Number(id);
-  return Number.isFinite(n) && n > 0 ? n : null;
+  return id ?? null;
 }
 
-export function useVersiones(proyectoId: number | null) {
+export function useVersiones(proyectoId: string | null) {
   return useQuery({
-    queryKey: qk.versiones(proyectoId ?? 0),
+    queryKey: qk.versiones(proyectoId ?? ""),
     queryFn: async () => {
       try {
+        // TODO(047): el backend parsea este {proyectoId} como Long, no como UUIDv7
+        // (PresupuestoVersionResource.java:49). Falla en runtime hasta que se corrija.
         return await get<PresupuestoVersionResponse[]>(`/proyectos/${proyectoId}/presupuestos`);
       } catch (e) {
         // El backend aún no expone esta ruta para proyectos sin presupuestos.

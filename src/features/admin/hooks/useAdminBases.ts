@@ -26,7 +26,7 @@ export function useCrearBase() {
 export function useEliminarBase() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => del(`/admin/bases/${id}`),
+    mutationFn: (id: string) => del(`/admin/bases/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.adminBases() });
       toast.success("Base eliminada");
@@ -38,7 +38,7 @@ export function useEliminarBase() {
 export function useArchivarBase() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => post<BaseInsumosResponse>(`/admin/bases/${id}/archivar`),
+    mutationFn: (id: string) => post<BaseInsumosResponse>(`/admin/bases/${id}/archivar`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.adminBases() });
       toast.success("Base archivada/restaurada");

@@ -36,7 +36,7 @@ export function useCrearDesdePlantilla() {
       plantillaId,
       body,
     }: {
-      plantillaId: number;
+      plantillaId: string;
       body: ProyectoDesdePlantillaRequest;
     }) => post<ProyectoDetalleResponse>(`/proyectos/desde-plantilla/${plantillaId}`, body),
     onSuccess: () => {
@@ -50,7 +50,7 @@ export function useCrearDesdePlantilla() {
 export function useEliminarPlantillaProyecto() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => del(`/plantillas-proyecto/${id}`),
+    mutationFn: (id: string) => del(`/plantillas-proyecto/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.plantillasProyecto() });
       toast.success("Plantilla eliminada");

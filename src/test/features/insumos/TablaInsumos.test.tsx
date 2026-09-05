@@ -16,7 +16,7 @@ describe("TablaInsumos", () => {
   });
 
   it("renders rows", async () => {
-    renderConProviders(<TablaInsumos proyectoId={1} />);
+    renderConProviders(<TablaInsumos proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"} />);
 
     await waitFor(() => {
       expect(screen.getByText("Cemento Portland Tipo I")).toBeInTheDocument();
@@ -27,7 +27,7 @@ describe("TablaInsumos", () => {
   });
 
   it("desactualizado badge appears only when true", async () => {
-    renderConProviders(<TablaInsumos proyectoId={1} />);
+    renderConProviders(<TablaInsumos proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"} />);
 
     await waitFor(() => {
       // Arena fina is desactualizado=true
@@ -41,7 +41,7 @@ describe("TablaInsumos", () => {
   it("empty state CTA", async () => {
     server.use(http.get(`${API}/proyectos/:id/insumos`, () => HttpResponse.json(pagina([]))));
 
-    renderConProviders(<TablaInsumos proyectoId={1} />);
+    renderConProviders(<TablaInsumos proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"} />);
 
     await waitFor(() => {
       expect(screen.getByText(/No hay insumos/i)).toBeInTheDocument();

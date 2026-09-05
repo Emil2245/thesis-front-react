@@ -43,7 +43,7 @@ function ParametroSwitch({
 
 export function ParametrosPage() {
   const { id } = useParams();
-  const proyectoId = Number(id);
+  const proyectoId = id ?? "";
   const navigate = useNavigate();
   const { data: params, isPending } = useParametros(proyectoId);
   const { data: sistema } = useParametrosSistema();

@@ -17,7 +17,7 @@ describe("SelectorInsumo", () => {
       <SelectorInsumo
         abierto
         onClose={onClose}
-        proyectoId={1}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
         tipo="MATERIAL"
         onSeleccionar={onSeleccionar}
       />,
@@ -32,7 +32,7 @@ describe("SelectorInsumo", () => {
       <SelectorInsumo
         abierto
         onClose={onClose}
-        proyectoId={1}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
         tipo="MATERIAL"
         onSeleccionar={onSeleccionar}
       />,
@@ -65,7 +65,7 @@ describe("SelectorInsumo", () => {
       <SelectorInsumo
         abierto
         onClose={onClose}
-        proyectoId={1}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
         tipo="MATERIAL"
         onSeleccionar={onSeleccionar}
       />,
@@ -80,7 +80,7 @@ describe("SelectorInsumo", () => {
       <SelectorInsumo
         abierto
         onClose={onClose}
-        proyectoId={1}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
         tipo="MATERIAL"
         onSeleccionar={onSeleccionar}
       />,

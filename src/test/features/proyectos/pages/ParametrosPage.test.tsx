@@ -21,7 +21,7 @@ describe("ParametrosPage", () => {
       <Routes>
         <Route path="/proyectos/:id/parametros" element={<ParametrosPage />} />
       </Routes>,
-      { ruta: "/proyectos/1/parametros" },
+      { ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/parametros" },
     );
 
     await waitFor(() => {
@@ -35,7 +35,7 @@ describe("ParametrosPage", () => {
       <Routes>
         <Route path="/proyectos/:id/parametros" element={<ParametrosPage />} />
       </Routes>,
-      { ruta: "/proyectos/1/parametros" },
+      { ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/parametros" },
     );
 
     await waitFor(() => {
@@ -48,7 +48,7 @@ describe("ParametrosPage", () => {
       <Routes>
         <Route path="/proyectos/:id/parametros" element={<ParametrosPage />} />
       </Routes>,
-      { ruta: "/proyectos/1/parametros" },
+      { ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/parametros" },
     );
 
     await waitFor(() => {
@@ -68,7 +68,7 @@ describe("ParametrosPage", () => {
       <Routes>
         <Route path="/proyectos/:id/parametros" element={<ParametrosPage />} />
       </Routes>,
-      { ruta: "/proyectos/1/parametros" },
+      { ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/parametros" },
     );
 
     const hm = await screen.findByDisplayValue("5");

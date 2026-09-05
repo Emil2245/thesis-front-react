@@ -18,9 +18,9 @@ describe("TabFirmantes", () => {
   it("lista firmantes del proyecto", async () => {
     renderConProviders(
       <Routes>
-        <Route path="/proyectos/:id" element={<TabFirmantes proyectoId={1} />} />
+        <Route path="/proyectos/:id" element={<TabFirmantes proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"} />} />
       </Routes>,
-      { ruta: "/proyectos/1" },
+      { ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001" },
     );
 
     await waitFor(() => {
@@ -33,9 +33,9 @@ describe("TabFirmantes", () => {
 
     renderConProviders(
       <Routes>
-        <Route path="/proyectos/:id" element={<TabFirmantes proyectoId={2} />} />
+        <Route path="/proyectos/:id" element={<TabFirmantes proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000002"} />} />
       </Routes>,
-      { ruta: "/proyectos/2" },
+      { ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000002" },
     );
 
     await waitFor(() => {

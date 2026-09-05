@@ -45,7 +45,7 @@ import type { ResumenComponentesResponse } from "@/api/contract";
 
 export function ResumenProyectoPage() {
   const { id } = useParams();
-  const proyectoId = Number(id);
+  const proyectoId = id ?? "";
   const navigate = useNavigate();
   const { data: proyecto, isPending } = useProyecto(proyectoId);
   const [descuentoAbierto, setDescuentoAbierto] = useState(false);
@@ -247,7 +247,7 @@ export function ResumenProyectoPage() {
       <DialogoDescuentoGlobal
         abierto={descuentoAbierto}
         onClose={() => setDescuentoAbierto(false)}
-        proyectoId={proyectoId}
+        presupuestoId={presupuestoId}
       />
 
       <DialogoGuardarComoPlantilla

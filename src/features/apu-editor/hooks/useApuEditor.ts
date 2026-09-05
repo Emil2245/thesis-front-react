@@ -40,14 +40,14 @@ export interface UseApuEditor {
   guardando: boolean;
   error: ApiError | null;
   editarCelda(
-    detalleId: number,
+    detalleId: string,
     campo: "cantidad" | "rendimiento" | "precioOverride",
     valor: string,
   ): Promise<void>;
-  restaurarHerencia(detalleId: number): Promise<void>;
-  reordenarFila(detalleId: number, nuevoOrden: number): Promise<void>;
-  agregarFila(sel: { insumoId: number }): Promise<void>;
-  eliminarFila(detalleId: number): Promise<void>;
+  restaurarHerencia(detalleId: string): Promise<void>;
+  reordenarFila(detalleId: string, nuevoOrden: number): Promise<void>;
+  agregarFila(sel: { insumoId: string }): Promise<void>;
+  eliminarFila(detalleId: string): Promise<void>;
   editarEncabezado(patchReq: ApuPatchRequest): Promise<void>;
   editarPorcentajeCi(valor: string | null): Promise<void>;
   aplicarDescuento(porcentaje: string): Promise<void>;
@@ -75,9 +75,9 @@ const ETIQUETA: Record<SeccionTipo, string> = {
   TRANSPORTE: "Transporte",
 };
 
-export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEditor {
+export function useApuEditor(apuId: string, presupuestoId?: number): UseApuEditor {
   const qc = useQueryClient();
-  const [estadoCeldas, setEstadoCeldas] = useState<Map<number, EstadoCelda>>(new Map());
+  const [estadoCeldas, setEstadoCeldas] = useState<Map<string, EstadoCelda>>(new Map());
 
   const { data: apu, isPending: cargando } = useQuery({
     queryKey: qk.apu(apuId),
@@ -108,7 +108,7 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
   }, [apu, estadoCeldas]);
 
   const editMutation = useMutation({
-    mutationFn: ({ detalleId, body }: { detalleId: number; body: ApuDetallePatchRequest }) =>
+    mutationFn: ({ detalleId, body }: { detalleId: string; body: ApuDetallePatchRequest }) =>
       patch<ApuResponse>(`/apus/${apuId}/detalles/${detalleId}`, body),
     onSuccess: (response) => {
       qc.setQueryData(qk.apu(apuId), response);
@@ -132,7 +132,7 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
   });
 
   const eliminarMutation = useMutation({
-    mutationFn: (detalleId: number) => del<ApuResponse>(`/apus/${apuId}/detalles/${detalleId}`),
+    mutationFn: (detalleId: string) => del<ApuResponse>(`/apus/${apuId}/detalles/${detalleId}`),
     onSuccess: (response) => {
       qc.setQueryData(qk.apu(apuId), response);
       if (presupuestoId) {
@@ -164,7 +164,7 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
     },
   });
 
-  const actualizarEstado = useCallback((detalleId: number, estado: EstadoCelda) => {
+  const actualizarEstado = useCallback((detalleId: string, estado: EstadoCelda) => {
     setEstadoCeldas((prev) => {
       const next = new Map(prev);
       if (estado === "estable") next.delete(detalleId);
@@ -175,7 +175,7 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
 
   const editarCelda = useCallback(
     async (
-      detalleId: number,
+      detalleId: string,
       campo: "cantidad" | "rendimiento" | "precioOverride",
       valor: string,
     ) => {
@@ -233,7 +233,7 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
   );
 
   const restaurarHerencia = useCallback(
-    async (detalleId: number) => {
+    async (detalleId: string) => {
       try {
         await editMutation.mutateAsync({
           detalleId,
@@ -247,7 +247,7 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
   );
 
   const reordenarFila = useCallback(
-    async (detalleId: number, nuevoOrden: number) => {
+    async (detalleId: string, nuevoOrden: number) => {
       try {
         await editMutation.mutateAsync({ detalleId, body: { orden: nuevoOrden } });
       } catch {
@@ -258,7 +258,7 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
   );
 
   const agregarFila = useCallback(
-    async (sel: { insumoId: number }) => {
+    async (sel: { insumoId: string }) => {
       try {
         await agregarMutation.mutateAsync(sel);
       } catch {
@@ -269,7 +269,7 @@ export function useApuEditor(apuId: number, presupuestoId?: number): UseApuEdito
   );
 
   const eliminarFila = useCallback(
-    async (detalleId: number) => {
+    async (detalleId: string) => {
       try {
         await eliminarMutation.mutateAsync(detalleId);
       } catch {
