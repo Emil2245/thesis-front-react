@@ -14,7 +14,10 @@ export function usePreviewDescuento(presupuestoId: number | null) {
 
 export function useAplicarDescuento() {
   return useMutation({
-    mutationFn: (body: DescuentoGlobalRequest) =>
-      post(`/presupuestos/${body.presupuestoId}/descuento-global`, body),
+    mutationFn: ({
+      presupuestoId,
+      ...body
+    }: DescuentoGlobalRequest & { presupuestoId: number }) =>
+      post(`/presupuestos/${presupuestoId}/descuento-global`, body),
   });
 }

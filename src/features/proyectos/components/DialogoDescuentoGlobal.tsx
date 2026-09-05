@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { crearDescuentoSchema, type DescuentoFormData } from "../schemas";
 import { usePreviewDescuento, useAplicarDescuento } from "../hooks/useDescuentoGlobal";
 import { useParametrosSistema } from "@/features/admin/hooks/useParametrosSistema";
+import type { DescuentoGlobalPreviewResponse } from "@/api/contract";
 import { asDecimal } from "@/lib/decimal";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,19 +48,7 @@ export function DialogoDescuentoGlobal({
 
   const preview = usePreviewDescuento(null);
   const aplicar = useAplicarDescuento();
-  const [previewData, setPreviewData] = useState<{
-    apus: Array<{
-      apuId: number;
-      codigo: string;
-      descripcion: string;
-      cd: string;
-      cdAjustado: string;
-      ci: string;
-      ct: string;
-    }>;
-    totalGeneralActual: string;
-    totalGeneralNuevo: string;
-  } | null>(null);
+  const [previewData, setPreviewData] = useState<DescuentoGlobalPreviewResponse | null>(null);
 
   const porcentaje = form.watch("porcentaje");
 
@@ -116,7 +105,6 @@ export function DialogoDescuentoGlobal({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Código</TableHead>
-                    <TableHead>Descripción</TableHead>
                     <TableHead className="text-right">CD</TableHead>
                     <TableHead className="text-right">CD ajustado</TableHead>
                     <TableHead className="text-right">CI</TableHead>
@@ -124,10 +112,9 @@ export function DialogoDescuentoGlobal({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {previewData.apus.map((apu) => (
+                  {previewData.porApu.map((apu) => (
                     <TableRow key={apu.apuId}>
                       <TableCell className="font-mono text-xs">{apu.codigo}</TableCell>
-                      <TableCell>{apu.descripcion}</TableCell>
                       <TableCell className="text-right tabular-nums">{apu.cd}</TableCell>
                       <TableCell className="text-right tabular-nums">{apu.cdAjustado}</TableCell>
                       <TableCell className="text-right tabular-nums">{apu.ci}</TableCell>
@@ -141,7 +128,7 @@ export function DialogoDescuentoGlobal({
                   Actual: <strong>{previewData.totalGeneralActual}</strong>
                 </span>
                 <span>
-                  Nuevo: <strong>{previewData.totalGeneralNuevo}</strong>
+                  Nuevo: <strong>{previewData.totalGeneralProyectado}</strong>
                 </span>
               </div>
             </>

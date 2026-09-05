@@ -41,6 +41,7 @@ import { MOTIVO_SIN_BACKEND } from "@/lib/disponibilidad";
 import { usePresupuesto, useResumen } from "@/features/presupuesto/hooks/usePresupuesto";
 import { formatearPorcentaje } from "@/lib/decimal";
 import type { Decimal } from "@/lib/decimal";
+import type { ResumenComponentesResponse } from "@/api/contract";
 
 export function ResumenProyectoPage() {
   const { id } = useParams();
@@ -277,27 +278,28 @@ function Dato({
   );
 }
 
+const ETIQUETA_COMPONENTE: Record<string, string> = {
+  EQUIPO: "Equipo",
+  MANO_OBRA: "Mano de obra",
+  MATERIAL: "Materiales",
+  TRANSPORTE: "Transporte",
+};
+
 function FranjaTotales({
   total,
   resumen,
 }: {
   total: Decimal | null;
-  resumen?: {
-    equipo: { total: Decimal; porcentaje: Decimal };
-    manoObra: { total: Decimal; porcentaje: Decimal };
-    material: { total: Decimal; porcentaje: Decimal };
-    transporte: { total: Decimal; porcentaje: Decimal };
-  };
+  resumen?: ResumenComponentesResponse;
 }) {
   // Sin desglose real preferimos decirlo a pintar cuatro casillas en blanco.
-  const componentes = resumen?.equipo
-    ? [
-        { etiqueta: "Equipo", ...resumen.equipo },
-        { etiqueta: "Mano de obra", ...resumen.manoObra },
-        { etiqueta: "Materiales", ...resumen.material },
-        { etiqueta: "Transporte", ...resumen.transporte },
-      ]
-    : [];
+  const totalNum = Number(resumen?.totalGeneral ?? 0);
+  const porComponente: Record<string, Decimal> = resumen?.porComponente ?? {};
+  const componentes = Object.entries(porComponente).map(([clave, valor]) => ({
+    etiqueta: ETIQUETA_COMPONENTE[clave] ?? clave,
+    total: valor,
+    porcentaje: totalNum > 0 ? Number(valor) / totalNum : 0,
+  }));
 
   return (
     <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl bg-border ring-1 ring-foreground/10 sm:grid-cols-2 lg:grid-cols-5">

@@ -197,6 +197,7 @@ export function PresupuestoPage() {
                 id: 0,
                 item: "",
                 descripcion: "",
+                orden: 0,
                 subcapitulos: [],
                 rubros: [],
                 total: DECIMAL_ZERO,
