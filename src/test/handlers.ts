@@ -557,18 +557,17 @@ export const handlers = [
     if (params.id !== PRESUPUESTO_V1 && params.id !== PRESUPUESTO_V2) {
       return HttpResponse.json({ title: "No encontrado" }, { status: 404 });
     }
-    const url = new URL(request.url);
-    const qParam = url.searchParams.get("q");
-    const q = qParam?.toLowerCase();
+    const q = new URL(request.url).searchParams.get("q")?.toLowerCase();
     const lista = q
       ? apuResumenFixture.filter(
           (a) => a.codigo.toLowerCase().includes(q) || a.descripcion.toLowerCase().includes(q),
         )
       : apuResumenFixture;
-    if (qParam !== null) {
-      return HttpResponse.json(lista);
-    }
-    return HttpResponse.json({ contenido: lista, total: lista.length, pagina: 0, tamano: 20 });
+    // Este handler devolvía un array pelado al buscar y `{contenido, total,
+    // pagina, tamano}` sin buscar: dos formas, y ninguna era `Page<T>`. La
+    // primera reproducía tal cual el bug del plan 021 (`data.contenido` es
+    // undefined) y ningún test podía verlo. La validación Zod del 028 lo cazó.
+    return HttpResponse.json(pagina(lista));
   }),
   http.get(`${API}/presupuestos/:id`, () => HttpResponse.json(presupuestoFixture)),
   http.get(`${API}/presupuestos/:id/resumen`, () => HttpResponse.json(resumenComponentesFixture)),

@@ -4,6 +4,7 @@ import { screen, waitFor } from "@testing-library/react";
 import { Route, Routes } from "react-router-dom";
 import { http, HttpResponse } from "msw";
 import { server } from "@/test/server";
+import { pagina } from "@/test/handlers";
 import { apuResumenFixture } from "@/test/fixtures/apu";
 import { ListaApusPage } from "@/features/apu-editor/pages/ListaApusPage";
 
@@ -54,12 +55,7 @@ describe("ListaApusPage", () => {
     server.use(
       http.get(`${API}/presupuestos/:id/apus`, ({ request }) => {
         pedidos.push(new URL(request.url).pathname);
-        return HttpResponse.json({
-          contenido: apuResumenFixture,
-          total: apuResumenFixture.length,
-          pagina: 0,
-          tamano: 20,
-        });
+        return HttpResponse.json(pagina(apuResumenFixture));
       }),
     );
 
@@ -77,12 +73,7 @@ describe("ListaApusPage", () => {
     server.use(
       http.get(`${API}/presupuestos/:id/apus`, ({ request }) => {
         pedidos.push(new URL(request.url).pathname);
-        return HttpResponse.json({
-          contenido: apuResumenFixture,
-          total: apuResumenFixture.length,
-          pagina: 0,
-          tamano: 20,
-        });
+        return HttpResponse.json(pagina(apuResumenFixture));
       }),
     );
 
@@ -102,12 +93,7 @@ describe("ListaApusPage", () => {
       http.get(`${API}/proyectos/:id/presupuestos`, () => HttpResponse.json([])),
       http.get(`${API}/presupuestos/:id/apus`, ({ request }) => {
         pedidos.push(new URL(request.url).pathname);
-        return HttpResponse.json({
-          contenido: apuResumenFixture,
-          total: apuResumenFixture.length,
-          pagina: 0,
-          tamano: 20,
-        });
+        return HttpResponse.json(pagina(apuResumenFixture));
       }),
     );
 

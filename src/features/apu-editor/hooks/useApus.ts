@@ -1,12 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { get, post, del } from "@/api/request";
+import { getValidado, post, del } from "@/api/request";
 import { qk } from "@/api/queryKeys";
-import type { Page, ApuResumenResponse, ApuResponse, ApuCrearRequest } from "@/api/contract";
+import { paginaDe, apuResumenSchema } from "@/api/schemas";
+import type { ApuResponse, ApuCrearRequest } from "@/api/contract";
 
 export function useApus(presupuestoId: string, filtros?: Record<string, unknown>) {
   return useQuery({
     queryKey: qk.apus(presupuestoId, filtros),
-    queryFn: () => get<Page<ApuResumenResponse>>(`/presupuestos/${presupuestoId}/apus`, filtros),
+    queryFn: () =>
+      getValidado(`/presupuestos/${presupuestoId}/apus`, paginaDe(apuResumenSchema), filtros),
     enabled: !!presupuestoId,
   });
 }

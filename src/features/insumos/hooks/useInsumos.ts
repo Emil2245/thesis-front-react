@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { get } from "@/api/request";
+import { getValidado } from "@/api/request";
 import { qk } from "@/api/queryKeys";
-import type { Page, InsumoResponse } from "@/api/contract";
+import { paginaDe, insumoSchema } from "@/api/schemas";
 
 export function useInsumos(proyectoId: string, filtros?: Record<string, unknown>) {
   return useQuery({
     queryKey: qk.insumos(proyectoId, filtros),
-    queryFn: () => get<Page<InsumoResponse>>(`/proyectos/${proyectoId}/insumos`, filtros),
+    queryFn: () => getValidado(`/proyectos/${proyectoId}/insumos`, paginaDe(insumoSchema), filtros),
   });
 }

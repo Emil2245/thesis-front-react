@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { get, put, del, post } from "@/api/request";
+import { get, getValidado, put, del, post } from "@/api/request";
 import { qk } from "@/api/queryKeys";
+import { plantillaApuResumenSchema } from "@/api/schemas";
+import { z } from "zod";
 import type {
   PlantillaApuResumenResponse,
   PlantillaApuDetalleResponse,
@@ -13,7 +15,7 @@ export function usePlantillas(tipo?: string) {
     queryKey: qk.plantillas(tipo ? { tipo } : undefined),
     queryFn: () => {
       const params = tipo ? `?tipo=${tipo}` : "";
-      return get<PlantillaApuResumenResponse[]>(`/plantillas-apu${params}`);
+      return getValidado(`/plantillas-apu${params}`, z.array(plantillaApuResumenSchema));
     },
   });
 }
