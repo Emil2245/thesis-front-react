@@ -109,8 +109,12 @@ crudo**, no un objeto:
 PATCH /api/v1/apus/{apuId}/porcentaje-indirecto
 Content-Type: application/json
 
-12.5
+0.2200
 ```
+
+> ⚠️ **Corregido 2026-09-06.** El ejemplo anterior decía `12.5` y sugería que el body es un
+> **porcentaje**. Es una **fracción**: `ApuResourceIT` en `origin/main @ c337950` manda `"0.2200"`
+> y espera `porcentajeIndirecto` igual a `0.22`. Misma escala que `ApuResponse`, no la cambies.
 
 Además hay que borrar `ApuPatchRequest.porcentajeIndirecto` de `contract.ts`: declara un campo
 que el backend nunca aceptó.

@@ -14,8 +14,8 @@
 | --- | ---- | ------ | -------- | ------ | ---- |
 | 0 | 061 política de dinero | ✅ verde | — | 5b1e8fb | fusionado a main · 2º intento |
 | 1 | 053 ids UUID | ✅ verde | — | 9564e39 | fusionado a main |
-| 2 | 054 descuento global + bugs SILENT | 🔄 en curso | .claude/worktrees/ola2-054 | — | despachado 2026-09-06 |
-| 2 | 059 formas de DTO | ⏳ pendiente | — | — | después del 054, mismo `ApuResponse` |
+| 2 | 054 descuento global + bugs SILENT | ✅ verde | — | 82edeae | fusionado a main |
+| 2 | 059 formas de DTO | 🔄 en curso | .claude/worktrees/ola2-059 | — | despachado tras cerrar el 054 |
 | 3 | 057 tests de hook | ⏳ pendiente | — | — | rebanable por módulo |
 | 4 | 028 Zod en el seam | ⏳ pendiente | — | — | esquemas salen del 057 |
 | 5 | 055 cronograma (reb. 1–4) | ⏳ pendiente | — | — | cierra sin la rebanada 5 |
@@ -41,6 +41,14 @@ Baseline original del handoff: **45 archivos, 207 tests, verde** · backend `ori
 docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
+
+- 2026-09-06 — **054 aceptado, y el plan estaba mal en un detalle peligroso.** Su ejemplo de body
+  para `PATCH /apus/{id}/porcentaje-indirecto` decía `12.5`, sugiriendo porcentaje. Es **fracción**:
+  `ApuResourceIT` manda `"0.2200"` y espera `0.22`. El ejecutor lo dedujo bien por su cuenta y lo
+  verifiqué contra el backend; el plan queda corregido para quien lo lea después.
+- 2026-09-06 — Causa raíz cerrada de paso: los handlers MSW aceptaban cualquier body, que es lo que
+  dejó pasar los tres bugs SILENT. Ahora hay una lista blanca `soloCampos` que devuelve 400 ante
+  propiedad desconocida, marcada con `ponytail:` porque el arreglo de fondo es el plan 028.
 
 - 2026-09-06 — **Decisión #6 del handoff resuelta por el orquestador: se degrada `descuento-global`.**
   El plan 054 rebanada 1 pedía preguntar por si el backend estuviera «a días». No lo está:
