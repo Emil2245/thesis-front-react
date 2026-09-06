@@ -48,7 +48,7 @@ describe("SelectorInsumo", () => {
         HttpResponse.json(
           pagina([
             {
-              id: 100,
+              id: "018f8a20-0000-7000-8000-000000000100",
               codigo: "C-001",
               descripcion: "Cemento IESS",
               tipo: "MATERIAL",

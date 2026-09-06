@@ -103,7 +103,7 @@ describe("guards de id con UUID", () => {
       <Routes>
         <Route path="/proyectos/:id/documentos" element={<ExportPageActiva />} />
       </Routes>,
-      { ruta: `/proyectos/1/documentos?v=${PRESUPUESTO_V2}` },
+      { ruta: `/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/documentos?v=${PRESUPUESTO_V2}` },
     );
 
     await waitFor(() => expect(pedidos).toContain(PRESUPUESTO_V2));
@@ -122,7 +122,7 @@ describe("guards de id con UUID", () => {
       <Routes>
         <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
       </Routes>,
-      { ruta: `/proyectos/1/cronograma?v=${PRESUPUESTO_V2}` },
+      { ruta: `/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/cronograma?v=${PRESUPUESTO_V2}` },
     );
 
     await waitFor(() => expect(screen.getByText("Cronograma")).toBeInTheDocument());

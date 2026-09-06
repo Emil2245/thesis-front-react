@@ -27,7 +27,7 @@ describe("DialogoGuardarPlantilla", () => {
       http.post(`${API}/apus/:id/guardar-plantilla`, () =>
         HttpResponse.json(
           {
-            id: 99,
+            id: "018f8a1e-0000-7000-8000-000000000099",
             nombre: "Mi plantilla",
             tipo: "PERSONAL",
             fechaCreacion: "2026-07-23T00:00:00",

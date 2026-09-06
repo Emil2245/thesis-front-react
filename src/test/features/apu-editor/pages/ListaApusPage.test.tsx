@@ -9,7 +9,7 @@ import { ListaApusPage } from "@/features/apu-editor/pages/ListaApusPage";
 
 const API = "*/api/v1";
 
-function renderLista(ruta = "/proyectos/1/apus") {
+function renderLista(ruta = "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/apus") {
   return renderConProviders(
     <Routes>
       <Route path="/proyectos/:id/apus" element={<ListaApusPage />} />
@@ -86,7 +86,9 @@ describe("ListaApusPage", () => {
       }),
     );
 
-    renderLista("/proyectos/1/apus?v=0198c1a0-0000-7000-8000-000000000010");
+    renderLista(
+      "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/apus?v=0198c1a0-0000-7000-8000-000000000010",
+    );
     await waitFor(() => {
       expect(screen.getByText("APU-001")).toBeInTheDocument();
     });

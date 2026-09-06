@@ -1,6 +1,8 @@
 # Plan 057 — Cobertura de tests donde viven los bugs
 
-**Status:** TODO
+**Status:** HECHO en `ola3-057`, 2026-09-06. `pnpm run verify` en verde (66 archivos, 387 tests,
+build ok). **Excepción:** la sección final del banner `CI_NO_CONFIGURADO` NO se ejecutó — sigue
+pendiente de la decisión de producto del humano.
 **Escrito contra:** frontend `8cc08b5` — 45 archivos, 207 tests, verdes
 **Esfuerzo:** L (2–3 días, pero rebanable por módulo) · **Riesgo:** BAJO — solo añade tests
 **Depende de:** `061` · `053` · `054` · `059` — se fija el seam **después** de corregirlo
