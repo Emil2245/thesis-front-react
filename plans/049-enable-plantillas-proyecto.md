@@ -268,3 +268,19 @@ Write the two pinning tests **red first**. Both currently pass for the wrong rea
 ## Maintenance notes
 
 `useGuardarPlantillaProyecto` gains a required `proyectoId` argument, which makes it unusable from a context that does not know the project — that is intentional and matches the endpoint. If a future "save any project as template" screen needs it, pass the id per-call in `mutateAsync` instead of at hook construction.
+
+---
+
+## Corregido 2026-09-06 — la forma de `advertencias`
+
+Este plan proponía `advertencias?: string[]`. El DTO real de `origin/main @ c337950` es:
+
+```java
+public record ProyectoDesdePlantillaResponse(
+        ProyectoResponse proyecto, List<AdvertenciaPlantillaResponse> advertencias) {}
+
+public record AdvertenciaPlantillaResponse(String insumoCodigo, String motivo, String mensaje) {}
+```
+
+No son cadenas: son objetos con código de insumo, motivo y mensaje. `AdvertenciaPlantillaResponse`
+**ya existía en `contract.ts`** para el lado APU, así que se reutiliza en vez de duplicarla.

@@ -21,7 +21,7 @@
 | 4 | 028 Zod en el seam | ✅ verde | — | 7d153bc | fusionado a main · ola 4 cerrada |
 | 5 | 055 cronograma (reb. 1–4) | ✅ verde | — | a126d80 | fusionado · cierra sin la reb. 5 |
 | 5 | 048 plantillas APU | 🔄 en curso | .claude/worktrees/ola5-048-052 | — | tanda 2, con el 052 |
-| 5 | 049 plantillas de proyecto | 🔄 en curso | .claude/worktrees/ola5-049 | — | tanda 2 |
+| 5 | 049 plantillas de proyecto | ✅ verde | — | 0e6aa46 | fusionado · tanda 2 |
 | 5 | 050 admin + S-39 | ✅ verde | — | cccb1b0 | fusionado · S-39 parcial, ver plan |
 | 5 | 051 export ET DOCX | ✅ verde | — | 065c90a | fusionado · tanda 1 |
 | 5 | 052 acciones deshabilitadas | 🔄 en curso | .claude/worktrees/ola5-048-052 | — | tanda 2, comparte EditorApuPage con el 048 |
@@ -43,6 +43,17 @@ Baseline original del handoff: **45 archivos, 207 tests, verde** · backend `ori
 docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
+
+- 2026-09-06 — **049 aceptado.** Verifiqué sus cuatro defectos contra el backend: el endpoint real
+  es `POST /proyectos/{proyectoId}/guardar-plantilla` (`PlantillaProyectoGuardarResource:21`), y la
+  respuesta es el envoltorio `ProyectoDesdePlantillaResponse(proyecto, advertencias)` — el hook
+  tipaba el proyecto pelado, así que la página navegaba a `/proyectos/undefined`. **Corrección al
+  plan:** decía `advertencias?: string[]`; el DTO real es
+  `AdvertenciaPlantillaResponse{insumoCodigo, motivo, mensaje}`, que ya existía en `contract.ts`.
+- 2026-09-06 — El ejecutor del 049 **revirtió a propósito las 10 capturas** que el e2e regeneró
+  (solo cambiaba la insignia «pronto» del sidebar): habrían dado 10 conflictos binarios contra la
+  rama del 048, que también toca el sidebar. **Pendiente: `pnpm run e2e:screenshots` tras cerrar
+  la ola 5.**
 
 - 2026-09-06 — 🔴 **Hallazgo grave, plan 063 escrito** (§7 caso 2): **el backend no habla RFC 7807
   en ningún sitio.** `GlobalExceptionMapper` envuelve todo en
