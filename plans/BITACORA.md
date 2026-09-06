@@ -1,6 +1,6 @@
 # Bitácora
 
-**Ola actual:** 0 · **Actualizada:** 2026-09-06
+**Ola actual:** 1 · **Actualizada:** 2026-09-06
 
 > La lleva el orquestador ([`ORQUESTADOR.md`](ORQUESTADOR.md)). Se escribe **en el momento** en que
 > algo cambia de estado, no al final de la sesión: si la sesión se corta, lo que no está escrito
@@ -12,8 +12,8 @@
 
 | Ola | Plan | Estado | Worktree | Commit | Nota |
 | --- | ---- | ------ | -------- | ------ | ---- |
-| 0 | 061 política de dinero | ❌ rechazado, redespachado | .claude/worktrees/ola0-061 | — | 1er intento sobre base equivocada |
-| 1 | 053 ids UUID | ⏳ pendiente | — | — | |
+| 0 | 061 política de dinero | ✅ verde | — | 5b1e8fb | fusionado a main · 2º intento |
+| 1 | 053 ids UUID | 🔄 en curso | .claude/worktrees/ola1-053 | — | despachado 2026-09-06 |
 | 2 | 054 descuento global + bugs SILENT | ⏳ pendiente | — | — | va antes del 059 |
 | 2 | 059 formas de DTO | ⏳ pendiente | — | — | después del 054, mismo `ApuResponse` |
 | 3 | 057 tests de hook | ⏳ pendiente | — | — | rebanable por módulo |
@@ -36,10 +36,19 @@
 
 ## Verificación al arrancar
 
-Baseline esperado: **45 archivos, 207 tests, verde** · backend `origin/main` @ `c337950` ·
+Baseline **actualizado tras la ola 0**: 46 archivos, 220 tests, verde · `verify` ahora encadena `guard:adr9`.
+Baseline original del handoff: **45 archivos, 207 tests, verde** · backend `origin/main` @ `c337950` ·
 docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
+
+- 2026-09-06 — **061 aceptado con una desviación**: la guarda ADR 9 vive en `package.json` como
+  `pnpm run guard:adr9` dentro de `verify`, no como paso de CI. Verificado: `.gitignore:32` ignora
+  `.github/` (commit `7635176`, «bypass workflow token requirement») y el directorio no existe, así
+  que un workflow sería letra muerta. Si algún día se despliega CI de verdad, mover la guarda allí.
+- 2026-09-06 — Queda **una división en `src/features/**`**: `ResumenProyectoPage.tsx:301`,
+  `Number(valor) / totalNum`. Es una proporción de gráfico, no una cifra de dinero — fuera de la
+  DoD del 061 a propósito.
 
 - 2026-09-06 — ⚠️ **`isolation: "worktree"` del `Agent` tool NO sirve en este repo.** Ramifica desde
   `origin/HEAD`/`origin/main`, que está en `f823fc6` (2026-08-29); el `main` local va **9 commits
