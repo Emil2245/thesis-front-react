@@ -25,7 +25,7 @@
 | 5 | 050 admin + S-39 | ⏳ pendiente | — | — | choca con 058 en insumos |
 | 5 | 051 export ET DOCX | ⏳ pendiente | — | — | |
 | 5 | 052 acciones deshabilitadas | ⏳ pendiente | — | — | necesita 059 cerrado |
-| 5 | 058 bases personales | ⏳ pendiente | — | — | choca con 050 en insumos |
+| 5 | 058 **reescrito**: procedencia del insumo | ⏳ pendiente | — | — | bases personales retiradas, no construibles |
 | 6 | 060 limpieza | ⏳ pendiente | — | — | último |
 
 ### Fuera de las olas
@@ -42,6 +42,19 @@ Baseline original del handoff: **45 archivos, 207 tests, verde** · backend `ori
 docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
+
+- 2026-09-06 — ⚠️ **Plan 058 reescrito** (§7 caso 1): las bases personales **no son construibles**.
+  Verificado en `origin/main @ c337950`: (1) `BasesPersonalesResource` son `GET`/`POST`/`DELETE` y
+  ninguno mete insumos; (2) `CopiaBaseService` lanza *«fuenteTipo debe ser CENTRAL o PROYECTO»*, así
+  que no vale como origen de copia; (3) `InsumoCatalogoService` emite `esCentral ? "CENTRAL" :
+  "PROYECTO"` — nunca `PERSONAL`, o sea que una base personal no sale de ninguna búsqueda. Es un
+  contenedor con nombre, vacío e invisible. Retiradas sus rebanadas 1 y 2; **queda la 3**, que
+  nunca dependió de ellas: mostrar `fuente`/`baseNombre` en `SelectorInsumo`. **Pregunta para el
+  backend anotada en el plan.**
+- 2026-09-06 — ⚠️ **El handoff se equivoca al llamar la ola 5 «archivos distintos».** Grep de rutas
+  por plan: `048`∩`052` comparten `EditorApuPage.tsx`; `051`∩`052` comparten `request.ts`;
+  `handlers.ts`, `disponibilidad.ts` y `contract.ts` los tocan tres o más. La ola 5 va en **dos
+  tandas secuenciales**, no en un solo disparo de siete.
 
 - 2026-09-06 — **028 aceptado con brecha de alcance declarada.** El plan tiene una condición de
   STOP en «tocar un componente» y el ejecutor la cruzó en `DialogoAgregarItem.tsx`; también deja

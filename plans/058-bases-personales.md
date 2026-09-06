@@ -1,121 +1,96 @@
-# Plan 058 — Bases personales de insumos (N04 §A9)
+# Plan 058 — Procedencia del insumo (y por qué las bases personales no se pueden construir)
 
-**Status:** TODO
-**Escrito contra:** frontend `8cc08b5` · backend `origin/main` @ `c337950`
-**Fuente de verdad:** `BasesPersonalesResource` y `BasePersonalResponse` en `origin/main`
-**Esfuerzo:** M (4–6 h) · **Riesgo:** BAJO — es construir sobre backend probado, sin corregir nada
-**Depende de:** `061` → `053`
-**Choca con:** `050` — ambos tocan los componentes de insumos
+**Status:** TODO — **reescrito 2026-09-06 por el orquestador**
+**Escrito contra:** frontend `43277fd` · backend `origin/main` @ `c337950`
+**Esfuerzo:** S (1–2 h) · **Riesgo:** BAJO
+**Depende de:** `061` → `053` → `059`
+**Choca con:** `050` — ambos tocan componentes de insumos
 
-## Por qué
+> ## ⚠️ Reescritura — la versión anterior no era construible
+>
+> El plan original proponía tres rebanadas sobre **bases personales**: tipo + hook + añadirlas como
+> origen en `DialogoCopiarBase`, una pantalla de gestión, y mostrar la procedencia. Él mismo dejaba
+> abierta la pregunta «¿cómo entran insumos en una base personal?» y decía *«si no hay forma de
+> llenarla, parar aquí»*.
+>
+> **Se leyó el backend. No hay forma de llenarla, ni de usarla, ni de verla.** Tres hechos
+> verificados en `origin/main @ c337950`:
+>
+> 1. **`BasesPersonalesResource` tiene tres endpoints y ninguno toca insumos:** `GET` listar,
+>    `POST` crear, `DELETE /{id}` borrar. No hay `POST /bases-personales/{id}/insumos`, ni import
+>    CSV, ni nada equivalente a lo que sí tienen las centrales.
+> 2. **No sirve como origen de copia.** `CopiaBaseService` valida:
+>    ```java
+>    if (req.fuenteTipo() == null
+>            || (!"CENTRAL".equalsIgnoreCase(req.fuenteTipo()) && !"PROYECTO".equalsIgnoreCase(req.fuenteTipo()))) {
+>        throw ProblemaException.validacion("fuenteTipo debe ser CENTRAL o PROYECTO");
+>    }
+>    ```
+>    Añadir «base personal» como tercer origen en `DialogoCopiarBase` daría **400**.
+> 3. **Es invisible en toda ruta de lectura.** `InsumoCatalogoService` construye
+>    `InsumoBusquedaResponse` con `esCentral ? "CENTRAL" : "PROYECTO"`. El valor `PERSONAL` no
+>    existe: una base personal no puede salir de ninguna búsqueda ni de ningún selector.
+>
+> **Conclusión:** una base personal se puede crear, listar y borrar. Es un contenedor con nombre,
+> permanentemente vacío e invisible. Construir UI encima sería prometer una feature que no existe.
+> Las rebanadas 1 y 2 originales quedan **retiradas**.
+>
+> Lo que sí queda es la rebanada 3, que nunca dependió de las bases personales.
 
-**Cuatro endpoints en producción, cero líneas de frontend.** Ni tipo en `contract.ts`, ni hook, ni
-pantalla, ni mención en los planes 001–057. No es una feature degradada: es una que nadie vio.
+## Lo que sí hay que hacer — la procedencia del insumo
 
-Salió del barrido de endpoints ([`INVENTARIO-COBERTURA.md`](INVENTARIO-COBERTURA.md) §3.2), no de
-ningún plan ni documento — precisamente porque no aparece en ninguno.
+`InsumoBusquedaResponse` trae dos campos que el frontend **ignora**:
 
-## Qué es
-
-La **base PERSONAL** de N04 §A9: un catálogo de insumos del usuario, transversal a sus proyectos.
-El modelo de bases tiene tres niveles:
-
-| Nivel | Quién la mantiene | Dónde vive hoy en el frontend |
-|---|---|---|
-| **CENTRAL** | Super-Admin | S-17 (explorar) + S-38/S-39 (admin) |
-| **PERSONAL** | el propio usuario | **nada** |
-| **PROYECTO** | copia editable por proyecto | S-14 (la pantalla principal de insumos) |
-
-`02-pantallas-flujos.md` S-23 lo menciona de pasada: *«cualquier insumo usado desde
-CENTRAL/PERSONAL se copia aquí»*. El selector de insumo del editor de APU debería poder buscar en
-la base personal, y hoy no sabe que existe.
-
-## Contrato
-
-Todo `@RolesAllowed({"USUARIO","SUPER_ADMIN"})`, con **aislamiento por propietario** verificado en
-`BasesPersonalesResourceIT` (Alice no ve las de Bob).
-
-| Verbo | Ruta | Body | Devuelve |
-|---|---|---|---|
-| `GET` | `/bases-personales` | — | `List<BasePersonalResponse>` — **lista pelada** |
-| `POST` | `/bases-personales` | `{nombre}` `@NotBlank @Size(max=200)` | 201 `BasePersonalResponse` |
-| `DELETE` | `/bases-personales/{id}` | — | 204 · 404 si no es tuya |
-
-```ts
-BasePersonalResponse {
-  id: string          // UUIDv7
-  nombre: string
-  archivada: boolean
-  totalInsumos: number   // long → number, no Decimal
-  createdAt: string      // Instant ISO
-  updatedAt: string
-}
+```java
+public record InsumoBusquedaResponse(
+        UUID id, String codigo, TipoInsumo tipo, String descripcion, String unidad,
+        BigDecimal precioUnitario, Instant fechaActualizacion, boolean desactualizado,
+        String fuente,        // "CENTRAL" | "PROYECTO"
+        String baseNombre) {}
 ```
 
-Nótese que `BasePersonalResponse` trae `createdAt`/`updatedAt` y `AdminBaseCentralResponse` no.
-No unificar los dos tipos: son distintos a propósito.
+`fuente` y `baseNombre` responden a la pregunta de N04 §A9: **de dónde salió este precio.** Hoy el
+usuario no puede saberlo, y el dato ya viaja por el cable en cada búsqueda.
 
-## Los dos límites que hay que respetar
+> El plan `059` ya corrigió el bug asociado: `SelectorInsumo` comparaba `fuente` contra `"LOCAL"`,
+> valor que el backend no emite, así que **todo insumo de proyecto se pintaba como Central**.
+> Verifica que ese arreglo está en `main` antes de empezar; si no, este plan lo incluye.
 
-**No hay endpoint para renombrar ni archivar una base personal.** Central tiene `PUT` y
-`/archivar`; personal no. El campo `archivada` viene en la respuesta pero **el usuario no puede
-cambiarlo** desde ninguna ruta. Mostrarlo como estado de solo lectura; no poner un botón de
-archivar que no existe.
+### Qué construir
 
-**No hay CRUD de insumos dentro de una base personal.** Central tiene
-`POST/PUT/DELETE /admin/bases-centrales/{id}/insumos` e import CSV; personal no tiene equivalente.
-Se puede crear la base y borrarla, pero no llenarla por esta vía.
+En `SelectorInsumo` (S-23), junto a cada resultado: la procedencia. `fuente` da el nivel y
+`baseNombre` el nombre concreto de la base. Un `baseNombre` nulo o vacío no debe pintar nada — no
+inventes una etiqueta por defecto.
 
-Eso deja una pregunta que el backend no responde: **¿cómo entran insumos en una base personal?**
-Probablemente por `POST /proyectos/{id}/insumos/copiar` en sentido inverso, o por una ruta que aún
-no existe. **Verificarlo antes de diseñar la pantalla** — si no hay forma de llenarla, una pantalla
-de gestión sirve de poco y este plan se reduce a la rebanada 1.
+Reutiliza el componente de etiqueta que ya exista en el repo para esto (`ChipEstado` y los badges
+de `components/ui/` son los candidatos; **mira antes de crear uno nuevo**).
 
-## Rebanadas
+### Test rojo primero
 
-### 1 — tipo, hook y selector
+Un test de `SelectorInsumo` que monte resultados con `fuente: "CENTRAL"` y `fuente: "PROYECTO"`,
+cada uno con su `baseNombre`, y compruebe que la procedencia sale distinguible en ambos. Falla hoy:
+el componente no pinta ninguno de los dos campos.
 
-Lo mínimo con valor: que la base personal exista en el seam y se pueda **usar como origen**.
+Un segundo caso con `baseNombre: null` que compruebe que **no** aparece etiqueta de base.
 
-- `BasePersonalResponse` en `contract.ts`.
-- `useBasesPersonales()` en `src/features/insumos/hooks/` — lista pelada, no `Page`.
-- `qk.basesPersonales()`.
-- **`DialogoCopiarBase`** (S-18, P-17): hoy ofrece «base central» y «proyecto propio». Añadir
-  «base personal» como tercer origen. `POST /proyectos/{id}/insumos/copiar` es el endpoint que ya
-  usa; comprobar qué acepta como fuente antes de asumir que soporta personal.
+## La pregunta que queda para el backend
 
-Con esto la feature aporta valor sin pantalla nueva.
+Anotada aquí porque no tiene otro sitio, y **no la resuelve el frontend**:
 
-### 2 — pantalla de gestión (condicional)
+> Las bases personales (N04 §A9) tienen `GET`/`POST`/`DELETE` en `/bases-personales` pero ningún
+> camino para meterles insumos, ninguna forma de usarlas como origen de copia, y no aparecen en
+> `InsumoBusquedaResponse.fuente`. Tal como está, la feature no es utilizable desde ninguna UI.
+> **¿Se completa en el backend, o se retira?** Hasta que se responda, el frontend no construye nada
+> encima: sería una pantalla que crea contenedores vacíos.
 
-**Solo si la rebanada 1 confirma que existe forma de llenar una base personal.**
-
-Una vista más en `InsumosPage`, junto a la de bases centrales (`VistaBasesCentrales` es el
-patrón a copiar): listar, crear, borrar. Sin renombrar, sin archivar.
-
-Si resulta que no hay forma de llenarla, **parar aquí y anotarlo como pregunta al backend**. Es
-mejor una feature a medias documentada que una pantalla que crea contenedores vacíos.
-
-### 3 — selector de insumo del editor de APU
-
-`SelectorInsumo` (S-23) busca sobre `GET /proyectos/{id}/insumos/selector`. Comprobar si ese
-endpoint ya incluye resultados de la base personal —`InsumoBusquedaResponse` trae `fuente` y
-`baseNombre`, lo que sugiere que sí— y, si es así, **solo hay que mostrar la procedencia**, no
-consultar `/bases-personales` desde el selector.
-
-Ese es el trabajo real de esta rebanada: `fuente`/`baseNombre` ya vienen del backend y el frontend
-los ignora (§7 del plan 059). Mostrarlos cierra el hueco de N04 §A9 sobre saber de dónde salió un
-precio.
-
-## Antes de empezar
-
-Este plan tiene **una pregunta abierta que decide su tamaño** (cómo se llena una base personal).
-Resolverla es media hora de leer `BasesPersonalesService` e `InsumoCrudService` en el backend.
-Hacerlo primero.
+Si el backend las completa, este plan se reabre con las rebanadas retiradas y el `fuente` ganará un
+tercer valor.
 
 ## Definición de hecho
 
-- `npm run verify` en verde.
-- `BasePersonalResponse` en `contract.ts`, `useBasesPersonales` con test de hook (plan 057).
-- `DialogoCopiarBase` ofrece la base personal como origen, con test.
-- La pregunta de la rebanada 2 respondida por escrito, en este archivo.
+- `pnpm run verify` en verde.
+- `SelectorInsumo` muestra `fuente` y `baseNombre` de cada resultado, distinguiendo CENTRAL de
+  PROYECTO, y no pinta nada cuando `baseNombre` viene nulo.
+- Dos tests nuevos de `SelectorInsumo`, ambos rojos antes del cambio.
+- **Cero** código de bases personales: ni tipo en `contract.ts`, ni hook, ni pantalla, ni origen
+  nuevo en `DialogoCopiarBase`. Si algo de eso aparece en el diff, el plan se ejecutó mal.
