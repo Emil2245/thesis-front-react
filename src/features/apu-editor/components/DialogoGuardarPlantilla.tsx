@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { post } from "@/api/request";
-import type { PlantillaApuCrearRequest, PlantillaApuResumenResponse } from "@/api/contract";
+import { useGuardarPlantilla } from "../hooks/usePlantillas";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +24,9 @@ export function DialogoGuardarPlantilla({ abierto, onClose, apuId }: DialogoGuar
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [guardando, setGuardando] = useState(false);
+  // El POST va por el hook, no por `post` en línea: es el que invalida la lista
+  // de «Mis plantillas», que desde el plan 048 es una pantalla de verdad.
+  const guardar = useGuardarPlantilla(apuId);
 
   const handleGuardar = async () => {
     if (!nombre.trim()) {
@@ -33,21 +34,17 @@ export function DialogoGuardarPlantilla({ abierto, onClose, apuId }: DialogoGuar
       return;
     }
     setError(null);
-    setGuardando(true);
     try {
-      const body: PlantillaApuCrearRequest = {
+      await guardar.mutateAsync({
         nombre: nombre.trim(),
         descripcionRubro: descripcion.trim() || undefined,
-      };
-      await post<PlantillaApuResumenResponse>(`/apus/${apuId}/guardar-plantilla`, body);
+      });
       toast.success("Plantilla guardada. Puedes verla en Mis plantillas.");
       setNombre("");
       setDescripcion("");
       onClose();
     } catch {
       setError("Error al guardar la plantilla");
-    } finally {
-      setGuardando(false);
     }
   };
 
@@ -93,8 +90,8 @@ export function DialogoGuardarPlantilla({ abierto, onClose, apuId }: DialogoGuar
         </div>
 
         <DialogFooter>
-          <Button onClick={handleGuardar} disabled={guardando}>
-            {guardando ? "Guardando…" : "Guardar plantilla"}
+          <Button onClick={handleGuardar} disabled={guardar.isPending}>
+            {guardar.isPending ? "Guardando…" : "Guardar plantilla"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -46,6 +46,18 @@ describe("EditorApuPage", () => {
     });
   });
 
+  // Plan 052 rebanada 2: `POST /apus/{apuId}/guardar-plantilla` existe en
+  // origin/main y el diálogo estaba construido; solo faltaba quitar el gate.
+  it("Guardar como plantilla está habilitado y abre el diálogo", async () => {
+    const { user } = renderEditor();
+
+    const boton = await screen.findByRole("button", { name: /Guardar como plantilla/ });
+    expect(boton).toBeEnabled();
+
+    await user.click(boton);
+    expect(await screen.findByLabelText(/Nombre/)).toBeInTheDocument();
+  });
+
   it("usa la versión vigente cuando la URL no trae ?v=", async () => {
     let peticionVersiones: string | null = null;
     server.use(

@@ -24,8 +24,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { MOTIVO_SIN_BACKEND } from "@/lib/disponibilidad";
 import {
   PlusIcon,
   MoreHorizontalIcon,
@@ -146,7 +144,7 @@ export function ListaApusPage() {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon-sm">
+                        <Button variant="ghost" size="icon-sm" aria-label="Acciones del APU">
                           <MoreHorizontalIcon />
                         </Button>
                       </DropdownMenuTrigger>
@@ -156,16 +154,9 @@ export function ListaApusPage() {
                         >
                           <ExternalLinkIcon /> Abrir
                         </DropdownMenuItem>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>
-                              <DropdownMenuItem disabled onClick={() => duplicar.mutate(apu.id)}>
-                                <CopyIcon /> Duplicar
-                              </DropdownMenuItem>
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>{MOTIVO_SIN_BACKEND}</TooltipContent>
-                        </Tooltip>
+                        <DropdownMenuItem onClick={() => duplicar.mutate(apu.id)}>
+                          <CopyIcon /> Duplicar
+                        </DropdownMenuItem>
                         {!apu.vinculado && (
                           <ConfirmarDestructivo
                             titulo="Eliminar APU"
