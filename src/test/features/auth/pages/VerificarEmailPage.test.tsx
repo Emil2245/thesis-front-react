@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { renderConProviders } from "@/test/render";
 import { screen, waitFor } from "@testing-library/react";
-import { http, HttpResponse } from "msw";
+import { http } from "msw";
+import { problema } from "@/test/handlers";
 import { server } from "@/test/server";
 import { VerificarEmailPage } from "@/features/auth/pages/VerificarEmailPage";
 
@@ -19,10 +20,7 @@ describe("VerificarEmailPage", () => {
   it("muestra expirado con token inválido", async () => {
     server.use(
       http.post(`${API}/auth/verificar-email`, () =>
-        HttpResponse.json(
-          { type: "/problemas/token-invalido-o-expirado", title: "Expirado", status: 410 },
-          { status: 410, headers: { "Content-Type": "application/problem+json" } },
-        ),
+        problema(410, "token-invalido-o-expirado", "Token inválido o expirado"),
       ),
     );
 

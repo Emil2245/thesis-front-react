@@ -8,17 +8,18 @@ import type {
   ActividadProgramarRequest,
   PerdidaAvanceResponse,
 } from "@/api/contract";
-import { ApiError } from "@/api/problem";
+import { ApiError, type ProblemType } from "@/api/problem";
 import { toast } from "sonner";
 
 /**
- * El backend del cronograma no habla Problem+JSON: `GlobalExceptionMapper`
- * emite `{codigo, mensaje}`, así que los tres 409 del módulo —ya existe,
- * requiere confirmación y segmento solapado— se distinguen por `codigo` y
- * nunca por `status`. Un `catch` por `status === 409` los mezcla.
+ * Los tres 409 del módulo —ya existe, requiere confirmación y segmento
+ * solapado— se distinguen por `codigo` y nunca por `status`: un `catch` por
+ * `status === 409` los mezcla. Ahora `codigo` es el campo real del cuerpo y los
+ * tres están en `PROBLEM_TYPES`, así que basta con `is()`; sobraba el lector a
+ * medida que hacía falta cuando `Problem` fingía ser RFC 7807.
  */
-const codigoDe = (err: unknown): string | undefined =>
-  err instanceof ApiError ? (err.problem.codigo as string | undefined) : undefined;
+const es = (err: unknown, codigo: ProblemType): boolean =>
+  err instanceof ApiError && err.is(codigo);
 
 /** 404 = «este presupuesto todavía no tiene cronograma», que es un estado de
  * la página, no un fallo. Cualquier otro error sí sube. */
@@ -49,7 +50,7 @@ export function useCrearCronograma(presupuestoId: string) {
     onError: (err) => {
       // La relación presupuesto↔cronograma es 1:1: si ya existe, lo que hay que
       // hacer es recargar el que hay, no enseñar un error.
-      if (codigoDe(err) === "cronograma-ya-existe") {
+      if (es(err, "cronograma-ya-existe")) {
         qc.invalidateQueries({ queryKey: qk.cronograma(presupuestoId) });
         toast.info("Este presupuesto ya tenía cronograma; se recargó el existente");
       } else {
@@ -75,7 +76,7 @@ export function useConfigurarCronograma(
     onError: (err) => {
       // El payload trae `perdidas[]` —actividad, período y valor—, que es lo
       // único que el usuario puede mirar antes de confirmar la pérdida.
-      if (codigoDe(err) === "configuracion-cronograma-requiere-confirmacion" && on409) {
+      if (es(err, "configuracion-cronograma-requiere-confirmacion") && on409) {
         const perdidas = (err as ApiError).problem.perdidas;
         on409(Array.isArray(perdidas) ? (perdidas as PerdidaAvanceResponse[]) : []);
       } else {
@@ -97,7 +98,7 @@ export function useProgramarActividad(cronogramaId: string, presupuestoId: strin
     },
     onError: (err) => {
       toast.error(
-        codigoDe(err) === "segmento-solapado"
+        es(err, "segmento-solapado")
           ? "El destino se solapa con otro segmento de la actividad"
           : "Error al programar la actividad",
       );

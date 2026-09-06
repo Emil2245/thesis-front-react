@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { http, HttpResponse } from "msw";
 import type { ReactNode } from "react";
+import { toast } from "sonner";
 
 import { crearQueryClient } from "@/test/render";
 import { server } from "@/test/server";
@@ -173,7 +174,7 @@ describe("contrato de las mutaciones de auth", () => {
   it("actualizar perfil manda PUT /perfil con solo nombre y email", async () => {
     const peticiones = espiar();
 
-    const { result } = renderHook(() => useActualizarPerfil(vi.fn()), { wrapper });
+    const { result } = renderHook(() => useActualizarPerfil(), { wrapper });
     await result.current.mutateAsync({ nombre: "Ana T.", email: "ana2@ejemplo.ec" });
 
     const p = ultima(peticiones, "PUT", "/perfil");
@@ -181,35 +182,29 @@ describe("contrato de las mutaciones de auth", () => {
     await waitFor(() => expect(p?.cuerpo).toEqual({ nombre: "Ana T.", email: "ana2@ejemplo.ec" }));
   });
 
-  // El Problem de validación trae `errores[{campo, mensaje}]`: si el backend
-  // renombrara cualquiera de los dos, el formulario se quedaría mudo.
-  it("un Problem de validación se reparte sobre los campos del formulario", async () => {
+  /**
+   * Antes repartía `errores[{campo, mensaje}]` sobre el formulario. Ese array
+   * no existe: `GlobalExceptionMapper` reduce la `ConstraintViolationException`
+   * al primer mensaje y lo manda pelado en `ErrorPayload`, sin nombre de campo.
+   * Lo único que se puede hacer es enseñar ese mensaje.
+   */
+  it("el mensaje de validación del backend se notifica tal cual", async () => {
     server.use(
-      http.put(`${API}/perfil`, () =>
-        problema(400, "validacion", "Datos inválidos", {
-          errores: [{ campo: "email", mensaje: "Ese correo ya está en uso" }],
-        }),
-      ),
+      http.put(`${API}/perfil`, () => problema(400, "validacion", "Ese correo ya está en uso")),
     );
-    const setError = vi.fn();
 
-    const { result } = renderHook(() => useActualizarPerfil(setError), { wrapper });
+    const { result } = renderHook(() => useActualizarPerfil(), { wrapper });
     await result.current
       .mutateAsync({ nombre: "Ana", email: "ana@ejemplo.ec" })
       .catch(() => undefined);
 
-    await waitFor(() =>
-      expect(setError).toHaveBeenCalledWith("email", {
-        type: "server",
-        message: "Ese correo ya está en uso",
-      }),
-    );
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Ese correo ya está en uso"));
   });
 
   it("cambiar password manda PUT /perfil/password con los tres campos", async () => {
     const peticiones = espiar();
 
-    const { result } = renderHook(() => useCambiarPassword(vi.fn()), { wrapper });
+    const { result } = renderHook(() => useCambiarPassword(), { wrapper });
     await result.current.mutateAsync({
       passwordActual: "vieja1234",
       passwordNueva: "nueva1234",

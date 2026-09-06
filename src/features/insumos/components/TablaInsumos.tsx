@@ -60,8 +60,8 @@ import {
   Trash2Icon,
   SearchIcon,
 } from "lucide-react";
-import type { InsumoResponse, InsumoUsoResponse } from "@/api/contract";
-import { ApiError, type InsumoEnUsoProblem } from "@/api/problem";
+import type { InsumoResponse } from "@/api/contract";
+import { notificarError } from "@/lib/manejoErrores";
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
@@ -94,11 +94,10 @@ export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
   const [insumoEditar, setInsumoEditar] = useState<InsumoResponse | undefined>(undefined);
   const [importAbierto, setImportAbierto] = useState(false);
   const [copiarAbierto, setCopiarAbierto] = useState(false);
-  const [usoDialogo, setUsoDialogo] = useState<{
-    abierto: boolean;
-    insumoId: string;
-    usosPrecargados?: InsumoUsoResponse[];
-  }>({ abierto: false, insumoId: "" });
+  const [usoDialogo, setUsoDialogo] = useState<{ abierto: boolean; insumoId: string }>({
+    abierto: false,
+    insumoId: "",
+  });
 
   const filtros = useMemo(() => {
     const f: Record<string, unknown> = {};
@@ -186,13 +185,13 @@ export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
                     try {
                       await eliminar.mutateAsync(insumo.id);
                     } catch (err) {
-                      if (err instanceof ApiError && err.is("insumo-en-uso")) {
-                        setUsoDialogo({
-                          abierto: true,
-                          insumoId: insumo.id,
-                          usosPrecargados: (err.problem as InsumoEnUsoProblem).usos,
-                        });
-                      }
+                      // No existe ningún `insumo-en-uso`: `InsumoCrudService`
+                      // rechaza el borrado con `validacion` (400) y el motivo
+                      // —incluido el número de APUs— viene ya en `mensaje`. El
+                      // cuerpo de error son dos strings, así que tampoco podía
+                      // traer la lista de usos incrustada; para verla está
+                      // `GET /insumos/{id}/usos`, detrás de «Ver uso».
+                      notificarError(err, "No se pudo eliminar el insumo");
                     }
                   }}
                 >
@@ -406,7 +405,6 @@ export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
         onClose={() => setUsoDialogo({ abierto: false, insumoId: "" })}
         proyectoId={proyectoId}
         insumoId={usoDialogo.insumoId}
-        usosPrecargados={usoDialogo.usosPrecargados}
       />
 
       <AsistenteImportCsv

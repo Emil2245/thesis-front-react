@@ -90,9 +90,27 @@ export const plantillaApuResumenSchema = z.object({
 });
 
 /**
- * Un fallo de validación es un problema del *cliente*, no un tipo del contrato:
- * por eso `type` no sale de `PROBLEM_TYPES`. Se envuelve en `ApiError` para que
- * el manejo de errores existente lo trate como cualquier otro fallo de red.
+ * El cuerpo de error del backend (`record ErrorPayload(String codigo, String
+ * mensaje)`). El plan 028 validó las respuestas *correctas* y dejó fuera esta
+ * mitad del seam —que es justo donde se escondió el defecto del plan 063
+ * durante toda la vida del repo—, así que aquí se cierra.
+ *
+ * `passthrough()` es obligatorio, no laxitud: el 409 de configurar cronograma
+ * manda `CronogramaConflictoPayload(codigo, mensaje, perdidas)` y `strip` —el
+ * defecto de `z.object`— se comería `perdidas`, que `useCronograma` necesita.
+ */
+export const errorPayloadSchema = z
+  .object({
+    codigo: z.string(),
+    mensaje: z.string(),
+  })
+  .passthrough();
+
+/**
+ * Un fallo de validación es un problema del *cliente*, no un código del
+ * contrato: por eso `respuesta-invalida` no sale de `PROBLEM_TYPES`. Se
+ * envuelve en `ApiError` para que el manejo de errores existente lo trate como
+ * cualquier otro fallo de red.
  */
 export function errorDeRespuesta(url: string, error: z.ZodError): ApiError {
   const detalle = error.issues
@@ -101,10 +119,8 @@ export function errorDeRespuesta(url: string, error: z.ZodError): ApiError {
     .join("; ");
   return new ApiError(
     {
-      type: "/problemas/respuesta-invalida",
-      title: "El servidor devolvió una respuesta inesperada",
-      status: 500,
-      detail: `${url} — ${detalle}`,
+      codigo: "respuesta-invalida",
+      mensaje: `El servidor devolvió una respuesta inesperada: ${url} — ${detalle}`,
     },
     500,
   );

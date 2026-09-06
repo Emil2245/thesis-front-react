@@ -3,6 +3,7 @@ import { post, del } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import type { PresupuestoVersionResponse } from "@/api/contract";
 import { toast } from "sonner";
+import { notificarError } from "@/lib/manejoErrores";
 
 export function useVersionMutaciones(proyectoId: string) {
   const queryClient = useQueryClient();
@@ -40,7 +41,10 @@ export function useVersionMutaciones(proyectoId: string) {
       invalidateVersiones();
       toast.success("Versión eliminada");
     },
-    onError: () => toast.error("Error al eliminar versión"),
+    // `version-vigente-protegida` explica que hay que marcar otra versión como
+    // vigente primero. Tirar `mensaje` y pintar un genérico dejaba al usuario
+    // sin saber qué hacer.
+    onError: (err) => notificarError(err, "Error al eliminar versión"),
   });
 
   return { crear, marcarVigente, eliminar };

@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ApiError } from "@/api/problem";
+import { notificarError } from "@/lib/manejoErrores";
 import type { InsumoResponse } from "@/api/contract";
 import type { DestinoInsumos } from "../destino";
 import { parsearEntradaDecimal } from "@/lib/decimal";
@@ -124,15 +124,9 @@ export function DialogoInsumo({
       }
       onClose();
     } catch (err) {
-      if (err instanceof ApiError) {
-        for (const ce of err.camposConError) {
-          form.setError(ce.campo as keyof InsumoFormData, {
-            message: ce.mensaje,
-          });
-        }
-      } else {
-        toast.error("Error al guardar el insumo");
-      }
+      // Sin `errores[]` en el cuerpo no hay a qué campo apuntar: se muestra el
+      // mensaje del backend (p. ej. el de `codigo-duplicado`) tal cual.
+      notificarError(err, "Error al guardar el insumo");
     }
   });
 

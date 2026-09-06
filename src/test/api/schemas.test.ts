@@ -38,8 +38,9 @@ describe("getValidado", () => {
 
     const err = (await getValidado("/cosas", paginaLaxa).catch((e: unknown) => e)) as ApiError;
 
-    expect(err.problem.detail).toContain("/cosas");
-    expect(err.problem.detail).toContain("contenido");
+    // `ErrorPayload` no tiene `detail`: el contexto va dentro de `mensaje`.
+    expect(err.problem.mensaje).toContain("/cosas");
+    expect(err.problem.mensaje).toContain("contenido");
   });
 
   it("un item con el tipo equivocado también falla", async () => {

@@ -34,16 +34,13 @@ export function RegistroPage() {
         passwordConfirmacion: data.passwordConfirmacion,
       });
     } catch (e) {
-      if (e instanceof ApiError && e.is("validacion")) {
-        for (const { campo, mensaje } of e.camposConError) {
-          form.setError(campo as "nombre" | "email" | "password", {
-            type: "server",
-            message: mensaje,
-          });
-        }
-        if (e.camposConError.length === 0) {
-          setErrorGeneral("Error al crear la cuenta");
-        }
+      // El backend no dice *qué* campo falló: `ErrorPayload` son dos strings y
+      // el mapper se queda con el primer mensaje de la violación. Marcar el
+      // campo concreto es imposible con este contrato, así que el mensaje del
+      // servidor —"El correo ya está registrado", "Las contraseñas no
+      // coinciden"— se muestra como error general del formulario.
+      if (e instanceof ApiError) {
+        setErrorGeneral(e.problem.mensaje || "Error al crear la cuenta");
       }
     }
   }
