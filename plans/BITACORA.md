@@ -19,13 +19,13 @@
 | 3 | 057 tests de hook | ✅ verde | — | ad4c0f3 | fusionado a main · ola 3 cerrada |
 | 3-bis | **062 FormData rota + banner fantasma** | ✅ verde | — | 921acfd | fusionado a main |
 | 4 | 028 Zod en el seam | ✅ verde | — | 7d153bc | fusionado a main · ola 4 cerrada |
-| 5 | 055 cronograma (reb. 1–4) | ⏳ pendiente | — | — | cierra sin la rebanada 5 |
+| 5 | 055 cronograma (reb. 1–4) | 🔄 en curso | .claude/worktrees/ola5-055 | — | tanda 1 |
 | 5 | 048 plantillas APU | ⏳ pendiente | — | — | |
 | 5 | 049 plantillas de proyecto | ⏳ pendiente | — | — | |
-| 5 | 050 admin + S-39 | ⏳ pendiente | — | — | choca con 058 en insumos |
-| 5 | 051 export ET DOCX | ⏳ pendiente | — | — | |
+| 5 | 050 admin + S-39 | 🔄 en curso | .claude/worktrees/ola5-050-058 | — | tanda 1, con el 058 |
+| 5 | 051 export ET DOCX | ✅ verde | — | 065c90a | fusionado · tanda 1 |
 | 5 | 052 acciones deshabilitadas | ⏳ pendiente | — | — | necesita 059 cerrado |
-| 5 | 058 **reescrito**: procedencia del insumo | ⏳ pendiente | — | — | bases personales retiradas, no construibles |
+| 5 | 058 **reescrito**: procedencia del insumo | 🔄 en curso | .claude/worktrees/ola5-050-058 | — | tanda 1, con el 050 |
 | 6 | 060 limpieza | ⏳ pendiente | — | — | último |
 
 ### Fuera de las olas
@@ -42,6 +42,14 @@ Baseline original del handoff: **45 archivos, 207 tests, verde** · backend `ori
 docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
+
+- 2026-09-06 — **051 aceptado.** Endpoint verificado en `DocumentoResource:78`
+  (`GET /documentos/especificaciones-tecnicas/{presupuestoId}`), las 4 URLs inventadas a cero,
+  `documentos` fuera de `MODULOS_SIN_BACKEND`. `descargar()` devuelve `{blob, nombreArchivo}` y
+  saca el nombre de `Content-Disposition` en forma normal y RFC 5987, quedándose con el basename
+  porque la cabecera viene de la red. `titulo1`/`titulo2` no se exponen: el plan dice «puede», no
+  «debe» (su línea 72). Un 400 del endpoint sale como toast genérico porque con `responseType:
+  "blob"` axios entrega un Blob al interceptor; declarado por el ejecutor, no bloquea.
 
 - 2026-09-06 — ⚠️ **Plan 058 reescrito** (§7 caso 1): las bases personales **no son construibles**.
   Verificado en `origin/main @ c337950`: (1) `BasesPersonalesResource` son `GET`/`POST`/`DELETE` y
