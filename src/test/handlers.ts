@@ -1,4 +1,5 @@
 import { http, HttpResponse } from "msw";
+import type { DefaultBodyType, PathParams } from "msw";
 import type {
   ProyectoResponse,
   PresupuestoVersionResponse,
@@ -648,33 +649,28 @@ export const handlers = [
     });
   }),
 
-  // ———— Exportar (Plan 013) ————
-  http.get(`${API}/presupuestos/:id/exportar/pdf`, () => {
-    return HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-      status: 200,
-      headers: { "Content-Type": "application/pdf" },
-    });
-  }),
-  http.get(`${API}/presupuestos/:id/exportar/excel`, () => {
-    return HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      },
-    });
-  }),
-  http.get(`${API}/presupuestos/:id/apus/exportar`, () => {
-    return HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-      status: 200,
-      headers: { "Content-Type": "application/pdf" },
-    });
-  }),
-  http.get(`${API}/presupuestos/:id/cronograma/exportar`, () => {
-    return HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-      status: 200,
-      headers: { "Content-Type": "application/pdf" },
-    });
-  }),
+  // ———— Exportar (Plan 051) ————
+  // El único endpoint de documentos que existe en origin/main. `formato` es
+  // opcional y solo admite `docx`; cualquier otro valor es 400.
+  http.get<PathParams, DefaultBodyType, Problem | ArrayBuffer>(
+    `${API}/documentos/especificaciones-tecnicas/:id`,
+    ({ request }) => {
+      const formato = new URL(request.url).searchParams.get("formato");
+      if (formato !== null && formato !== "docx")
+        return problema(
+          400,
+          "formato-no-soportado",
+          `Formato no soportado: ${formato} (solo DOCX en esta iteración)`,
+        );
+      return HttpResponse.arrayBuffer(new ArrayBuffer(8), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "Content-Disposition": 'attachment; filename="especificaciones-tecnicas.docx"',
+        },
+      });
+    },
+  ),
 
   // ———— Admin (Plan 014) ————
   http.get(`${API}/admin/usuarios`, ({ request }) => {

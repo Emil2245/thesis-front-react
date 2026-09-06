@@ -39,5 +39,27 @@ export const patch = async <T>(
 
 export const del = async <T = void>(url: string): Promise<T> => (await http.delete<T>(url)).data;
 
-export const descargar = async (url: string, params?: unknown): Promise<Blob> =>
-  (await http.get(url, { params, responseType: "blob" })).data;
+/**
+ * El nombre del archivo lo pone el backend en `Content-Disposition`; el cliente
+ * no lo inventa. Se devuelve `undefined` si la cabecera falta o no trae nombre,
+ * para que el llamante elija su propio fallback.
+ */
+const nombreDeContentDisposition = (cabecera: unknown): string | undefined => {
+  if (typeof cabecera !== "string") return undefined;
+  const m = /filename\*=UTF-8''([^;]+)|filename="([^"]*)"|filename=([^;]+)/i.exec(cabecera);
+  if (!m) return undefined;
+  const bruto = m[1] ? decodeURIComponent(m[1]) : (m[2] ?? m[3]);
+  // Solo el nombre base: la cabecera viene de la red y no decide rutas.
+  return bruto.trim().split(/[/\\]/).pop() || undefined;
+};
+
+export const descargar = async (
+  url: string,
+  params?: unknown,
+): Promise<{ blob: Blob; nombreArchivo: string | undefined }> => {
+  const r = await http.get<Blob>(url, { params, responseType: "blob" });
+  return {
+    blob: r.data,
+    nombreArchivo: nombreDeContentDisposition(r.headers["content-disposition"]),
+  };
+};

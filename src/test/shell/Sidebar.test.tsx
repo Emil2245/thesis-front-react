@@ -38,7 +38,7 @@ describe("AppSidebar", () => {
     expect(screen.getByText("Usuarios")).toBeInTheDocument();
   });
 
-  it("Presupuesto, Cronograma e Insumos no tienen insignia pendiente", async () => {
+  it("Presupuesto, Cronograma, Insumos y Documentos no tienen insignia pendiente", async () => {
     useSesionStore.setState({ usuario: usuarioFixture, cargando: false });
     renderConProviders(
       <SidebarProvider>
@@ -60,6 +60,12 @@ describe("AppSidebar", () => {
     const insumos = await screen.findByText("Insumos");
     const filaInsumos = insumos.closest("a")!;
     expect(within(filaInsumos).queryByText("pronto")).not.toBeInTheDocument();
+
+    // Plan 051: el backend genera la especificación técnica, así que el módulo
+    // deja de estar pendiente aunque solo cubra uno de los cinco entregables.
+    const documentos = await screen.findByText("Documentos");
+    const filaDocumentos = documentos.closest("a")!;
+    expect(within(filaDocumentos).queryByText("pronto")).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText("APUs")).toBeInTheDocument();

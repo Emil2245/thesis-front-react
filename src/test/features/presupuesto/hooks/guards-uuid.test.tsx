@@ -13,7 +13,7 @@ import { usePresupuesto } from "@/features/presupuesto/hooks/usePresupuesto";
 import { useCapituloMutaciones } from "@/features/presupuesto/hooks/useCapituloMutaciones";
 import { useValidacionExport } from "@/features/exportar/hooks/useExportar";
 import { useCronograma } from "@/features/cronograma/hooks/useCronograma";
-import { ExportPageActiva } from "@/features/exportar/pages/ExportPage";
+import { ExportPage } from "@/features/exportar/pages/ExportPage";
 import { CronogramaPage } from "@/features/cronograma/pages/CronogramaPage";
 import {
   presupuestoFixture,
@@ -101,7 +101,7 @@ describe("guards de id con UUID", () => {
 
     renderConProviders(
       <Routes>
-        <Route path="/proyectos/:id/documentos" element={<ExportPageActiva />} />
+        <Route path="/proyectos/:id/documentos" element={<ExportPage />} />
       </Routes>,
       { ruta: `/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/documentos?v=${PRESUPUESTO_V2}` },
     );
