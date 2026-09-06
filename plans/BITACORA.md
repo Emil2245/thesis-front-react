@@ -19,7 +19,7 @@
 | 3 | 057 tests de hook | ✅ verde | — | ad4c0f3 | fusionado a main · ola 3 cerrada |
 | 3-bis | **062 FormData rota + banner fantasma** | ✅ verde | — | 921acfd | fusionado a main |
 | 4 | 028 Zod en el seam | ✅ verde | — | 7d153bc | fusionado a main · ola 4 cerrada |
-| 5 | 055 cronograma (reb. 1–4) | 🔄 en curso | .claude/worktrees/ola5-055 | — | tanda 1 |
+| 5 | 055 cronograma (reb. 1–4) | ✅ verde | — | a126d80 | fusionado · cierra sin la reb. 5 |
 | 5 | 048 plantillas APU | ⏳ pendiente | — | — | |
 | 5 | 049 plantillas de proyecto | ⏳ pendiente | — | — | |
 | 5 | 050 admin + S-39 | 🔄 en curso | .claude/worktrees/ola5-050-058 | — | tanda 1, con el 058 |
@@ -42,6 +42,16 @@ Baseline original del handoff: **45 archivos, 207 tests, verde** · backend `ori
 docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
+
+- 2026-09-06 — **055 aceptado, incluidos sus dos archivos compartidos.** Verifiqué la
+  justificación de tocar `decimal.ts`: `PesoPonderadoCalculador:31` hace
+  `precio.multiply(100).divide(totalGeneral, 4)`, o sea **puntos porcentuales**, no fracción — el
+  `formatearPorcentaje` existente habría pintado `7.567,57 %`. `formatearPuntosPorcentaje` va en
+  `decimal.ts` y no en `features/cronograma/` porque `guard:adr9` solo permite formateo numérico
+  ahí. La entrada quitada de `PROBLEM_TYPES` era cronograma y no existe en el backend.
+- 2026-09-06 — **Deuda de documentación abierta:** `thesis-docs/07-api-contract.md` §7 describe el
+  cronograma con el contrato viejo. Regla del ORQUESTADOR: gana el código, los docs se corrigen.
+  Es otro repo, así que ningún ejecutor lo hace; queda para quien pueda escribir en `thesis-docs`.
 
 - 2026-09-06 — **051 aceptado.** Endpoint verificado en `DocumentoResource:78`
   (`GET /documentos/especificaciones-tecnicas/{presupuestoId}`), las 4 URLs inventadas a cero,
