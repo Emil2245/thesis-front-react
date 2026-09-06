@@ -58,9 +58,9 @@ describe("AppSidebar", () => {
     expect(within(filaUsuarios).getByText("pronto")).toBeInTheDocument();
   });
 
-  // Plan 049: el backend expone /plantillas-proyecto y los dos endpoints de
-  // guardar/aplicar, así que la entrada sale de MODULOS_SIN_BACKEND.
-  it("Plantillas de proyecto ya no está pendiente", () => {
+  // Planes 048 y 049: PlantillaApuResource y /plantillas-proyecto existen los
+  // dos en origin/main, así que ninguna de las dos entradas sigue en el gate.
+  it("ni Plantillas APU ni Plantillas de proyecto están pendientes", () => {
     useSesionStore.setState({ usuario: usuarioFixture, cargando: false });
     renderConProviders(
       <SidebarProvider>
@@ -71,8 +71,11 @@ describe("AppSidebar", () => {
       { ruta: "/" },
     );
 
-    const fila = screen.getByText("Plantillas de proyecto").closest("a")!;
-    expect(within(fila).queryByText("pronto")).not.toBeInTheDocument();
+    const filaPlantillas = screen.getByText("Plantillas APU").closest("a")!;
+    expect(within(filaPlantillas).queryByText("pronto")).not.toBeInTheDocument();
+
+    const filaPlantillasProyecto = screen.getByText("Plantillas de proyecto").closest("a")!;
+    expect(within(filaPlantillasProyecto).queryByText("pronto")).not.toBeInTheDocument();
   });
 
   it("Presupuesto, Cronograma, Insumos y Documentos no tienen insignia pendiente", async () => {

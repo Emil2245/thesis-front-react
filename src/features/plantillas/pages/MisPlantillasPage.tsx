@@ -28,25 +28,9 @@ import {
 } from "@/components/ui/dialog";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
-import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
 import { EyeIcon, PencilIcon, Trash2Icon, SaveIcon, XIcon } from "lucide-react";
 
-// El backend no tiene /plantillas-apu todavía (plan 027). Para reactivar:
-// borra este bloque, quita "plantillas" de MODULOS_SIN_BACKEND y exporta
-// MisPlantillasPageActiva como MisPlantillasPage.
 export function MisPlantillasPage() {
-  return (
-    <>
-      <EncabezadoPagina titulo="Mis plantillas" />
-      <ModuloNoDisponible
-        modulo="La biblioteca de plantillas de APU"
-        descripcion="El servidor todavía no expone las plantillas de APU. La pantalla está construida y se activará cuando el endpoint exista."
-      />
-    </>
-  );
-}
-
-export function MisPlantillasPageActiva() {
   const { data: plantillas, isPending } = usePlantillas("PERSONAL");
   const eliminar = useEliminarPlantilla();
   const renombrar = useRenombrarPlantilla();
@@ -109,12 +93,18 @@ export function MisPlantillasPageActiva() {
                           // oxlint-disable-next-line jsx-a11y/no-autofocus -- inline rename triggered by user click
                           autoFocus
                         />
-                        <Button variant="ghost" size="icon-sm" onClick={handleRenombrar}>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label="Guardar nombre"
+                          onClick={handleRenombrar}
+                        >
                           <SaveIcon />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon-sm"
+                          aria-label="Cancelar renombrado"
                           onClick={() => {
                             setRenombrarId(null);
                             setNuevoNombre("");
@@ -135,12 +125,18 @@ export function MisPlantillasPageActiva() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon-sm" onClick={() => setPreviewId(p.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="Ver plantilla"
+                        onClick={() => setPreviewId(p.id)}
+                      >
                         <EyeIcon />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon-sm"
+                        aria-label="Renombrar plantilla"
                         onClick={() => {
                           setRenombrarId(p.id);
                           setNuevoNombre(p.nombre);
@@ -154,7 +150,12 @@ export function MisPlantillasPageActiva() {
                         textoConfirmar="Eliminar"
                         onConfirmar={() => eliminar.mutate(p.id)}
                       >
-                        <Button variant="ghost" size="icon-sm" className="text-destructive">
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          className="text-destructive"
+                          aria-label="Eliminar plantilla"
+                        >
                           <Trash2Icon />
                         </Button>
                       </ConfirmarDestructivo>

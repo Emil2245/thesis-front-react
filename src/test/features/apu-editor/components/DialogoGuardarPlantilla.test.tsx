@@ -53,6 +53,33 @@ describe("DialogoGuardarPlantilla", () => {
     });
   });
 
+  // El diálogo llamaba a `post` en línea, en paralelo al hook
+  // `useGuardarPlantilla`: dos caminos al mismo endpoint y solo uno invalida la
+  // caché. Daba igual mientras «Mis plantillas» era un stub; con el plan 048 la
+  // pantalla existe, así que guardar dejaba la lista obsoleta.
+  it("invalida la lista de plantillas al guardar", async () => {
+    const onClose = vi.fn();
+    const { user, client } = renderConProviders(
+      <DialogoGuardarPlantilla
+        abierto
+        onClose={onClose}
+        apuId={"018f8a40-0000-7000-8000-000000000001"}
+      />,
+    );
+
+    // El cliente de test usa gcTime 0, así que una entrada sembrada sin
+    // observador se recoge antes de poder mirarla: se afirma la invalidación.
+    const invalidar = vi.spyOn(client, "invalidateQueries");
+
+    await user.type(screen.getByLabelText(/Nombre/), "Mi plantilla");
+    await user.click(screen.getByText("Guardar plantilla"));
+
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalled();
+    });
+    expect(invalidar).toHaveBeenCalledWith({ queryKey: ["plantillas-apu"] });
+  });
+
   it("muestra texto de ayuda", () => {
     renderConProviders(
       <DialogoGuardarPlantilla

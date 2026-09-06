@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { renderConProviders } from "@/test/render";
 import { screen } from "@testing-library/react";
 import { PieTotales } from "@/features/apu-editor/components/PieTotales";
@@ -62,6 +62,26 @@ describe("PieTotales", () => {
     );
     expect(screen.queryByRole("button", { name: /descuento/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/El descuento se aplica al costo directo/)).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /desglose/i })).toBeDisabled();
+  });
+
+  // Plan 052 rebanada 3: el endpoint `GET /apus/{apuId}/calculo` existía ya,
+  // pero la forma del DTO no casaba y por eso el botón seguía apagado. El plan
+  // 059 alineó `ApuCalculoResponse` (e182d2a), así que el gate ya no describe
+  // nada: queda encenderlo.
+  it("Desglose está habilitado e invoca onAbrirDesglose", async () => {
+    const abrir = vi.fn();
+    const { user } = renderConProviders(
+      <PieTotales
+        apu={apuDetalleFixture}
+        onEditarPorcentajeCi={() => Promise.resolve()}
+        onAbrirDesglose={abrir}
+      />,
+    );
+
+    const boton = screen.getByRole("button", { name: /desglose/i });
+    expect(boton).toBeEnabled();
+
+    await user.click(boton);
+    expect(abrir).toHaveBeenCalled();
   });
 });

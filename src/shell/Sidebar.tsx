@@ -162,13 +162,11 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   asChild
                   isActive={estaActivo(pathname, "/plantillas")}
-                  className={MODULOS_SIN_BACKEND.has("plantillas") ? "opacity-60" : ""}
                   tooltip="Plantillas APU"
                 >
                   <Link to="/plantillas">
                     <FileSpreadsheetIcon />
                     <span>Plantillas APU</span>
-                    {MODULOS_SIN_BACKEND.has("plantillas") && <InsigniaPronto />}
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

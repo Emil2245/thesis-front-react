@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderConProviders } from "@/test/render";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
+import { espiar, ultima } from "@/test/espia";
 import { Route, Routes } from "react-router-dom";
 import { http, HttpResponse } from "msw";
 import { server } from "@/test/server";
@@ -47,6 +48,37 @@ describe("ListaApusPage", () => {
     await waitFor(() => {
       const apu002 = screen.getByText("APU-002");
       expect(apu002).toBeInTheDocument();
+    });
+  });
+
+  // Plan 052 rebanada 1: `POST /apus/{apuId}/duplicar` existe en origin/main y
+  // `useDuplicarApu` ya apuntaba ahí; el item solo estaba `disabled`. El test
+  // mira la petición, no la respuesta del mock: con el item deshabilitado el
+  // click no dispara nada y no hay POST que encontrar.
+  it("duplicar manda POST /apus/{id}/duplicar", async () => {
+    const peticiones = espiar();
+    const { user } = renderLista();
+
+    await waitFor(() => {
+      expect(screen.getByText("APU-001")).toBeInTheDocument();
+    });
+
+    const fila = screen.getByText("APU-001").closest("tr")!;
+    await user.click(within(fila).getByRole("button", { name: "Acciones del APU" }));
+
+    // El item de menú es un div, no un <button>: con `disabled` Radix marca
+    // aria-disabled pero el onClick sigue disparando, así que el POST salía
+    // igual. Afirmar solo la petición estaría verde contra el gate.
+    const item = await screen.findByRole("menuitem", { name: /Duplicar/ });
+    expect(item).not.toHaveAttribute("data-disabled");
+    expect(item).not.toHaveAttribute("aria-disabled", "true");
+
+    await user.click(item);
+
+    await waitFor(() => {
+      expect(
+        ultima(peticiones, "POST", "/apus/018f8a40-0000-7000-8000-000000000001/duplicar"),
+      ).toBeDefined();
     });
   });
 

@@ -5,14 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Edit2Icon, CalculatorIcon } from "lucide-react";
 import {
   ESCALA_PORCENTAJE,
   parsearEntradaNumerica,
   porcentajeAFraccionDecimal,
 } from "@/lib/decimal";
-import { MOTIVO_SIN_BACKEND } from "@/lib/disponibilidad";
 
 interface PieTotalesProps {
   apu: ApuResponse;
@@ -133,16 +131,9 @@ export function PieTotales({ apu, onEditarPorcentajeCi, onAbrirDesglose }: PieTo
       </TarjetaTabla>
 
       <div className="grid gap-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <Button variant="outline" className="w-full" onClick={onAbrirDesglose} disabled>
-                <CalculatorIcon data-icon="inline-start" /> Desglose
-              </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>{MOTIVO_SIN_BACKEND}</TooltipContent>
-        </Tooltip>
+        <Button variant="outline" className="w-full" onClick={onAbrirDesglose}>
+          <CalculatorIcon data-icon="inline-start" /> Desglose
+        </Button>
       </div>
     </div>
   );
