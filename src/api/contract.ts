@@ -587,16 +587,44 @@ export interface ValidacionPresupuestoResponse {
 }
 
 // ————— Cronograma (§11) —————
+//
+// Escrito contra el paquete `ec.uce.propuestas.cronograma` de `origin/main`
+// (plan 055), no contra `07-api-contract.md` §7, que describe el contrato
+// anterior a los planes de backend 026–030.
+//
+// Dos escalas conviven aquí: el dinero va a 6 decimales
+// (`totalGeneral`, `precioTotal`, …) y todo lo que es porcentaje o avance a 4
+// (`pesoPonderado`, `avancePorPeriodo`, `desviacion`, `avanceFinal`).
 export type UnidadTiempo = "SEMANA" | "MES";
 
-export interface ActividadResponse {
+/** `COMPLETO` sólo si toda desviación es 0,0000 y `avanceFinal` es 100,0000. */
+export type EstadoDistribucion = "COMPLETO" | "BORRADOR";
+
+/** Corrida de períodos consecutivos, 1-based e inclusiva por los dos extremos. */
+export interface SegmentoResponse {
+  inicio: number;
+  fin: number;
+}
+
+export interface ActividadCronogramaResponse {
   id: string;
   rubroId: string;
   item: string;
+  codigo: string;
   descripcion: string;
+  unidad: string;
+  cantidad: Decimal;
+  precioUnitario: Decimal;
   precioTotal: Decimal;
+  /** Porcentaje escala 4: 75,6757 se manda como `"75.6757"`, no como `0.756757`. */
   pesoPonderado: Decimal;
+  /**
+   * Disperso: sólo los períodos asignados, con la clave 1-based como string.
+   * Ojo — el campo homónimo de `CronogramaResponse` es un array denso.
+   */
   avancePorPeriodo: Record<string, Decimal>;
+  segmentos: SegmentoResponse[];
+  /** `pesoPonderado − Σ avancePorPeriodo`, escala 4. */
   desviacion: Decimal;
 }
 
@@ -606,12 +634,16 @@ export interface CronogramaResponse {
   unidadTiempo: UnidadTiempo;
   numeroPeriodos: number;
   totalGeneral: Decimal;
-  totalGeneralRevisado?: Decimal;
-  fechaRevision?: string;
+  totalGeneralRevisado: Decimal | null;
+  fechaRevision: string | null;
+  estadoDistribucion: EstadoDistribucion;
   desactualizado: boolean;
-  actividades: ActividadResponse[];
-  avancePorPeriodo: Record<string, Decimal>;
-  avanceAcumulado: Record<string, Decimal>;
+  /** Σ de todos los avances, escala 4. */
+  avanceFinal: Decimal;
+  actividades: ActividadCronogramaResponse[];
+  /** Array **denso** de largo `numeroPeriodos`: la posición 0 es el período 1. */
+  avancePorPeriodo: Decimal[];
+  avanceAcumulado: Decimal[];
 }
 
 export interface CronogramaCrearRequest {
@@ -619,14 +651,45 @@ export interface CronogramaCrearRequest {
   numeroPeriodos: number;
 }
 
+/** Los dos primeros son obligatorios también al reconfigurar. */
 export interface CronogramaConfigurarRequest {
-  unidadTiempo?: UnidadTiempo;
-  numeroPeriodos?: number;
+  unidadTiempo: UnidadTiempo;
+  numeroPeriodos: number;
   confirmarPerdida?: boolean;
 }
 
-export interface ActividadAvanceRequest {
-  avancePorPeriodo: Record<string, Decimal>;
+/**
+ * El PATCH de actividad es una unión discriminada por `operacion`, y el parser
+ * del backend rechaza cualquier propiedad fuera de la lista de su operación.
+ */
+export type ActividadProgramarRequest =
+  | { operacion: "REEMPLAZAR_AVANCES"; avancePorPeriodo: Record<string, Decimal> }
+  | { operacion: "DISTRIBUIR_UNIFORME"; periodos: number[] }
+  | { operacion: "MOVER_SEGMENTO"; inicio: number; fin: number; delta: number }
+  | {
+      operacion: "REDIMENSIONAR_SEGMENTO";
+      inicio: number;
+      fin: number;
+      nuevoInicio: number;
+      nuevoFin: number;
+    };
+
+/** Un avance que la reconfiguración va a borrar. */
+export interface PerdidaAvanceResponse {
+  actividadId: string;
+  periodo: number;
+  valor: Decimal;
+}
+
+/**
+ * Los 409 de configuración y de programación NO pasan por
+ * `GlobalExceptionMapper`, así que no traen `type`/`title`/`status`: se
+ * distinguen por `codigo`. El de creación sí es Problem+JSON normal.
+ */
+export interface ConflictoCronograma {
+  codigo: string;
+  mensaje: string;
+  perdidas?: PerdidaAvanceResponse[];
 }
 
 // ————— Super-Admin (§11) —————

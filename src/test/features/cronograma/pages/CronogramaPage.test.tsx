@@ -1,11 +1,14 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { renderConProviders } from "@/test/render";
 import { Route, Routes } from "react-router-dom";
 import { useSesionStore } from "@/features/auth/sesion";
 import { usuarioFixture } from "@/test/fixtures/auth";
-import { cronogramaFixture } from "@/test/fixtures/cronograma";
+import {
+  cronogramaBorradorFixture,
+  cronogramaDesactualizadoFixture,
+} from "@/test/fixtures/cronograma";
 import { server } from "@/test/server";
 import { CronogramaPage } from "@/features/cronograma/pages/CronogramaPage";
 
@@ -127,10 +130,50 @@ describe("CronogramaPage", () => {
     expect(screen.getByText("P4")).toBeInTheDocument();
   });
 
+  // El camino completo del 409 de configuración: reducir períodos sin
+  // confirmar → 409 con `perdidas[]` → el diálogo las pinta. Antes leía
+  // `periodosAfectados`, que no existe, y se confirmaba a ciegas.
+  it("el 409 de reconfiguración abre el diálogo con las pérdidas del backend", async () => {
+    const { user } = await setupCronogramaPage();
+
+    await user.click(screen.getByRole("button", { name: /reconfigurar/i }));
+    const periodos = screen.getByLabelText("Número de períodos");
+    await user.clear(periodos);
+    await user.type(periodos, "2");
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", { name: /^reconfigurar$/i }),
+    );
+
+    await waitFor(() => expect(screen.getByText(/se borrarán/i)).toBeInTheDocument());
+    const confirmacion = within(screen.getByRole("dialog"));
+    expect(confirmacion.getByText("25,2253 %")).toBeInTheDocument();
+    expect(confirmacion.getByText("5,4054 %")).toBeInTheDocument();
+  });
+
+  it("marca la distribución incompleta cuando el estado es BORRADOR", async () => {
+    server.use(
+      http.get(`${API}/presupuestos/:id/cronograma`, () =>
+        HttpResponse.json(cronogramaBorradorFixture),
+      ),
+    );
+    renderConProviders(
+      <Routes>
+        <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
+      </Routes>,
+      {
+        ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/cronograma?v=0198c1a0-0000-7000-8000-000000000011",
+      },
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Distribución incompleta")).toBeInTheDocument();
+    });
+  });
+
   it("muestra BadgeDesactualizado cuando desactualizado es true", async () => {
     server.use(
       http.get(`${API}/presupuestos/:id/cronograma`, () =>
-        HttpResponse.json({ ...cronogramaFixture, desactualizado: true }),
+        HttpResponse.json(cronogramaDesactualizadoFixture),
       ),
     );
     renderConProviders(
