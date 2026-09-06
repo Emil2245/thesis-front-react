@@ -18,6 +18,9 @@ import {
 } from "@/components/ui/select";
 import type { UnidadTiempo } from "@/api/contract";
 
+/** Límite canónico del backend, replicado también en el CHECK de `V009`. */
+const MAX_PERIODOS: Record<UnidadTiempo, number> = { SEMANA: 520, MES: 120 };
+
 interface DialogoConfigurarCronogramaProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -35,8 +38,14 @@ export function DialogoConfigurarCronograma({
   periodosActual = 4,
   modo,
 }: DialogoConfigurarCronogramaProps) {
-  const [unidad, setUnidad] = useState(unidadActual);
+  const [unidad, setUnidad] = useState<UnidadTiempo>(unidadActual);
   const [periodos, setPeriodos] = useState(String(periodosActual));
+
+  const max = MAX_PERIODOS[unidad];
+  const n = Number(periodos);
+  // Validar aquí y no esperar al 400: el backend responde
+  // «numeroPeriodos fuera del límite canónico para MES: 1..120».
+  const fueraDeRango = periodos !== "" && (!Number.isInteger(n) || n < 1 || n > max);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -65,14 +74,21 @@ export function DialogoConfigurarCronograma({
               id="periodos"
               type="number"
               min={1}
-              max={120}
+              max={max}
               value={periodos}
+              aria-invalid={fueraDeRango}
               onChange={(e) => setPeriodos(e.target.value)}
             />
+            {fueraDeRango && (
+              <p className="text-xs text-destructive">
+                El número de períodos debe estar entre 1 y {max} para {unidad.toLowerCase()}.
+              </p>
+            )}
           </div>
           {modo === "reconfigurar" && (
             <p className="text-xs text-muted-foreground">
-              Reconfigurar puede perder los avances existentes si cambia el número de períodos.
+              Reducir los períodos o cambiar la unidad borra los avances que queden fuera; el
+              cronograma pedirá confirmación y mostrará cuáles.
             </p>
           )}
         </div>
@@ -80,12 +96,8 @@ export function DialogoConfigurarCronograma({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button
-            onClick={() => {
-              onConfirm(unidad, Number(periodos));
-            }}
-            disabled={!periodos || Number(periodos) < 1}
-          >
+          {/* El PUT es un reemplazo completo: siempre van los dos campos. */}
+          <Button onClick={() => onConfirm(unidad, n)} disabled={periodos === "" || fueraDeRango}>
             {modo === "crear" ? "Crear" : "Reconfigurar"}
           </Button>
         </DialogFooter>

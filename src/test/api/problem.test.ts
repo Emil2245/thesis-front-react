@@ -35,7 +35,11 @@ describe("ApiError", () => {
     expect(e.is("validacion")).toBe(false);
   });
 
+  // Eran 15 hasta el plan 055: `reduccion-periodos-requiere-confirmacion` salía
+  // de los docs §7 y no existe en el backend. El 409 de reconfigurar cronograma
+  // se distingue por `codigo`, no por `type`, así que no entra en este catálogo.
   it("el catálogo de types coincide con architecture/07 §1", () => {
-    expect(PROBLEM_TYPES).toHaveLength(15);
+    expect(PROBLEM_TYPES).toHaveLength(14);
+    expect(PROBLEM_TYPES).not.toContain("reduccion-periodos-requiere-confirmacion");
   });
 });

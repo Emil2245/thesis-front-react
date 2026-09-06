@@ -6,7 +6,7 @@ import {
   useCronograma,
   useCrearCronograma,
   useConfigurarCronograma,
-  useActualizarAvance,
+  useProgramarActividad,
   useRevisarCronograma,
 } from "../hooks/useCronograma";
 import { TablaActividades } from "../components/TablaActividades";
@@ -16,7 +16,14 @@ import { DialogoConfigurarCronograma } from "../components/DialogoConfigurarCron
 import { DialogoConfirmarReduccion } from "../components/DialogoConfirmarReduccion";
 import { DialogoEditarActividad } from "../components/DialogoEditarActividad";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
-import type { ActividadResponse, CronogramaConfigurarRequest, UnidadTiempo } from "@/api/contract";
+import { Badge } from "@/components/ui/badge";
+import type {
+  ActividadCronogramaResponse,
+  ActividadProgramarRequest,
+  CronogramaConfigurarRequest,
+  PerdidaAvanceResponse,
+  UnidadTiempo,
+} from "@/api/contract";
 
 export function CronogramaPage() {
   // La versión la manda el selector de la barra superior, que ya cae en la
@@ -24,30 +31,31 @@ export function CronogramaPage() {
   const { presupuestoId } = useVersionActiva();
   const versionId = presupuestoId ?? "";
 
+  // `data` es `null` —no `undefined`— cuando el backend responde 404: este
+  // presupuesto todavía no tiene cronograma, que es un estado, no un fallo.
   const { data: cronograma, isLoading } = useCronograma(versionId);
   const crearCrono = useCrearCronograma(versionId);
 
   const [configDialog, setConfigDialog] = useState(false);
-  const [actividadEdit, setActividadEdit] = useState<ActividadResponse | null>(null);
-  const [reduccionData, setReduccionData] = useState<{
+  const [actividadEdit, setActividadEdit] = useState<ActividadCronogramaResponse | null>(null);
+  const [reduccion, setReduccion] = useState<{
     body: CronogramaConfigurarRequest;
-    periodos: string[];
+    perdidas: PerdidaAvanceResponse[];
   } | null>(null);
-  const [lastConfigBody, setLastConfigBody] = useState<CronogramaConfigurarRequest | null>(null);
+  const [ultimaConfig, setUltimaConfig] = useState<CronogramaConfigurarRequest | null>(null);
 
-  const configCrono = useConfigurarCronograma(cronograma?.id ?? "", versionId, (periodos) => {
-    if (lastConfigBody) {
-      setReduccionData({ body: lastConfigBody, periodos });
-    }
+  const cronogramaId = cronograma?.id ?? "";
+  const configCrono = useConfigurarCronograma(cronogramaId, versionId, (perdidas) => {
+    if (ultimaConfig) setReduccion({ body: ultimaConfig, perdidas });
   });
-  const { mutate: actualizarAvance } = useActualizarAvance(cronograma?.id ?? "", versionId);
-  const { mutate: revisar } = useRevisarCronograma(cronograma?.id ?? "", versionId);
+  const { mutate: programar } = useProgramarActividad(cronogramaId, versionId);
+  const { mutate: revisar } = useRevisarCronograma(cronogramaId, versionId);
 
   const handleConfigurar = useCallback(
     (unidadTiempo: UnidadTiempo, numeroPeriodos: number) => {
       const body = { unidadTiempo, numeroPeriodos };
       if (cronograma) {
-        setLastConfigBody(body);
+        setUltimaConfig(body);
         configCrono.mutate(body);
       } else {
         crearCrono.mutate(body);
@@ -57,17 +65,13 @@ export function CronogramaPage() {
     [cronograma, configCrono, crearCrono],
   );
 
-  const handleGuardarAvance = useCallback(
-    (body: { avancePorPeriodo: Record<string, string> }) => {
-      if (actividadEdit) {
-        actualizarAvance({
-          actividadId: actividadEdit.id,
-          body: body as import("@/api/contract").ActividadAvanceRequest,
-        });
-        setActividadEdit(null);
-      }
+  const handleProgramar = useCallback(
+    (body: ActividadProgramarRequest) => {
+      if (!actividadEdit) return;
+      programar({ actividadId: actividadEdit.id, body });
+      setActividadEdit(null);
     },
-    [actividadEdit, actualizarAvance],
+    [actividadEdit, programar],
   );
 
   if (isLoading) {
@@ -88,7 +92,14 @@ export function CronogramaPage() {
             ? `${cronograma.numeroPeriodos} períodos (${cronograma.unidadTiempo.toLowerCase()})`
             : "No configurado"
         }
-        insignia={<BadgeDesactualizado desactualizado={cronograma?.desactualizado ?? false} />}
+        insignia={
+          <>
+            {cronograma?.estadoDistribucion === "BORRADOR" && (
+              <Badge variant="secondary">Distribución incompleta</Badge>
+            )}
+            <BadgeDesactualizado desactualizado={cronograma?.desactualizado ?? false} />
+          </>
+        }
         acciones={
           <>
             {cronograma && (
@@ -117,6 +128,35 @@ export function CronogramaPage() {
             onClickActividad={setActividadEdit}
           />
           <GanttChart cronograma={cronograma} />
+
+          {/* Sólo con una actividad de verdad: el objeto ficticio que había
+              aquí existía para contentar al tipado viejo. */}
+          {actividadEdit && (
+            <DialogoEditarActividad
+              open
+              onOpenChange={(open) => {
+                if (!open) setActividadEdit(null);
+              }}
+              onConfirm={handleProgramar}
+              actividad={actividadEdit}
+              numeroPeriodos={cronograma.numeroPeriodos}
+            />
+          )}
+
+          <DialogoConfirmarReduccion
+            open={!!reduccion}
+            onOpenChange={(open) => {
+              if (!open) setReduccion(null);
+            }}
+            onConfirm={() => {
+              if (reduccion) {
+                configCrono.mutate({ ...reduccion.body, confirmarPerdida: true });
+                setReduccion(null);
+              }
+            }}
+            perdidas={reduccion?.perdidas ?? []}
+            actividades={cronograma.actividades}
+          />
         </>
       )}
 
@@ -127,41 +167,6 @@ export function CronogramaPage() {
         unidadActual={cronograma?.unidadTiempo}
         periodosActual={cronograma?.numeroPeriodos}
         modo={cronograma ? "reconfigurar" : "crear"}
-      />
-
-      <DialogoEditarActividad
-        open={!!actividadEdit}
-        onOpenChange={(open) => {
-          if (!open) setActividadEdit(null);
-        }}
-        onConfirm={handleGuardarAvance}
-        actividad={
-          actividadEdit ?? {
-            id: "",
-            rubroId: "",
-            item: "",
-            descripcion: "",
-            precioTotal: "0" as never,
-            pesoPonderado: "0" as never,
-            avancePorPeriodo: {},
-            desviacion: "0" as never,
-          }
-        }
-        numeroPeriodos={cronograma?.numeroPeriodos ?? 1}
-      />
-
-      <DialogoConfirmarReduccion
-        open={!!reduccionData}
-        onOpenChange={(open) => {
-          if (!open) setReduccionData(null);
-        }}
-        onConfirm={() => {
-          if (reduccionData) {
-            configCrono.mutate({ ...reduccionData.body, confirmarPerdida: true });
-            setReduccionData(null);
-          }
-        }}
-        periodosAfectados={reduccionData?.periodos ?? []}
       />
     </>
   );

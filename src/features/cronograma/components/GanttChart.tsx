@@ -1,5 +1,5 @@
-import { formatearMoneda, formatearPorcentaje } from "@/lib/decimal";
-import type { CronogramaResponse, ActividadResponse } from "@/api/contract";
+import { formatearPuntosPorcentaje } from "@/lib/decimal";
+import type { CronogramaResponse, SegmentoResponse } from "@/api/contract";
 
 interface GanttChartProps {
   cronograma: CronogramaResponse;
@@ -12,28 +12,11 @@ function etiquetaPeriodo(unidad: string, periodo: number): string {
   return unidad === "SEMANA" ? `S${periodo}` : `M${periodo}`;
 }
 
-function rangoActivo(act: ActividadResponse, periodos: number) {
-  let min = periodos + 1;
-  let max = 0;
-  for (let p = 1; p <= periodos; p++) {
-    if (Number(act.avancePorPeriodo[String(p)] || 0) > 0) {
-      if (p < min) min = p;
-      if (p > max) max = p;
-    }
-  }
-  return min <= max ? { desde: min, hasta: max } : null;
-}
+const contiene = (s: SegmentoResponse, p: number) => p >= s.inicio && p <= s.fin;
 
 export function GanttChart({ cronograma }: GanttChartProps) {
-  const {
-    actividades,
-    numeroPeriodos,
-    avancePorPeriodo,
-    avanceAcumulado,
-    totalGeneral,
-    unidadTiempo,
-  } = cronograma;
-  const total = Number(totalGeneral);
+  const { actividades, numeroPeriodos, avancePorPeriodo, avanceAcumulado, unidadTiempo } =
+    cronograma;
 
   return (
     <div className="space-y-1">
@@ -65,8 +48,10 @@ export function GanttChart({ cronograma }: GanttChartProps) {
 
           {/* ── Activity rows with bars ── */}
           {actividades.map((act) => {
-            const rango = rangoActivo(act, numeroPeriodos);
-            const actTotal = Number(act.precioTotal);
+            // Las barras salen de `segmentos[]`, que ya los calcula el backend:
+            // derivarlas del mapa perdía el caso de una actividad con dos
+            // corridas separadas, que se pintaba como una sola barra continua.
+            const peso = Number(act.pesoPonderado);
 
             return (
               <div key={act.id} className="flex border-b hover:bg-muted/20 group">
@@ -81,11 +66,11 @@ export function GanttChart({ cronograma }: GanttChartProps) {
                 </div>
                 {Array.from({ length: numeroPeriodos }, (_, i) => {
                   const p = i + 1;
-                  const val = Number(act.avancePorPeriodo[String(p)] || 0);
-                  const isActive = rango && p >= rango.desde && p <= rango.hasta;
-                  const isFirst = rango && p === rango.desde;
-                  const isLast = rango && p === rango.hasta;
-                  const intensity = actTotal > 0 ? Math.min(val / actTotal, 1) : 0;
+                  const segmento = act.segmentos.find((s) => contiene(s, p));
+                  const valor = act.avancePorPeriodo[String(p)];
+                  // Cuánto del peso de la actividad cae en este período: es un
+                  // ratio de porcentajes para la opacidad, no aritmética de dinero.
+                  const intensidad = peso > 0 ? Math.min(Number(valor ?? 0) / peso, 1) : 0;
 
                   return (
                     <div
@@ -96,7 +81,7 @@ export function GanttChart({ cronograma }: GanttChartProps) {
                       {/* Grid line */}
                       <div className="absolute inset-0 border-r border-dashed border-border/30" />
 
-                      {isActive && (
+                      {segmento && (
                         <div
                           className="absolute inset-x-0 top-1/2 -translate-y-1/2 mx-0.5"
                           style={{ height: 20 }}
@@ -104,15 +89,13 @@ export function GanttChart({ cronograma }: GanttChartProps) {
                           <div
                             className={[
                               "h-full bg-foreground/70",
-                              isFirst && isLast ? "rounded" : "",
-                              isFirst && !isLast ? "rounded-l" : "",
-                              isLast && !isFirst ? "rounded-r" : "",
-                              !isFirst && !isLast ? "" : "",
+                              p === segmento.inicio ? "rounded-l" : "",
+                              p === segmento.fin ? "rounded-r" : "",
                             ]
                               .filter(Boolean)
                               .join(" ")}
-                            style={{ opacity: 0.3 + intensity * 0.7 }}
-                            title={`${etiquetaPeriodo(unidadTiempo, p)}: ${formatearMoneda(val as never)}`}
+                            style={{ opacity: 0.3 + intensidad * 0.7 }}
+                            title={`${etiquetaPeriodo(unidadTiempo, p)}: ${formatearPuntosPorcentaje(valor)}`}
                           />
                         </div>
                       )}
@@ -123,67 +106,43 @@ export function GanttChart({ cronograma }: GanttChartProps) {
             );
           })}
 
-          {/* ── Summary: avance por período ── */}
-          <div className="flex border-b bg-muted/30">
-            <div
-              className="shrink-0 px-3 py-1.5 border-r text-xs font-medium flex items-center"
-              style={{ width: COL_LABEL }}
-            >
-              Avance por período
-            </div>
-            {Array.from({ length: numeroPeriodos }, (_, i) => {
-              const val = Number(avancePorPeriodo[String(i + 1)] || 0);
-              const pct = total > 0 ? (val / total) * 100 : 0;
-              return (
-                <div
-                  key={i}
-                  className="shrink-0 border-r last:border-r-0 px-1 py-1.5 flex flex-col items-center justify-center"
-                  style={{ width: COL_PERIOD }}
-                >
-                  <span className="text-[10px] font-mono tabular-nums">
-                    {formatearPorcentaje(String(pct / 100) as never)}
-                  </span>
-                  <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mt-0.5">
-                    <div
-                      className="bg-foreground/60 h-full rounded-full"
-                      style={{ width: `${pct}%` }}
-                    />
+          {/* ── Resumen: los dos arrays densos del cronograma, ya en puntos de
+                porcentaje sobre 100. No hay que dividirlos por el total. ── */}
+          {(
+            [
+              ["Avance por período", avancePorPeriodo, "bg-foreground/60"],
+              ["Avance acumulado", avanceAcumulado, "bg-foreground"],
+            ] as const
+          ).map(([titulo, serie, color]) => (
+            <div key={titulo} className="flex border-b last:border-b-0 bg-muted/30">
+              <div
+                className="shrink-0 px-3 py-1.5 border-r text-xs font-medium flex items-center"
+                style={{ width: COL_LABEL }}
+              >
+                {titulo}
+              </div>
+              {Array.from({ length: numeroPeriodos }, (_, i) => {
+                const puntos = Number(serie[i] ?? 0);
+                return (
+                  <div
+                    key={i}
+                    className="shrink-0 border-r last:border-r-0 px-1 py-1.5 flex flex-col items-center justify-center"
+                    style={{ width: COL_PERIOD }}
+                  >
+                    <span className="text-[10px] font-mono tabular-nums">
+                      {formatearPuntosPorcentaje(serie[i], 2)}
+                    </span>
+                    <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mt-0.5">
+                      <div
+                        className={`${color} h-full rounded-full`}
+                        style={{ width: `${Math.min(puntos, 100)}%` }}
+                      />
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* ── Summary: avance acumulado ── */}
-          <div className="flex bg-muted/30">
-            <div
-              className="shrink-0 px-3 py-1.5 border-r text-xs font-medium flex items-center"
-              style={{ width: COL_LABEL }}
-            >
-              Avance acumulado
+                );
+              })}
             </div>
-            {Array.from({ length: numeroPeriodos }, (_, i) => {
-              const val = Number(avanceAcumulado[String(i + 1)] || 0);
-              const pct = total > 0 ? (val / total) * 100 : 0;
-              return (
-                <div
-                  key={i}
-                  className="shrink-0 border-r last:border-r-0 px-1 py-1.5 flex flex-col items-center justify-center"
-                  style={{ width: COL_PERIOD }}
-                >
-                  <span className="text-[10px] font-mono tabular-nums">
-                    {formatearPorcentaje(String(pct / 100) as never)}
-                  </span>
-                  <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mt-0.5">
-                    <div
-                      className="bg-foreground h-full rounded-full"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          ))}
         </div>
       </div>
     </div>

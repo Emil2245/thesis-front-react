@@ -36,7 +36,7 @@ import {
   PRESUPUESTO_V2,
   PRESUPUESTO_V3,
 } from "./fixtures/presupuesto";
-import { cronogramaFixture } from "./fixtures/cronograma";
+import { cronogramaFixture, perdidasFixture } from "./fixtures/cronograma";
 import {
   usuariosAdminFixture,
   parametrosSistemaFixture,
@@ -94,6 +94,147 @@ const soloCampos = async (request: Request, ...permitidos: string[]) => {
   return sobran.length === 0
     ? null
     : problema(400, "campo-desconocido", `El backend no acepta: ${sobran.join(", ")}`);
+};
+
+// El backend NO habla Problem+JSON: `GlobalExceptionMapper` emite
+// `{codigo, mensaje}` a secas, sin `type`/`title`/`status`. Los tres 409 del
+// cronograma se distinguen por `codigo`, y el de configuración añade
+// `perdidas[]`. Un `catch` por `status === 409` los mezcla.
+// ponytail: los 400 de estos handlers siguen saliendo por `problema()`, que sí
+// es Problem+JSON; nadie afirma su forma y arreglarlo es del plan 059.
+const errorCronograma = (
+  status: number,
+  codigo: string,
+  mensaje: string,
+  extra: Record<string, unknown> = {},
+) => HttpResponse.json({ codigo, mensaje, ...extra }, { status });
+
+const leerCuerpo = async (request: Request) =>
+  (await request
+    .clone()
+    .json()
+    .catch(() => ({}))) as Record<string, unknown>;
+
+const MAX_PERIODOS: Record<string, number> = { SEMANA: 520, MES: 120 };
+
+/** `unidadTiempo` y `numeroPeriodos` son obligatorios en el POST y en el PUT. */
+const validarConfiguracion = (cuerpo: Record<string, unknown>) => {
+  const { unidadTiempo, numeroPeriodos } = cuerpo;
+  if (typeof unidadTiempo !== "string" || !(unidadTiempo in MAX_PERIODOS)) {
+    return errorCronograma(400, "validacion", "unidadTiempo solo admite SEMANA o MES");
+  }
+  if (!Number.isInteger(numeroPeriodos)) {
+    return errorCronograma(400, "validacion", "numeroPeriodos es obligatorio y debe ser un entero");
+  }
+  const max = MAX_PERIODOS[unidadTiempo];
+  return Number(numeroPeriodos) >= 1 && Number(numeroPeriodos) <= max
+    ? null
+    : errorCronograma(
+        400,
+        "validacion",
+        `numeroPeriodos fuera del límite canónico para ${unidadTiempo}: 1..${max}`,
+      );
+};
+
+/** Los arrays de avance son densos y de largo `numeroPeriodos`. */
+const reconfigurado = (cuerpo: Record<string, unknown>, status: number) => {
+  const n = Number(cuerpo.numeroPeriodos);
+  const denso = (valores: readonly string[]) =>
+    Array.from({ length: n }, (_, i) => valores[i] ?? "0.0000");
+  return HttpResponse.json(
+    {
+      ...cronogramaFixture,
+      unidadTiempo: cuerpo.unidadTiempo,
+      numeroPeriodos: n,
+      avancePorPeriodo: denso(cronogramaFixture.avancePorPeriodo),
+      avanceAcumulado: denso(cronogramaFixture.avanceAcumulado),
+    },
+    { status },
+  );
+};
+
+// El PATCH de actividad es una unión discriminada por `operacion` y el parser
+// rechaza cualquier propiedad fuera de la lista de la suya.
+const CAMPOS_OPERACION: Record<string, string[]> = {
+  REEMPLAZAR_AVANCES: ["avancePorPeriodo"],
+  DISTRIBUIR_UNIFORME: ["periodos"],
+  MOVER_SEGMENTO: ["inicio", "fin", "delta"],
+  REDIMENSIONAR_SEGMENTO: ["inicio", "fin", "nuevoInicio", "nuevoFin"],
+};
+
+const validarProgramacion = (cuerpo: Record<string, unknown>, actividadId: string) => {
+  const n = cronogramaFixture.numeroPeriodos;
+  const enRango = (p: unknown) => Number.isInteger(p) && Number(p) >= 1 && Number(p) <= n;
+
+  if (cuerpo.operacion === "REEMPLAZAR_AVANCES") {
+    const avances = cuerpo.avancePorPeriodo;
+    if (typeof avances !== "object" || avances === null || Array.isArray(avances)) {
+      return errorCronograma(400, "validacion", "avancePorPeriodo debe ser un objeto JSON");
+    }
+    for (const [clave, valor] of Object.entries(avances)) {
+      if (!/^[0-9]+$/.test(clave) || !enRango(Number(clave))) {
+        return errorCronograma(400, "validacion", `Clave de período fuera del rango 1..${n}`);
+      }
+      // Un número JSON aquí es un 400: el avance viaja como decimal string.
+      if (typeof valor !== "string") {
+        return errorCronograma(400, "validacion", "Valor de avance debe ser un decimal string");
+      }
+      if ((valor.split(".")[1] ?? "").length > 4) {
+        return errorCronograma(400, "validacion", `Avance con escala mayor que 4: ${valor}`);
+      }
+      if (Number(valor) < 0) {
+        return errorCronograma(
+          400,
+          "validacion",
+          `Los avances no pueden ser negativos; clave=${clave}`,
+        );
+      }
+    }
+  }
+
+  if (cuerpo.operacion === "DISTRIBUIR_UNIFORME") {
+    const periodos = cuerpo.periodos;
+    if (!Array.isArray(periodos) || periodos.length === 0) {
+      return errorCronograma(400, "validacion", "periodos no puede ser vacío");
+    }
+    if (!periodos.every(enRango)) {
+      return errorCronograma(400, "validacion", `Período fuera del rango 1..${n}`);
+    }
+    if (new Set(periodos).size !== periodos.length) {
+      return errorCronograma(400, "validacion", "Períodos duplicados");
+    }
+  }
+
+  if (cuerpo.operacion === "MOVER_SEGMENTO" || cuerpo.operacion === "REDIMENSIONAR_SEGMENTO") {
+    const { inicio, fin } = cuerpo;
+    if (!enRango(inicio) || !enRango(fin) || Number(fin) < Number(inicio)) {
+      return errorCronograma(400, "validacion", "fin debe ser >= inicio y estar en rango");
+    }
+    const mover = cuerpo.operacion === "MOVER_SEGMENTO";
+    if (mover && (!Number.isInteger(cuerpo.delta) || cuerpo.delta === 0)) {
+      return errorCronograma(400, "validacion", "delta no puede ser cero");
+    }
+    const delta = Number(cuerpo.delta);
+    const destinoIni = mover ? Number(inicio) + delta : Number(cuerpo.nuevoInicio);
+    const destinoFin = mover ? Number(fin) + delta : Number(cuerpo.nuevoFin);
+    if (!enRango(destinoIni) || !enRango(destinoFin) || destinoFin < destinoIni) {
+      return errorCronograma(400, "validacion", `El destino sale del rango 1..${n}`);
+    }
+    // 409 sólo si el destino pisa OTRO segmento de la misma actividad.
+    const segmentos = cronogramaFixture.actividades.find((a) => a.id === actividadId)?.segmentos;
+    const ajenos = (segmentos ?? []).filter(
+      (s) => s.inicio !== Number(inicio) || s.fin !== Number(fin),
+    );
+    if (ajenos.some((s) => destinoIni <= s.fin && destinoFin >= s.inicio)) {
+      return errorCronograma(
+        409,
+        "segmento-solapado",
+        "El destino colisiona con claves fuera del segmento fuente",
+      );
+    }
+  }
+
+  return HttpResponse.json(cronogramaFixture);
 };
 
 export const pagina = <T>(items: T[]) => ({
@@ -612,41 +753,58 @@ export const handlers = [
     HttpResponse.json({ precisionDinero: 2, precisionPorcentaje: 4 }),
   ),
 
-  // ———— Cronograma (Plan 012) ————
-  http.get(`${API}/presupuestos/:id/cronograma`, ({ params }) => {
-    if (params.id !== cronogramaFixture.presupuestoId) {
-      return HttpResponse.json(null, { status: 404 });
-    }
-    return HttpResponse.json(cronogramaFixture);
+  // ———— Cronograma (plan 055, contrato de `origin/main` c337950) ————
+  http.get(`${API}/presupuestos/:id/cronograma`, ({ params }) =>
+    params.id === cronogramaFixture.presupuestoId
+      ? HttpResponse.json(cronogramaFixture)
+      : errorCronograma(404, "no-encontrado", "El presupuesto no tiene cronograma"),
+  ),
+  http.post(`${API}/presupuestos/:id/cronograma`, async ({ request }) => {
+    const cuerpo = await leerCuerpo(request);
+    const sobra = await soloCampos(request, "unidadTiempo", "numeroPeriodos");
+    return sobra ?? validarConfiguracion(cuerpo) ?? reconfigurado(cuerpo, 201);
   }),
-  http.post(
-    `${API}/presupuestos/:id/cronograma`,
-    async ({ request }) =>
-      (await soloCampos(request, "unidadTiempo", "numeroPeriodos")) ??
-      HttpResponse.json(cronogramaFixture, { status: 201 }),
-  ),
-  // ponytail: ruta actual del frontend. El plan 055 la mueve a
-  // `/cronogramas/{id}/configuracion`, que es la del backend; cuando lo haga,
-  // este handler y su test se mueven con ella.
-  http.put(
-    `${API}/cronogramas/:id`,
-    async ({ request }) =>
-      (await soloCampos(request, "unidadTiempo", "numeroPeriodos", "confirmarPerdida")) ??
-      HttpResponse.json({ ...cronogramaFixture, desactualizado: false }),
-  ),
-  http.patch(
-    `${API}/cronogramas/:id/actividades/:actId`,
-    async ({ request }) =>
-      (await soloCampos(request, "avancePorPeriodo")) ?? HttpResponse.json(cronogramaFixture),
-  ),
-  http.post(`${API}/cronogramas/:id/revisado`, () => {
-    const revisado = Date.now().toString();
-    return HttpResponse.json({
+  http.put(`${API}/cronogramas/:id/configuracion`, async ({ request }) => {
+    const cuerpo = await leerCuerpo(request);
+    const sobra = await soloCampos(request, "unidadTiempo", "numeroPeriodos", "confirmarPerdida");
+    if (sobra) return sobra;
+    const invalido = validarConfiguracion(cuerpo);
+    if (invalido) return invalido;
+    // Reducir períodos o cambiar la unidad borra avances: el backend exige
+    // confirmación explícita y devuelve la lista de lo que se va a perder.
+    const pierde =
+      Number(cuerpo.numeroPeriodos) < cronogramaFixture.numeroPeriodos ||
+      cuerpo.unidadTiempo !== cronogramaFixture.unidadTiempo;
+    if (pierde && cuerpo.confirmarPerdida !== true) {
+      return errorCronograma(
+        409,
+        "configuracion-cronograma-requiere-confirmacion",
+        "La reconfiguración requiere confirmación explícita antes de perder datos o cambiar la unidad de tiempo",
+        { perdidas: perdidasFixture },
+      );
+    }
+    return reconfigurado(cuerpo, 200);
+  }),
+  http.patch(`${API}/cronogramas/:id/actividades/:actId`, async ({ request, params }) => {
+    const cuerpo = await leerCuerpo(request);
+    const campos = CAMPOS_OPERACION[String(cuerpo.operacion)];
+    if (!campos) {
+      return errorCronograma(
+        400,
+        "validacion",
+        `operacion debe ser una de: ${Object.keys(CAMPOS_OPERACION).join(", ")}`,
+      );
+    }
+    const sobra = await soloCampos(request, "operacion", ...campos);
+    return sobra ?? validarProgramacion(cuerpo, String(params.actId));
+  }),
+  http.post(`${API}/cronogramas/:id/revisado`, () =>
+    HttpResponse.json({
       ...cronogramaFixture,
       totalGeneralRevisado: cronogramaFixture.totalGeneral,
-      fechaRevision: revisado,
-    });
-  }),
+      fechaRevision: "2026-09-06T12:00:00Z",
+    }),
+  ),
 
   // ———— Exportar (Plan 013) ————
   http.get(`${API}/presupuestos/:id/exportar/pdf`, () => {

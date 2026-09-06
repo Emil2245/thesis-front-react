@@ -25,7 +25,10 @@ export const PROBLEM_TYPES = [
   "insumo-en-uso",
   "apu-referenciado",
   "version-vigente-protegida",
-  "reduccion-periodos-requiere-confirmacion",
+  // Aquí estaba `reduccion-periodos-requiere-confirmacion`, que venía de
+  // `07-api-contract.md` §7 y no existe en el backend. Los tres 409 del
+  // cronograma se distinguen por `codigo` —no por `type`—, así que no entran
+  // en esta lista: ver `useCronograma.ts`.
   "export-bloqueado",
   "csv-invalido",
   "fila-protegida",

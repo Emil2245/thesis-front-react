@@ -42,6 +42,23 @@ export function formatearPorcentaje(valor: Decimal | number | null | undefined, 
   }).format(n);
 }
 
+/**
+ * El cronograma manda **puntos de porcentaje** escala 4 (`"75.6757"` son
+ * 75,6757 %), no la fracción que usa el resto del contrato (`"0.756757"`).
+ * Pasarlos por `formatearPorcentaje` los multiplica por 100 y pinta
+ * «7.567,57 %», que es lo que hacía la tabla de actividades.
+ */
+export function formatearPuntosPorcentaje(
+  valor: Decimal | number | null | undefined,
+  dp = ESCALA_PORCENTAJE,
+): string {
+  const n = formatearNumero(valor, { min: dp, max: dp });
+  return n === "—" ? n : `${n} %`;
+}
+
+/** Decimales que trae un decimal string: `"25.2252"` → 4. */
+export const escalaDe = (valor: string): number => (valor.split(".")[1] ?? "").length;
+
 export function parsearEntradaDecimal(entrada: string): Decimal | null {
   const limpio = entrada.trim().replace(/\s/g, "").replace(",", ".");
   if (limpio === "") return null;
