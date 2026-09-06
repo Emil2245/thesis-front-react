@@ -162,10 +162,14 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
 
   // El %CI no cabe en ApuPatchRequest: el backend lo descartaba en silencio.
   // Endpoint propio, body un decimal crudo (o null para volver a heredar del
-  // proyecto), no un objeto — plan 054 §2.
+  // proyecto), no un objeto — plan 054 §2. Al no ser un objeto plano, axios no
+  // pone el `Content-Type` solo y sin él no serializa el `null`: hay que
+  // pedirlo a mano (plan 062 §1).
   const porcentajeCiMutation = useMutation({
     mutationFn: (valor: Decimal | null) =>
-      patch<ApuResponse>(`/apus/${apuId}/porcentaje-indirecto`, valor),
+      patch<ApuResponse>(`/apus/${apuId}/porcentaje-indirecto`, valor, {
+        headers: { "Content-Type": "application/json" },
+      }),
     onSuccess: (response) => {
       qc.setQueryData(qk.apu(apuId), response);
       if (presupuestoId) {

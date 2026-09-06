@@ -6,7 +6,7 @@ import type {
   PlantillaProyectoResponse,
   PlantillaProyectoCrearRequest,
   ProyectoDesdePlantillaRequest,
-  ProyectoDetalleResponse,
+  ProyectoResponse,
 } from "@/api/contract";
 
 export function usePlantillasProyecto() {
@@ -38,7 +38,7 @@ export function useCrearDesdePlantilla() {
     }: {
       plantillaId: string;
       body: ProyectoDesdePlantillaRequest;
-    }) => post<ProyectoDetalleResponse>(`/proyectos/desde-plantilla/${plantillaId}`, body),
+    }) => post<ProyectoResponse>(`/proyectos/desde-plantilla/${plantillaId}`, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.proyectos() });
       toast.success("Proyecto creado desde la plantilla");

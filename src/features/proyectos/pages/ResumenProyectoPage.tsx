@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useProyecto, useEliminarProyecto } from "../hooks/useProyectos";
+import { useParametros } from "../hooks/useParametros";
 import { TabFirmantes } from "../components/TabFirmantes";
 import { ChipEstado } from "@/components/comunes/ChipEstado";
 import { CargandoTabla } from "@/components/comunes/CargandoTabla";
@@ -54,10 +55,14 @@ export function ResumenProyectoPage() {
   const { presupuestoId, activa } = useVersionActiva();
   const { data: presupuesto } = usePresupuesto(presupuestoId ?? "");
   const { data: resumen } = useResumen(presupuestoId ?? "");
+  const { data: parametros } = useParametros(id ?? null);
 
   if (isPending) return <CargandoTabla />;
   if (!proyecto) return <p className="text-muted-foreground">Proyecto no encontrado</p>;
 
+  // `null` es «sin configurar»; un 0 explícito es una decisión válida del
+  // usuario y no debe disparar el aviso.
+  const ciSinConfigurar = parametros != null && parametros.porcentajeIndirecto == null;
   const capitulos = presupuesto?.capitulos ?? [];
   const totalGeneral = presupuesto?.totalGeneral ?? resumen?.totalGeneral ?? null;
 
@@ -142,19 +147,17 @@ export function ResumenProyectoPage() {
         }
       />
 
-      {(proyecto.alertas?.length ?? 0) > 0 && (
+      {ciSinConfigurar && (
         <Alert variant="destructive">
           <TriangleAlertIcon />
           <AlertTitle>Alertas</AlertTitle>
           <AlertDescription>
-            {proyecto.alertas?.includes("CI_NO_CONFIGURADO") && (
-              <span>
-                Porcentaje de indirectos no configurado.{" "}
-                <Link to={`/proyectos/${proyectoId}/parametros`} className="underline">
-                  Configurar ahora
-                </Link>
-              </span>
-            )}
+            <span>
+              Porcentaje de indirectos no configurado.{" "}
+              <Link to={`/proyectos/${proyectoId}/parametros`} className="underline">
+                Configurar ahora
+              </Link>
+            </span>
           </AlertDescription>
         </Alert>
       )}

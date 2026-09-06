@@ -4,7 +4,6 @@ import { qk } from "@/api/queryKeys";
 import type {
   Page,
   ProyectoResponse,
-  ProyectoDetalleResponse,
   ProyectoCrearRequest,
   ProyectoEditarRequest,
   ProyectoDuplicarRequest,
@@ -21,7 +20,7 @@ export function useProyectos(filtros?: Record<string, unknown>) {
 export function useProyecto(id: string | null) {
   return useQuery({
     queryKey: qk.proyecto(id ?? ""),
-    queryFn: () => get<ProyectoDetalleResponse>(`/proyectos/${id}`),
+    queryFn: () => get<ProyectoResponse>(`/proyectos/${id}`),
     enabled: id != null,
   });
 }
@@ -29,7 +28,7 @@ export function useProyecto(id: string | null) {
 export function useCrearProyecto() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: ProyectoCrearRequest) => post<ProyectoDetalleResponse>("/proyectos", body),
+    mutationFn: (body: ProyectoCrearRequest) => post<ProyectoResponse>("/proyectos", body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.proyectos() });
     },
@@ -39,8 +38,7 @@ export function useCrearProyecto() {
 export function useEditarProyecto(id: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: ProyectoEditarRequest) =>
-      put<ProyectoDetalleResponse>(`/proyectos/${id}`, body),
+    mutationFn: (body: ProyectoEditarRequest) => put<ProyectoResponse>(`/proyectos/${id}`, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.proyectos() });
       qc.invalidateQueries({ queryKey: qk.proyecto(id) });
@@ -62,7 +60,7 @@ export function useDuplicarProyecto() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, body }: { id: string; body: ProyectoDuplicarRequest }) =>
-      post<ProyectoDetalleResponse>(`/proyectos/${id}/duplicar`, body),
+      post<ProyectoResponse>(`/proyectos/${id}/duplicar`, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.proyectos() });
     },

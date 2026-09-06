@@ -2,9 +2,11 @@ import axios, { AxiosError } from "axios";
 import { API_BASE_URL } from "@/lib/env";
 import { ApiError, problemDesconocido, type Problem } from "./problem";
 
+// Sin `Content-Type` por defecto a propósito: axios lo pone solo (JSON para
+// objetos planos, multipart con boundary para FormData). Fijarlo aquí hacía que
+// `transformRequest` serializara todo FormData a JSON y perdiera el fichero.
 export const http = axios.create({
   baseURL: API_BASE_URL,
-  headers: { "Content-Type": "application/json" },
 });
 
 let accessToken: string | null = null;
