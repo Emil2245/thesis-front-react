@@ -128,9 +128,9 @@ Por tanto **no hay diferencia del backend que usar**: aplica directamente el fal
 dos totales sin restarlos. Si el diseño exige mostrar la diferencia, es trabajo de backend y hay
 que pedirlo; no se calcula en el cliente.
 
-**Deriva de contrato, para `053`/`059`:** el DTO del frontend no se parece al real — tiene
-`versionA`/`versionB` y `capitulos[].diferencia`, campos que el backend no manda. Corregirlo no es
-de este plan.
+**El DTO del frontend sí coincide** (`ComparacionVersionesResponse.versiones:
+PresupuestoComparacionItem[]`, `contract.ts`) — `e44c608` ya lo alineó. Su único defecto es
+`presupuestoId: number`, que re-tipa el plan [`053`](053-retipar-ids-presupuesto-uuid.md).
 
 Test de regresión con `395115.320000` y `355603.788000`: hoy falla.
 
