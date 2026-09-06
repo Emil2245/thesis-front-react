@@ -145,14 +145,22 @@ export interface PlantillaProyectoResponse {
   fechaCreacion: string;
 }
 
+/** Cuerpo de POST /proyectos/{proyectoId}/guardar-plantilla. `proyectoId` va en
+ *  la ruta, nunca en el cuerpo, y el snapshot lo construye el backend. */
 export interface PlantillaProyectoCrearRequest {
   nombre: string;
   descripcion?: string;
-  proyectoId: string;
 }
 
 export interface ProyectoDesdePlantillaRequest {
   nombre: string;
+}
+
+/** POST /proyectos/desde-plantilla/{plantillaId}: 201 sin advertencias, 200 con
+ *  ellas, y en ambos casos el proyecto viene envuelto. */
+export interface ProyectoDesdePlantillaResponse {
+  proyecto: ProyectoResponse;
+  advertencias?: AdvertenciaPlantillaResponse[];
 }
 
 export interface FirmanteResponse {

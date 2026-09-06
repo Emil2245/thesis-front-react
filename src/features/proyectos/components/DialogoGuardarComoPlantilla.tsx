@@ -25,7 +25,7 @@ export function DialogoGuardarComoPlantilla({
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const guardar = useGuardarPlantillaProyecto();
+  const guardar = useGuardarPlantillaProyecto(proyectoId);
 
   const handleGuardar = async () => {
     if (!nombre.trim()) {
@@ -36,7 +36,6 @@ export function DialogoGuardarComoPlantilla({
     await guardar.mutateAsync({
       nombre: nombre.trim(),
       descripcion: descripcion.trim() || undefined,
-      proyectoId,
     });
     setNombre("");
     setDescripcion("");
