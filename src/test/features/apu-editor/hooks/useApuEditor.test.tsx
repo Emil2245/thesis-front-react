@@ -13,6 +13,7 @@ import type { ApuResponse } from "@/api/contract";
 const API = "*/api/v1";
 const APU_ID = "018f8a40-0000-7000-8000-000000000001";
 const PRESUPUESTO_ID = "0198c1a0-0000-7000-8000-000000000011";
+const INSUMO_ID = "018f8a20-0000-7000-8000-000000000010";
 
 function crearConHmEnCache() {
   const client = crearQueryClient();
@@ -174,6 +175,60 @@ describe("useApuEditor", () => {
     });
 
     expect(cuerpo).toBe("null");
+  });
+
+  // Plan 059 §2: ApuDetalleCrearRequest(seccionTipo, insumoId, cantidad, rendimiento)
+  // con seccionTipo/insumoId/cantidad @NotNull. El hook mandaba sólo {insumoId},
+  // así que añadir una línea a un APU devolvía 400 en la pantalla núcleo (S-22).
+  it("agregarFila manda seccionTipo y cantidad además del insumoId", async () => {
+    let cuerpo: unknown = null;
+    server.use(
+      http.post(`${API}/apus/:id/detalles`, async ({ request }) => {
+        cuerpo = await request.json();
+        return HttpResponse.json(apuDetalleFixture, { status: 201 });
+      }),
+    );
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    await act(async () => {
+      await result.current.agregarFila({ seccionTipo: "MATERIAL", insumoId: INSUMO_ID });
+    });
+
+    expect(cuerpo).toEqual({ seccionTipo: "MATERIAL", insumoId: INSUMO_ID, cantidad: "1" });
+  });
+
+  // Contra el handler por defecto, que exige seccionTipo/insumoId/cantidad y
+  // rechaza cualquier campo de más: añadir una línea tiene que salir bien.
+  it("agregarFila funciona contra el handler estricto", async () => {
+    const { client, wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    await act(async () => {
+      await result.current.agregarFila({ seccionTipo: "MATERIAL", insumoId: INSUMO_ID });
+    });
+
+    expect(result.current.error).toBeNull();
+    expect(client.getQueryData<ApuResponse>(qk.apu(APU_ID))).toEqual(apuConHmFixture);
+  });
+
+  // `rendimiento` es @DecimalMin("0.000001"): mandar 0 es un 400. Se omite.
+  it("agregarFila no manda rendimiento", async () => {
+    let cuerpo: Record<string, unknown> = {};
+    server.use(
+      http.post(`${API}/apus/:id/detalles`, async ({ request }) => {
+        cuerpo = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(apuDetalleFixture, { status: 201 });
+      }),
+    );
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    await act(async () => {
+      await result.current.agregarFila({ seccionTipo: "EQUIPO", insumoId: INSUMO_ID });
+    });
+
+    expect(Object.keys(cuerpo)).not.toContain("rendimiento");
   });
 
   it("editing a cell invalidates presupuesto and cronograma keys", async () => {

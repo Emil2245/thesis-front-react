@@ -26,7 +26,7 @@ function ListaRubros({ items, titulo }: { items: RubroRefResponse[]; titulo: str
       </p>
       <ul className="list-disc list-inside text-muted-foreground">
         {items.map((r) => (
-          <li key={r.rubroId}>
+          <li key={r.id}>
             {r.item} — {r.descripcion}
           </li>
         ))}

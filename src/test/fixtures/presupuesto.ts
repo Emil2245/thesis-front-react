@@ -144,13 +144,13 @@ export const versionesFixture: PresupuestoVersionResponse[] = [
 export const validacionFixture: ValidacionPresupuestoResponse = {
   exportable: false,
   itemsPuCero: [
-    { rubroId: RUBRO_1_1_2, item: "1.1.2", codigo: "APU-002", descripcion: "Relleno compactado" },
+    { id: RUBRO_1_1_2, item: "1.1.2", codigo: "APU-002", descripcion: "Relleno compactado" },
   ],
   itemsCantidadCero: [
-    { rubroId: RUBRO_1_2_1, item: "1.2.1", codigo: "APU-003", descripcion: "Transporte material" },
+    { id: RUBRO_1_2_1, item: "1.2.1", codigo: "APU-003", descripcion: "Transporte material" },
   ],
   itemsSinActividad: [
-    { rubroId: RUBRO_1_1_1, item: "1.1.1", codigo: "APU-001", descripcion: "Excavación a máquina" },
+    { id: RUBRO_1_1_1, item: "1.1.1", codigo: "APU-001", descripcion: "Excavación a máquina" },
   ],
 };
 

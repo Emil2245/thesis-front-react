@@ -133,18 +133,8 @@ export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
         header: "",
         cell: (info) => <BadgeDesactualizado desactualizado={info.getValue()} />,
       }),
-      columnHelper.display({
-        id: "fuente",
-        header: "Fuente",
-        cell: (info) => {
-          const f = info.row.original.fuente;
-          return (
-            <Badge variant={f === "CENTRAL" ? "secondary" : "outline"}>
-              {f === "CENTRAL" ? "Central" : "Local"}
-            </Badge>
-          );
-        },
-      }),
+      // Sin columna "Fuente": InsumoResponse no trae `fuente`; es de
+      // InsumoBusquedaResponse, el DTO del selector. Pintaba siempre "Local".
       columnHelper.display({
         id: "acciones",
         header: "",

@@ -1,7 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
-import { get } from "@/api/request";
-import { qk } from "@/api/queryKeys";
-import type { ApuCalculoResponse } from "@/api/contract";
+import { useApuCalculo } from "../hooks/useApuCalculo";
+import { formatearMoneda, formatearPorcentaje } from "@/lib/decimal";
+import type { SeccionTipo } from "@/api/contract";
 import {
   Dialog,
   DialogContent,
@@ -16,16 +15,26 @@ interface PopoverDesgloseProps {
   apuId: string;
 }
 
+const BLOQUE: Record<SeccionTipo, string> = {
+  EQUIPO: "M",
+  MANO_OBRA: "N",
+  MATERIAL: "O",
+  TRANSPORTE: "P",
+};
+
+const ETIQUETA: Record<SeccionTipo, string> = {
+  EQUIPO: "Equipo",
+  MANO_OBRA: "Mano de obra",
+  MATERIAL: "Materiales",
+  TRANSPORTE: "Transporte",
+};
+
 export function PopoverDesglose({ abierto, onClose, apuId }: PopoverDesgloseProps) {
-  const { data, isPending } = useQuery({
-    queryKey: qk.apuCalculo(apuId),
-    queryFn: () => get<ApuCalculoResponse>(`/apus/${apuId}/calculo`),
-    enabled: abierto,
-  });
+  const { data, isPending } = useApuCalculo(apuId, abierto);
 
   return (
     <Dialog open={abierto} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Desglose de cálculo</DialogTitle>
           <DialogDescription>
@@ -36,41 +45,58 @@ export function PopoverDesglose({ abierto, onClose, apuId }: PopoverDesgloseProp
         {isPending && <p className="text-sm text-muted-foreground">Cargando…</p>}
 
         {data && (
-          <div className="space-y-4 text-sm">
-            <div className="space-y-1">
-              {data.formulas.map((f, i) => (
-                <div key={i} className="flex justify-between gap-4 rounded bg-muted p-2">
-                  <span className="text-muted-foreground">{f.concepto}</span>
-                  <span className="font-mono text-xs">{f.formula}</span>
-                  <span className="num font-medium">{f.resultado}</span>
-                </div>
-              ))}
+          <div className="max-h-[60vh] space-y-4 overflow-y-auto text-sm">
+            <div className="flex justify-between gap-4 rounded bg-muted p-2 text-xs">
+              <span className="text-muted-foreground">
+                %HM {formatearPorcentaje(data.parametros.hm)}
+              </span>
+              <span className="text-muted-foreground">
+                %CI aplicado {formatearPorcentaje(data.parametros.ciAplicado)}
+              </span>
             </div>
 
-            <div className="border-t pt-2">
-              <p className="mb-1 text-xs font-semibold text-muted-foreground">
-                Subtotales por bloque
-              </p>
-              {Object.entries(data.subtotales).map(([bloque, valor]) => (
-                <div key={bloque} className="flex justify-between text-xs">
-                  <span>Bloque {bloque}</span>
-                  <span className="num">{valor}</span>
+            {data.secciones.map((seccion) => (
+              <div key={seccion.tipo} className="space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground">
+                  {BLOQUE[seccion.tipo]} · {ETIQUETA[seccion.tipo]}
+                </p>
+                {seccion.lineas.map((linea) => (
+                  <div
+                    key={linea.detalleId}
+                    className="flex items-baseline justify-between gap-3 border-b pb-1 text-xs last:border-0"
+                  >
+                    <span className="min-w-0 flex-1 truncate">{linea.descripcion}</span>
+                    {/* `operacion` es la fórmula que ya compone el backend: aquí
+                        sólo se muestra, no se vuelve a armar. */}
+                    <span className="font-mono text-[11px] text-muted-foreground">
+                      {linea.operacion}
+                    </span>
+                    <span className="num font-medium">{formatearMoneda(linea.resultado)}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between text-xs">
+                  <span className="font-mono text-[11px] text-muted-foreground">
+                    {seccion.operacion}
+                  </span>
+                  <span className="num font-medium">
+                    Subtotal {formatearMoneda(seccion.subtotal)}
+                  </span>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
 
-            <div className="border-t pt-2 space-y-1">
+            <div className="space-y-1 border-t pt-2">
               <div className="flex justify-between text-xs">
                 <span>CD</span>
-                <span className="num font-medium">{data.cd}</span>
+                <span className="num font-medium">{formatearMoneda(data.resumen.cd)}</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span>CI</span>
-                <span className="num font-medium">{data.ci}</span>
+                <span className="num font-medium">{formatearMoneda(data.resumen.ci)}</span>
               </div>
               <div className="flex justify-between text-xs font-bold">
                 <span>CT</span>
-                <span className="num">{data.ct}</span>
+                <span className="num">{formatearMoneda(data.resumen.ct)}</span>
               </div>
             </div>
           </div>

@@ -35,6 +35,11 @@ describe("AsistenteCrearProyecto", () => {
     });
 
     await user.type(screen.getByLabelText("Nombre"), "Puente Tulcán");
+    // anio, plazoEjecucion y direccionInstitucional son @NotNull/@NotBlank en
+    // main; plazoUnidad ya viene por defecto en "MES".
+    await user.type(screen.getByLabelText("Año"), "2026");
+    await user.type(screen.getByLabelText("Plazo de ejecución"), "12");
+    await user.type(screen.getByLabelText("Dirección institucional"), "Dirección de Obras");
     await user.click(screen.getByRole("button", { name: /siguiente/i }));
     await user.click(screen.getByRole("button", { name: /crear proyecto/i }));
 
@@ -44,5 +49,19 @@ describe("AsistenteCrearProyecto", () => {
       expect(cuerpoCapturado).not.toHaveProperty("origenInsumos");
       expect(cuerpoCapturado).not.toHaveProperty("nombre");
     });
+    expect(cuerpoCapturado?.anio).toBe(2026);
+    expect(cuerpoCapturado?.plazoEjecucion).toBe(12);
+    expect(cuerpoCapturado?.plazoUnidad).toBe("MES");
+    expect(cuerpoCapturado?.direccionInstitucional).toBe("Dirección de Obras");
+  });
+
+  it("no avanza a Confirmar sin los campos que el backend exige", async () => {
+    const { user } = renderConProviders(<AsistenteCrearProyecto abierto onClose={() => {}} />);
+
+    await user.type(screen.getByLabelText("Nombre"), "Puente Tulcán");
+    await user.click(screen.getByRole("button", { name: /siguiente/i }));
+
+    expect(await screen.findByText("La dirección es obligatoria")).toBeInTheDocument();
+    expect(screen.getByText(/paso 1/i)).toBeInTheDocument();
   });
 });

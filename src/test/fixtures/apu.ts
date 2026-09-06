@@ -1,4 +1,9 @@
-import type { ApuResponse, ApuResumenResponse, PlantillaApuDetalleResponse } from "@/api/contract";
+import type {
+  ApuCalculoResponse,
+  ApuResponse,
+  ApuResumenResponse,
+  PlantillaApuDetalleResponse,
+} from "@/api/contract";
 
 export const apuResumenFixture: ApuResumenResponse[] = [
   {
@@ -51,10 +56,8 @@ export const apuDetalleFixture: ApuResponse = {
 
   costoDirecto: 800,
   costoTotal: 920,
-  porcentajeIndirecto: null,
   porcentajeIndirectoEfectivo: 0.15,
   costoIndirecto: 120,
-  especificacionTecnica: null,
   secciones: [
     {
       tipo: "EQUIPO",
@@ -158,6 +161,80 @@ export const apuConHmFixture: ApuResponse = {
     },
     ...apuDetalleFixture.secciones.slice(1),
   ],
+};
+
+// Forma de main: {apuId, codigo, parametros, secciones[{tipo, subtotal,
+// operacion, resultado, lineas[]}], resumen{cd, ci, ct}}. Dinero como `number`.
+// `operacion` la compone el backend: por línea EQUIPO/MANO_OBRA es
+// «cantidad × precio × rendimiento»; por sección, la suma de los resultados.
+export const apuCalculoFixture: ApuCalculoResponse = {
+  apuId: "018f8a40-0000-7000-8000-000000000001",
+  codigo: "APU-001",
+  parametros: { hm: 0.05, ciDefault: 0.15, ciAplicado: 0.15 },
+  secciones: [
+    {
+      tipo: "EQUIPO",
+      subtotal: 400,
+      operacion: "400.000000",
+      resultado: 400,
+      lineas: [
+        {
+          detalleId: "018f8a50-0000-7000-8000-000000000100",
+          orden: 1,
+          seccion: "EQUIPO",
+          esHerramientaMenor: false,
+          insumoId: "018f8a20-0000-7000-8000-000000000015",
+          descripcion: "Retroexcavadora",
+          cantidad: 1,
+          rendimiento: 0.05,
+          precioEfectivo: 45,
+          costoHora: 900,
+          operacion: "1.000000 × 45.000000 × 0.050000",
+          resultado: 400,
+        },
+      ],
+    },
+    {
+      tipo: "MANO_OBRA",
+      subtotal: 400,
+      operacion: "200.000000 + 200.000000",
+      resultado: 400,
+      lineas: [
+        {
+          detalleId: "018f8a50-0000-7000-8000-000000000101",
+          orden: 1,
+          seccion: "MANO_OBRA",
+          esHerramientaMenor: false,
+          insumoId: "018f8a20-0000-7000-8000-000000000013",
+          descripcion: "Albañil",
+          cantidad: 1,
+          rendimiento: 0.1,
+          precioEfectivo: 8.5,
+          costoHora: 85,
+          operacion: "1.000000 × 8.500000 × 0.100000",
+          resultado: 200,
+        },
+        {
+          detalleId: "018f8a50-0000-7000-8000-000000000102",
+          orden: 2,
+          seccion: "MANO_OBRA",
+          esHerramientaMenor: false,
+          insumoId: "018f8a20-0000-7000-8000-000000000014",
+          descripcion: "Peón",
+          cantidad: 2,
+          rendimiento: 0.1,
+          precioEfectivo: 4.25,
+          costoHora: 42.5,
+          operacion: "2.000000 × 4.250000 × 0.100000",
+          resultado: 200,
+        },
+      ],
+    },
+    { tipo: "MATERIAL", subtotal: 0, operacion: "0", resultado: 0, lineas: [] },
+    { tipo: "TRANSPORTE", subtotal: 0, operacion: "0", resultado: 0, lineas: [] },
+  ],
+  // Sin `cdAjustado`: la cadena activa del motor es CD → CI → CT.
+  resumen: { cd: 800, ci: 120, ct: 920 },
 };
 
 export const plantillaDetalleFixture: PlantillaApuDetalleResponse = {

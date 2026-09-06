@@ -1,5 +1,9 @@
 import { http, HttpResponse } from "msw";
-import type { ProyectoResponse, PresupuestoVersionResponse } from "@/api/contract";
+import type {
+  ProyectoResponse,
+  PresupuestoVersionResponse,
+  PlantillaProyectoResponse,
+} from "@/api/contract";
 import type { Problem } from "@/api/problem";
 import { tokenFixture } from "./fixtures/auth";
 import {
@@ -20,6 +24,7 @@ import {
   apuResumenFixture,
   apuDetalleFixture,
   apuConHmFixture,
+  apuCalculoFixture,
   plantillaDetalleFixture,
 } from "./fixtures/apu";
 import {
@@ -123,19 +128,27 @@ export const handlers = [
   http.put(`${API}/proyectos/:id/logo`, () => HttpResponse.json(null, { status: 204 })),
 
   // ———— Plantillas de proyecto (plan 035, sin backend real) ————
+  // `snapshotEstructura` es un JsonNode opaco y va en la respuesta de main; es
+  // lo que necesita el preview del snapshot (S-36/S-40).
   http.get(`${API}/plantillas-proyecto`, () =>
-    HttpResponse.json([
+    HttpResponse.json<PlantillaProyectoResponse[]>([
       {
-        id: 1,
+        id: "018f8a60-0000-7000-8000-000000000001",
         nombre: "Plantilla proyecto",
         descripcion: "Plantilla de prueba",
+        snapshotEstructura: { capitulos: [{ item: "1", descripcion: "Preliminares" }] },
         fechaCreacion: "2026-01-01T00:00:00Z",
       },
     ]),
   ),
   http.post(`${API}/plantillas-proyecto`, () =>
-    HttpResponse.json(
-      { id: 2, nombre: "Nueva plantilla", fechaCreacion: "2026-01-02T00:00:00Z" },
+    HttpResponse.json<PlantillaProyectoResponse>(
+      {
+        id: "018f8a60-0000-7000-8000-000000000002",
+        nombre: "Nueva plantilla",
+        snapshotEstructura: { capitulos: [] },
+        fechaCreacion: "2026-01-02T00:00:00Z",
+      },
       { status: 201 },
     ),
   ),
@@ -208,7 +221,8 @@ export const handlers = [
     }
     return HttpResponse.json(null, { status: 204 });
   }),
-  http.get(`${API}/proyectos/:id/insumos/:iid/uso`, () => HttpResponse.json(insumoUsoFixture)),
+  // La ruta del backend es `/usos` en plural; el frontend pedía `/uso`.
+  http.get(`${API}/proyectos/:id/insumos/:iid/usos`, () => HttpResponse.json(insumoUsoFixture)),
   http.post(`${API}/proyectos/:id/insumos/importar`, () =>
     HttpResponse.json(importResultadoFixture),
   ),
@@ -234,6 +248,10 @@ export const handlers = [
   ),
   // El %CI tiene endpoint propio y recibe un BigDecimal crudo, no un objeto.
   http.patch(`${API}/apus/:id/porcentaje-indirecto`, () => HttpResponse.json(apuConHmFixture)),
+  // La ET tiene su propio GET; no viaja dentro de ApuResponse.
+  http.get(`${API}/apus/:id/especificacion-tecnica`, ({ params }) =>
+    HttpResponse.json({ apuId: params.id, contenido: null }),
+  ),
   http.put(`${API}/apus/:id/especificacion-tecnica`, () => HttpResponse.json(apuDetalleFixture)),
   http.delete(`${API}/apus/:id`, ({ params }) => {
     if (Number(params.id) === 2) {
@@ -244,7 +262,21 @@ export const handlers = [
   http.post(`${API}/apus/:id/duplicar`, () =>
     HttpResponse.json(apuDetalleFixture, { status: 201 }),
   ),
-  http.post(`${API}/apus/:id/detalles`, () => HttpResponse.json(apuConHmFixture, { status: 201 })),
+  // ApuDetalleCrearRequest: seccionTipo, insumoId y cantidad son @NotNull. Sin
+  // ellos el backend devuelve 400, que es lo que pasaba al añadir una línea.
+  http.post(`${API}/apus/:id/detalles`, async ({ request }) => {
+    const cuerpo = (await request
+      .clone()
+      .json()
+      .catch(() => ({}))) as Record<string, unknown>;
+    const faltan = ["seccionTipo", "insumoId", "cantidad"].filter((c) => cuerpo[c] == null);
+    return (
+      (await soloCampos(request, "seccionTipo", "insumoId", "cantidad", "rendimiento")) ??
+      (faltan.length
+        ? problema(400, "campo-requerido", `Campos obligatorios: ${faltan.join(", ")}`)
+        : HttpResponse.json(apuConHmFixture, { status: 201 }))
+    );
+  }),
   http.patch(`${API}/apus/:id/detalles/:did`, ({ params }) => {
     if (Number(params.did) === 200) {
       return problema(
@@ -266,18 +298,7 @@ export const handlers = [
     return HttpResponse.json(apuConHmFixture);
   }),
   // ———— APU cálculo (Plan 010) ————
-  http.get(`${API}/apus/:id/calculo`, () =>
-    HttpResponse.json({
-      formulas: [
-        { concepto: "HM", formula: "5% × 8.99", resultado: "0.45" },
-        { concepto: "CD", formula: "Suma M+N+O+P", resultado: "800.00" },
-      ],
-      subtotales: { M: "400.00", N: "400.00", O: "0.00", P: "0.00" },
-      cd: "800.00",
-      ci: "120.00",
-      ct: "920.00",
-    }),
-  ),
+  http.get(`${API}/apus/:id/calculo`, () => HttpResponse.json(apuCalculoFixture)),
   http.post(
     `${API}/apus/:id/guardar-plantilla`,
     async ({ request }) =>

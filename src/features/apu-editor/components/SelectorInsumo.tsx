@@ -25,13 +25,14 @@ interface SelectorInsumoProps {
   onClose: () => void;
   proyectoId: string;
   tipo: SeccionTipo;
-  onSeleccionar: (sel: { insumoId: string }) => void;
+  onSeleccionar: (sel: { seccionTipo: SeccionTipo; insumoId: string }) => void;
 }
 
 export function SelectorInsumo({
   abierto,
   onClose,
   proyectoId,
+  tipo,
   onSeleccionar,
 }: SelectorInsumoProps) {
   const [fuente, setFuente] = useState("LOCAL");
@@ -85,7 +86,9 @@ export function SelectorInsumo({
                 type="button"
                 className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
                 onClick={() => {
-                  onSeleccionar({ insumoId: r.id });
+                  // La sección es la del grid que abrió el selector; el backend
+                  // la exige (@NotNull) para saber en qué bloque cae la fila.
+                  onSeleccionar({ seccionTipo: tipo, insumoId: r.id });
                   onClose();
                 }}
               >
@@ -98,7 +101,9 @@ export function SelectorInsumo({
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  {r.fuente === "LOCAL" ? (
+                  {/* El backend emite "PROYECTO" para la base local; comparar
+                      contra "LOCAL" mandaba todas las filas a la rama Central. */}
+                  {r.fuente === "PROYECTO" ? (
                     <Badge variant="secondary">Local</Badge>
                   ) : (
                     <Badge variant="outline" className="text-xs">

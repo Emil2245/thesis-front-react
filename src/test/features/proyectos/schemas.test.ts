@@ -3,9 +3,42 @@ import {
   parametrosSchema,
   descuentoSchema,
   firmanteSchema,
+  proyectoSchema,
   crearParametrosSchema,
   crearDescuentoSchema,
 } from "@/features/proyectos/schemas";
+
+// Plan 059 §10: en main, ProyectoCrearRequest tiene @NotNull en anio,
+// plazoEjecucion y plazoUnidad, y @NotBlank en nombreProyecto y
+// direccionInstitucional. El formulario los daba por opcionales, así que dejaba
+// enviar un cuerpo que el backend rechaza.
+describe("proyectoSchema", () => {
+  const completo = {
+    nombreProyecto: "Obra de alcantarillado",
+    anio: 2026,
+    plazoEjecucion: 12,
+    plazoUnidad: "MES" as const,
+    direccionInstitucional: "Dirección de Obras Públicas",
+  };
+
+  it("acepta un proyecto con todos los campos obligatorios", () => {
+    expect(proyectoSchema.safeParse(completo).success).toBe(true);
+  });
+
+  it.each(["anio", "plazoEjecucion", "plazoUnidad", "direccionInstitucional"] as const)(
+    "rechaza un proyecto sin %s",
+    (campo) => {
+      const { [campo]: _omitido, ...parcial } = completo;
+      expect(proyectoSchema.safeParse(parcial).success).toBe(false);
+    },
+  );
+
+  it("rechaza direccionInstitucional en blanco", () => {
+    expect(proyectoSchema.safeParse({ ...completo, direccionInstitucional: "" }).success).toBe(
+      false,
+    );
+  });
+});
 
 describe("parametrosSchema", () => {
   it("rechaza %HM > 20", () => {

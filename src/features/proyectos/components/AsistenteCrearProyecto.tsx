@@ -52,7 +52,9 @@ export function AsistenteCrearProyecto({
 
   const avanzar = async () => {
     if (paso === 0) {
-      const ok = await form.trigger(["nombreProyecto"]);
+      // Todos los obligatorios están en este paso: se validan antes de pasar a
+      // Confirmar, no al pulsar Crear sobre campos ya fuera de pantalla.
+      const ok = await form.trigger();
       if (!ok) return;
     }
     if (paso < PASOS.length - 1) {
@@ -61,16 +63,18 @@ export function AsistenteCrearProyecto({
   };
 
   const handleCrear = async () => {
+    // Los obligatorios viven en el paso 2, que nadie validaba antes de enviar.
+    if (!(await form.trigger())) return;
     const data = form.getValues();
     const body: ProyectoCrearRequest = {
       nombreProyecto: data.nombreProyecto,
       codigo: data.codigo || undefined,
       descripcion: data.descripcion || undefined,
-      anio: data.anio || undefined,
+      anio: data.anio,
       fechaInicio: data.fechaInicio || undefined,
-      plazoEjecucion: data.plazoEjecucion || undefined,
-      plazoUnidad: data.plazoUnidad ?? undefined,
-      direccionInstitucional: data.direccionInstitucional || undefined,
+      plazoEjecucion: data.plazoEjecucion,
+      plazoUnidad: data.plazoUnidad,
+      direccionInstitucional: data.direccionInstitucional,
       subdireccionInstitucional: data.subdireccionInstitucional || undefined,
     };
     try {
@@ -151,6 +155,7 @@ export function AsistenteCrearProyecto({
             <Field>
               <Label htmlFor="direccion">Dirección institucional</Label>
               <Input id="direccion" {...form.register("direccionInstitucional")} />
+              <FieldError>{form.formState.errors.direccionInstitucional?.message}</FieldError>
             </Field>
             <Field>
               <Label htmlFor="subdireccion">Subdirección institucional</Label>
