@@ -300,11 +300,83 @@ Sin backend, dejar apagadas: **descuento APU** (retirado a propósito), **ver us
 
 ---
 
-## 8. Decisiones que necesita el humano
+## 8. Qué contiene `test/stuff` (para decidir si se mergea)
 
-1. **¿`test/stuff` se mergea o se abandona?** Tiene cronograma, admin completo (usuarios/logs/
-   parámetros), descuento global y los exportadores XLSX — trabajo real que main no tiene.
-   Si aterriza, gran parte de las secciones 4, 5 y 7 cambian. **Es la decisión bloqueante.**
+Todo verificado leyendo `git show test/stuff:<path>`.
+
+### Lo que aporta y main no tiene
+
+| Feature | Recursos |
+|---|---|
+| **Cronograma** | `PresupuestoCronogramaResource` → `/presupuestos/{id}/cronograma` · `CronogramaResource` → `/cronogramas/{id}`, `/actividades/{actividadId}`, `/revisado` |
+| **Admin completo** | `AdminUsuarioResource` (`/admin/usuarios`, desactivar, reactivar) · `AdminLogResource` (`/admin/logs`) · `AdminParametrosSistemaResource` (`/admin/parametros-sistema`) |
+| **Exportadores XLSX** | `/documentos/apu/{apuId}` · `/documentos/apus/{presupuestoId}` · `/documentos/presupuesto/{presupuestoId}` · `/documentos/cronograma/{presupuestoId}` |
+| **Descuento global** | `DescuentoGlobalService` + endpoints de preview y aplicación |
+
+### Lo que quita respecto a main
+
+- `DELETE /admin/bases-centrales/{id}` (commit `a5f34db`).
+
+### El problema: los contratos de presupuesto son incompatibles
+
+```java
+// origin/main
+PresupuestoResponse(UUID presupuestoId, Short version, boolean esVigente,
+                    String totalGeneral, List<CapituloResponse> capitulos)
+// test/stuff
+PresupuestoResponse(Long presupuestoId, Short version, boolean esVigente,
+                    BigDecimal totalGeneral, List<CapituloResponse> capitulos)
+```
+
+Difieren en **dos ejes a la vez**: tipo de id (`UUID` vs `Long`) y serialización del dinero
+(string vs número). Lo mismo en `PresupuestoVersionResource`: main declara
+`@PathParam("proyectoId") String`, test/stuff declara `Long`.
+
+Main además refactorizó presupuesto en recursos separados (`ComparacionResource`,
+`PresupuestoValidacionResource`, `PresupuestoVigenciaResource`, `ResumenComponentesResource`)
+que en test/stuff no existen como tales.
+
+### Superficie del conflicto
+
+```
+git diff --shortstat origin/main test/stuff
+198 files changed, 6247 insertions(+), 18616 deletions(-)
+```
+
+Es decir: **main tiene ~18.6k líneas que test/stuff no tiene.** Archivos que difieren por
+paquete: `presupuesto` 43 · `api` 33 · tests 29 · `docs` 17 · `cronograma` 14 · `apu` 12 ·
+`plans` 11 · `admin` 10 · `documento` 5.
+
+**No es un merge trivial.** El módulo presupuesto divergió de raíz.
+
+### Otros datos
+
+- Suite en test/stuff: 318 tests, 2 en rojo aceptados (GM-19/GM-20, redondeo de
+  consolidación del motor), 1 skipped (GM-24, fixture upstream).
+- test/stuff tiene **dos clases `DocumentoResource` registradas en el mismo `@Path("/documentos")`**
+  (`documento/DocumentoResource.java` y `documento/resource/DocumentoResource.java`) — parece
+  artefacto de merge, probablemente un bug.
+
+### Las tres salidas
+
+1. **Abandonar `test/stuff`** y reimplementar cronograma/admin/export sobre el contrato UUID de
+   main. Se pierde trabajo, pero el contrato queda uniforme.
+2. **Mergear `test/stuff` a main** portando sus features al contrato de main (UUID + dinero
+   string). El conflicto real está en los 43 archivos de presupuesto.
+3. **Cherry-pick por feature.** Cronograma, admin y export son bastante independientes del
+   contrato de presupuesto salvo por los ids que reciben; podrían portarse de uno en uno.
+   Descuento global sí toca presupuesto de lleno.
+
+La opción 3 es la que menos bloquea al frontend: permite encender módulos por separado sin
+esperar a resolver todo el conflicto de presupuesto.
+
+---
+
+## 9. Decisiones que necesita el humano
+
+1. **¿`test/stuff` se mergea, se abandona o se cherry-pickea?** Ver §8 para el inventario
+   completo, la incompatibilidad de contratos y las tres salidas. Si aterriza, gran parte de
+   las secciones 4, 5 y 7 cambian. **Es la decisión bloqueante.**
 2. **¿Cómo representar el dinero?** El backend parte `String` (presupuesto) vs `BigDecimal`
    → número (APU/insumo/parámetros). Hay que decidir si el front normaliza en el seam o si
    `Decimal` se aplica solo a presupuesto.
