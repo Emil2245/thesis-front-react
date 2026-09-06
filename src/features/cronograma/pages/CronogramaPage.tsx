@@ -22,7 +22,7 @@ export function CronogramaPage() {
   // La versión la manda el selector de la barra superior, que ya cae en la
   // vigente cuando la URL no trae `?v=`.
   const { presupuestoId } = useVersionActiva();
-  const versionId = presupuestoId ?? 0;
+  const versionId = presupuestoId ?? "";
 
   const { data: cronograma, isLoading } = useCronograma(versionId);
   const crearCrono = useCrearCronograma(versionId);
@@ -35,13 +35,13 @@ export function CronogramaPage() {
   } | null>(null);
   const [lastConfigBody, setLastConfigBody] = useState<CronogramaConfigurarRequest | null>(null);
 
-  const configCrono = useConfigurarCronograma(cronograma?.id ?? 0, versionId, (periodos) => {
+  const configCrono = useConfigurarCronograma(cronograma?.id ?? "", versionId, (periodos) => {
     if (lastConfigBody) {
       setReduccionData({ body: lastConfigBody, periodos });
     }
   });
-  const { mutate: actualizarAvance } = useActualizarAvance(cronograma?.id ?? 0, versionId);
-  const { mutate: revisar } = useRevisarCronograma(cronograma?.id ?? 0, versionId);
+  const { mutate: actualizarAvance } = useActualizarAvance(cronograma?.id ?? "", versionId);
+  const { mutate: revisar } = useRevisarCronograma(cronograma?.id ?? "", versionId);
 
   const handleConfigurar = useCallback(
     (unidadTiempo: UnidadTiempo, numeroPeriodos: number) => {
@@ -137,8 +137,8 @@ export function CronogramaPage() {
         onConfirm={handleGuardarAvance}
         actividad={
           actividadEdit ?? {
-            id: 0,
-            rubroId: 0,
+            id: "",
+            rubroId: "",
             item: "",
             descripcion: "",
             precioTotal: "0" as never,

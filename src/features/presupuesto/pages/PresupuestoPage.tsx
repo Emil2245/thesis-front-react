@@ -23,7 +23,7 @@ export function PresupuestoPage() {
   // vigente cuando la URL no trae `?v=`; leer el parámetro en crudo dejaba la
   // pantalla vacía en la primera carga.
   const { presupuestoId } = useVersionActiva();
-  const versionId = presupuestoId ?? 0;
+  const versionId = presupuestoId ?? "";
 
   const { data: presupuesto, isLoading } = usePresupuesto(versionId);
   const { data: resumen, isLoading: resumenLoading } = useResumen(versionId);
@@ -35,11 +35,11 @@ export function PresupuestoPage() {
   const [dialogo, setDialogo] = useState<
     | {
         type: "crear" | "editar" | "mover" | "agregar";
-        padreId?: number;
+        padreId?: string;
         capitulo?: CapituloResponse;
       }
     | { type: "eliminar-capitulo"; capitulo: CapituloResponse }
-    | { type: "eliminar-rubro"; capituloId: number; rubroId: number }
+    | { type: "eliminar-rubro"; capituloId: string; rubroId: string }
     | null
   >(null);
 
@@ -66,7 +66,7 @@ export function PresupuestoPage() {
   }, []);
 
   const handleConfirmarMover = useCallback(
-    (parentId: number | null, orden: number) => {
+    (parentId: string | null, orden: number) => {
       if (dialogo?.type === "mover" && dialogo.capitulo) {
         mover.mutate({ capituloId: dialogo.capitulo.id, body: { parentId, orden } });
       }
@@ -75,7 +75,7 @@ export function PresupuestoPage() {
     [mover, dialogo],
   );
 
-  const handleAgregarRubro = useCallback((capituloId: number) => {
+  const handleAgregarRubro = useCallback((capituloId: string) => {
     setDialogo({ type: "agregar", padreId: capituloId });
   }, []);
 
@@ -91,7 +91,7 @@ export function PresupuestoPage() {
 
   const handleConfirmarAgregarSub = useCallback(
     (descripcion: string) => {
-      const payload: { descripcion: string; parentId?: number } = { descripcion };
+      const payload: { descripcion: string; parentId?: string } = { descripcion };
       if (dialogo?.type === "crear" && dialogo.padreId) {
         payload.parentId = dialogo.padreId;
       }
@@ -102,13 +102,13 @@ export function PresupuestoPage() {
   );
 
   const handleCantidadChange = useCallback(
-    (capituloId: number, rubroId: number, cantidad: string) => {
+    (capituloId: string, rubroId: string, cantidad: string) => {
       actualizarCantidad.mutate({ capituloId, rubroId, cantidad });
     },
     [actualizarCantidad],
   );
 
-  const handleEliminarRubro = useCallback((capituloId: number, rubroId: number) => {
+  const handleEliminarRubro = useCallback((capituloId: string, rubroId: string) => {
     setDialogo({ type: "eliminar-rubro", capituloId, rubroId });
   }, []);
 
@@ -194,7 +194,7 @@ export function PresupuestoPage() {
           dialogo?.type === "mover"
             ? dialogo.capitulo!
             : {
-                id: 0,
+                id: "",
                 item: "",
                 descripcion: "",
                 orden: 0,

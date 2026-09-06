@@ -6,14 +6,36 @@ import type {
   ComparacionVersionesResponse,
 } from "@/api/contract";
 
+// UUIDv7 estables: las queryKeys y los snapshots deben ser deterministas, así
+// que nada de crypto.randomUUID() aquí.
+export const PRESUPUESTO_V1 = "0198c1a0-0000-7000-8000-000000000010";
+export const PRESUPUESTO_V2 = "0198c1a0-0000-7000-8000-000000000011";
+export const PRESUPUESTO_V3 = "0198c1a0-0000-7000-8000-000000000012";
+
+export const CAPITULO_1 = "0198c1a1-0000-7000-8000-000000000010";
+export const CAPITULO_1_1 = "0198c1a1-0000-7000-8000-000000000011";
+export const CAPITULO_1_2 = "0198c1a1-0000-7000-8000-000000000012";
+export const CAPITULO_2 = "0198c1a1-0000-7000-8000-000000000020";
+
+export const RUBRO_1_1_1 = "0198c1a2-0000-7000-8000-000000000100";
+export const RUBRO_1_1_2 = "0198c1a2-0000-7000-8000-000000000101";
+export const RUBRO_1_2_1 = "0198c1a2-0000-7000-8000-000000000102";
+export const RUBRO_2_1 = "0198c1a2-0000-7000-8000-000000000200";
+
+// Los apuId son los de apuResumenFixture: un rubro apunta a un APU real.
+const APU_001 = "018f8a40-0000-7000-8000-000000000001";
+const APU_002 = "018f8a40-0000-7000-8000-000000000002";
+const APU_003 = "018f8a40-0000-7000-8000-000000000003";
+const APU_004 = "018f8a40-0000-7000-8000-000000000004";
+
 export const presupuestoFixture: PresupuestoResponse = {
-  presupuestoId: 1,
+  presupuestoId: PRESUPUESTO_V2,
   version: 2,
   esVigente: true,
   totalGeneral: "18500.000000" as never,
   capitulos: [
     {
-      id: 10,
+      id: CAPITULO_1,
       item: "1",
       descripcion: "Preliminares",
       orden: 1,
@@ -21,7 +43,7 @@ export const presupuestoFixture: PresupuestoResponse = {
       rubros: [],
       subcapitulos: [
         {
-          id: 11,
+          id: CAPITULO_1_1,
           item: "1.1",
           descripcion: "Instalación de campamento",
           orden: 1,
@@ -29,7 +51,7 @@ export const presupuestoFixture: PresupuestoResponse = {
           subcapitulos: [],
           rubros: [
             {
-              id: 100,
+              id: RUBRO_1_1_1,
               item: "1.1.1",
               codigo: "APU-001",
               descripcion: "Excavación a máquina",
@@ -37,11 +59,10 @@ export const presupuestoFixture: PresupuestoResponse = {
               cantidad: "50.000000" as never,
               precioUnitario: "40.000000" as never,
               precioTotal: "2000.000000" as never,
-              apuId: 1,
-              alertas: [],
+              apuId: APU_001,
             },
             {
-              id: 101,
+              id: RUBRO_1_1_2,
               item: "1.1.2",
               codigo: "APU-002",
               descripcion: "Relleno compactado",
@@ -49,13 +70,12 @@ export const presupuestoFixture: PresupuestoResponse = {
               cantidad: "20.000000" as never,
               precioUnitario: "25.000000" as never,
               precioTotal: "500.000000" as never,
-              apuId: 2,
-              alertas: ["PU_CERO"],
+              apuId: APU_002,
             },
           ],
         },
         {
-          id: 12,
+          id: CAPITULO_1_2,
           item: "1.2",
           descripcion: "Cerramiento provisional",
           orden: 2,
@@ -63,7 +83,7 @@ export const presupuestoFixture: PresupuestoResponse = {
           subcapitulos: [],
           rubros: [
             {
-              id: 102,
+              id: RUBRO_1_2_1,
               item: "1.2.1",
               codigo: "APU-003",
               descripcion: "Transporte material",
@@ -71,15 +91,14 @@ export const presupuestoFixture: PresupuestoResponse = {
               cantidad: "100.000000" as never,
               precioUnitario: "20.000000" as never,
               precioTotal: "2000.000000" as never,
-              apuId: 3,
-              alertas: ["CANTIDAD_CERO"],
+              apuId: APU_003,
             },
           ],
         },
       ],
     },
     {
-      id: 20,
+      id: CAPITULO_2,
       item: "2",
       descripcion: "Obra civil",
       orden: 2,
@@ -87,7 +106,7 @@ export const presupuestoFixture: PresupuestoResponse = {
       subcapitulos: [],
       rubros: [
         {
-          id: 200,
+          id: RUBRO_2_1,
           item: "2.1",
           codigo: "APU-004",
           descripcion: "Hormigón simple",
@@ -95,8 +114,7 @@ export const presupuestoFixture: PresupuestoResponse = {
           cantidad: "10.000000" as never,
           precioUnitario: "1400.000000" as never,
           precioTotal: "14000.000000" as never,
-          apuId: 4,
-          alertas: [],
+          apuId: APU_004,
         },
       ],
     },
@@ -105,19 +123,18 @@ export const presupuestoFixture: PresupuestoResponse = {
 
 export const versionesFixture: PresupuestoVersionResponse[] = [
   {
-    presupuestoId: 10,
+    presupuestoId: PRESUPUESTO_V1,
     version: 1,
     esVigente: false,
-    origenId: 0,
     notas: "Versión inicial",
     totalGeneral: "18000.000000" as never,
     fechaCreacion: "2026-06-01T00:00:00",
   },
   {
-    presupuestoId: 11,
+    presupuestoId: PRESUPUESTO_V2,
     version: 2,
     esVigente: true,
-    origenId: 10,
+    origenId: PRESUPUESTO_V1,
     notas: "Corrección APU hormigón",
     totalGeneral: "18500.000000" as never,
     fechaCreacion: "2026-07-01T00:00:00",
@@ -127,13 +144,13 @@ export const versionesFixture: PresupuestoVersionResponse[] = [
 export const validacionFixture: ValidacionPresupuestoResponse = {
   exportable: false,
   itemsPuCero: [
-    { rubroId: 101, item: "1.1.2", codigo: "APU-002", descripcion: "Relleno compactado" },
+    { rubroId: RUBRO_1_1_2, item: "1.1.2", codigo: "APU-002", descripcion: "Relleno compactado" },
   ],
   itemsCantidadCero: [
-    { rubroId: 102, item: "1.2.1", codigo: "APU-003", descripcion: "Transporte material" },
+    { rubroId: RUBRO_1_2_1, item: "1.2.1", codigo: "APU-003", descripcion: "Transporte material" },
   ],
   itemsSinActividad: [
-    { rubroId: 100, item: "1.1.1", codigo: "APU-001", descripcion: "Excavación a máquina" },
+    { rubroId: RUBRO_1_1_1, item: "1.1.1", codigo: "APU-001", descripcion: "Excavación a máquina" },
   ],
 };
 
@@ -152,7 +169,7 @@ export const resumenComponentesFixture: ResumenComponentesResponse = {
 export const comparacionFixture: ComparacionVersionesResponse = {
   versiones: [
     {
-      presupuestoId: 10,
+      presupuestoId: PRESUPUESTO_V1,
       version: 1,
       totalGeneral: "18000.000000" as never,
       porCapituloRaiz: [
@@ -161,7 +178,7 @@ export const comparacionFixture: ComparacionVersionesResponse = {
       ],
     },
     {
-      presupuestoId: 11,
+      presupuestoId: PRESUPUESTO_V2,
       version: 2,
       totalGeneral: "18500.000000" as never,
       porCapituloRaiz: [

@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { get } from "@/api/request";
-import { ApiError } from "@/api/problem";
 import { qk } from "@/api/queryKeys";
 import type {
   PresupuestoResponse,
@@ -10,53 +9,45 @@ import type {
   ComparacionVersionesResponse,
 } from "@/api/contract";
 
-export function usePresupuesto(presupuestoId: number) {
+export function usePresupuesto(presupuestoId: string) {
   return useQuery({
     queryKey: qk.presupuesto(presupuestoId),
     queryFn: () => get<PresupuestoResponse>(`/presupuestos/${presupuestoId}`),
-    enabled: presupuestoId > 0,
+    enabled: !!presupuestoId,
   });
 }
 
-export function useResumen(presupuestoId: number) {
+export function useResumen(presupuestoId: string) {
   return useQuery({
     queryKey: qk.presupuestoResumen(presupuestoId),
     queryFn: () => get<ResumenComponentesResponse>(`/presupuestos/${presupuestoId}/resumen`),
-    enabled: presupuestoId > 0,
+    enabled: !!presupuestoId,
   });
 }
 
-export function useValidacion(presupuestoId: number) {
+export function useValidacion(presupuestoId: string) {
   return useQuery({
     queryKey: qk.presupuestoValidacion(presupuestoId),
     queryFn: () => get<ValidacionPresupuestoResponse>(`/presupuestos/${presupuestoId}/validacion`),
-    enabled: presupuestoId > 0,
+    enabled: !!presupuestoId,
   });
 }
 
 export function useVersiones(proyectoId: string) {
   return useQuery({
     queryKey: qk.versiones(proyectoId),
-    queryFn: async () => {
-      try {
-        return await get<PresupuestoVersionResponse[]>(`/proyectos/${proyectoId}/presupuestos`);
-      } catch (e) {
-        // El backend aún no expone esta ruta para proyectos sin presupuestos.
-        if (e instanceof ApiError && e.status === 404) return [];
-        throw e;
-      }
-    },
+    queryFn: () => get<PresupuestoVersionResponse[]>(`/proyectos/${proyectoId}/presupuestos`),
     enabled: !!proyectoId,
   });
 }
 
-export function useComparacion(presupuestoId: number, conPresupuestoId?: number) {
+export function useComparacion(presupuestoId: string, conPresupuestoId?: string) {
   return useQuery({
     queryKey: [...qk.presupuesto(presupuestoId), "comparar", conPresupuestoId] as const,
     queryFn: () =>
       get<ComparacionVersionesResponse>(`/presupuestos/${presupuestoId}/comparar`, {
         con: conPresupuestoId,
       }),
-    enabled: presupuestoId > 0 && !!conPresupuestoId,
+    enabled: !!presupuestoId && !!conPresupuestoId,
   });
 }

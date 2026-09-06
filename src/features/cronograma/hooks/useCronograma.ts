@@ -10,15 +10,15 @@ import type {
 import { ApiError } from "@/api/problem";
 import { toast } from "sonner";
 
-export function useCronograma(presupuestoId: number) {
+export function useCronograma(presupuestoId: string) {
   return useQuery({
     queryKey: qk.cronograma(presupuestoId),
     queryFn: () => get<CronogramaResponse>(`/presupuestos/${presupuestoId}/cronograma`),
-    enabled: presupuestoId > 0,
+    enabled: !!presupuestoId,
   });
 }
 
-export function useCrearCronograma(presupuestoId: number) {
+export function useCrearCronograma(presupuestoId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: CronogramaCrearRequest) =>
@@ -32,8 +32,8 @@ export function useCrearCronograma(presupuestoId: number) {
 }
 
 export function useConfigurarCronograma(
-  cronogramaId: number,
-  presupuestoId: number,
+  cronogramaId: string,
+  presupuestoId: string,
   on409?: (periodosAfectados: string[]) => void,
 ) {
   const qc = useQueryClient();
@@ -55,10 +55,10 @@ export function useConfigurarCronograma(
   });
 }
 
-export function useActualizarAvance(cronogramaId: number, presupuestoId: number) {
+export function useActualizarAvance(cronogramaId: string, presupuestoId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ actividadId, body }: { actividadId: number; body: ActividadAvanceRequest }) =>
+    mutationFn: ({ actividadId, body }: { actividadId: string; body: ActividadAvanceRequest }) =>
       patch<CronogramaResponse>(`/cronogramas/${cronogramaId}/actividades/${actividadId}`, body),
     onSuccess: (data) => {
       qc.setQueryData(qk.cronograma(presupuestoId), data);
@@ -68,7 +68,7 @@ export function useActualizarAvance(cronogramaId: number, presupuestoId: number)
   });
 }
 
-export function useRevisarCronograma(cronogramaId: number, presupuestoId: number) {
+export function useRevisarCronograma(cronogramaId: string, presupuestoId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => post<CronogramaResponse>(`/cronogramas/${cronogramaId}/revisado`),

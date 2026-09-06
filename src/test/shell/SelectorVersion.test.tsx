@@ -49,7 +49,7 @@ describe("SelectorVersion", () => {
       <Routes>
         <Route path="/proyectos/:id" element={<SelectorVersion />} />
       </Routes>,
-      { ruta: "/proyectos/1?v=999" },
+      { ruta: "/proyectos/1?v=0198c1a0-0000-7000-8000-0000000009f9" },
     );
 
     await waitFor(() => {

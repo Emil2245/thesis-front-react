@@ -4,7 +4,7 @@ import { qk } from "@/api/queryKeys";
 import type { PresupuestoResponse } from "@/api/contract";
 import { toast } from "sonner";
 
-export function useRubroMutaciones(presupuestoId: number) {
+export function useRubroMutaciones(presupuestoId: string) {
   const queryClient = useQueryClient();
 
   const onSuccess = (data: PresupuestoResponse) => {
@@ -18,7 +18,7 @@ export function useRubroMutaciones(presupuestoId: number) {
       apuId,
       cantidad,
     }: {
-      capituloId: number;
+      capituloId: string;
       apuId: string;
       cantidad: string;
     }) =>
@@ -39,8 +39,8 @@ export function useRubroMutaciones(presupuestoId: number) {
       rubroId,
       cantidad,
     }: {
-      capituloId: number;
-      rubroId: number;
+      capituloId: string;
+      rubroId: string;
       cantidad: string;
     }) =>
       patch<PresupuestoResponse>(
@@ -55,7 +55,7 @@ export function useRubroMutaciones(presupuestoId: number) {
   });
 
   const eliminar = useMutation({
-    mutationFn: ({ capituloId, rubroId }: { capituloId: number; rubroId: number }) =>
+    mutationFn: ({ capituloId, rubroId }: { capituloId: string; rubroId: string }) =>
       del<PresupuestoResponse>(
         `/presupuestos/${presupuestoId}/capitulos/${capituloId}/rubros/${rubroId}`,
       ),

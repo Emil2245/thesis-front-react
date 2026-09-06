@@ -35,7 +35,7 @@ export function DialogoDescuentoGlobal({
 }: {
   abierto: boolean;
   onClose: () => void;
-  presupuestoId: number | null;
+  presupuestoId: string | null;
 }) {
   const { data: sistema } = useParametrosSistema();
   const maxDesc = sistema?.rangoDescuentoMax ? fraccionAPorcentaje(sistema.rangoDescuentoMax) : 50;

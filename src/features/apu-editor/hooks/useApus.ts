@@ -3,15 +3,15 @@ import { get, post, del } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import type { Page, ApuResumenResponse, ApuResponse, ApuCrearRequest } from "@/api/contract";
 
-export function useApus(presupuestoId: number, filtros?: Record<string, unknown>) {
+export function useApus(presupuestoId: string, filtros?: Record<string, unknown>) {
   return useQuery({
     queryKey: qk.apus(presupuestoId, filtros),
     queryFn: () => get<Page<ApuResumenResponse>>(`/presupuestos/${presupuestoId}/apus`, filtros),
-    enabled: presupuestoId > 0,
+    enabled: !!presupuestoId,
   });
 }
 
-export function useCrearApu(presupuestoId: number) {
+export function useCrearApu(presupuestoId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: ApuCrearRequest) =>
@@ -23,7 +23,7 @@ export function useCrearApu(presupuestoId: number) {
   });
 }
 
-export function useEliminarApu(presupuestoId: number) {
+export function useEliminarApu(presupuestoId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (apuId: string) => del(`/apus/${apuId}`),
@@ -33,7 +33,7 @@ export function useEliminarApu(presupuestoId: number) {
   });
 }
 
-export function useDuplicarApu(presupuestoId: number) {
+export function useDuplicarApu(presupuestoId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (apuId: string) => post<ApuResponse>(`/apus/${apuId}/duplicar`),

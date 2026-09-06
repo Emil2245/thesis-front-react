@@ -27,6 +27,9 @@ import {
   validacionFixture,
   resumenComponentesFixture,
   comparacionFixture,
+  PRESUPUESTO_V1,
+  PRESUPUESTO_V2,
+  PRESUPUESTO_V3,
 } from "./fixtures/presupuesto";
 import { cronogramaFixture } from "./fixtures/cronograma";
 import {
@@ -61,19 +64,18 @@ export const pagina = <T>(items: T[]) => ({
 
 const versionesStub: PresupuestoVersionResponse[] = [
   {
-    presupuestoId: 10,
+    presupuestoId: PRESUPUESTO_V1,
     version: 1,
     esVigente: false,
-    origenId: 0,
     notas: "Primera versión",
     totalGeneral: "1000.000000" as never,
     fechaCreacion: "2026-02-01T00:00:00",
   },
   {
-    presupuestoId: 11,
+    presupuestoId: PRESUPUESTO_V2,
     version: 2,
     esVigente: true,
-    origenId: 10,
+    origenId: PRESUPUESTO_V1,
     notas: "Segunda versión",
     totalGeneral: "1200.000000" as never,
     fechaCreacion: "2026-03-01T00:00:00",
@@ -149,7 +151,7 @@ export const handlers = [
       porcentaje: "0.0500" as never,
       porApu: [
         {
-          apuId: 1,
+          apuId: "018f8a40-0000-7000-8000-000000000001",
           codigo: "APU-001",
           cd: "100.000000" as never,
           cdAjustado: "95.000000" as never,
@@ -312,10 +314,10 @@ export const handlers = [
   http.post(`${API}/proyectos/:id/presupuestos`, () =>
     HttpResponse.json(
       {
-        presupuestoId: 12,
+        presupuestoId: PRESUPUESTO_V3,
         version: 3,
         esVigente: false,
-        origenId: 11,
+        origenId: PRESUPUESTO_V2,
         notas: "Nueva versión",
         totalGeneral: "18500.000000" as never,
         fechaCreacion: "2026-07-23T00:00:00",
@@ -325,24 +327,23 @@ export const handlers = [
   ),
   http.post(`${API}/presupuestos/:id/vigente`, () =>
     HttpResponse.json({
-      presupuestoId: 11,
+      presupuestoId: PRESUPUESTO_V2,
       version: 2,
       esVigente: true,
-      origenId: 10,
+      origenId: PRESUPUESTO_V1,
       notas: "Corrección APU hormigón",
       totalGeneral: "18500.000000" as never,
       fechaCreacion: "2026-07-01T00:00:00",
     }),
   ),
   http.delete(`${API}/presupuestos/:id`, ({ params }) => {
-    if (Number(params.id) === 11) {
+    if (params.id === PRESUPUESTO_V2) {
       return problema(409, "version-vigente-protegida", "No se puede eliminar la versión vigente");
     }
     return HttpResponse.json(null, { status: 204 });
   }),
   http.get(`${API}/presupuestos/:id/apus`, ({ params, request }) => {
-    const id = Number(params.id);
-    if (id !== 10 && id !== 11) {
+    if (params.id !== PRESUPUESTO_V1 && params.id !== PRESUPUESTO_V2) {
       return HttpResponse.json({ title: "No encontrado" }, { status: 404 });
     }
     const url = new URL(request.url);
@@ -389,7 +390,7 @@ export const handlers = [
 
   // ———— Cronograma (Plan 012) ————
   http.get(`${API}/presupuestos/:id/cronograma`, ({ params }) => {
-    if (Number(params.id) !== cronogramaFixture.presupuestoId) {
+    if (params.id !== cronogramaFixture.presupuestoId) {
       return HttpResponse.json(null, { status: 404 });
     }
     return HttpResponse.json(cronogramaFixture);

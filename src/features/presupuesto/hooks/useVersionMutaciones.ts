@@ -12,7 +12,7 @@ export function useVersionMutaciones(proyectoId: string) {
   };
 
   const crear = useMutation({
-    mutationFn: ({ origenId, notas }: { origenId: number; notas?: string }) =>
+    mutationFn: ({ origenId, notas }: { origenId: string; notas?: string }) =>
       post<PresupuestoVersionResponse>(`/proyectos/${proyectoId}/presupuestos`, {
         origenId,
         notas,
@@ -25,7 +25,7 @@ export function useVersionMutaciones(proyectoId: string) {
   });
 
   const marcarVigente = useMutation({
-    mutationFn: (versionId: number) =>
+    mutationFn: (versionId: string) =>
       post<PresupuestoVersionResponse>(`/presupuestos/${versionId}/vigente`),
     onSuccess: () => {
       invalidateVersiones();
@@ -35,7 +35,7 @@ export function useVersionMutaciones(proyectoId: string) {
   });
 
   const eliminar = useMutation({
-    mutationFn: (versionId: number) => del(`/presupuestos/${versionId}`),
+    mutationFn: (versionId: string) => del(`/presupuestos/${versionId}`),
     onSuccess: () => {
       invalidateVersiones();
       toast.success("Versión eliminada");

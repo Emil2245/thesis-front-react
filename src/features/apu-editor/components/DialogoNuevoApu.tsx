@@ -20,7 +20,7 @@ import { toast } from "sonner";
 interface DialogoNuevoApuProps {
   abierto: boolean;
   onClose: () => void;
-  presupuestoId: number;
+  presupuestoId: string;
   proyectoId: string;
   onCreate: (apuId: string) => void;
 }

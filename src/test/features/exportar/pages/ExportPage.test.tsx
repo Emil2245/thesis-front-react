@@ -15,7 +15,7 @@ async function setup() {
     <Routes>
       <Route path="/proyectos/:id/documentos" element={<ExportPageActiva />} />
     </Routes>,
-    { ruta: "/proyectos/1/documentos?v=11" },
+    { ruta: "/proyectos/1/documentos?v=0198c1a0-0000-7000-8000-000000000011" },
   );
   await waitFor(() => expect(screen.getByText("Exportar")).toBeInTheDocument());
   return { user: result.user };
@@ -67,7 +67,7 @@ describe("ExportPage", () => {
       <Routes>
         <Route path="/proyectos/:id/documentos" element={<ExportPage />} />
       </Routes>,
-      { ruta: "/proyectos/1/documentos?v=11" },
+      { ruta: "/proyectos/1/documentos?v=0198c1a0-0000-7000-8000-000000000011" },
     );
 
     expect(screen.getByText("Exportar")).toBeInTheDocument();

@@ -20,7 +20,6 @@ export function useActualizarParametros(proyectoId: string) {
       qc.invalidateQueries({
         queryKey: qk.parametrosProyecto(proyectoId),
       });
-      qc.invalidateQueries({ queryKey: qk.apus(0) });
       qc.invalidateQueries({ queryKey: ["presupuesto"] });
     },
   });

@@ -19,7 +19,7 @@ export function EditorApuPage() {
   // La versión la manda el selector de la barra superior; `:apuId` sí es de ruta.
   const { apuId } = useParams<{ apuId: string }>();
   const { presupuestoId: versionActiva } = useVersionActiva();
-  const presupuestoId = versionActiva ?? 0;
+  const presupuestoId = versionActiva ?? "";
   const parsedApuId = apuId ?? "";
 
   const {

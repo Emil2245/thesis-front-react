@@ -1,9 +1,16 @@
 import type { CronogramaResponse, ActividadResponse } from "@/api/contract";
+import { PRESUPUESTO_V2, RUBRO_1_1_1, RUBRO_1_1_2, RUBRO_2_1 } from "./presupuesto";
+
+export const CRONOGRAMA_ID = "0198c1a3-0000-7000-8000-000000000001";
+
+const ACTIVIDAD_1 = "0198c1a4-0000-7000-8000-000000000100";
+const ACTIVIDAD_2 = "0198c1a4-0000-7000-8000-000000000101";
+const ACTIVIDAD_3 = "0198c1a4-0000-7000-8000-000000000200";
 
 export const actividadesFixture: ActividadResponse[] = [
   {
-    id: 100,
-    rubroId: 100,
+    id: ACTIVIDAD_1,
+    rubroId: RUBRO_1_1_1,
     item: "1.1.1",
     descripcion: "Excavación a máquina",
     precioTotal: "2000.000000" as never,
@@ -16,8 +23,8 @@ export const actividadesFixture: ActividadResponse[] = [
     desviacion: "0.000000" as never,
   },
   {
-    id: 101,
-    rubroId: 101,
+    id: ACTIVIDAD_2,
+    rubroId: RUBRO_1_1_2,
     item: "1.1.2",
     descripcion: "Relleno compactado",
     precioTotal: "500.000000" as never,
@@ -26,8 +33,8 @@ export const actividadesFixture: ActividadResponse[] = [
     desviacion: "0.000000" as never,
   },
   {
-    id: 200,
-    rubroId: 200,
+    id: ACTIVIDAD_3,
+    rubroId: RUBRO_2_1,
     item: "2.1",
     descripcion: "Hormigón simple",
     precioTotal: "14000.000000" as never,
@@ -43,8 +50,8 @@ export const actividadesFixture: ActividadResponse[] = [
 ];
 
 export const cronogramaFixture: CronogramaResponse = {
-  id: 1,
-  presupuestoId: 11,
+  id: CRONOGRAMA_ID,
+  presupuestoId: PRESUPUESTO_V2,
   unidadTiempo: "MES",
   numeroPeriodos: 4,
   totalGeneral: "18500.000000" as never,

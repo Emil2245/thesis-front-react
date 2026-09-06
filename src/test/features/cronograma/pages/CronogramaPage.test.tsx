@@ -15,7 +15,7 @@ beforeEach(() => {
   useSesionStore.setState({ usuario: usuarioFixture, cargando: false });
 });
 
-async function setupCronogramaPage(version = "11") {
+async function setupCronogramaPage(version = "0198c1a0-0000-7000-8000-000000000011") {
   const result = renderConProviders(
     <Routes>
       <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
@@ -37,7 +37,7 @@ describe("CronogramaPage", () => {
       <Routes>
         <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
       </Routes>,
-      { ruta: "/proyectos/1/cronograma?v=999" },
+      { ruta: "/proyectos/1/cronograma?v=0198c1a0-0000-7000-8000-0000000009f9" },
     );
     await waitFor(() => {
       expect(screen.getByText(/no hay cronograma/i)).toBeInTheDocument();
@@ -109,7 +109,7 @@ describe("CronogramaPage", () => {
       <Routes>
         <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
       </Routes>,
-      { ruta: "/proyectos/1/cronograma?v=999" },
+      { ruta: "/proyectos/1/cronograma?v=0198c1a0-0000-7000-8000-0000000009f9" },
     );
     await waitFor(() => {
       expect(screen.getByText(/no hay cronograma/i)).toBeInTheDocument();
@@ -133,7 +133,7 @@ describe("CronogramaPage", () => {
       <Routes>
         <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
       </Routes>,
-      { ruta: "/proyectos/1/cronograma?v=11" },
+      { ruta: "/proyectos/1/cronograma?v=0198c1a0-0000-7000-8000-000000000011" },
     );
     await waitFor(() => {
       expect(screen.getByText("Desactualizado")).toBeInTheDocument();

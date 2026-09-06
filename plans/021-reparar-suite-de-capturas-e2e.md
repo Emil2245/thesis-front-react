@@ -315,3 +315,12 @@ Para y reporta si:
 - Si en el futuro se quieren capturas móviles *además* de las de escritorio, la
   vía correcta es que `capturar()` escriba en `screenshots/<proyecto>/`, no
   quitar el `testIgnore`.
+- **Pendiente (dejado por el plan 053, 2026-09-06):** `e2e/screenshots.spec.ts`
+  todavía mockea ids de presupuesto numéricos (`${API}/presupuestos/11`,
+  `/11/resumen`, `/11/validacion`, `/11/cronograma` — líneas 500, 501, 512, 536,
+  545). En `origin/main` esos ids son UUIDv7 y el plan 053 ya retipó todo
+  `src/`. Las capturas siguen pasando porque el mock es literal y la página usa
+  el id que le da el mock de `/proyectos/:id/presupuestos`, pero los ids del
+  spec ya no se parecen a los reales. Al tocarlo, usar los UUID estables de
+  `src/test/fixtures/presupuesto.ts` (`PRESUPUESTO_V1`/`V2`). Fuera del gate de
+  vitest; este plan es su dueño.

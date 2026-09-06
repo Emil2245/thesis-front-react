@@ -18,7 +18,7 @@ interface DialogoAgregarItemProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (apuId: string, cantidad: string) => void;
-  presupuestoId: number;
+  presupuestoId: string;
 }
 
 export function DialogoAgregarItem({

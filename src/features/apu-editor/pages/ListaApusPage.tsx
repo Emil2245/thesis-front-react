@@ -44,7 +44,7 @@ export function ListaApusPage() {
   // proyecto y solo se usa para las URLs de navegación.
   const proyectoId = useProyectoActivoId();
   const { presupuestoId: versionActiva } = useVersionActiva();
-  const presupuestoId = versionActiva ?? 0;
+  const presupuestoId = versionActiva ?? "";
   const navigate = useNavigate();
 
   const [q, setQ] = useState("");
