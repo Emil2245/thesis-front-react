@@ -1,6 +1,6 @@
 # Bitácora
 
-**Ola actual:** 2 · **Actualizada:** 2026-09-06
+**Ola actual:** 3 · **Actualizada:** 2026-09-06
 
 > La lleva el orquestador ([`ORQUESTADOR.md`](ORQUESTADOR.md)). Se escribe **en el momento** en que
 > algo cambia de estado, no al final de la sesión: si la sesión se corta, lo que no está escrito
@@ -15,8 +15,8 @@
 | 0 | 061 política de dinero | ✅ verde | — | 5b1e8fb | fusionado a main · 2º intento |
 | 1 | 053 ids UUID | ✅ verde | — | 9564e39 | fusionado a main |
 | 2 | 054 descuento global + bugs SILENT | ✅ verde | — | 82edeae | fusionado a main |
-| 2 | 059 formas de DTO | 🔄 en curso | .claude/worktrees/ola2-059 | — | despachado tras cerrar el 054 |
-| 3 | 057 tests de hook | ⏳ pendiente | — | — | rebanable por módulo |
+| 2 | 059 formas de DTO | ✅ verde | — | e182d2a | fusionado a main · ola 2 cerrada |
+| 3 | 057 tests de hook | 🔄 en curso | .claude/worktrees/ola3-057 | — | despachado 2026-09-06 |
 | 4 | 028 Zod en el seam | ⏳ pendiente | — | — | esquemas salen del 057 |
 | 5 | 055 cronograma (reb. 1–4) | ⏳ pendiente | — | — | cierra sin la rebanada 5 |
 | 5 | 048 plantillas APU | ⏳ pendiente | — | — | |
@@ -41,6 +41,19 @@ Baseline original del handoff: **45 archivos, 207 tests, verde** · backend `ori
 docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
+
+- 2026-09-06 — **059 aceptado.** Verifiqué dos hallazgos suyos contra el backend y los dos son
+  ciertos: `ApuDetalleCrearRequest` exige `seccionTipo` `@NotNull` (añadir línea de APU era un 400
+  duro), e `InsumoCatalogoService:67` emite `esCentral ? "CENTRAL" : "PROYECTO"` — el frontend
+  comparaba con `"LOCAL"`, así que **todo insumo de proyecto se pintaba como Central**.
+- 2026-09-06 — Los dos restos del grep del DoD del 059 tienen dueño: `ActividadResponse.rubroId` es
+  del `055` (lo nombra en sus líneas 115 y 241), y los `cdAjustado`/`porcentajeDescuento` que
+  quedan son comentarios que explican el retiro, no campos.
+- 2026-09-06 — ⚠️ **Trabajo huérfano encontrado, plan escrito** (§7 caso 2): el banner
+  `CI_NO_CONFIGURADO` de `ResumenProyectoPage` lee `proyecto.alertas`, campo que **no existe en
+  `ProyectoResponse`** y cuya constante no aparece en ningún sitio del backend. El fixture se lo
+  inventa y el test pasa por encima: el banner no sale nunca en producción. Añadido como sección al
+  plan **057**, que es donde toca. **Tiene una decisión de producto pendiente del humano.**
 
 - 2026-09-06 — **054 aceptado, y el plan estaba mal en un detalle peligroso.** Su ejemplo de body
   para `PATCH /apus/{id}/porcentaje-indirecto` decía `12.5`, sugiriendo porcentaje. Es **fracción**:

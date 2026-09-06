@@ -162,3 +162,33 @@ los records de Java.
 - Todas las fixtures usan UUIDv7 estables; cero ids numéricos fuera de `usuario` y `perfil`.
 - Las 11 páginas sin test la tienen.
 - `Moneda`, `Numero` y `Porcentaje` tienen test.
+
+---
+
+## Añadido 2026-09-06 (ola 2) — el banner `CI_NO_CONFIGURADO` es un fixture que miente
+
+Encontrado al revisar el plan `059`. Es el caso de libro de lo que este plan existe para cazar.
+
+**Los hechos, verificados contra `origin/main @ c337950`:**
+
+- `ProyectoResponse` **no tiene `alertas`** — el record son 13 campos y ninguno es ese.
+- `CI_NO_CONFIGURADO` **no aparece en ninguna parte del backend** (`git grep` en todo `origin/main`).
+- El frontend declara `ProyectoDetalleResponse = ProyectoResponse & { alertas?: string[] }` en
+  `src/api/contract.ts` — tipo inventado aquí, no traducido de nada.
+- `ResumenProyectoPage.tsx` pinta un banner con enlace a parámetros cuando
+  `proyecto.alertas?.includes("CI_NO_CONFIGURADO")`.
+- `src/test/fixtures/proyectos.ts` sirve `alertas: ["CI_NO_CONFIGURADO"]`, y
+  `ResumenProyectoPage.test.tsx` comprueba que el banner sale.
+
+**Consecuencia:** el banner no puede aparecer nunca en producción, y el test está verde porque el
+fixture inventa el campo. Test que solo prueba el fixture.
+
+**Decisión de producto pendiente — preguntar antes de ejecutar esta sección.** Dos salidas:
+
+1. **Calcularlo en el cliente.** El aviso es útil y el dato ya está: `ParametrosProyectoResponse`
+   dice si el %CI está configurado. El banner deja de depender de un campo fantasma y empieza a
+   funcionar de verdad. *Recomendada* — conserva la UX y no necesita backend.
+2. **Borrarlo.** Banner, tipo `ProyectoDetalleResponse`, campo del fixture y test. Si el aviso no
+   se quiere, no debe quedar el andamio.
+
+Lo que **no** vale es dejarlo como está: promete un aviso que el usuario nunca verá.
