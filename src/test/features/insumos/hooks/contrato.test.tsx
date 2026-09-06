@@ -13,7 +13,7 @@ import {
   basesCentralesFixture,
   importResultadoFixture,
 } from "@/test/fixtures/insumos";
-import { ApiError, type InsumoEnUsoProblem } from "@/api/problem";
+import { ApiError } from "@/api/problem";
 import { useInsumos } from "@/features/insumos/hooks/useInsumos";
 import {
   useCrearInsumo,
@@ -137,16 +137,24 @@ describe("contrato de las mutaciones de insumo", () => {
     expect(p?.ruta).toBe(`/api/v1/proyectos/${PROYECTO_ID}/insumos/${INSUMO_ID}`);
   });
 
-  it("el 409 `insumo-en-uso` llega al llamador con la lista de `usos`", async () => {
+  /**
+   * `insumo-en-uso` no existe: cero apariciones en el backend.
+   * `InsumoCrudService.eliminar` rechaza el borrado con
+   * `ProblemaException.validacion(...)` —400, código `validacion`— y mete el
+   * conteo en el mensaje. El cuerpo no trae ni puede traer `usos[]`.
+   */
+  it("el borrado de un insumo referenciado vuelve como `validacion` con el motivo", async () => {
     const { result } = renderHook(() => useEliminarInsumo(destinoProyecto(PROYECTO_ID)), {
       wrapper,
     });
 
     const error = await result.current.mutateAsync(INSUMO_EN_USO).catch((e: unknown) => e);
+
     expect(error).toBeInstanceOf(ApiError);
-    expect((error as ApiError).is("insumo-en-uso")).toBe(true);
-    const problem = (error as ApiError).problem as InsumoEnUsoProblem;
-    expect(problem.usos.map((u) => u.codigo)).toEqual(["APU-001", "APU-002"]);
+    expect((error as ApiError).status).toBe(400);
+    expect((error as ApiError).is("validacion")).toBe(true);
+    expect((error as ApiError).problem.mensaje).toMatch(/referenciado en 2 parte\(s\) de APU/);
+    expect((error as ApiError).problem.usos).toBeUndefined();
   });
 });
 

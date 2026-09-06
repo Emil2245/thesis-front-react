@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Field } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { ChevronLeftIcon, DownloadIcon, AlertCircleIcon } from "lucide-react";
-import { ApiError } from "@/api/problem";
+import { notificarError } from "@/lib/manejoErrores";
 import type { DestinoInsumos } from "../destino";
 
 const PASOS = ["Seleccionar archivo", "Importar"];
@@ -67,11 +67,10 @@ export function AsistenteImportCsv({
         onClose();
       }
     } catch (err) {
-      if (err instanceof ApiError && err.is("csv-invalido")) {
-        toast.error(err.problem.detail ?? "El archivo CSV no es válido");
-      } else {
-        toast.error("Error al importar");
-      }
+      // No hay ningún `csv-invalido`: los errores de fila vuelven en un 200
+      // con `ImportResultadoResponse.errores[]` (arriba), y un CSV que el
+      // backend no puede procesar sale como `validacion` con su mensaje.
+      notificarError(err, "Error al importar");
     }
   };
 

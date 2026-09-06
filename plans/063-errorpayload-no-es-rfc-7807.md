@@ -1,6 +1,6 @@
 # Plan 063 — El manejo de errores del frontend no coincide con el backend en ningún módulo
 
-**Status:** TODO
+**Status:** HECHO
 **Escrito contra:** frontend `main` tras la ola 5 tanda 1 · backend `origin/main` @ `c337950`
 **Fuente de verdad:** `GlobalExceptionMapper`, `ProblemaException` y `ErrorPayload` en `origin/main`
 **Esfuerzo:** M (3–4 h) · **Riesgo:** MEDIO — toca las 4 pantallas de auth y 4 más
@@ -158,3 +158,79 @@ escondió este defecto durante toda la vida del repo.
 - Un test por cada rama que hoy está muerta: credenciales inválidas, email no verificado,
   código duplicado, insumo en uso, apu referenciado. Todos rojos si `slug` vuelve a leer `type`.
 - La pregunta sobre `errores[]` anotada en este archivo con la respuesta, o marcada como abierta.
+
+---
+
+## Ejecución — resultado
+
+**Status:** HECHO · `pnpm run verify` y `pnpm run e2e` en verde (448 unit, 20 e2e).
+
+### Corrección al plan: el comando de la rebanada 1 se queda corto
+
+El `git grep` que propone el plan devuelve **4** códigos (`base-no-archivada`, `servidor`,
+`validacion`, `vigente-duplicado`). Si se borra todo lo que no salga ahí, se cargan códigos
+reales. El patrón sólo ve `new ErrorPayload("lit"` y `ProblemaException.factoria("lit"`, y en este
+backend los códigos viven en **cinco** sitios, tres de ellos invisibles a ese grep:
+
+1. Hardcodeados dentro de las factorías de `ProblemaException` (`new ProblemaException(400,
+   "validacion", …)`) — invisible.
+2. El `switch` de `GlobalExceptionMapper.codePorEstatus(status)` — invisible; de aquí sale
+   `acceso-denegado`, que el frontend no conocía pese a dispararse en **todo** fallo de rol.
+3. El helper privado `AuthService.error(status, codigo, mensaje)` — invisible; de aquí salen
+   `email-no-verificado` y `cuenta-desactivada`.
+4. `SeguridadExceptionMapper` y `ValidacionExceptionMapper`.
+5. `AvanceSegmentoException` y `CronogramaConflictoException`, con su propio `entity(...)`.
+
+El catálogo verificado son **18** códigos, los que están hoy en `PROBLEM_TYPES`.
+
+### Tres códigos del frontend no existen en el backend
+
+Cero apariciones en todo `origin/main`:
+
+| Código inventado | Lo que manda el backend de verdad |
+|---|---|
+| `insumo-en-uso` | `InsumoCrudService.eliminar` → `ProblemaException.validacion(…)`: **400 `validacion`**, con el conteo dentro de `mensaje`. Además `conteoUsosApu()` es un stub que devuelve `0`, así que el guard ni se dispara, y `GET /insumos/{id}/usos` devuelve `List.of()`. |
+| `csv-invalido` | No hay error: los fallos de fila vuelven en un **200** con `ImportResultadoResponse.errores: List<ErrorFila>`. |
+| `export-bloqueado` | `DocumentoResource:85` y `EspecificacionesTecnicasService:70` → `validacion`. |
+
+Por eso la rebanada 3 acabó siendo **borrado**, no reconexión: no hay ningún `insumo-en-uso` al que
+reaccionar. `usosPrecargados`/`precargados` fuera; `DialogoUsoInsumo` ya pedía los usos a
+`GET /insumos/{id}/usos` él solo. El fallo de borrado ahora enseña el `mensaje` del backend.
+
+### La pregunta de la rebanada 2 — `errores[]`
+
+> ¿Debe `ErrorPayload` ganar un `errores[]` por campo, o la validación por campo se hace sólo en el
+> cliente con Zod?
+
+**ABIERTA.** Hace falta que la conteste el backend. Lo verificado mientras tanto:
+
+- `ErrorPayload` es exactamente `(codigo, mensaje)`; ninguna respuesta de error lleva jamás un
+  array por campo.
+- `GlobalExceptionMapper:32-35` **y** `ValidacionExceptionMapper:24-27` colapsan la
+  `ConstraintViolationException` con `findFirst()`: si fallan tres campos, el usuario ve un mensaje
+  y pierde los otros dos, sin saber a qué campo pertenece el que ve.
+- La única forma `{campo, mensaje}` del backend es `ErrorFila(int fila, String campo, String
+  mensaje)`, y viaja en un **cuerpo de éxito** (200) del import CSV, no en un error.
+
+Hasta que se decida, `camposConError` y `aplicarErroresDeApi` están **borrados** —no devolviendo
+`[]` en silencio, que era la misma mentira en otra forma— y quien los usaba enseña `mensaje` como
+error general del formulario. Si el backend añade `errores[]`, se revierte marcando campo a campo.
+
+### Defectos vecinos que salieron del mismo hilo
+
+- `notificarError` hacía `if (is("validacion")) return`: se **tragaba** todos los 400 suponiendo
+  que el formulario los pintaría desde `errores[]`. Sin ese array, el usuario se quedaba sin
+  ninguna señal. Quitado.
+- `problemDesconocido` sintetizaba `no-encontrado`, así que un fallo de red se hacía pasar por un
+  404 del servidor. Ahora usa `sin-respuesta`, fuera del catálogo a propósito.
+- `useVersionMutaciones` tiraba el mensaje de `version-vigente-protegida` («marque otra como
+  vigente primero») y pintaba un genérico. Ya llega al usuario.
+- `errorCronograma` en `handlers.ts` era una copia de `problema()` que ya decía la verdad; ahora
+  que `problema()` no miente, son la misma función.
+
+### Nota para quien siga
+
+`Problem` conserva el índice abierto **a propósito**: el 409 de configurar cronograma manda
+`CronogramaConflictoPayload(codigo, mensaje, perdidas)`, un superconjunto de `ErrorPayload`. Por
+eso `errorPayloadSchema` lleva `.passthrough()`: con el `strip` por defecto de Zod, `perdidas` se
+perdería y el diálogo de confirmación se quedaría vacío.

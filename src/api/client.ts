@@ -1,6 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { API_BASE_URL } from "@/lib/env";
 import { ApiError, problemDesconocido, type Problem } from "./problem";
+import { errorPayloadSchema } from "./schemas";
 
 // Sin `Content-Type` por defecto a propósito: axios lo pone solo (JSON para
 // objetos planos, multipart con boundary para FormData). Fijarlo aquí hacía que
@@ -59,7 +60,14 @@ http.interceptors.response.use(
       onSesionExpirada?.();
     }
 
-    const problem = error.response?.data ?? problemDesconocido(status, error.message);
-    throw new ApiError(problem, status);
+    // El cuerpo de error también es frontera de confianza: se valida en vez de
+    // castearse. Si no trae `{codigo, mensaje}` no se hace pasar por un error
+    // del contrato —`is()` daría false contra un código inventado— y cae a uno
+    // sintético del cliente.
+    const cuerpo = errorPayloadSchema.safeParse(error.response?.data);
+    throw new ApiError(
+      cuerpo.success ? cuerpo.data : problemDesconocido(status, error.message),
+      status,
+    );
   },
 );

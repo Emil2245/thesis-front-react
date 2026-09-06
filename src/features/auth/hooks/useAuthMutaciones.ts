@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { post, put } from "@/api/request";
 import { setAccessToken } from "@/api/client";
 import { queryClient } from "@/api/queryClient";
-import { aplicarErroresDeApi } from "@/lib/formErrors";
+import { notificarError } from "@/lib/manejoErrores";
 import type {
   LoginRequest,
   PerfilActualizarRequest,
@@ -14,7 +14,6 @@ import type {
   TokenResponse,
 } from "@/api/contract";
 import { leerRefreshGuardado } from "../sesion";
-import type { UseFormSetError, FieldValues } from "react-hook-form";
 import { useSesionStore } from "../sesion";
 
 export function useLogin() {
@@ -83,19 +82,21 @@ export function useCerrarSesion() {
   });
 }
 
-export function useActualizarPerfil<T extends FieldValues>(setError: UseFormSetError<T>) {
+/**
+ * Ya no recibe `setError`: `ErrorPayload` no trae `errores[]`, así que no hay
+ * forma de saber a qué campo pertenece el fallo. `GlobalExceptionMapper` reduce
+ * la `ConstraintViolationException` al *primer* mensaje y lo manda pelado.
+ */
+export function useActualizarPerfil() {
   return useMutation({
     mutationFn: (body: PerfilActualizarRequest) => put("/perfil", body),
     onError: (error) => {
-      aplicarErroresDeApi(error, setError);
+      notificarError(error, "No se pudo actualizar el perfil");
     },
   });
 }
 
-export function useCambiarPassword<T extends FieldValues>(
-  setError: UseFormSetError<T>,
-  onSuccess?: () => void,
-) {
+export function useCambiarPassword(onSuccess?: () => void) {
   return useMutation({
     mutationFn: (body: PasswordCambiarRequest) => put<void>("/perfil/password", body),
     onSuccess: () => {
@@ -103,7 +104,7 @@ export function useCambiarPassword<T extends FieldValues>(
       onSuccess?.();
     },
     onError: (error) => {
-      aplicarErroresDeApi(error, setError);
+      notificarError(error, "No se pudo cambiar la contraseña");
     },
   });
 }

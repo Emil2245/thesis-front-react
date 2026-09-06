@@ -17,24 +17,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CargandoTabla } from "@/components/comunes/CargandoTabla";
-import type { InsumoUsoResponse } from "@/api/contract";
 
 export function DialogoUsoInsumo({
   abierto,
   onClose,
   proyectoId,
   insumoId,
-  usosPrecargados,
 }: {
   abierto: boolean;
   onClose: () => void;
   proyectoId: string;
   insumoId: string;
-  usosPrecargados?: InsumoUsoResponse[];
 }) {
+  // Los usos se piden siempre a `GET /insumos/{id}/usos`. No venían nunca
+  // "precargados" en el error de borrado: `ErrorPayload` son dos strings y no
+  // puede transportar la lista.
   const { data: usos, isPending } = useInsumoUsos(proyectoId, insumoId, {
     habilitado: abierto,
-    precargados: usosPrecargados,
   });
 
   return (

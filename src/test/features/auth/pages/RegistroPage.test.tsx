@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { renderConProviders } from "@/test/render";
 import { screen, waitFor } from "@testing-library/react";
-import { http, HttpResponse } from "msw";
+import { http } from "msw";
+import { problema } from "@/test/handlers";
 import { server } from "@/test/server";
 import { Route, Routes } from "react-router-dom";
 import { RegistroPage } from "@/features/auth/pages/RegistroPage";
@@ -33,15 +34,9 @@ describe("RegistroPage", () => {
   it("muestra error de campo para correo duplicado", async () => {
     server.use(
       http.post(`${API}/auth/registro`, () =>
-        HttpResponse.json(
-          {
-            type: "/problemas/validacion",
-            title: "Datos inválidos",
-            status: 400,
-            errores: [{ campo: "email", mensaje: "El correo ya está registrado" }],
-          },
-          { status: 400, headers: { "Content-Type": "application/problem+json" } },
-        ),
+        // `AuthService:51`. El backend NO manda `errores[]`: el motivo viaja
+        // entero en `mensaje` y la pantalla lo pinta como error general.
+        problema(400, "validacion", "El correo ya está registrado"),
       ),
     );
 

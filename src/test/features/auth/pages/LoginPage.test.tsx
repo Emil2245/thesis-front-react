@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { renderConProviders } from "@/test/render";
 import { screen, waitFor } from "@testing-library/react";
-import { http, HttpResponse } from "msw";
+import { http } from "msw";
+import { problema } from "@/test/handlers";
 import { server } from "@/test/server";
 import { getAccessToken } from "@/api/client";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
@@ -24,14 +25,8 @@ describe("LoginPage", () => {
   it("muestra mensaje genérico para credenciales inválidas (anti-enumeración)", async () => {
     server.use(
       http.post(`${API}/auth/login`, () =>
-        HttpResponse.json(
-          {
-            type: "/problemas/credenciales-invalidas",
-            title: "Credenciales inválidas",
-            status: 401,
-          },
-          { status: 401, headers: { "Content-Type": "application/problem+json" } },
-        ),
+        // El cuerpo es el de `AuthService.error(401, ...)`, literal.
+        problema(401, "credenciales-invalidas", "Correo o contraseña incorrectos"),
       ),
     );
 
@@ -51,10 +46,7 @@ describe("LoginPage", () => {
   it("muestra enlace de reenvío para email no verificado", async () => {
     server.use(
       http.post(`${API}/auth/login`, () =>
-        HttpResponse.json(
-          { type: "/problemas/email-no-verificado", title: "Email no verificado", status: 403 },
-          { status: 403, headers: { "Content-Type": "application/problem+json" } },
-        ),
+        problema(403, "email-no-verificado", "El correo no ha sido verificado"),
       ),
     );
 

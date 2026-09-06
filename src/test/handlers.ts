@@ -66,16 +66,22 @@ const CAMPOS_PROYECTO = [
 
 const CAMPOS_FIRMANTE = ["nombre", "cargo", "rol", "orden"] as const;
 
+/**
+ * El cuerpo de error tal cual lo manda el backend: `ErrorPayload(codigo,
+ * mensaje)` y `Content-Type: application/json`.
+ *
+ * Fabricaba RFC 7807 —otro Content-Type y otros campos—, un protocolo que el
+ * backend no ha hablado nunca. Con 9 llamadas aquí dentro, la suite entera
+ * validaba el frontend contra un servidor imaginario: verde en el gate y
+ * muerto en producción. Mientras esto mienta, el gate vuelve a dar verde sobre
+ * ese servidor, así que es el paso que hace permanente el arreglo del plan 063.
+ */
 export const problema = (
   status: number,
-  type: string,
-  title: string,
+  codigo: string,
+  mensaje: string,
   extra: Partial<Problem> = {},
-) =>
-  HttpResponse.json<Problem>(
-    { type: `/problemas/${type}`, title, status, ...extra },
-    { status, headers: { "Content-Type": "application/problem+json" } },
-  );
+) => HttpResponse.json<Problem>({ codigo, mensaje, ...extra }, { status });
 
 // Los handlers aceptaban cualquier body, así que el seam no podía ver un campo
 // de más ni uno mal nombrado: así pasaron `porcentajeIndirecto` en
@@ -91,18 +97,11 @@ const soloCampos = async (request: Request, ...permitidos: string[]) => {
     : problema(400, "campo-desconocido", `El backend no acepta: ${sobran.join(", ")}`);
 };
 
-// El backend NO habla Problem+JSON: `GlobalExceptionMapper` emite
-// `{codigo, mensaje}` a secas, sin `type`/`title`/`status`. Los tres 409 del
-// cronograma se distinguen por `codigo`, y el de configuración añade
-// `perdidas[]`. Un `catch` por `status === 409` los mezcla.
-// ponytail: los 400 de estos handlers siguen saliendo por `problema()`, que sí
-// es Problem+JSON; nadie afirma su forma y arreglarlo es del plan 059.
-const errorCronograma = (
-  status: number,
-  codigo: string,
-  mensaje: string,
-  extra: Record<string, unknown> = {},
-) => HttpResponse.json({ codigo, mensaje, ...extra }, { status });
+// Era una copia de `problema()` que ya emitía `{codigo, mensaje}` porque el
+// cronograma no podía fingir 7807: sus tres 409 se distinguen por `codigo`, y
+// el de configuración añade `perdidas[]`. Ahora que `problema()` dice la
+// verdad, las dos son la misma función.
+const errorCronograma = problema;
 
 const leerCuerpo = async (request: Request) =>
   (await request
@@ -504,7 +503,16 @@ export const handlers = [
   ),
   http.delete(`${API}/proyectos/:id/insumos/:iid`, ({ params }) => {
     if (params.iid === INSUMO_EN_USO) {
-      return problema(409, "insumo-en-uso", "El insumo está en uso", { usos: insumoUsoFixture });
+      // `InsumoCrudService.eliminar` rechaza el borrado con
+      // `ProblemaException.validacion(...)`: 400 y código `validacion`, con el
+      // conteo dentro del mensaje. No existe ningún `insumo-en-uso` (cero
+      // apariciones en el backend) ni 409, y `ErrorPayload` no puede llevar la
+      // lista de usos: son dos strings.
+      return problema(
+        400,
+        "validacion",
+        "No se puede eliminar el insumo: está referenciado en 2 parte(s) de APU",
+      );
     }
     return HttpResponse.json(null, { status: 204 });
   }),

@@ -100,8 +100,7 @@ describe("VersionesPage", () => {
     const dialogo = await screen.findByRole("alertdialog");
     await user.click(within(dialogo).getByRole("button", { name: "Eliminar" }));
 
-    // ponytail: `useVersionMutaciones` descarta el `detail` del problem+json
-    // («No se puede eliminar la versión vigente») y muestra un genérico.
-    expect(await screen.findByText("Error al eliminar versión")).toBeInTheDocument();
+    // El motivo del backend llega al usuario en vez del genérico de antes.
+    expect(await screen.findByText(/No se puede eliminar la versión vigente/i)).toBeInTheDocument();
   });
 });

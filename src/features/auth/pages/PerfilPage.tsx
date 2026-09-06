@@ -18,13 +18,13 @@ export function PerfilPage() {
     resolver: zodResolver(perfilSchema),
     values: { nombre: usuario?.nombre ?? "", email: usuario?.email ?? "" },
   });
-  const actualizarPerfil = useActualizarPerfil(perfilForm.setError);
+  const actualizarPerfil = useActualizarPerfil();
 
   const passwordForm = useForm({
     resolver: zodResolver(cambiarPasswordSchema),
     defaultValues: { passwordActual: "", passwordNueva: "", passwordConfirmacion: "" },
   });
-  const cambiarPassword = useCambiarPassword(passwordForm.setError);
+  const cambiarPassword = useCambiarPassword();
 
   if (!usuario) return null;
 

@@ -258,7 +258,8 @@ describe("contrato saliente de presupuesto", () => {
       result.current.eliminar.mutate(PRESUPUESTO_V2);
       await waitFor(() => expect(result.current.eliminar.isError).toBe(true));
       expect(result.current.eliminar.error).toMatchObject({
-        problem: { status: 409, type: "/problemas/version-vigente-protegida" },
+        status: 409,
+        problem: { codigo: "version-vigente-protegida" },
       });
     });
   });
