@@ -22,6 +22,7 @@ import {
 } from "@/features/insumos/hooks/useInsumoMutaciones";
 import { useBasesCentrales } from "@/features/insumos/hooks/useBasesCentrales";
 import { useImportarCsv } from "@/features/insumos/hooks/useImportCsv";
+import { destinoProyecto } from "@/features/insumos/destino";
 
 const API = "*/api/v1";
 const PROYECTO_ID = "018f8a10-0000-7000-8000-000000000001";
@@ -73,7 +74,7 @@ describe("contrato de las mutaciones de insumo", () => {
   it("crea con POST /proyectos/{id}/insumos y el cuerpo exacto del backend", async () => {
     const peticiones = espiar();
 
-    const { result } = renderHook(() => useCrearInsumo(PROYECTO_ID), { wrapper });
+    const { result } = renderHook(() => useCrearInsumo(destinoProyecto(PROYECTO_ID)), { wrapper });
     await result.current.mutateAsync({
       codigo: "M-010",
       tipo: "MATERIAL",
@@ -95,7 +96,7 @@ describe("contrato de las mutaciones de insumo", () => {
   });
 
   it("el seam rechaza `precio`, que el backend descartaba en silencio", async () => {
-    const { result } = renderHook(() => useCrearInsumo(PROYECTO_ID), { wrapper });
+    const { result } = renderHook(() => useCrearInsumo(destinoProyecto(PROYECTO_ID)), { wrapper });
 
     await expect(
       result.current.mutateAsync({
@@ -111,7 +112,7 @@ describe("contrato de las mutaciones de insumo", () => {
   it("edita con PUT /proyectos/{id}/insumos/{insumoId} y solo los campos editables", async () => {
     const peticiones = espiar();
 
-    const { result } = renderHook(() => useEditarInsumo(PROYECTO_ID), { wrapper });
+    const { result } = renderHook(() => useEditarInsumo(destinoProyecto(PROYECTO_ID)), { wrapper });
     await result.current.mutateAsync({
       id: INSUMO_ID,
       body: { descripcion: "Cemento Portland Tipo IP", precioUnitario: 13.9 },
@@ -127,7 +128,9 @@ describe("contrato de las mutaciones de insumo", () => {
   it("borra con DELETE /proyectos/{id}/insumos/{insumoId}", async () => {
     const peticiones = espiar();
 
-    const { result } = renderHook(() => useEliminarInsumo(PROYECTO_ID), { wrapper });
+    const { result } = renderHook(() => useEliminarInsumo(destinoProyecto(PROYECTO_ID)), {
+      wrapper,
+    });
     await result.current.mutateAsync(INSUMO_ID);
 
     const p = ultima(peticiones, "DELETE", `/proyectos/${PROYECTO_ID}/insumos/${INSUMO_ID}`);
@@ -135,7 +138,9 @@ describe("contrato de las mutaciones de insumo", () => {
   });
 
   it("el 409 `insumo-en-uso` llega al llamador con la lista de `usos`", async () => {
-    const { result } = renderHook(() => useEliminarInsumo(PROYECTO_ID), { wrapper });
+    const { result } = renderHook(() => useEliminarInsumo(destinoProyecto(PROYECTO_ID)), {
+      wrapper,
+    });
 
     const error = await result.current.mutateAsync(INSUMO_EN_USO).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ApiError);
@@ -164,7 +169,7 @@ describe("contrato de useImportarCsv", () => {
   it("sube a POST /proyectos/{id}/insumos/importar", async () => {
     const peticiones = espiar();
 
-    const { result } = renderHook(() => useImportarCsv(PROYECTO_ID), { wrapper });
+    const { result } = renderHook(() => useImportarCsv(destinoProyecto(PROYECTO_ID)), { wrapper });
     const formData = new FormData();
     formData.append("archivo", new File(["codigo,descripcion\nM-001,Cemento\n"], "insumos.csv"));
     await result.current.mutateAsync({ formData });
@@ -199,7 +204,7 @@ describe("contrato de useImportarCsv", () => {
       }),
     );
 
-    const { result } = renderHook(() => useImportarCsv(PROYECTO_ID), { wrapper });
+    const { result } = renderHook(() => useImportarCsv(destinoProyecto(PROYECTO_ID)), { wrapper });
     const formData = new FormData();
     formData.append("archivo", new File(["codigo,descripcion\nM-001,Cemento\n"], "insumos.csv"));
     await result.current.mutateAsync({ formData });

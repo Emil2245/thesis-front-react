@@ -37,14 +37,7 @@ import {
   PRESUPUESTO_V3,
 } from "./fixtures/presupuesto";
 import { cronogramaFixture } from "./fixtures/cronograma";
-import {
-  usuariosAdminFixture,
-  parametrosSistemaFixture,
-  valoresReferenciaFixture,
-  logsFixture,
-  basesCentralesFixtureAdmin,
-  plantillasSistemaFixture,
-} from "./fixtures/admin";
+import { parametrosSistemaFixture, basesCentralesFixtureAdmin } from "./fixtures/admin";
 
 const API = "*/api/v1";
 
@@ -125,9 +118,8 @@ const versionesStub: PresupuestoVersionResponse[] = [
 ];
 
 export const handlers = [
-  // El backend expone esta lectura en /proyectos/parametros-sistema, sin rol
-  // de admin (plan 027); la escritura no existe todavía y AdminParametrosPage
-  // la mantiene deshabilitada.
+  // El backend expone lectura y escritura en /proyectos/parametros-sistema,
+  // fuera de /admin: la lectura sin rol, el PUT como SUPER_ADMIN.
   //
   // Va ANTES que `/proyectos/:id`: MSW casa por orden, así que la ruta con
   // parámetro se tragaba ésta y devolvía el 404 de «proyecto no encontrado».
@@ -143,6 +135,14 @@ export const handlers = [
         "porcentajeHerramientaMenor",
         "porcentajeIndirecto",
         "iva",
+        "rangoHmMin",
+        "rangoHmMax",
+        "rangoCiMin",
+        "rangoCiMax",
+        "rangoDescuentoMin",
+        "rangoDescuentoMax",
+        "rangoIvaMin",
+        "rangoIvaMax",
         "moneda",
       )) ?? HttpResponse.json(parametrosSistemaFixture),
   ),
@@ -677,81 +677,54 @@ export const handlers = [
   }),
 
   // ———— Admin (Plan 014) ————
-  http.get(`${API}/admin/usuarios`, ({ request }) => {
-    const url = new URL(request.url);
-    const activo = url.searchParams.get("activo");
-    const rol = url.searchParams.get("rol");
-    let result = usuariosAdminFixture;
-    if (activo !== null) result = result.filter((u) => u.activo === (activo === "true"));
-    if (rol) result = result.filter((u) => u.rol === rol);
-    return HttpResponse.json({ contenido: result, total: result.length, pagina: 0, tamano: 20 });
+  // `AdminBaseCentralResource` sirve una `List<T>` pelada, no una `Page<T>`:
+  // envolverla en `pagina()` es justo el mock inventado que dejaba pasar en
+  // verde una página que revienta contra el backend real.
+  http.get(`${API}/admin/bases-centrales`, ({ request }) => {
+    const incluirArchivadas = new URL(request.url).searchParams.get("incluirArchivadas") === "true";
+    return HttpResponse.json(
+      incluirArchivadas
+        ? basesCentralesFixtureAdmin
+        : basesCentralesFixtureAdmin.filter((b) => !b.archivada),
+    );
   }),
   http.post(
-    `${API}/admin/usuarios/invitar`,
-    async ({ request }) =>
-      (await soloCampos(request, "nombre", "email", "rol")) ??
-      HttpResponse.json(null, { status: 204 }),
-  ),
-  http.patch(`${API}/admin/usuarios/:id`, ({ params }) => {
-    const user = usuariosAdminFixture.find((u) => u.id === Number(params.id));
-    return HttpResponse.json(user ?? { ...usuariosAdminFixture[0] });
-  }),
-  http.delete(`${API}/admin/usuarios/:id`, () => HttpResponse.json(null, { status: 204 })),
-  http.post(`${API}/admin/usuarios/:id/restaurar`, () => HttpResponse.json(null, { status: 204 })),
-
-  http.get(`${API}/admin/bases`, () =>
-    HttpResponse.json({
-      contenido: basesCentralesFixtureAdmin,
-      total: basesCentralesFixtureAdmin.length,
-      pagina: 0,
-      tamano: 20,
-    }),
-  ),
-  http.post(
-    `${API}/admin/bases`,
+    `${API}/admin/bases-centrales`,
     async ({ request }) =>
       (await soloCampos(request, "nombre")) ??
       HttpResponse.json(basesCentralesFixtureAdmin[0], { status: 201 }),
   ),
-  http.get(`${API}/admin/bases/:id`, () => HttpResponse.json(basesCentralesFixtureAdmin[0])),
   http.put(
-    `${API}/admin/bases/:id`,
+    `${API}/admin/bases-centrales/:id`,
     async ({ request }) =>
       (await soloCampos(request, "nombre")) ?? HttpResponse.json(basesCentralesFixtureAdmin[0]),
   ),
-  http.delete(`${API}/admin/bases/:id`, () => HttpResponse.json(null, { status: 204 })),
-  http.post(`${API}/admin/bases/:id/archivar`, ({ params }) =>
+  http.delete(`${API}/admin/bases-centrales/:id`, () => HttpResponse.json(null, { status: 204 })),
+  // Insumos bajo la base central: mismos DTOs que el catálogo de proyecto.
+  // Ojo a `/import` (admin) frente a `/importar` (proyecto).
+  http.post(
+    `${API}/admin/bases-centrales/:id/insumos`,
+    async ({ request }) =>
+      (await soloCampos(request, "codigo", "tipo", "descripcion", "unidad", "precioUnitario")) ??
+      HttpResponse.json(insumosFixture[0], { status: 201 }),
+  ),
+  http.put(
+    `${API}/admin/bases-centrales/:id/insumos/:iid`,
+    async ({ request }) =>
+      (await soloCampos(request, "descripcion", "unidad", "precioUnitario")) ??
+      HttpResponse.json(insumosFixture[0]),
+  ),
+  http.delete(`${API}/admin/bases-centrales/:id/insumos/:iid`, () =>
+    HttpResponse.json(null, { status: 204 }),
+  ),
+  http.post(`${API}/admin/bases-centrales/:id/insumos/import`, () =>
+    HttpResponse.json(importResultadoFixture),
+  ),
+  http.post(`${API}/admin/bases-centrales/:id/archivar`, ({ params }) =>
     HttpResponse.json({
+      ...basesCentralesFixtureAdmin[0],
       id: String(params.id),
-      nombre: "Base test",
-      tipo: "CENTRAL",
       archivada: true,
-      totalInsumos: 10,
     }),
   ),
-
-  http.get(`${API}/admin/plantillas`, () => HttpResponse.json(plantillasSistemaFixture)),
-  http.post(
-    `${API}/admin/plantillas`,
-    async ({ request }) =>
-      (await soloCampos(request, "nombre", "descripcion", "desdeApuId")) ??
-      HttpResponse.json(plantillasSistemaFixture[0], { status: 201 }),
-  ),
-  http.delete(`${API}/admin/plantillas/:id`, () => HttpResponse.json(null, { status: 204 })),
-
-  http.get(`${API}/admin/valores-referencia`, () => HttpResponse.json(valoresReferenciaFixture)),
-  http.put(
-    `${API}/admin/valores-referencia/:clave`,
-    async ({ request }) =>
-      (await soloCampos(request, "valor", "descripcion", "fuente")) ??
-      HttpResponse.json(valoresReferenciaFixture[0]),
-  ),
-
-  http.get(`${API}/admin/logs`, ({ request }) => {
-    const url = new URL(request.url);
-    const evento = url.searchParams.get("evento");
-    let result = logsFixture;
-    if (evento) result = result.filter((l) => l.evento.includes(evento));
-    return HttpResponse.json({ contenido: result, total: result.length, pagina: 0, tamano: 20 });
-  }),
 ];

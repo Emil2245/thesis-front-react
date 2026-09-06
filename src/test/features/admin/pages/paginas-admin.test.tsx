@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { renderConProviders } from "@/test/render";
-import { espiar } from "@/test/espia";
+import { espiar, ultima } from "@/test/espia";
 import { AdminUsuariosPage } from "@/features/admin/pages/AdminUsuariosPage";
 import { AdminLogsPage } from "@/features/admin/pages/AdminLogsPage";
 import { AdminPlantillasPage } from "@/features/admin/pages/AdminPlantillasPage";
@@ -56,9 +57,75 @@ describe("AdminParametrosPage", () => {
     expect(screen.getByLabelText("Moneda")).toHaveValue(parametrosSistemaFixture.moneda);
   });
 
-  it("mantiene «Guardar» deshabilitado: la escritura no existe en el backend", async () => {
+  // `PUT /proyectos/parametros-sistema` sí existe (SUPER_ADMIN); lo que no
+  // existía era el formulario completo. Con 4 de los 10 campos `@NotNull` el
+  // backend devuelve 400, así que encender el botón sin los 11 campos habría
+  // cambiado un tooltip por un error.
+  it("«Guardar» está activo: la escritura existe en el backend", async () => {
     renderConProviders(<AdminParametrosPage />);
 
-    expect(await screen.findByRole("button", { name: "Guardar" })).toBeDisabled();
+    expect(await screen.findByRole("button", { name: "Guardar" })).toBeEnabled();
+  });
+
+  it("edita los 8 rangos, no solo los 3 valores por defecto", async () => {
+    renderConProviders(<AdminParametrosPage />);
+
+    for (const etiqueta of [
+      "Rango HM mínimo",
+      "Rango HM máximo",
+      "Rango CI mínimo",
+      "Rango CI máximo",
+      "Rango descuento mínimo",
+      "Rango descuento máximo",
+      "Rango IVA mínimo",
+      "Rango IVA máximo",
+    ]) {
+      expect(await screen.findByLabelText(etiqueta)).toBeInTheDocument();
+    }
+  });
+
+  it("guarda mandando los 11 campos numéricos, no 4", async () => {
+    const user = userEvent.setup();
+    const peticiones = espiar();
+    renderConProviders(<AdminParametrosPage />);
+
+    await user.click(await screen.findByRole("button", { name: "Guardar" }));
+
+    await waitFor(() => {
+      const p = ultima(peticiones, "PUT", "/parametros-sistema");
+      expect(Object.keys(p?.cuerpo as Record<string, unknown>).sort()).toEqual(
+        [
+          "iva",
+          "moneda",
+          "porcentajeHerramientaMenor",
+          "porcentajeIndirecto",
+          "rangoCiMax",
+          "rangoCiMin",
+          "rangoDescuentoMax",
+          "rangoDescuentoMin",
+          "rangoHmMax",
+          "rangoHmMin",
+          "rangoIvaMax",
+          "rangoIvaMin",
+        ].sort(),
+      );
+    });
+  });
+
+  it("manda los importes como números, no como decimal string", async () => {
+    const user = userEvent.setup();
+    const peticiones = espiar();
+    renderConProviders(<AdminParametrosPage />);
+
+    await user.click(await screen.findByRole("button", { name: "Guardar" }));
+
+    await waitFor(() => {
+      const cuerpo = ultima(peticiones, "PUT", "/parametros-sistema")?.cuerpo as Record<
+        string,
+        unknown
+      >;
+      expect(cuerpo.iva).toBe(0.12);
+      expect(typeof cuerpo.rangoHmMax).toBe("number");
+    });
   });
 });

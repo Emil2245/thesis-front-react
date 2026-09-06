@@ -630,70 +630,53 @@ export interface ActividadAvanceRequest {
 }
 
 // ————— Super-Admin (§11) —————
-export interface UsuarioAdminResponse {
-  id: number;
-  nombre: string;
-  email: string;
-  rol: Rol;
-  activo: boolean;
-  emailVerificado: boolean;
-  fechaCreacion: string;
-}
-
-export interface UsuarioInvitarRequest {
-  nombre: string;
-  email: string;
-  rol: Rol;
-}
-
-export interface UsuarioAdminEditarRequest {
-  nombre?: string;
-  email?: string;
-  rol?: Rol;
-}
-
+// Los DTO de usuarios, valores de referencia y logs de actividad se borraron
+// con sus hooks (plan 050): ninguno de esos recursos existe en origin/main, y
+// un tipo sin endpoint es una promesa que el próximo agente cree cumplida.
+/**
+ * `GET /proyectos/parametros-sistema` devuelve la **entidad cruda**
+ * `ParametrosSistema`, no un DTO: trae además seis booleanos de display,
+ * `mensajeFooter`, `modoCodigoRubro` y `updatedAt`, que la UI no usa y por eso
+ * no están aquí.
+ *
+ * Son `BigDecimal` serializados como número JSON, y son editables: `number`
+ * por los dos ejes de la política de dinero (plan 061). Todas las columnas son
+ * `nullable = false` con default en la entidad salvo `porcentajeIndirecto`, así
+ * que los ocho rangos llegan siempre y no hay que inventarles un valor.
+ */
 export interface ParametrosSistemaResponse {
-  porcentajeHerramientaMenor: Decimal;
-  porcentajeIndirecto?: Decimal | null;
-  iva: Decimal;
+  porcentajeHerramientaMenor: number;
+  porcentajeIndirecto?: number | null;
+  iva: number;
   moneda: string;
-  rangoHmMin?: Decimal;
-  rangoHmMax?: Decimal;
-  rangoCiMin?: Decimal;
-  rangoCiMax?: Decimal;
-  rangoDescuentoMin?: Decimal;
-  rangoDescuentoMax?: Decimal;
-  rangoIvaMin?: Decimal;
-  rangoIvaMax?: Decimal;
+  rangoHmMin: number;
+  rangoHmMax: number;
+  rangoCiMin: number;
+  rangoCiMax: number;
+  rangoDescuentoMin: number;
+  rangoDescuentoMax: number;
+  rangoIvaMin: number;
+  rangoIvaMax: number;
 }
 
-export interface ParametrosSistemaActualizarRequest {
-  porcentajeHerramientaMenor?: Decimal;
-  porcentajeIndirecto?: Decimal | null;
-  iva?: Decimal;
+/**
+ * `ParametrosSistemaEditarRequest` — diez de los once campos numéricos son
+ * `@NotNull` en el backend, así que un PUT parcial (la pantalla mandaba cuatro)
+ * es un 400. Todos van en `[0, 1]`.
+ */
+export interface ParametrosSistemaEditarRequest {
+  porcentajeHerramientaMenor: number;
+  porcentajeIndirecto?: number | null;
+  iva: number;
+  rangoHmMin: number;
+  rangoHmMax: number;
+  rangoCiMin: number;
+  rangoCiMax: number;
+  rangoDescuentoMin: number;
+  rangoDescuentoMax: number;
+  rangoIvaMin: number;
+  rangoIvaMax: number;
   moneda?: string;
-}
-
-export interface ValorReferenciaResponse {
-  clave: string;
-  valor: string;
-  descripcion: string;
-  fuente: string;
-}
-
-export interface ValorReferenciaRequest {
-  valor: string;
-  descripcion: string;
-  fuente: string;
-}
-
-export interface LogActividadResponse {
-  id: number;
-  usuarioId: number;
-  usuarioNombre: string;
-  evento: string;
-  detalle: Record<string, unknown>;
-  fecha: string;
 }
 
 // ————— Display config —————

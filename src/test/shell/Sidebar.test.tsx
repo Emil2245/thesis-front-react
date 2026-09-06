@@ -38,6 +38,26 @@ describe("AppSidebar", () => {
     expect(screen.getByText("Usuarios")).toBeInTheDocument();
   });
 
+  // El gate pasa de granularidad de módulo a granularidad de página: dentro de
+  // «admin» conviven una pantalla con backend completo (Bases) y cuatro sin él.
+  it("dentro de Admin, Bases ya no está pendiente pero Usuarios sí", () => {
+    useSesionStore.setState({ usuario: adminFixture, cargando: false });
+    renderConProviders(
+      <SidebarProvider>
+        <Routes>
+          <Route path="/" element={<AppSidebar />} />
+        </Routes>
+      </SidebarProvider>,
+      { ruta: "/" },
+    );
+
+    const filaBases = screen.getByText("Bases").closest("a")!;
+    expect(within(filaBases).queryByText("pronto")).not.toBeInTheDocument();
+
+    const filaUsuarios = screen.getByText("Usuarios").closest("a")!;
+    expect(within(filaUsuarios).getByText("pronto")).toBeInTheDocument();
+  });
+
   it("Presupuesto, Cronograma e Insumos no tienen insignia pendiente", async () => {
     useSesionStore.setState({ usuario: usuarioFixture, cargando: false });
     renderConProviders(

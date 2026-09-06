@@ -3,6 +3,7 @@ import { renderConProviders } from "@/test/render";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DialogoInsumo } from "@/features/insumos/components/DialogoInsumo";
+import { destinoProyecto } from "@/features/insumos/destino";
 import { insumosFixture } from "@/test/fixtures/insumos";
 import { server } from "@/test/server";
 import { http, HttpResponse } from "msw";
@@ -18,7 +19,7 @@ describe("DialogoInsumo", () => {
       <DialogoInsumo
         abierto={true}
         onClose={onClose}
-        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+        destino={destinoProyecto("01927f4e-1a2b-7c3d-8e4f-000000000001")}
       />,
     );
 
@@ -34,7 +35,7 @@ describe("DialogoInsumo", () => {
       <DialogoInsumo
         abierto={true}
         onClose={onClose}
-        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+        destino={destinoProyecto("01927f4e-1a2b-7c3d-8e4f-000000000001")}
       />,
     );
 
@@ -50,7 +51,7 @@ describe("DialogoInsumo", () => {
       <DialogoInsumo
         abierto={true}
         onClose={onClose}
-        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+        destino={destinoProyecto("01927f4e-1a2b-7c3d-8e4f-000000000001")}
       />,
     );
 
@@ -67,7 +68,7 @@ describe("DialogoInsumo", () => {
       <DialogoInsumo
         abierto={true}
         onClose={onClose}
-        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+        destino={destinoProyecto("01927f4e-1a2b-7c3d-8e4f-000000000001")}
       />,
     );
 
@@ -81,7 +82,7 @@ describe("DialogoInsumo", () => {
       <DialogoInsumo
         abierto={true}
         onClose={onClose}
-        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+        destino={destinoProyecto("01927f4e-1a2b-7c3d-8e4f-000000000001")}
         insumo={insumosFixture[0]}
       />,
     );
@@ -110,7 +111,7 @@ describe("DialogoInsumo", () => {
       <DialogoInsumo
         abierto={true}
         onClose={onClose}
-        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+        destino={destinoProyecto("01927f4e-1a2b-7c3d-8e4f-000000000001")}
       />,
     );
 
@@ -133,7 +134,7 @@ describe("DialogoInsumo", () => {
       <DialogoInsumo
         abierto={true}
         onClose={onClose}
-        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+        destino={destinoProyecto("01927f4e-1a2b-7c3d-8e4f-000000000001")}
       />,
     );
 

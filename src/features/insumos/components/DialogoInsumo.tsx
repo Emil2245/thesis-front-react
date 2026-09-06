@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { ApiError } from "@/api/problem";
 import type { InsumoResponse } from "@/api/contract";
+import type { DestinoInsumos } from "../destino";
 import { parsearEntradaDecimal } from "@/lib/decimal";
 
 function precioLabel(tipo: string): string {
@@ -44,17 +45,18 @@ const TIPOS = [
 export function DialogoInsumo({
   abierto,
   onClose,
-  proyectoId,
+  destino,
   insumo,
 }: {
   abierto: boolean;
   onClose: () => void;
-  proyectoId: string;
+  /** Catálogo del proyecto o base central: el formulario es el mismo. */
+  destino: DestinoInsumos;
   insumo?: InsumoResponse;
 }) {
   const esEditar = !!insumo;
-  const crear = useCrearInsumo(proyectoId);
-  const editar = useEditarInsumo(proyectoId);
+  const crear = useCrearInsumo(destino);
+  const editar = useEditarInsumo(destino);
 
   const form = useForm<InsumoFormData>({
     resolver: zodResolver(insumoSchema),

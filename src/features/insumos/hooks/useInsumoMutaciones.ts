@@ -1,36 +1,35 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { post, put, del } from "@/api/request";
-import { qk } from "@/api/queryKeys";
 import type { InsumoResponse, InsumoCrearRequest, InsumoEditarRequest } from "@/api/contract";
+import type { DestinoInsumos } from "../destino";
 
-export function useCrearInsumo(proyectoId: string) {
+export function useCrearInsumo(destino: DestinoInsumos) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: InsumoCrearRequest) =>
-      post<InsumoResponse>(`/proyectos/${proyectoId}/insumos`, body),
+    mutationFn: (body: InsumoCrearRequest) => post<InsumoResponse>(destino.ruta, body),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: qk.insumos(proyectoId) });
+      qc.invalidateQueries({ queryKey: destino.clave });
     },
   });
 }
 
-export function useEditarInsumo(proyectoId: string) {
+export function useEditarInsumo(destino: DestinoInsumos) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, body }: { id: string; body: InsumoEditarRequest }) =>
-      put<InsumoResponse>(`/proyectos/${proyectoId}/insumos/${id}`, body),
+      put<InsumoResponse>(`${destino.ruta}/${id}`, body),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: qk.insumos(proyectoId) });
+      qc.invalidateQueries({ queryKey: destino.clave });
     },
   });
 }
 
-export function useEliminarInsumo(proyectoId: string) {
+export function useEliminarInsumo(destino: DestinoInsumos) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => del(`/proyectos/${proyectoId}/insumos/${id}`),
+    mutationFn: (id: string) => del(`${destino.ruta}/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: qk.insumos(proyectoId) });
+      qc.invalidateQueries({ queryKey: destino.clave });
     },
   });
 }
