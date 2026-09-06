@@ -3,6 +3,7 @@ import { renderConProviders } from "@/test/render";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AsistenteImportCsv } from "@/features/insumos/components/AsistenteImportCsv";
+import { destinoProyecto } from "@/features/insumos/destino";
 import { server } from "@/test/server";
 import { http, HttpResponse } from "msw";
 import { importResultadoFixture, importResultadoConErroresFixture } from "@/test/fixtures/insumos";
@@ -24,7 +25,7 @@ describe("AsistenteImportCsv", () => {
       <AsistenteImportCsv
         abierto={true}
         onClose={() => {}}
-        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+        destino={destinoProyecto("01927f4e-1a2b-7c3d-8e4f-000000000001")}
       />,
     );
 
@@ -49,7 +50,7 @@ describe("AsistenteImportCsv", () => {
       <AsistenteImportCsv
         abierto={true}
         onClose={onClose}
-        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+        destino={destinoProyecto("01927f4e-1a2b-7c3d-8e4f-000000000001")}
       />,
     );
 
@@ -78,7 +79,7 @@ describe("AsistenteImportCsv", () => {
       <AsistenteImportCsv
         abierto={true}
         onClose={onClose}
-        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+        destino={destinoProyecto("01927f4e-1a2b-7c3d-8e4f-000000000001")}
       />,
     );
 
@@ -107,7 +108,7 @@ describe("AsistenteImportCsv", () => {
       <AsistenteImportCsv
         abierto={true}
         onClose={onClose}
-        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+        destino={destinoProyecto("01927f4e-1a2b-7c3d-8e4f-000000000001")}
       />,
     );
 

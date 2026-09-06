@@ -1,20 +1,31 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { get, post, del } from "@/api/request";
+import { z } from "zod";
+import { getValidado, post, put, del } from "@/api/request";
+import { baseCentralSchema } from "@/api/schemas";
 import { qk } from "@/api/queryKeys";
-import type { BaseInsumosResponse, Page } from "@/api/contract";
+import type { BaseInsumosResponse } from "@/api/contract";
 import { toast } from "sonner";
 
-export function useAdminBases(filtros?: Record<string, unknown>) {
+/**
+ * `AdminBaseCentralResource` (SUPER_ADMIN) vive en `/admin/bases-centrales`.
+ * `/admin/bases` no existió nunca, y el listado devuelve una `List<T>` pelada:
+ * tipado como `Page<T>`, la pantalla hacía `data.contenido.map` sobre
+ * `undefined` y reventaba al montar.
+ */
+const listaDeBases = z.array(baseCentralSchema);
+
+export function useAdminBases(filtros?: { incluirArchivadas?: boolean }) {
   return useQuery({
     queryKey: qk.adminBases(filtros),
-    queryFn: () => get<Page<BaseInsumosResponse>>("/admin/bases", filtros),
+    queryFn: () => getValidado("/admin/bases-centrales", listaDeBases, filtros),
   });
 }
 
 export function useCrearBase() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { nombre: string }) => post<BaseInsumosResponse>("/admin/bases", body),
+    mutationFn: (body: { nombre: string }) =>
+      post<BaseInsumosResponse>("/admin/bases-centrales", body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.adminBases() });
       toast.success("Base creada");
@@ -23,10 +34,23 @@ export function useCrearBase() {
   });
 }
 
+export function useRenombrarBase() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, nombre }: { id: string; nombre: string }) =>
+      put<BaseInsumosResponse>(`/admin/bases-centrales/${id}`, { nombre }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.adminBases() });
+      toast.success("Base renombrada");
+    },
+    onError: () => toast.error("Error al renombrar base"),
+  });
+}
+
 export function useEliminarBase() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => del(`/admin/bases/${id}`),
+    mutationFn: (id: string) => del(`/admin/bases-centrales/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.adminBases() });
       toast.success("Base eliminada");
@@ -38,7 +62,7 @@ export function useEliminarBase() {
 export function useArchivarBase() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => post<BaseInsumosResponse>(`/admin/bases/${id}/archivar`),
+    mutationFn: (id: string) => post<BaseInsumosResponse>(`/admin/bases-centrales/${id}/archivar`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.adminBases() });
       toast.success("Base archivada/restaurada");

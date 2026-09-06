@@ -100,14 +100,21 @@ export function SelectorInsumo({
                     {r.unidad} · {formatearMoneda(r.precioUnitario)}
                   </span>
                 </div>
-                <div className="flex items-center gap-1">
-                  {/* El backend emite "PROYECTO" para la base local; comparar
-                      contra "LOCAL" mandaba todas las filas a la rama Central. */}
-                  {r.fuente === "PROYECTO" ? (
-                    <Badge variant="secondary">Local</Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-xs">
-                      {r.baseNombre ?? "Central"}
+                {/* De dónde sale este precio (N04 §A9): `fuente` da el nivel y
+                    `baseNombre` la base concreta. Son dos datos distintos, así
+                    que son dos etiquetas: enseñar el nombre de la base *en vez*
+                    del nivel dejaba al usuario sin saber si era central o suya.
+                    El backend emite "PROYECTO" para la base local; comparar
+                    contra "LOCAL" mandaba todas las filas a la rama Central. */}
+                <div className="flex shrink-0 items-center gap-1">
+                  <Badge variant={r.fuente === "PROYECTO" ? "secondary" : "outline"}>
+                    {r.fuente === "PROYECTO" ? "Local" : "Central"}
+                  </Badge>
+                  {/* Sin nombre no hay etiqueta: un valor por defecto aquí sería
+                      el nivel repetido haciéndose pasar por nombre de base. */}
+                  {r.baseNombre && (
+                    <Badge variant="outline" className="text-xs" title="Base de origen">
+                      {r.baseNombre}
                     </Badge>
                   )}
                 </div>

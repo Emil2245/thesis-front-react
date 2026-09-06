@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-table";
 import { useInsumos } from "../hooks/useInsumos";
 import { useEliminarInsumo } from "../hooks/useInsumoMutaciones";
+import { destinoProyecto } from "../destino";
 import { BadgeDesactualizado } from "./BadgeDesactualizado";
 import { DialogoInsumo } from "./DialogoInsumo";
 import { DialogoUsoInsumo } from "./DialogoUsoInsumo";
@@ -80,6 +81,9 @@ const TIPO_TABS = [
 const columnHelper = createColumnHelper<InsumoResponse>();
 
 export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
+  // El catálogo de esta tabla es siempre el del proyecto; la base central usa
+  // los mismos diálogos con otro destino (S-39).
+  const destino = destinoProyecto(proyectoId);
   const [tipo, setTipo] = useState("");
   const [q, setQ] = useState("");
   const [soloDesactualizados, setSoloDesactualizados] = useState(false);
@@ -106,7 +110,7 @@ export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
   }, [tipo, q, soloDesactualizados, page]);
 
   const { data, isPending } = useInsumos(proyectoId, filtros);
-  const eliminar = useEliminarInsumo(proyectoId);
+  const eliminar = useEliminarInsumo(destino);
 
   const columns = useMemo(
     () => [
@@ -393,7 +397,7 @@ export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
       <DialogoInsumo
         abierto={dialogoAbierto}
         onClose={handleCloseDialogo}
-        proyectoId={proyectoId}
+        destino={destino}
         insumo={insumoEditar}
       />
 
@@ -408,7 +412,7 @@ export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
       <AsistenteImportCsv
         abierto={importAbierto}
         onClose={() => setImportAbierto(false)}
-        proyectoId={proyectoId}
+        destino={destino}
       />
 
       <DialogoCopiarBase

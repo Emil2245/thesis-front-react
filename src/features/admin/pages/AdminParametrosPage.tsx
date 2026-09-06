@@ -1,22 +1,124 @@
-import { useRef } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldError } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
-import { MOTIVO_SIN_BACKEND } from "@/lib/disponibilidad";
+import { ESCALA_PORCENTAJE, parsearEntradaNumerica } from "@/lib/decimal";
 import { useParametrosSistema, useActualizarParametros } from "../hooks/useParametrosSistema";
+
+/**
+ * S-41 — parámetros globales. `PUT /proyectos/parametros-sistema` existe
+ * (SUPER_ADMIN); lo que faltaba era el formulario. Diez de los once campos
+ * numéricos son `@NotNull`, así que mandar los cuatro de antes devolvía 400:
+ * encender el botón sin completar el formulario habría cambiado un tooltip por
+ * un error.
+ *
+ * Los rangos no son decorativos: `rangoDescuentoMin/Max` acotan el descuento
+ * global y `rangoHm*`/`rangoCi*` los parámetros de cada proyecto.
+ */
+
+// Todos los campos son fracciones en [0, 1] a escala 4 (`precision 5, scale 4`
+// en la entidad). Se teclean como texto y se cuantizan una sola vez, en la
+// frontera de entrada (plan 061).
+const fraccion = z
+  .string()
+  .refine((v) => parsearEntradaNumerica(v, ESCALA_PORCENTAJE) !== null, "Ingresa un número válido")
+  .refine((v) => {
+    const n = parsearEntradaNumerica(v, ESCALA_PORCENTAJE);
+    return n !== null && n >= 0 && n <= 1;
+  }, "Debe estar entre 0 y 1");
+
+const RANGOS = [
+  ["rangoHmMin", "rangoHmMax", "HM"],
+  ["rangoCiMin", "rangoCiMax", "CI"],
+  ["rangoDescuentoMin", "rangoDescuentoMax", "descuento"],
+  ["rangoIvaMin", "rangoIvaMax", "IVA"],
+] as const;
+
+const esquema = z
+  .object({
+    porcentajeHerramientaMenor: fraccion,
+    // El único nullable de la entidad: vacío se manda como null, no como 0.
+    porcentajeIndirecto: z.union([z.literal(""), fraccion]),
+    iva: fraccion,
+    rangoHmMin: fraccion,
+    rangoHmMax: fraccion,
+    rangoCiMin: fraccion,
+    rangoCiMax: fraccion,
+    rangoDescuentoMin: fraccion,
+    rangoDescuentoMax: fraccion,
+    rangoIvaMin: fraccion,
+    rangoIvaMax: fraccion,
+    moneda: z.string().max(10, "Máximo 10 caracteres"),
+  })
+  // Los rangos son la fuente autoritativa de PUT /proyectos/{id}/parametros:
+  // un min por encima del max deja el rango vacío y bloquea esa pantalla.
+  .superRefine((datos, ctx) => {
+    for (const [min, max] of RANGOS) {
+      const nMin = parsearEntradaNumerica(datos[min], ESCALA_PORCENTAJE);
+      const nMax = parsearEntradaNumerica(datos[max], ESCALA_PORCENTAJE);
+      if (nMin !== null && nMax !== null && nMin > nMax) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [max],
+          message: "El máximo no puede ser menor que el mínimo",
+        });
+      }
+    }
+  });
+
+type FormularioParametros = z.infer<typeof esquema>;
+
+const num = (v: string) => parsearEntradaNumerica(v, ESCALA_PORCENTAJE) ?? 0;
 
 export function AdminParametrosPage() {
   const { data, isLoading } = useParametrosSistema();
   const actualizar = useActualizarParametros();
 
-  const hmRef = useRef<HTMLInputElement>(null);
-  const ciRef = useRef<HTMLInputElement>(null);
-  const ivaRef = useRef<HTMLInputElement>(null);
-  const monedaRef = useRef<HTMLInputElement>(null);
+  const form = useForm<FormularioParametros>({
+    resolver: zodResolver(esquema),
+    // `values` en vez de `defaultValues`: los parámetros llegan del servidor y
+    // el formulario se resiembra solo cuando cambian.
+    values: data && {
+      porcentajeHerramientaMenor: String(data.porcentajeHerramientaMenor),
+      porcentajeIndirecto: data.porcentajeIndirecto == null ? "" : String(data.porcentajeIndirecto),
+      iva: String(data.iva),
+      rangoHmMin: String(data.rangoHmMin),
+      rangoHmMax: String(data.rangoHmMax),
+      rangoCiMin: String(data.rangoCiMin),
+      rangoCiMax: String(data.rangoCiMax),
+      rangoDescuentoMin: String(data.rangoDescuentoMin),
+      rangoDescuentoMax: String(data.rangoDescuentoMax),
+      rangoIvaMin: String(data.rangoIvaMin),
+      rangoIvaMax: String(data.rangoIvaMax),
+      moneda: data.moneda,
+    },
+  });
+
+  const { errors } = form.formState;
+
+  const onSubmit = form.handleSubmit((valores) =>
+    actualizar.mutate({
+      porcentajeHerramientaMenor: num(valores.porcentajeHerramientaMenor),
+      porcentajeIndirecto:
+        valores.porcentajeIndirecto.trim() === "" ? null : num(valores.porcentajeIndirecto),
+      iva: num(valores.iva),
+      rangoHmMin: num(valores.rangoHmMin),
+      rangoHmMax: num(valores.rangoHmMax),
+      rangoCiMin: num(valores.rangoCiMin),
+      rangoCiMax: num(valores.rangoCiMax),
+      rangoDescuentoMin: num(valores.rangoDescuentoMin),
+      rangoDescuentoMax: num(valores.rangoDescuentoMax),
+      rangoIvaMin: num(valores.rangoIvaMin),
+      rangoIvaMax: num(valores.rangoIvaMax),
+      moneda: valores.moneda,
+    }),
+  );
 
   if (isLoading)
     return (
@@ -26,75 +128,63 @@ export function AdminParametrosPage() {
       </>
     );
 
+  const campoFraccion = (nombre: keyof FormularioParametros, etiqueta: string) => (
+    <Field>
+      <Label htmlFor={nombre}>{etiqueta}</Label>
+      <Input
+        id={nombre}
+        type="number"
+        step="0.0001"
+        min="0"
+        max="1"
+        className="font-mono w-40"
+        {...form.register(nombre)}
+      />
+      {errors[nombre] && <FieldError>{errors[nombre]?.message}</FieldError>}
+    </Field>
+  );
+
   return (
     <>
       <EncabezadoPagina titulo="Parámetros del sistema" />
-      <Card>
-        <CardHeader>
-          <CardTitle>Configuración global</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="hm">% Herramienta menor</Label>
-            <Input
-              id="hm"
-              ref={hmRef}
-              defaultValue={data?.porcentajeHerramientaMenor ?? "0.05"}
-              className="font-mono w-40"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="ci">% Costos indirectos</Label>
-            <Input
-              id="ci"
-              ref={ciRef}
-              defaultValue={data?.porcentajeIndirecto ?? "0.15"}
-              className="font-mono w-40"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="iva">IVA</Label>
-            <Input
-              id="iva"
-              ref={ivaRef}
-              defaultValue={data?.iva ?? "0.12"}
-              className="font-mono w-40"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="moneda">Moneda</Label>
-            <Input
-              id="moneda"
-              ref={monedaRef}
-              defaultValue={data?.moneda ?? "USD"}
-              className="w-40"
-            />
-          </div>
-          {/* El backend solo expone la lectura de parámetros del sistema
-              (plan 027): guardar queda deshabilitado hasta que exista la
-              escritura. */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span>
-                <Button
-                  disabled
-                  onClick={() => {
-                    actualizar.mutate({
-                      porcentajeHerramientaMenor: hmRef.current?.value as never,
-                      porcentajeIndirecto: ciRef.current?.value as never,
-                      iva: ivaRef.current?.value as never,
-                      moneda: monedaRef.current?.value,
-                    });
-                  }}
-                >
-                  Guardar
-                </Button>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>{MOTIVO_SIN_BACKEND}</TooltipContent>
-          </Tooltip>
-        </CardContent>
-      </Card>
+      <form onSubmit={onSubmit}>
+        <Card>
+          <CardHeader>
+            <CardTitle>Configuración global</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {campoFraccion("porcentajeHerramientaMenor", "% Herramienta menor")}
+            {campoFraccion("porcentajeIndirecto", "% Costos indirectos")}
+            {campoFraccion("iva", "IVA")}
+
+            <div className="pt-2">
+              <h3 className="text-sm font-medium">Rangos configurables</h3>
+              <p className="text-sm text-muted-foreground">
+                Acotan lo que se puede introducir en los parámetros de cada proyecto y en el
+                descuento global.
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {RANGOS.map(([min, max, nombre]) => (
+                <div key={nombre} className="contents">
+                  {campoFraccion(min, `Rango ${nombre} mínimo`)}
+                  {campoFraccion(max, `Rango ${nombre} máximo`)}
+                </div>
+              ))}
+            </div>
+
+            <Field>
+              <Label htmlFor="moneda">Moneda</Label>
+              <Input id="moneda" maxLength={10} className="w-40" {...form.register("moneda")} />
+              {errors.moneda && <FieldError>{errors.moneda.message}</FieldError>}
+            </Field>
+
+            <Button type="submit" disabled={actualizar.isPending}>
+              {actualizar.isPending ? "Guardando…" : "Guardar"}
+            </Button>
+          </CardContent>
+        </Card>
+      </form>
     </>
   );
 }

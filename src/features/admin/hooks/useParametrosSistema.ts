@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, put } from "@/api/request";
 import { qk } from "@/api/queryKeys";
-import type { ParametrosSistemaResponse, ParametrosSistemaActualizarRequest } from "@/api/contract";
+import type { ParametrosSistemaResponse, ParametrosSistemaEditarRequest } from "@/api/contract";
 import { toast } from "sonner";
 
 // El backend expone esta lectura sin rol de admin, en el recurso de
@@ -13,13 +13,13 @@ export function useParametrosSistema() {
   });
 }
 
-// El backend no expone ninguna escritura de parámetros de sistema todavía
-// (plan 027): esta mutación queda deshabilitada en AdminParametrosPage con
-// MOTIVO_SIN_BACKEND hasta que exista.
+// `PUT /proyectos/parametros-sistema` existe (SUPER_ADMIN). No está bajo
+// `/admin/`, que es por lo que el análisis del plan 027 no lo encontró y dio
+// por deshabilitada una escritura que sí estaba.
 export function useActualizarParametros() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: ParametrosSistemaActualizarRequest) =>
+    mutationFn: (body: ParametrosSistemaEditarRequest) =>
       put<ParametrosSistemaResponse>("/proyectos/parametros-sistema", body),
     onSuccess: (data) => {
       qc.setQueryData(qk.adminParametros(), data);

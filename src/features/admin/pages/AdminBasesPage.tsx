@@ -1,8 +1,17 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -13,36 +22,76 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import type { BaseInsumosResponse } from "@/api/contract";
 import {
   useAdminBases,
   useCrearBase,
   useEliminarBase,
   useArchivarBase,
+  useRenombrarBase,
 } from "../hooks/useAdminBases";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
-import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
-import { ArchiveIcon, ArchiveRestoreIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { ArchiveIcon, ArchiveRestoreIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 
-// El backend no tiene /admin/bases todavía (plan 027). Para reactivar: borra
-// este bloque, quita "admin" de MODULOS_SIN_BACKEND (si ya no aplica al resto
-// del grupo) y exporta AdminBasesPageActiva como AdminBasesPage.
-export function AdminBasesPage() {
+/** Alta y renombrado piden lo mismo —un `nombre`— así que comparten diálogo. */
+function DialogoNombreBase({
+  abierto,
+  titulo,
+  inicial,
+  onGuardar,
+  onClose,
+}: {
+  abierto: boolean;
+  titulo: string;
+  inicial: string;
+  onGuardar: (nombre: string) => void;
+  onClose: () => void;
+}) {
+  const [nombre, setNombre] = useState(inicial);
+
   return (
-    <>
-      <EncabezadoPagina titulo="Bases de insumos" />
-      <ModuloNoDisponible
-        modulo="La administración de bases de insumos"
-        descripcion="El servidor todavía no expone la administración de bases centrales. La pantalla está construida y se activará cuando el endpoint exista."
-      />
-    </>
+    <Dialog open={abierto} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{titulo}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label htmlFor="nombre-base">Nombre</Label>
+          {/* @Size(max=200) en el backend: se corta aquí para no gastar un 400. */}
+          <Input
+            id="nombre-base"
+            maxLength={200}
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+          />
+        </div>
+        <DialogFooter>
+          <Button
+            disabled={nombre.trim() === ""}
+            onClick={() => {
+              onGuardar(nombre.trim());
+              onClose();
+            }}
+          >
+            Guardar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
-export function AdminBasesPageActiva() {
-  const [incluirArchivadas, setIncluirArchivadas] = useState(true);
-  const { data, isPending } = useAdminBases({ incluirArchivadas });
+export function AdminBasesPage() {
+  // El backend ya filtra por defecto (`incluirArchivadas=false`); el conmutador
+  // viaja como query param, no filtra en cliente.
+  const [incluirArchivadas, setIncluirArchivadas] = useState(false);
+  const [creando, setCreando] = useState(false);
+  const [renombrando, setRenombrando] = useState<BaseInsumosResponse | null>(null);
+
+  const { data: bases, isPending } = useAdminBases({ incluirArchivadas });
   const crear = useCrearBase();
+  const renombrar = useRenombrarBase();
   const eliminar = useEliminarBase();
   const archivar = useArchivarBase();
 
@@ -59,7 +108,7 @@ export function AdminBasesPageActiva() {
       <EncabezadoPagina
         titulo="Bases de insumos"
         acciones={
-          <Button onClick={() => crear.mutate({ nombre: `Base ${Date.now()}` })}>
+          <Button onClick={() => setCreando(true)}>
             <PlusIcon data-icon="inline-start" /> Nueva base
           </Button>
         }
@@ -79,14 +128,16 @@ export function AdminBasesPageActiva() {
               <TableHead>Nombre</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Insumos</TableHead>
-              <TableHead className="w-24 text-right">Acciones</TableHead>
+              <TableHead className="w-36 text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data?.contenido.map((b) => (
+            {bases?.map((b) => (
               <TableRow key={b.id} className={cn(b.archivada && "opacity-50")}>
                 <TableCell className="font-medium">
-                  {b.nombre}
+                  <Link to={`/admin/bases/${b.id}`} className="hover:underline">
+                    {b.nombre}
+                  </Link>
                   {b.archivada && (
                     <Badge variant="outline" className="ml-2">
                       Archivada
@@ -99,6 +150,14 @@ export function AdminBasesPageActiva() {
                   <Button
                     variant="ghost"
                     size="icon"
+                    title="Renombrar"
+                    onClick={() => setRenombrando(b)}
+                  >
+                    <PencilIcon />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     title={b.archivada ? "Restaurar" : "Archivar"}
                     onClick={() => archivar.mutate(b.id)}
                   >
@@ -107,6 +166,7 @@ export function AdminBasesPageActiva() {
                   <Button
                     variant="ghost"
                     size="icon"
+                    title="Eliminar"
                     className="text-destructive"
                     onClick={() => eliminar.mutate(b.id)}
                   >
@@ -118,6 +178,25 @@ export function AdminBasesPageActiva() {
           </TableBody>
         </Table>
       </TarjetaTabla>
+
+      {creando && (
+        <DialogoNombreBase
+          abierto
+          titulo="Nueva base central"
+          inicial=""
+          onGuardar={(nombre) => crear.mutate({ nombre })}
+          onClose={() => setCreando(false)}
+        />
+      )}
+      {renombrando && (
+        <DialogoNombreBase
+          abierto
+          titulo="Renombrar base"
+          inicial={renombrando.nombre}
+          onGuardar={(nombre) => renombrar.mutate({ id: renombrando.id, nombre })}
+          onClose={() => setRenombrando(null)}
+        />
+      )}
     </>
   );
 }

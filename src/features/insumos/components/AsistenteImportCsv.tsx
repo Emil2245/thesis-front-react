@@ -17,23 +17,25 @@ import { Field } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { ChevronLeftIcon, DownloadIcon, AlertCircleIcon } from "lucide-react";
 import { ApiError } from "@/api/problem";
+import type { DestinoInsumos } from "../destino";
 
 const PASOS = ["Seleccionar archivo", "Importar"];
 
 export function AsistenteImportCsv({
   abierto,
   onClose,
-  proyectoId,
+  destino,
 }: {
   abierto: boolean;
   onClose: () => void;
-  proyectoId: string;
+  /** El backend usa el mismo parser y servicio para proyecto y base central. */
+  destino: DestinoInsumos;
 }) {
   const [paso, setPaso] = useState(0);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [filas, setFilas] = useState<Record<string, string>[]>([]);
   const [resultado, setResultado] = useState<ImportResultadoResponse | null>(null);
-  const importar = useImportarCsv(proyectoId);
+  const importar = useImportarCsv(destino);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

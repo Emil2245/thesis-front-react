@@ -1,86 +1,18 @@
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useAdminLogs } from "../hooks/useAdminLogs";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
-import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
 import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
-import { SearchIcon } from "lucide-react";
 
-// El backend no tiene /admin/logs todavía (plan 027). Para reactivar: borra
-// este bloque, quita "admin" de MODULOS_SIN_BACKEND (si ya no aplica al resto
-// del grupo) y exporta AdminLogsPageActiva como AdminLogsPage.
+// S-42 sigue degradada: no hay recurso de logs de actividad en origin/main. El
+// hook que llamaba a `/admin/logs` se borró (plan 050).
+//
+// Para reactivar cuando exista: quita "admin-logs" de MODULOS_SIN_BACKEND.
 export function AdminLogsPage() {
   return (
     <>
       <EncabezadoPagina titulo="Registro de actividades" />
       <ModuloNoDisponible
         modulo="El registro de actividades"
-        descripcion="El servidor todavía no expone el registro de actividades del sistema. La pantalla está construida y se activará cuando el endpoint exista."
+        descripcion="El servidor no expone todavía el registro de actividades del sistema."
       />
-    </>
-  );
-}
-
-export function AdminLogsPageActiva() {
-  const [filtroEvento, setFiltroEvento] = useState("");
-  const { data, isPending } = useAdminLogs(filtroEvento ? { evento: filtroEvento } : undefined);
-
-  return (
-    <>
-      <EncabezadoPagina titulo="Registro de actividades" />
-      <div className="relative w-72">
-        <SearchIcon className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-        <Input
-          className="pl-8"
-          placeholder="Filtrar por evento..."
-          value={filtroEvento}
-          onChange={(e) => setFiltroEvento(e.target.value)}
-        />
-      </div>
-      {isPending ? (
-        <Skeleton className="h-64" />
-      ) : (
-        <TarjetaTabla>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Usuario</TableHead>
-                <TableHead>Evento</TableHead>
-                <TableHead>Detalle</TableHead>
-                <TableHead>Fecha</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data?.contenido.map((l) => (
-                <TableRow key={l.id}>
-                  <TableCell className="text-sm">{l.usuarioNombre}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="font-mono text-xs">
-                      {l.evento}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground max-w-48 truncate">
-                    {JSON.stringify(l.detalle)}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {new Date(l.fecha).toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TarjetaTabla>
-      )}
     </>
   );
 }

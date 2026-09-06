@@ -1,179 +1,25 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  useAdminUsuarios,
-  useInvitarUsuario,
-  useEliminarUsuario,
-  useRestaurarUsuario,
-} from "../hooks/useAdminUsuarios";
-import { CargandoTabla } from "@/components/comunes/CargandoTabla";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
-import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
 import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
-import { PlusIcon, Trash2Icon, RotateCcwIcon } from "lucide-react";
 
-// El backend no tiene /admin/usuarios todavía (plan 027). Para reactivar:
-// borra este bloque, quita "admin" de MODULOS_SIN_BACKEND (si ya no aplica al
-// resto del grupo) y exporta AdminUsuariosPageActiva como AdminUsuariosPage.
+// S-37 sigue degradada: en origin/main no existe ningún recurso de usuarios de
+// admin. `PUT /admin/usuarios/{id}`, `POST /{id}/reactivar` y
+// `POST /{id}/desactivar` tampoco: viven solo en la rama test/stuff, que no se
+// mergea. Los hooks que apuntaban ahí se borraron (plan 050) en vez de dejarse
+// como código que el próximo agente creería funcional.
+//
+// Para reactivar cuando exista el backend: quita "admin-usuarios" de
+// MODULOS_SIN_BACKEND y escribe la pantalla contra el contrato real.
+//
+// Anotado y no construido: `POST /auth/aceptar-invitacion` sí existe en main,
+// pero su flujo arranca en esta pantalla, que no existe.
 export function AdminUsuariosPage() {
   return (
     <>
       <EncabezadoPagina titulo="Usuarios" />
       <ModuloNoDisponible
         modulo="La administración de usuarios"
-        descripcion="El servidor todavía no expone la administración de usuarios. La pantalla está construida y se activará cuando el endpoint exista."
+        descripcion="El servidor no expone todavía la administración de usuarios."
       />
-    </>
-  );
-}
-
-export function AdminUsuariosPageActiva() {
-  const { data, isPending } = useAdminUsuarios();
-  const invitar = useInvitarUsuario();
-  const eliminar = useEliminarUsuario();
-  const restaurar = useRestaurarUsuario();
-  const [dialogAbierto, setDialogAbierto] = useState(false);
-  const [nombre, setNombre] = useState("");
-  const [email, setEmail] = useState("");
-  const [rol, setRol] = useState<"USUARIO" | "SUPER_ADMIN">("USUARIO");
-
-  if (isPending) return <CargandoTabla />;
-
-  return (
-    <>
-      <EncabezadoPagina
-        titulo="Usuarios"
-        acciones={
-          <Button onClick={() => setDialogAbierto(true)}>
-            <PlusIcon data-icon="inline-start" /> Invitar
-          </Button>
-        }
-      />
-      <TarjetaTabla>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Rol</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Verificado</TableHead>
-              <TableHead className="w-24 text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data?.contenido.map((u) => (
-              <TableRow key={u.id}>
-                <TableCell>{u.nombre}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
-                <TableCell>
-                  <Badge variant={u.rol === "SUPER_ADMIN" ? "default" : "outline"}>{u.rol}</Badge>
-                </TableCell>
-                <TableCell>
-                  {u.activo ? <Badge>Activo</Badge> : <Badge variant="destructive">Inactivo</Badge>}
-                </TableCell>
-                <TableCell>
-                  {u.emailVerificado ? (
-                    <Badge variant="outline">Sí</Badge>
-                  ) : (
-                    <Badge variant="secondary">No</Badge>
-                  )}
-                </TableCell>
-                <TableCell className="text-right">
-                  {u.activo ? (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive"
-                      onClick={() => eliminar.mutate(u.id)}
-                    >
-                      <Trash2Icon className="size-4" />
-                    </Button>
-                  ) : (
-                    <Button variant="ghost" size="icon" onClick={() => restaurar.mutate(u.id)}>
-                      <RotateCcwIcon className="size-4" />
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TarjetaTabla>
-
-      <Dialog open={dialogAbierto} onOpenChange={setDialogAbierto}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Invitar usuario</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="inv-nombre">Nombre</Label>
-              <Input id="inv-nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="inv-email">Email</Label>
-              <Input
-                id="inv-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Rol</Label>
-              <Select value={rol} onValueChange={(v: "USUARIO" | "SUPER_ADMIN") => setRol(v)}>
-                <SelectTrigger aria-label="Rol">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USUARIO">Usuario</SelectItem>
-                  <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogAbierto(false)}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={() => {
-                invitar.mutate({ nombre, email, rol });
-                setDialogAbierto(false);
-              }}
-              disabled={!nombre || !email}
-            >
-              Invitar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

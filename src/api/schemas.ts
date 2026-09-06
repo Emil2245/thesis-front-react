@@ -55,6 +55,19 @@ export const insumoSchema = z.object({
   desactualizado: z.boolean(),
 });
 
+/**
+ * `GET /admin/bases-centrales` — lista pelada, no `Page<T>`. Se valida porque
+ * el defecto que traía era exactamente de forma: el hook la tipaba como página
+ * y `data.contenido.map` reventaba al montar. `totalInsumos` es un `long`.
+ */
+export const baseCentralSchema = z.object({
+  id: z.string(),
+  nombre: z.string(),
+  tipo: z.literal("CENTRAL"),
+  archivada: z.boolean(),
+  totalInsumos: z.number(),
+});
+
 export const apuResumenSchema = z.object({
   id: z.string(),
   codigo: z.string(),

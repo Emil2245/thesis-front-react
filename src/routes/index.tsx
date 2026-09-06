@@ -164,6 +164,13 @@ export const router = createBrowserRouter([
                 ),
               },
               {
+                path: "/admin/bases/:id",
+                lazy: lazyPage(
+                  () => import("@/features/admin/pages/AdminBaseDetallePage"),
+                  "AdminBaseDetallePage",
+                ),
+              },
+              {
                 path: "/admin/plantillas",
                 lazy: lazyPage(
                   () => import("@/features/admin/pages/AdminPlantillasPage"),

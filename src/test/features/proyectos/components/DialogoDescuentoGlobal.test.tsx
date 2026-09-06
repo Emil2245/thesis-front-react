@@ -43,7 +43,7 @@ describe("DialogoDescuentoGlobalActivo", () => {
   it("muestra el rango máximo sin cola de float", async () => {
     server.use(
       http.get(`${API}/proyectos/parametros-sistema`, () =>
-        HttpResponse.json({ ...parametrosSistemaFixture, rangoDescuentoMax: "0.2900" }),
+        HttpResponse.json({ ...parametrosSistemaFixture, rangoDescuentoMax: 0.29 }),
       ),
     );
     renderConProviders(
