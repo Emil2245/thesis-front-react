@@ -82,9 +82,19 @@ usuario:
 
 Test: el diálogo renderiza el estado degradado y **no** dispara ninguna petición.
 
-> **Preguntar antes de ejecutar esta rebanada.** La especificación está cerrada y los endpoints
-> documentados; solo falta que main los implemente. Si están a días, degradar y volver a encender
-> es trabajo tirado — basta con corregir los tipos y dejar el gate. Decisión #6 del handoff.
+> ~~**Preguntar antes de ejecutar esta rebanada.**~~ **RESUELTO 2026-09-06 por el orquestador —
+> ejecuta la rebanada 1 tal cual, degradando.**
+>
+> Verificado contra `origin/main @ c337950`: cero endpoints `descuento-global`
+> (`git grep -i 'descuento-global\|descuentoGlobal' origin/main -- '*.java'` → sin resultados).
+> Los únicos 4 archivos que mencionan «descuento» son el **retiro** del descuento de APU —
+> `plans/015-retirar-descuento-apu.md` y tres tests que **afirman que el endpoint ya no existe**
+> (`DescuentoEndpointRetiradoTest`, `DescuentoRetiradoContratoTest`, `DescuentoRetiradoMotorTest`).
+>
+> La única implementación (`DescuentoGlobalService`, `e3fb8ba`) vive en `test/stuff`, sin tocar
+> desde el 2026-08-30, rama que el proyecto ya decidió **no mergear**. No está «a días»: está
+> ausente a propósito, y volver a añadirlo sería un cambio de especificación, no una entrega
+> pendiente. Degradar es lo correcto.
 
 ### Rebanada 2 — `porcentajeIndirecto` se descarta en silencio
 

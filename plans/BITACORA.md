@@ -42,6 +42,15 @@ docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
 
+- 2026-09-06 — **Decisión #6 del handoff resuelta por el orquestador: se degrada `descuento-global`.**
+  El plan 054 rebanada 1 pedía preguntar por si el backend estuviera «a días». No lo está:
+  `origin/main @ c337950` tiene **cero** endpoints `descuento-global`, y los únicos 4 archivos que
+  dicen «descuento» son el retiro del descuento de APU más tres tests que afirman que el endpoint
+  no existe. La implementación solo vive en `test/stuff` (2026-08-30), rama descartada. Anotado en
+  el plan para que el ejecutor no se pare.
+- 2026-09-06 — El 1er ejecutor del 054 murió por límite de sesión antes de escribir nada; worktree
+  limpio, redespachado sin pérdida.
+
 - 2026-09-06 — **053 aceptado.** Verifiqué la sensibilidad de los tests de guard yo mismo: revertí
   `enabled: !!presupuestoId` a `Number(presupuestoId) > 0` en `usePresupuesto.ts:16` y el test
   correspondiente se puso rojo. El bug era real y grave: con ids UUID, `presupuestoId > 0` era
