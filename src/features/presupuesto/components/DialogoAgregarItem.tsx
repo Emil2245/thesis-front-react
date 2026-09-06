@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import { get } from "@/api/request";
+import { getValidado } from "@/api/request";
+import { paginaDe, apuResumenSchema } from "@/api/schemas";
 import type { ApuResumenResponse } from "@/api/contract";
 import { Search, Loader2 } from "lucide-react";
 
@@ -31,11 +32,17 @@ export function DialogoAgregarItem({
   const [apuSeleccionado, setApuSeleccionado] = useState<ApuResumenResponse | null>(null);
   const [cantidad, setCantidad] = useState("1.000000");
 
-  const { data: apus, isLoading } = useQuery({
+  // `get<ApuResumenResponse[]>` mentía: PresupuestoApuResource.listar devuelve
+  // `Page<ApuResumenResponse>` siempre, y `?q=` sólo filtra filas. Contra el
+  // backend real esto iteraba un objeto. Sólo el mock lo hacía parecer correcto.
+  const { data, isLoading } = useQuery({
     queryKey: ["presupuesto", presupuestoId, "apus", "busqueda", busqueda],
     queryFn: () =>
-      get<ApuResumenResponse[]>(`/presupuestos/${presupuestoId}/apus`, { q: busqueda }),
+      getValidado(`/presupuestos/${presupuestoId}/apus`, paginaDe(apuResumenSchema), {
+        q: busqueda,
+      }),
   });
+  const apus = data?.contenido;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

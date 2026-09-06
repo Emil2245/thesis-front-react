@@ -20,21 +20,21 @@ const token = { accessToken: "tok", expiraEnSegundos: 3600, refreshToken: "rt-te
 
 const proyectos = [
   {
-    id: 1,
+    id: "1",
     nombreProyecto: "Puente Ambato",
     codigo: "AMB-001",
     estado: "EN_PROCESO",
     updatedAt: "2026-01-15T00:00:00Z",
   },
   {
-    id: 2,
+    id: "2",
     nombreProyecto: "Vía Quito Sur",
     codigo: "UIO-002",
     estado: "BORRADOR",
     updatedAt: "2026-03-20T00:00:00Z",
   },
   {
-    id: 3,
+    id: "3",
     nombreProyecto: "Escuela Milagro",
     codigo: "MIL-003",
     estado: "FINALIZADO",
@@ -42,7 +42,7 @@ const proyectos = [
   },
 ];
 const proyectoDetalle = {
-  id: 1,
+  id: "1",
   nombreProyecto: "Puente Ambato",
   codigo: "AMB-001",
   estado: "EN_PROCESO",
@@ -76,46 +76,46 @@ const parametros = {
 };
 const insumos = [
   {
-    id: 10,
+    id: "10",
     codigo: "M-001",
     descripcion: "Cemento Portland Tipo I",
     tipo: "MATERIAL",
     unidad: "kg",
-    precio: "12.500000",
+    precioUnitario: 12.5,
     fechaActualizacion: "2026-03-15T00:00:00",
     desactualizado: false,
     fuente: "LOCAL",
   },
   {
-    id: 11,
+    id: "11",
     codigo: "M-002",
     descripcion: "Arena fina",
     tipo: "MATERIAL",
     unidad: "m3",
-    precio: "18.000000",
+    precioUnitario: 18.0,
     fechaActualizacion: "2025-11-20T00:00:00",
     desactualizado: true,
     fuente: "LOCAL",
   },
   {
-    id: 13,
+    id: "13",
     codigo: "MO-001",
     descripcion: "Albañil",
     tipo: "MANO_OBRA",
     unidad: "h",
-    precio: "8.500000",
+    precioUnitario: 8.5,
     jornal: "8.500000",
     fechaActualizacion: "2026-02-01T00:00:00",
     desactualizado: false,
     fuente: "LOCAL",
   },
   {
-    id: 15,
+    id: "15",
     codigo: "EQ-001",
     descripcion: "Retroexcavadora",
     tipo: "EQUIPO",
     unidad: "h",
-    precio: "45.000000",
+    precioUnitario: 45.0,
     tarifa: "45.000000",
     fechaActualizacion: "2026-03-01T00:00:00",
     desactualizado: false,
@@ -124,33 +124,30 @@ const insumos = [
 ];
 const apusResumen = [
   {
-    id: 1,
+    id: "1",
     codigo: "APU-001",
     descripcion: "Excavación a máquina",
     unidad: "m3",
-    esAuxiliar: false,
-    costoDirecto: "800.000000",
-    costoTotal: "920.000000",
+    costoDirecto: 800.0,
+    costoTotal: 920.0,
     vinculado: false,
   },
   {
-    id: 2,
+    id: "2",
     codigo: "APU-002",
     descripcion: "Relleno compactado",
     unidad: "m3",
-    esAuxiliar: false,
-    costoDirecto: "450.000000",
-    costoTotal: "517.500000",
+    costoDirecto: 450.0,
+    costoTotal: 517.5,
     vinculado: true,
   },
   {
-    id: 4,
+    id: "4",
     codigo: "APU-004",
     descripcion: "Hormigón simple",
     unidad: "m3",
-    esAuxiliar: false,
-    costoDirecto: "2100.000000",
-    costoTotal: "2415.000000",
+    costoDirecto: 2100.0,
+    costoTotal: 2415.0,
     vinculado: true,
   },
 ];
@@ -382,21 +379,23 @@ const proyectosResponse = { items: proyectos, page: 0, size: 25, total: 3, total
 
 const plantillasSistema = [
   {
-    id: 1,
+    id: "1",
     nombre: "Excavación típica",
-    descripcion: "Plantilla base para excavaciones",
+    descripcionRubro: "Plantilla base para excavaciones",
     tipo: "SISTEMA",
-    fechaCreacion: "2026-01-01T00:00:00",
+    createdAt: "2026-01-01T00:00:00",
+    updatedAt: "2026-01-01T00:00:00",
   },
 ];
 
 const plantillasPersonales = [
   {
-    id: 2,
+    id: "2",
     nombre: "Mi plantilla",
-    descripcion: "Plantilla personal",
+    descripcionRubro: "Plantilla personal",
     tipo: "PERSONAL",
-    fechaCreacion: "2026-07-20T00:00:00",
+    createdAt: "2026-07-20T00:00:00",
+    updatedAt: "2026-07-20T00:00:00",
   },
 ];
 
@@ -477,7 +476,7 @@ test("06-apus", async ({ page }, testInfo) => {
   await baseAutenticado(page);
   await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
   await page.route(`${API}/presupuestos/*/apus*`, (route) =>
-    route.fulfill(json({ contenido: apusResumen, total: 3, pagina: 0, tamano: 20 })),
+    route.fulfill(json({ items: apusResumen, total: 3, page: 0, size: 25, totalPaginas: 1 })),
   );
   await page.goto("/proyectos/1/apus", { waitUntil: "networkidle", timeout: 30000 });
   await capturar(page, "06-apus", testInfo);

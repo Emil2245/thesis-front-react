@@ -47,6 +47,8 @@
 
 ## Status
 
+- **Status**: HECHO (rama `ola4-028`). `pnpm run verify` exit 0 con 393 tests en
+  67 archivos; `pnpm run e2e` exit 0 con 20 passed.
 - **Priority**: P1
 - **Effort**: M
 - **Risk**: MEDIUM (toca el único seam por el que pasa todo el tráfico HTTP)
