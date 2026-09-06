@@ -1,9 +1,33 @@
 # Plan 052 — Re-enable stale `MOTIVO_SIN_BACKEND` actions
 
+> ## Revisión 2026-09-06 — **parcialmente inválido**, lee esto antes
+>
+> Escrito contra `test/stuff`, que no está mergeada. Veredictos re-verificados contra
+> `origin/main` @ `c337950`:
+>
+> | Acción | Veredicto original | Veredicto real |
+> |---|---|---|
+> | Duplicar APU | encender | ✅ **correcto** — `POST /apus/{apuId}/duplicar` |
+> | Guardar como plantilla | encender | ✅ **correcto** — `POST /apus/{apuId}/guardar-plantilla` |
+> | Desglose (`/calculo`) | encender | ⚠️ **el endpoint existe, la forma del DTO no coincide** — antes hay que hacer [`059`](059-corregir-formas-de-dto.md) §1 |
+> | **Descuento de APU** | «encender, pero el hook está mal» | ❌ **BORRAR, no encender.** El endpoint está **retirado por diseño** y dos contract tests del backend lo custodian; los docs lo marcaron **WITHDRAWN** el 2026-08-31 (v1.3 §2.5.4 / N04 §A1). La rebanada 4 de este plan está anulada — la sustituye la rebanada 4 del [`054`](054-degradar-descuento-global-y-bugs-silenciosos.md). |
+> | Guardar parámetros de sistema | «diferir al 050» | ✅ correcto, pero por otra razón: el endpoint es `PUT /proyectos/parametros-sistema`, **no** `/admin/`, y exige **11 campos `@NotNull`**. Ver [`050`](050-enable-admin-module.md) rebanada 5. |
+> | Guardar plantilla de proyecto | diferir al 049 | ✅ correcto |
+> | Ver uso de insumo | mantener deshabilitado | ✅ correcto — el handler devuelve `List.of()`; además la ruta es `/usos` y la forma del DTO difiere ([`059`](059-corregir-formas-de-dto.md) §3) |
+> | Duplicar proyecto | mantener deshabilitado | ✅ correcto — no existe en main |
+>
+> **El bug 2 que este plan documenta (`porcentajeIndirecto` descartado en silencio) es real y sigue
+> vivo**; lo arregla la rebanada 2 del `054`. El bug 1 (`aplicarDescuento`) ya no se arregla: se
+> borra.
+>
+> Ejecuta este plan **solo** para las tres acciones marcadas ✅ de encender, y después del `059`
+> para el desglose.
+
 **Status:** TODO
 **Written against:** `e44c608`
 **Spec source:** backend `ApuResource`, `InsumoResource` on `test/stuff` (`eb9a1da`); `plans/ROADMAP-V2-BACKEND-PARITY.md`
 **Effort:** M (3-4 hours across independent slices)
+**Depende de:** `059` cerrado — el desglose necesita la forma correcta de `ApuCalculoResponse`
 **Risk:** LOW per slice — each is separately committable and revertible
 
 ## Why

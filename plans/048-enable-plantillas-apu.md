@@ -1,9 +1,24 @@
 # Plan 048 — Enable plantillas de APU (un-gate `plantillas`)
 
+> ## Revisión 2026-09-06 — **válido**, corregida la fuente
+>
+> El encabezado dice «Spec source: backend `test/stuff`». Esa rama **no está mergeada**, pero
+> `PlantillaApuResource` existe igual en `origin/main` @ `c337950` con los mismos cuatro endpoints y
+> los mismos ids UUIDv7. **El plan se sostiene tal cual.** Leer `origin/main`, no `test/stuff`.
+>
+> Dos notas de coordinación:
+>
+> - El arreglo `descripcion` → `descripcionRubro` está también en la rebanada 3 del
+>   [`054`](054-degradar-descuento-global-y-bugs-silenciosos.md). Quien llegue primero lo hace; el
+>   otro verifica.
+> - Dejar **test de hook** para `usePlantillas`, no solo de página: un test que compruebe que la
+>   mutación resolvió está verde contra el campo mal nombrado. Ver [`057`](057-cobertura-de-tests-en-el-seam.md).
+
 **Status:** TODO
 **Written against:** `e44c608`
 **Spec source:** backend `test/stuff` @ `eb9a1da`, `PlantillaApuResource` (`/plantillas-apu`); supersedes the gate added in plan 027
 **Effort:** S (1-2 hours)
+**Depende de:** `053` · coordina con `054` rebanada 3 (`descripcion` → `descripcionRubro`)
 **Risk:** LOW — the page is fully written; this removes a stub and fixes two contract mismatches
 
 ## Why

@@ -1,5 +1,22 @@
 # Roadmap V2 — Frontend ↔ Backend parity
 
+> # ⚠ SUPERSEDED — 2026-09-06
+>
+> **No ejecutar desde aquí.** El índice vivo es
+> [`HANDOFF-ESTADO-Y-GAPS.md`](HANDOFF-ESTADO-Y-GAPS.md) §7.
+>
+> Este roadmap se escribió contra `origin/main` @ `f707863`. El backend avanzó a `c337950`
+> (+6 commits, +13 897 líneas) e **implementó el módulo cronograma completo**. En consecuencia:
+>
+> - «Cronograma: absent on `origin/main` → **must be re-degraded**» es **falso**. Existe, y hay
+>   que alinearlo y encenderlo → [`055`](055-cronograma-alinear-y-encender.md).
+> - El 054 pierde la mitad de su alcance: solo degrada descuento global →
+>   [`054`](054-degradar-descuento-global-y-bugs-silenciosos.md).
+> - La pregunta abierta #1 (¿mergear `test/stuff`?) deja de ser bloqueante para el frontend.
+>
+> Lo que **sigue siendo válido**: la doctrina de ids UUIDv7, la anulación del plan 047, el gate
+> de verificación, y los veredictos sobre 048–052.
+
 **Written:** 2026-09-05 · **revised** the same day after correcting the reference branch
 **Frontend HEAD:** `2ebf40d`
 **Backend reference:** **`origin/main` @ `f707863`** — the authoritative branch

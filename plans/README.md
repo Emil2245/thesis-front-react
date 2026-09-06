@@ -9,6 +9,34 @@ Self-contained implementation plans for the **Sistema APU** frontend: the React 
 
 Each plan is written for an executor with **zero context from the session that produced it**. Read the plan you are executing in full; it inlines everything it needs.
 
+> ## Empieza aquí (2026-09-06)
+>
+> **¿Vas a llevar el proyecto de punta a punta? Lee [`ORQUESTADOR.md`](ORQUESTADOR.md) y arranca.**
+> Estado vivo en [`BITACORA.md`](BITACORA.md).
+>
+> **El índice vivo de trabajo pendiente es [`HANDOFF-ESTADO-Y-GAPS.md`](HANDOFF-ESTADO-Y-GAPS.md).**
+> Esta tabla de estado documenta lo que se hizo; el handoff documenta qué hacer ahora y por qué
+> varios planes de la tabla están caducados.
+>
+> - **Planes 038–045 y 047: no ejecutar.** Superseded o anulados.
+> - **Planes 050 y 051: reescribir antes de ejecutar.** Se escribieron contra endpoints que
+>   `origin/main` no tiene.
+> - **Ruta de ejecución (7 olas):** `061` → `053` → `054` → `059` → `057` → `028` → en paralelo
+>   `055`(reb. 1–4) · `048` · `049` · `050` · `051` · `052` · `058` → `060`.
+>   Tabla completa en [`HANDOFF-ESTADO-Y-GAPS.md`](HANDOFF-ESTADO-Y-GAPS.md) §7.
+> - **Fuera de las olas:** `056` (responsive) ⏸ en espera hasta que el humano lo pida ·
+>   `055` rebanada 5 (vistas del cronograma) ⏸ diferida hasta la entrevista N05.
+> - **Reescritos el 2026-09-06:** `050` (admin) y `051` (export) — las versiones anteriores se
+>   escribieron contra `test/stuff`.
+> - **Con aviso de revisión:** `028`, `048`, `049`, `052`. Léelo antes de ejecutarlos.
+> - **Antes de cualquier cosa:** `git fetch --all` en `../thesis-back-quarkus` y comparar
+>   `origin/main` con el commit que cita el handoff. El backend se mueve rápido; tres análisis
+>   ya se hicieron contra ramas o commits equivocados.
+> - **Gate de verificación:** `npm run typecheck`, nunca `npx tsc --noEmit` (no comprueba nada).
+> - **Inventario medido** (roadmap, 44 pantallas, 92 endpoints, tests, shadcn, responsive):
+>   [`INVENTARIO-COBERTURA.md`](INVENTARIO-COBERTURA.md).
+> - **Bloqueado por decisión de producto:** [`056`](056-decidir-y-cerrar-responsive.md) (responsive).
+
 ---
 
 ## Execution order and dependencies
@@ -333,9 +361,28 @@ Anyone executing any plan should know these before writing a line.
 
 The thesis's headline dependent variable is `exactitud_calculo` = **0 % deviation** against certified reference cases. A second implementation of the money math in TypeScript would put that at risk for a cosmetic gain. Plan 015 mechanises the guard as a CI grep for `toFixed`/`parseFloat` outside `src/lib/decimal.ts`.
 
-### 2. Money travels as decimal strings
+### 2. El dinero se parte en dos ejes — CORREGIDO 2026-09-06
 
-`../thesis-docs/plan/architecture/07-api-contract.md §1`: *"Dinero/porcentajes como string decimal (`"61.390000"`) para no perder precisión en JS."* Plan 002 brands the type; plan 004 provides display-only formatters. Never parse to `number` and send it back. Percentages travel as **fractions** (`"0.1800"` = 18 %).
+> La versión anterior de este punto decía «Money travels as decimal strings … never parse to
+> `number` and send it back». **Es falso desde que existe el backend real** y produjo los 9
+> `as never` del repo. Plan [`061`](061-politica-de-dinero.md).
+
+**Eje 1 — transporte.** Lo fija el backend y no se negocia:
+
+| Módulo | JSON |
+|---|---|
+| presupuesto y cronograma (`totalGeneral`, `precioTotal`, `cantidad`, avances…) | **string** |
+| APU · insumo · parámetros (`costoDirecto`, `precioUnitario`, `iva`…) | **number** |
+| todos los requests | acepta número o string numérico |
+
+**Eje 2 — edición.** Decisión del humano, 2026-09-06: **campo editable → `number`** cuantizado;
+**campo de solo lectura → `string`**.
+
+**Y la regla que no cambia:** el frontend **no hace aritmética de dinero** (ADR 9,
+`08-codebase-design.md §8`). Los float arrastran decimales: con los totales reales del proyecto,
+`395115.32 − 355603.788` da `39511.53200000001` en JS. `toFixed` y `parseFloat` solo dentro de
+`src/lib/decimal.ts`, con guarda de CI. Los porcentajes viajan como **fracción** (`0.1800` = 18 %),
+dinero a escala **6**, porcentajes y avances a escala **4**.
 
 ### 3. One seam with the backend
 

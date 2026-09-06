@@ -1,4 +1,9 @@
-# Prompt de arranque — agente orquestador (Opus)
+# Prompt de arranque — agente orquestador (Opus) · **HISTÓRICO**
+
+> **Superseded 2026-09-06 por [`ORQUESTADOR.md`](ORQUESTADOR.md).** Este documento organizó los
+> planes 019–027, cerrados en agosto. Se conserva como registro. El encargo vigente y la ruta de
+> ejecución están en `ORQUESTADOR.md` y en `HANDOFF-ESTADO-Y-GAPS.md` §7.
+
 
 > Pega todo lo que sigue como primer mensaje en una sesión de Claude Code con
 > Opus, abierta en `/home/etverkade/workspace/thesis-front-react`.

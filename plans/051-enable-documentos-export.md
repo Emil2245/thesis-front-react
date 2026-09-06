@@ -1,242 +1,116 @@
-# Plan 051 — Enable the documentos/export module
+# Plan 051 — Export: encender solo la ET en DOCX y borrar el resto
 
-**Status:** TODO
-**Written against:** `e44c608`
-**Spec source:** backend `DocumentoResource` (both of them — see **Maintenance notes**); `plans/ROADMAP-V2-BACKEND-PARITY.md`
-**Effort:** M (3-4 hours)
-**Risk:** MEDIUM — every export URL in the frontend is currently wrong; one export is blocked upstream
+**Status:** TODO — **reescrito 2026-09-06**
+**Escrito contra:** frontend `8cc08b5` · backend `origin/main` @ `c337950`
+**Fuente de verdad:** `documento/DocumentoResource.java` en `origin/main` — **una sola clase, un solo endpoint**
+**Esfuerzo:** S (2–3 h) · **Riesgo:** BAJO — es sobre todo borrar
+**Depende de:** `053` · `059` (por `RubroRefResponse.id` en el banner de validación)
+**Cubre:** parte de S-35 / P-37
 
-## Why
+> ## Aviso de reescritura
+>
+> La versión anterior se escribió contra `test/stuff` y prometía **5 endpoints de export XLSX**.
+> No existen en `origin/main`: `grep -c exportar` → 0, y los dos `.xlsx` del repo son plantillas de
+> contenido, no código. Aquella versión también mencionaba «dos clases `DocumentoResource`
+> registradas en el mismo `@Path`» — eso es un artefacto de `test/stuff`; **en main hay una sola**.
 
-`documentos` is gated in `MODULOS_SIN_BACKEND` (`src/lib/disponibilidad.ts`). The comment above
-the gate says *"El backend no tiene ningún endpoint de exportación todavía (plan 027)"* — that is
-now false. `test/stuff` serves five export endpoints.
+## Lo que existe de verdad
 
-But the gate was hiding more than an unbuilt backend. **Every one of the four URLs in
-`opcionesExport` is wrong**, and two of the four advertise a format the backend cannot produce.
-Un-gating without fixing them ships four buttons that all fail.
+```
+GET /documentos/especificaciones-tecnicas/{presupuestoId}?formato=docx&titulo1=&titulo2=
+    @RolesAllowed({"USUARIO","SUPER_ADMIN"})
+    → 200 con el binario + Content-Disposition: attachment; filename="…"
+    → 400 si formato != docx  ("Formato no soportado: … (solo DOCX en esta iteración)")
+    → 404 si el presupuesto no es del usuario
+```
 
-### What the backend actually serves
+Eso es todo. `formato` es **opcional**: si no se manda, o se manda `docx`, genera; cualquier otro
+valor es 400. `titulo1` y `titulo2` son opcionales y van a la portada del documento.
 
-`src/main/java/ec/uce/propuestas/documento/resource/DocumentoResource.java`:
+## Lo que el frontend cree que existe
 
-| Endpoint | Path param | Produces |
+`useExportar.ts` ofrece cuatro opciones, y **las cuatro URLs están inventadas**:
+
+| Opción de la UI | URL que llama | En main |
 |---|---|---|
-| `GET /documentos/apu/{apuId}?formato=xlsx` | `Long` | XLSX (one APU) |
-| `GET /documentos/apus/{presupuestoId}` | `Long` | XLSX (all APUs) |
-| `GET /documentos/presupuesto/{presupuestoId}` | `Long` | XLSX |
-| `GET /documentos/cronograma/{presupuestoId}` | `Long` | XLSX |
+| Presupuesto PDF | `GET /presupuestos/{id}/exportar/pdf` | no existe |
+| Presupuesto Excel | `GET /presupuestos/{id}/exportar/excel` | no existe |
+| Todos los APUs | `GET /presupuestos/{id}/apus/exportar` | no existe |
+| Cronograma | `GET /presupuestos/{id}/cronograma/exportar` | no existe |
 
-`src/main/java/ec/uce/propuestas/documento/DocumentoResource.java` (a **second** class on the
-same `@Path`):
+Ninguna apunta al único endpoint que sí existe. El módulo está degradado, así que hoy nadie las
+dispara — pero son 4 de las llamadas muertas del inventario §3.1 y hay que borrarlas, no
+redirigirlas.
 
-| Endpoint | Path param | Produces |
-|---|---|---|
-| `GET /documentos/especificaciones-tecnicas/{presupuestoId}?formato=docx&titulo1=&titulo2=` | **UUID** | DOCX |
+**No cablear PDF a otro endpoint.** El backend no genera PDF en ninguna ruta. Ofrecer un botón
+«PDF» que descargue un DOCX es peor que no ofrecerlo.
 
-### What the frontend calls today
+## Qué hace este plan
 
-`src/features/exportar/hooks/useExportar.ts`, `opcionesExport`:
+### 1 — borrar las 4 opciones inventadas
 
-| key | current endpoint | reality |
-|---|---|---|
-| `presupuesto-pdf` | `/presupuestos/{id}/exportar/pdf` | wrong path, **and PDF does not exist** |
-| `presupuesto-excel` | `/presupuestos/{id}/exportar/excel` | wrong path |
-| `apus` | `/presupuestos/{id}/apus/exportar` | wrong path, filename says `.pdf`, server sends XLSX |
-| `cronograma` | `/presupuestos/{id}/cronograma/exportar` | wrong path, filename says `.pdf`, server sends XLSX |
+`useExportar.ts`: fuera las cuatro URLs y el selector de formato PDF/XLSX. Queda **una** opción:
+especificaciones técnicas en DOCX.
 
-## Decisions the human must make
+También sale el `enabled: presupuestoId > 0` de `useExportar.ts:12` y el
+`Number(searchParams.get("v")) || 0` de `ExportPage.tsx:56` — los arregla el plan 053, pero si
+este plan se ejecuta antes, arreglarlos aquí y avisar al 053.
 
-### Decision A — PDF (blocking)
+### 2 — cablear la ET
 
-The UI offers *"Presupuesto (PDF)"*. **The backend produces XLSX and DOCX only. There is no PDF
-generator anywhere in `test/stuff`.**
-
-- **Recommended: remove the PDF affordance.** One deleted array entry, honest UI, smallest
-  diff. Users get XLSX, which is what the system actually makes.
-- Alternative: keep the button and file a backend plan for PDF rendering. That is a real
-  feature (a renderer, templates, page layout), not a config flag.
-
-**Do not wire `presupuesto-pdf` to the XLSX endpoint and rename the file `.pdf`.** That ships a
-corrupt download. This plan's steps assume the recommendation; if the human picks the
-alternative, stop and write the backend plan first.
-
-### Decision B — Especificaciones técnicas (blocked, not a choice)
-
-The ET export takes the presupuesto's **UUIDv7 `public_id`**. The frontend only ever holds the
-**`Long presupuestoId`** — `PresupuestoResponse` exposes no UUID field
-(`presupuesto/dto/PresupuestoResponse.java`). So the frontend **cannot call this endpoint at
-all** right now.
-
-Per `plans/047`, that endpoint is the one *correctly* following the UUIDv7 doctrine; the rest of
-the presupuesto module is the laggard. Resolving this needs the Step 5 follow-up in 047
-(expose the presupuesto `publicId`), not a frontend workaround.
-
-**Leave ET export out of this plan.** Note it in the UI's absence, not with a broken button.
-
-## What changes
-
-1. Rewrite `opcionesExport` with the real `/documentos/*` paths and correct `.xlsx` filenames.
-2. Drop the `presupuesto-pdf` entry (Decision A).
-3. Un-gate the module and export `ExportPageActiva` as `ExportPage`.
-4. MSW handlers for the four real paths.
-5. A test that asserts the **requested URL**, not merely that a download was attempted.
-
-## Steps
-
-### Step 1 — Rewrite `opcionesExport`
-
-`src/features/exportar/hooks/useExportar.ts`. Replace the whole array:
-
-```typescript
-export const opcionesExport = [
-  {
-    key: "presupuesto",
-    label: "Presupuesto (Excel)",
-    endpoint: (presupuestoId: number) => `/documentos/presupuesto/${presupuestoId}`,
-    nombre: (pid: string) => `presupuesto_${pid}.xlsx`,
-  },
-  {
-    key: "apus",
-    label: "APUs (Excel)",
-    endpoint: (presupuestoId: number) => `/documentos/apus/${presupuestoId}`,
-    nombre: (pid: string) => `apus_${pid}.xlsx`,
-  },
-  {
-    key: "cronograma",
-    label: "Cronograma (Excel)",
-    endpoint: (presupuestoId: number) => `/documentos/cronograma/${presupuestoId}`,
-    nombre: (pid: string) => `cronograma_${pid}.xlsx`,
-  },
-] as const;
+```ts
+GET /documentos/especificaciones-tecnicas/{presupuestoId}
 ```
 
-Three entries, not four — the PDF one is gone. The path param is the **presupuesto** id
-(`Long`), which stays numeric after plan 046; rename the parameter from `id` to
-`presupuestoId` so the next reader does not pass a proyecto id.
+Tres cosas que no son obvias:
 
-`GET /documentos/apu/{apuId}` (single APU) is a different surface — it belongs on the APU
-editor, not this page. Out of scope; see **Out of scope**.
+- **Es una descarga binaria, no JSON.** `src/api/request.ts` hace `get<T>` y devuelve `.data`
+  parseado. Para esto hace falta `responseType: "blob"`. Si no existe un helper de descarga en el
+  seam, este plan lo añade — es la primera descarga real del repo.
+- **El nombre del archivo viene en `Content-Disposition`**, no se inventa en el cliente. Leer la
+  cabecera; si falta, caer a un nombre por defecto.
+- **`titulo1` y `titulo2` son opcionales** y alimentan la portada. `ExportPage` puede exponerlos
+  como dos campos de texto, o no exponerlos. Si no se exponen, no mandarlos: mandar cadenas vacías
+  no es lo mismo que omitirlos.
 
-### Step 2 — Icon logic
+### 3 — validaciones bloqueantes: mantenerlas, con matiz
 
-`ExportPageActiva` picks its icon with `op.key.includes("excel")`. No key contains `"excel"`
-any more, so every row would render the generic `FileDown`. All three are spreadsheets now:
+S-35 y F-09 especifican un checklist bloqueante antes de exportar (ítems con PU = 0, rubros sin
+actividad). `GET /presupuestos/{id}/validacion` existe en main y devuelve
+`{exportable, itemsPuCero[], itemsCantidadCero[], itemsSinActividad[]}`. Mantener el banner.
 
-```tsx
-<TableCell className="flex items-center gap-2">
-  <FileSpreadsheet className="size-4 text-muted-foreground" />
-  {op.label}
-</TableCell>
-```
+Pero **`RubroRefResponse` tiene el campo `id`, no `rubroId`** (§5.4 del handoff), así que el banner
+lee hoy un campo `undefined`. Lo arregla el plan 059; si este se ejecuta antes, arreglarlo aquí.
 
-Drop the conditional and the now-unused `FileDown` import from the label cell (it is still used
-inside the button).
+Y un matiz del backend que la UI no debe inventar: **`cronograma.desactualizado` no bloquea la
+exportación.** Son ejes ortogonales (Plan 026 §4 del backend). No añadir un gate que el backend no
+tiene.
 
-### Step 3 — Un-gate the module
+### 4 — quitar `documentos` de `MODULOS_SIN_BACKEND`
 
-`src/lib/disponibilidad.ts` — remove `"documentos"`:
+Con una sola opción real, la página deja de estar degradada. Cambiar el texto de S-35 para que
+diga qué se puede exportar hoy en vez de prometer cuatro entregables.
 
-```typescript
-export const MODULOS_SIN_BACKEND = new Set([
-  "plantillas",
-  "plantillas-proyecto",
-  "admin",
-] as const);
-```
+## Lo que queda pendiente y por qué
 
-Also fix the stale block comment above the set: it claims the backend has "nueve recursos
-JAX-RS, sin paquetes presupuesto/cronograma/export/plantilla/admin", which has been untrue since
-`test/stuff`.
+P-37 pide **4 entregables** (APU individual, todos los APUs, presupuesto, cronograma) en
+`.xlsx`/`.pdf`, y es la historia **US-34** de la iteración **I-10** del roadmap. Este plan cubre
+un quinto entregable que no estaba en la lista original (la ET, P-45, añadida en I-06).
 
-`src/features/exportar/pages/ExportPage.tsx` — delete the stub `ExportPage` (and its
-`ModuloNoDisponible` import), then rename `ExportPageActiva` → `ExportPage`. Follow exactly what
-`e44c608` did for `PresupuestoPage`/`VersionesPage`.
+Es decir: **P-37 sigue sin empezar, y depende del backend.** El hito de tesis de la semana 20
+—tasa de conformidad CHK-01…CHK-31 medida con parse-back POI/PDFBox— no se puede alcanzar desde
+el frontend. Cuando el backend entregue I-10, este plan se amplía; hasta entonces no hay nada más
+que hacer aquí.
 
-Grep for `ExportPageActiva` afterwards; the route file and tests import it by name.
+Dejar constancia en `ExportPage` con un aviso honesto («por ahora solo especificaciones
+técnicas») en vez de botones deshabilitados con tooltip: un botón apagado promete que llegará
+pronto; un aviso dice la verdad.
 
-### Step 4 — MSW handlers
+## Definición de hecho
 
-`src/test/handlers.ts`. `descargar` returns a blob, so the handler must too:
-
-```typescript
-http.get("*/documentos/presupuesto/:id", () =>
-  HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-    headers: { "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
-  }),
-),
-http.get("*/documentos/apus/:id", () => HttpResponse.arrayBuffer(new ArrayBuffer(8))),
-http.get("*/documentos/cronograma/:id", () => HttpResponse.arrayBuffer(new ArrayBuffer(8))),
-```
-
-### Step 5 — Test the URL, red first
-
-The failure this plan exists to prevent is *"the button downloads from the wrong path"*. A test
-that only asserts "a download happened" cannot see that, and would have passed against the
-broken URLs. Assert the path.
-
-New file `src/test/features/exportar/pages/ExportPage.test.tsx`:
-
-1. **Red:** capture the requested URL via an MSW `onUnhandledRequest` spy or a
-   `server.events.on("request:start", …)` listener; assert clicking *Presupuesto (Excel)*
-   requests `/documentos/presupuesto/{id}`. Run it before Step 1 and watch it fail on the old
-   path.
-2. **Green:** apply Step 1.
-3. Then: exports are disabled while `validacion.exportable === false`; the three rows render.
-
-`jsdom` has no real download. `descargarConFallback` calls `URL.createObjectURL` and clicks an
-anchor — stub `URL.createObjectURL`/`revokeObjectURL` in the test setup, and assert the anchor's
-`download` attribute for the `.xlsx` filename.
-
-### Step 6 — Sidebar
-
-`src/shell/Sidebar.tsx` gates the nav entry on the same set, so removing `"documentos"` drops
-the "Próximamente" badge automatically. `src/test/shell/Sidebar.test.tsx` asserts which entries
-carry the badge — update it, as `e44c608` did for presupuesto.
-
-### Step 7 — Verify
-
-```bash
-npm run typecheck   # zero errors
-npx vitest run     # all pass
-npm run lint       # no new warnings
-```
-
-Baseline at `e44c608` is 45 files / 207 tests green, `tsc` clean, lint warnings pre-existing
-only.
-
-## Seams under test
-
-- `src/test/features/exportar/pages/ExportPage.test.tsx` — **primary seam.** The page's public
-  behaviour: which documents are offered, which URL each requests, when they are disabled.
-- `src/test/shell/Sidebar.test.tsx` — the module is no longer "próximamente".
-
-Test through the rendered page with MSW behind it. Do **not** unit-test `opcionesExport` by
-importing the array and asserting its strings — that is the tautology trap: it restates the
-constant instead of checking that clicking the button hits that path.
-
-## Out of scope
-
-- **PDF export** — Decision A. Backend feature if wanted.
-- **Especificaciones técnicas (DOCX)** — Decision B. Blocked on plan 047 Step 5.
-- **Single-APU export** (`GET /documentos/apu/{apuId}`) — belongs on the APU editor page.
-  Separate slice, and note its `apuId` is a `Long` while plan 046 moves APU ids to UUID
-  strings, so it needs 047's follow-up too.
-- Export progress/queueing. The endpoints are synchronous.
-
-## Escape hatches
-
-- If `descargar` sets an `Accept` header the MSW handler does not match, relax the handler
-  rather than the client.
-- If the backend rejects the numeric `presupuestoId` after plan 047's follow-up lands, this
-  plan's URLs change shape — cross-check 047 status before starting.
-
-## Maintenance notes
-
-Two classes carry `@Path("/documentos")`: `documento/DocumentoResource.java` (ET, UUID) and
-`documento/resource/DocumentoResource.java` (the four XLSX exports, Long). Grepping for the
-class name finds the wrong file half the time. Flagged for merge in plan 047's Maintenance
-notes.
-
-The `validacion.exportable` gate already works and is wired to a real endpoint
-(`GET /presupuestos/{id}/validacion`) — `useValidacionExport` needs no change.
+- `npm run verify` en verde.
+- Cero referencias a `/exportar/pdf`, `/exportar/excel`, `/apus/exportar`, `/cronograma/exportar`.
+- La descarga de ET funciona con un handler MSW que devuelve un blob con `Content-Disposition`,
+  y hay un test que comprueba que el nombre de archivo sale de la cabecera.
+- Un test del 400 con `formato=pdf`.
+- `documentos` fuera de `MODULOS_SIN_BACKEND`.

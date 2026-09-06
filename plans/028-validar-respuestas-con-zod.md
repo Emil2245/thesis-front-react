@@ -1,5 +1,41 @@
 # Plan 028: Validar las respuestas del backend con Zod en el seam de la API
 
+> ## Revisión 2026-09-06 — sube a P0 y gana una precondición
+>
+> Este plan se escribió el 2026-08-25 y **sigue siendo válido en su diagnóstico**: `src/api/request.ts`
+> es un cast puro que no comprueba nada. Tres cosas cambian.
+>
+> **1. Es lo de mayor apalancamiento del repo.** Desde que se escribió, *tres* análisis contra ramas
+> o commits equivocados produjeron código que typechequea y pasa 207 tests estando mal sobre el
+> formato de red. Validación en runtime es lo único que lo habría cazado. Ver
+> [`HANDOFF-ESTADO-Y-GAPS.md`](HANDOFF-ESTADO-Y-GAPS.md) §7 P2.
+>
+> **2. Precondición: la representación del dinero — RESUELTA 2026-09-06.**
+> El backend **parte** el dinero por módulo y no se puede cubrir con un solo tipo:
+>
+> | Módulo | Java | JSON |
+> |---|---|---|
+> | presupuesto y **cronograma** | `String` | **string** |
+> | APU · insumo · parámetros | `BigDecimal` | **number** |
+> | todos los requests | `BigDecimal` | acepta número o string numérico |
+>
+> **Decisión tomada:** eje de **transporte** (lo fija el backend: `z.string()` donde manda string,
+> `z.number()` donde manda number) y eje de **edición** (editable → `number` cuantizado, solo
+> lectura → `string`). Escalas: dinero **6**, porcentajes y avances **4**. La política y el helper
+> los entrega el plan [`061`](061-politica-de-dinero.md), en la ola 0.
+>
+> **Este plan ya no está bloqueado.** Escribe los esquemas contra esa partición; si algún campo no
+> encaja en ninguno de los dos ejes, el error está en el `061` y se corrige allí, no aquí.
+>
+> **3. Hermano nuevo: [`057`](057-cobertura-de-tests-en-el-seam.md).** Zod valida lo que *entra*;
+> el 057 prueba lo que *sale*. Ninguno solo cubre la lista completa de defectos: Zod no ve una URL
+> mal escrita, y un test de hook no ve un campo que el servidor devuelve con otro tipo.
+> **Recomendado hacer el 057 primero** — al escribir los tests de contrato aparecen los esquemas
+> que este plan necesita, derivados del uso real en vez de copiados a mano de los records de Java.
+>
+> El resto del plan (el análisis del seam, la estrategia de migración) se mantiene. Ignora las
+> referencias a endpoints concretos: se escribieron antes de conocer `origin/main`.
+
 > **Executor instructions**: Follow this plan step by step. Run every
 > verification command and confirm the expected result before moving to the
 > next step. If anything in the "STOP conditions" section occurs, stop and

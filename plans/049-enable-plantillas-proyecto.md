@@ -1,9 +1,36 @@
 # Plan 049 — Enable plantillas de proyecto (un-gate `plantillas-proyecto`)
 
+> ## Revisión 2026-09-06 — **válido**, corregida la fuente
+>
+> El encabezado dice «Spec source: backend `test/stuff`». Esa rama **no está mergeada**, pero los
+> tres recursos (`PlantillaProyectoResource`, `PlantillaProyectoGuardarResource`,
+> `PlantillaProyectoAplicarResource`) existen en `origin/main` @ `c337950` con los mismos endpoints.
+> **Los cuatro defectos que describe son reales.** Leer `origin/main`, no `test/stuff`.
+>
+> Confirmado contra main:
+>
+> ```java
+> PlantillaProyectoResponse(UUID id, String nombre, String descripcion,
+>                           JsonNode snapshotEstructura, Instant fechaCreacion)   // @JsonInclude(NON_NULL)
+> ProyectoDesdePlantillaResponse(ProyectoResponse proyecto,
+>                                List<AdvertenciaPlantillaResponse> advertencias) // @JsonInclude(NON_NULL)
+> ```
+>
+> `snapshotEstructura` es un `JsonNode` — en TypeScript, **`unknown`**. No inventar una interfaz
+> para una forma que el backend no fija; sería un contrato imaginario, que es el error que este
+> repo ya cometió tres veces.
+>
+> `@JsonInclude(NON_NULL)` significa que los campos nulos **no aparecen en el JSON**: tipar como
+> `?` opcional, no como `| null`.
+>
+> «Duplicar proyecto sigue deshabilitado» se confirma: `POST /proyectos/{id}/duplicar` tampoco
+> existe en main.
+
 **Status:** TODO
 **Written against:** `e44c608`
 **Spec source:** backend `test/stuff` @ `eb9a1da`, `PlantillaProyectoResource`; supersedes the gate added in plan 035
 **Effort:** M (3-4 hours)
+**Depende de:** `053` · `059` (por `PlantillaProyectoResponse.snapshotEstructura`)
 **Risk:** MEDIUM — un-gating exposes four contract bugs that are latent today because nothing calls the endpoints
 
 ## Why
