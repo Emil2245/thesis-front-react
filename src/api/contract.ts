@@ -104,9 +104,6 @@ export interface ProyectoResponse {
   updatedAt?: string;
 }
 
-// El backend aún no envía alertas; opcional hasta que las implemente.
-export type ProyectoDetalleResponse = ProyectoResponse & { alertas?: string[] };
-
 // Asimetría real del backend, no error del frontend: `plazoUnidad` es `String`
 // en los requests y el enum `PlazoUnidad` en la respuesta. Se tipa como viaja.
 export interface ProyectoCrearRequest {

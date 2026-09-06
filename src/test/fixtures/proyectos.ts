@@ -1,6 +1,5 @@
 import type {
   ProyectoResponse,
-  ProyectoDetalleResponse,
   ParametrosProyectoResponse,
   FirmanteResponse,
 } from "@/api/contract";
@@ -58,7 +57,7 @@ export const proyectosFixture: ProyectoResponse[] = [
   },
 ];
 
-export const proyectoDetalleFixture: ProyectoDetalleResponse = {
+export const proyectoDetalleFixture: ProyectoResponse = {
   id: PROYECTO_1,
   nombreProyecto: "Puente Ambato",
   codigo: "AMB-001",
@@ -72,7 +71,6 @@ export const proyectoDetalleFixture: ProyectoDetalleResponse = {
   plazoUnidad: "MES",
   tieneLogo: false,
   updatedAt: "2026-01-15T00:00:00Z",
-  alertas: ["CI_NO_CONFIGURADO"],
 };
 
 export const parametrosFixture: ParametrosProyectoResponse = {

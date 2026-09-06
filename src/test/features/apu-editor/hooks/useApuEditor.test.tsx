@@ -159,11 +159,18 @@ describe("useApuEditor", () => {
     expect(cuerpo).toBe("0.20");
   });
 
+  // El cuerpo es un escalar JSON pelado, no un objeto: axios sólo pone
+  // `Content-Type: application/json` solo cuando el cuerpo es un objeto plano,
+  // así que este endpoint tiene que pedirlo a mano. Sin la cabecera, axios no
+  // serializa el `null` y manda un cuerpo vacío — el backend no llega a saber
+  // que hay que volver a heredar (plan 062 §1).
   it("editarPorcentajeCi(null) manda null crudo para volver a heredar del proyecto", async () => {
     let cuerpo = "sin-peticion";
+    let contentType = "";
     server.use(
       http.patch(`${API}/apus/:id/porcentaje-indirecto`, async ({ request }) => {
         cuerpo = await request.text();
+        contentType = request.headers.get("content-type") ?? "";
         return HttpResponse.json(apuDetalleFixture);
       }),
     );
@@ -175,6 +182,7 @@ describe("useApuEditor", () => {
     });
 
     expect(cuerpo).toBe("null");
+    expect(contentType).toContain("application/json");
   });
 
   // Plan 059 §2: ApuDetalleCrearRequest(seccionTipo, insumoId, cantidad, rendimiento)

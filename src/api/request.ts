@@ -1,3 +1,4 @@
+import type { AxiosRequestConfig } from "axios";
 import { http } from "./client";
 
 export const get = async <T>(url: string, params?: unknown): Promise<T> =>
@@ -9,8 +10,11 @@ export const post = async <T>(url: string, body?: unknown): Promise<T> =>
 export const put = async <T>(url: string, body?: unknown): Promise<T> =>
   (await http.put<T>(url, body)).data;
 
-export const patch = async <T>(url: string, body?: unknown): Promise<T> =>
-  (await http.patch<T>(url, body)).data;
+export const patch = async <T>(
+  url: string,
+  body?: unknown,
+  config?: AxiosRequestConfig,
+): Promise<T> => (await http.patch<T>(url, body, config)).data;
 
 export const del = async <T = void>(url: string): Promise<T> => (await http.delete<T>(url)).data;
 

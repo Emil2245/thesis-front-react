@@ -173,21 +173,28 @@ describe("contrato de useImportarCsv", () => {
     expect(p?.ruta).toBe(`/api/v1/proyectos/${PROYECTO_ID}/insumos/importar`);
   });
 
-  // ponytail: defecto pinchado, no arreglado. El `Content-Type:
-  // application/json` por defecto de la instancia axios (src/api/client.ts) gana
-  // sobre el FormData: axios 1.x, al ver un content-type JSON, convierte el
-  // FormData con `formDataToJSON` y manda `{"archivo":{}}` — el archivo se
-  // queda en el suelo y el backend recibe un multipart vacío. El arreglo es
-  // pasar `{ headers: { "Content-Type": undefined } }` en el POST de importar
-  // (o no fijar el default en la instancia). Este test afirma el estado ACTUAL:
-  // cuando se arregle se pondrá rojo, y ahí es cuando hay que invertirlo.
-  it("HOY manda el CSV como JSON: el default de la instancia gana al FormData", async () => {
-    let contentType: string | null = null;
-    let cuerpo = "";
+  // Plan 062 §1: el CSV tiene que salir como multipart de verdad. Si alguien
+  // vuelve a fijar `Content-Type: application/json` en la instancia axios
+  // (src/api/client.ts), `transformRequest` serializa el FormData con
+  // `formDataToJSON` y por el cable va `{"archivo":{}}` — el fichero se queda
+  // en el suelo. Este test afirma lo contrario y se pone rojo si vuelve.
+  //
+  // ponytail: se mira el cuerpo crudo, no `request.formData()`. Techo del
+  // entorno, no del código: en `environment: "jsdom"` el `File`/`FormData`
+  // globales son los de jsdom y el `Request` es el de undici, que no reconoce
+  // el `File` ajeno — pierde los bytes al serializar y `request.formData()`
+  // revienta hasta con un multipart bien formado. Para leerlo como FormData
+  // habría que sustituir `File`, `Blob` y `FormData` globales por los de Node
+  // en el setup, y eso rompe `AsistenteImportCsv.test.tsx` (userEvent.upload y
+  // FileReader quieren los de jsdom). La cabecera y el marco multipart bastan
+  // para pinchar el defecto.
+  it("manda el CSV como multipart, no como JSON", async () => {
+    let contentType = "";
+    let crudo = "";
     server.use(
       http.post(`${API}/proyectos/:id/insumos/importar`, async ({ request }) => {
-        contentType = request.headers.get("Content-Type");
-        cuerpo = await request.clone().text();
+        contentType = request.headers.get("content-type") ?? "";
+        crudo = await request.text();
         return HttpResponse.json(importResultadoFixture);
       }),
     );
@@ -197,7 +204,8 @@ describe("contrato de useImportarCsv", () => {
     formData.append("archivo", new File(["codigo,descripcion\nM-001,Cemento\n"], "insumos.csv"));
     await result.current.mutateAsync({ formData });
 
-    expect(contentType).toBe("application/json");
-    expect(cuerpo).not.toContain("codigo,descripcion");
+    expect(contentType).toMatch(/^multipart\/form-data; boundary=.+/);
+    expect(crudo).toContain('name="archivo"');
+    expect(crudo).not.toContain('{"archivo"');
   });
 });

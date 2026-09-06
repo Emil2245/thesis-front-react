@@ -134,16 +134,13 @@ describe("contrato de proyectos", () => {
     await waitFor(() => expect(p?.cuerpo).toEqual({ nombre: "Copia", codigo: "AMB-002" }));
   });
 
-  // ponytail: defecto de producción, no se arregla aquí. El hook construye un
-  // FormData con el campo `logo`, pero `http` (src/api/client.ts) fija
-  // `Content-Type: application/json` en los defaults de la instancia axios, y el
-  // `transformRequest` de axios 1.x convierte el FormData a JSON cuando el
-  // content-type es JSON. Lo que sale por el cable es
-  // `application/json` con `{"logo":{}}`: el fichero se pierde entero y el
-  // backend nunca ve un multipart. Se fija el comportamiento de hoy; el arreglo
-  // (no fijar el header por defecto, o forzar multipart en este `put`) es de
-  // otro plan.
-  it("useSubirLogo pide la ruta correcta pero degrada el multipart a JSON", async () => {
+  // Plan 062 §1: el logo tiene que salir como multipart de verdad. Con un
+  // `Content-Type: application/json` fijado en la instancia axios, axios 1.x
+  // serializa el FormData a `{"logo":{}}` y el fichero se pierde entero.
+  // Sobre por qué se mira el cuerpo crudo y no `request.formData()`, ver la
+  // nota de `src/test/features/insumos/hooks/contrato.test.tsx`: jsdom y
+  // undici no comparten `File`, así que el FormData no sobrevive al viaje.
+  it("useSubirLogo manda el fichero como multipart en PUT /proyectos/{id}/logo", async () => {
     let contentType = "";
     let crudo = "";
     server.use(
@@ -159,9 +156,9 @@ describe("contrato de proyectos", () => {
     await result.current.mutateAsync(new File(["x"], "logo.png", { type: "image/png" }));
 
     expect(ultima(peticiones, "PUT", `/proyectos/${PROYECTO_1}/logo`)).toBeDefined();
-    expect(Object.keys(JSON.parse(crudo))).toEqual(["logo"]);
-    expect(contentType).toContain("application/json");
-    expect(crudo).toBe('{"logo":{}}');
+    expect(contentType).toMatch(/^multipart\/form-data; boundary=.+/);
+    expect(crudo).toContain('name="logo"');
+    expect(crudo).not.toContain('{"logo"');
   });
 });
 
