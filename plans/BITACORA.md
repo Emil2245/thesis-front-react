@@ -1,6 +1,6 @@
 # Bitácora
 
-**Ola actual:** 0 — sin arrancar · **Actualizada:** 2026-09-06
+**Ola actual:** 0 · **Actualizada:** 2026-09-06
 
 > La lleva el orquestador ([`ORQUESTADOR.md`](ORQUESTADOR.md)). Se escribe **en el momento** en que
 > algo cambia de estado, no al final de la sesión: si la sesión se corta, lo que no está escrito
@@ -12,7 +12,7 @@
 
 | Ola | Plan | Estado | Worktree | Commit | Nota |
 | --- | ---- | ------ | -------- | ------ | ---- |
-| 0 | 061 política de dinero | ⏳ pendiente | — | — | |
+| 0 | 061 política de dinero | ❌ rechazado, redespachado | .claude/worktrees/ola0-061 | — | 1er intento sobre base equivocada |
 | 1 | 053 ids UUID | ⏳ pendiente | — | — | |
 | 2 | 054 descuento global + bugs SILENT | ⏳ pendiente | — | — | va antes del 059 |
 | 2 | 059 formas de DTO | ⏳ pendiente | — | — | después del 054, mismo `ApuResponse` |
@@ -41,6 +41,30 @@ docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
 
+- 2026-09-06 — ⚠️ **`isolation: "worktree"` del `Agent` tool NO sirve en este repo.** Ramifica desde
+  `origin/HEAD`/`origin/main`, que está en `f823fc6` (2026-08-29); el `main` local va **9 commits
+  por delante y nunca se ha empujado**. El primer intento del 061 salió sobre una base sin
+  `2ebf40d` (UUIDv7→string), sin el arreglo de formato y **sin el propio archivo del plan**. Su
+  `verify` salió verde contra el contrato viejo, o sea que no probaba nada. Rebase sobre `main`:
+  5 conflictos en los archivos centrales → descartado, no reconciliado.
+  **Protocolo desde ahora:** el orquestador crea el worktree a mano
+  (`git worktree add -b <rama> .claude/worktrees/<n> main`) y despacha un `Agent` **sin**
+  `isolation`, diciéndole la ruta absoluta. Alternativa que necesita al humano: empujar `main` a
+  `origin`.
+- 2026-09-06 — **Plan 061 corregido contra `origin/main @ c337950`** (§7 caso 1): la rebanada 2
+  afirmaba que `GET /presupuestos/{id}/comparar` devuelve la comparación calculada. Falso —
+  `ComparacionVersionesResponse(List<ComparacionItem>)` devuelve dos totales string y **ninguna
+  diferencia**. Se aplica el fallback. De paso: el DTO del frontend (`versionA`/`versionB`/
+  `capitulos[].diferencia`) es deriva; le toca a `053`/`059`.
+
+- 2026-09-06 — **Baseline no estaba verde**: `format:check` rojo en 16 archivos ya commiteados
+  (`e44c608`/`2ebf40d` escribieron a 80 columnas con `printWidth: 100`). Arreglado en `eef0b7d`,
+  solo espacios. Typecheck, lint y 45/207 tests sí coincidían. Segunda puerta que se dio por verde
+  sin correrla, después del `npx tsc --noEmit`.
+- 2026-09-06 — Los planes 053–061 estaban **sin trackear**: un worktree de ejecutor no los habría
+  visto. Commiteados en `68088a6` antes de despachar nada.
+- 2026-09-06 — 9 worktrees huérfanos de la sesión anterior, todos vacíos y sin commits. El borrado
+  lo bloqueó el clasificador de permisos; se dejan, no estorban.
 - 2026-09-06 — Dinero: editable `number` cuantizado, solo lectura `string`. Plan 061.
 - 2026-09-06 — Responsive: escritorio y móvil, tres fases, prioridad baja, arranque a petición.
 - 2026-09-06 — `test/stuff` no se mergea: esperar a main.

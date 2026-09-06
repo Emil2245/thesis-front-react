@@ -107,10 +107,30 @@ tecleado como `12,5` con coma decimal, y un valor con 8 decimales que debe cuant
 
 ### 2 — arreglar los dos sitios de aritmética
 
-**`ComparadorVersiones.tsx:21`.** `GET /presupuestos/{id}/comparar?con=` existe en main y ya
-devuelve la comparación calculada por el servidor — el frontend lo llama y luego **recalcula la
-diferencia por su cuenta**. Usar la del backend. Si la respuesta no trae la diferencia, mostrar
-los dos totales sin restarlos.
+**`ComparadorVersiones.tsx:21`.** ⚠️ **Corregido 2026-09-06 contra `origin/main @ c337950`.**
+La redacción anterior decía que el endpoint «ya devuelve la comparación calculada por el servidor».
+**Es falso.** Verificado leyendo el código:
+
+```java
+// ComparacionVersionesResponse.java
+public record ComparacionVersionesResponse(List<ComparacionItem> versiones) {}
+// ComparacionItem.java
+public record ComparacionItem(
+        UUID presupuestoId, Short version, String totalGeneral,
+        List<CapituloRaizComparacion> porCapituloRaiz) {}
+```
+
+`GET /presupuestos/{id}/comparar?con=` devuelve **dos ítems con sus totales, y ninguna diferencia**
+— ni general ni por capítulo. Todo el dinero es string a escala 6. El orden es estable: el primer
+ítem es el del path, el segundo el de `con`.
+
+Por tanto **no hay diferencia del backend que usar**: aplica directamente el fallback, mostrar los
+dos totales sin restarlos. Si el diseño exige mostrar la diferencia, es trabajo de backend y hay
+que pedirlo; no se calcula en el cliente.
+
+**Deriva de contrato, para `053`/`059`:** el DTO del frontend no se parece al real — tiene
+`versionA`/`versionB` y `capitulos[].diferencia`, campos que el backend no manda. Corregirlo no es
+de este plan.
 
 Test de regresión con `395115.320000` y `355603.788000`: hoy falla.
 
