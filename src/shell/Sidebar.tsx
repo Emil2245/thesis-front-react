@@ -77,7 +77,7 @@ const RUTAS_PROYECTO: {
   { sufijo: "/apus", icono: FileTextIcon, etiqueta: "APUs" },
   { sufijo: "/presupuesto", icono: BarChart3Icon, etiqueta: "Presupuesto" },
   { sufijo: "/cronograma", icono: CalendarIcon, etiqueta: "Cronograma" },
-  { sufijo: "/documentos", icono: DownloadIcon, etiqueta: "Documentos", modulo: "documentos" },
+  { sufijo: "/documentos", icono: DownloadIcon, etiqueta: "Documentos" },
   { sufijo: "/parametros", icono: SettingsIcon, etiqueta: "Parámetros" },
   { sufijo: "/versiones", icono: GitBranchIcon, etiqueta: "Versiones" },
 ];

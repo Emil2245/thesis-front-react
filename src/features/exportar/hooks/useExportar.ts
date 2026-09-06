@@ -13,13 +13,25 @@ export function useValidacionExport(presupuestoId: string) {
   });
 }
 
+/**
+ * El backend expone un único documento (plan 051): la especificación técnica en
+ * DOCX. Las opciones de presupuesto PDF/Excel, APUs y cronograma que vivían aquí
+ * apuntaban a rutas que no existen; se borraron en vez de redirigirlas, porque
+ * un botón «PDF» que descarga un DOCX miente más que la ausencia del botón.
+ *
+ * `formato` es opcional y su único valor válido es `docx`, así que no se manda.
+ * `titulo1`/`titulo2` alimentan la portada y tampoco se mandan: la pantalla no
+ * los pide, y una cadena vacía no equivale a omitir el parámetro.
+ */
 export function useExportar() {
-  const descargarConFallback = useCallback(async (url: string, nombre: string) => {
+  const descargarEspecificacionesTecnicas = useCallback(async (presupuestoId: string) => {
     try {
-      const blob = await descargar(url);
+      const { blob, nombreArchivo } = await descargar(
+        `/documentos/especificaciones-tecnicas/${presupuestoId}`,
+      );
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = nombre;
+      link.download = nombreArchivo ?? "especificaciones-tecnicas.docx";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -30,32 +42,5 @@ export function useExportar() {
     }
   }, []);
 
-  return { descargarConFallback };
+  return { descargarEspecificacionesTecnicas };
 }
-
-export const opcionesExport = [
-  {
-    key: "presupuesto-pdf",
-    label: "Presupuesto (PDF)",
-    endpoint: (id: string) => `/presupuestos/${id}/exportar/pdf`,
-    nombre: (pid: string) => `presupuesto_${pid}.pdf`,
-  },
-  {
-    key: "presupuesto-excel",
-    label: "Presupuesto (Excel)",
-    endpoint: (id: string) => `/presupuestos/${id}/exportar/excel`,
-    nombre: (pid: string) => `presupuesto_${pid}.xlsx`,
-  },
-  {
-    key: "apus",
-    label: "APUs",
-    endpoint: (id: string) => `/presupuestos/${id}/apus/exportar`,
-    nombre: (pid: string) => `apus_${pid}.pdf`,
-  },
-  {
-    key: "cronograma",
-    label: "Cronograma",
-    endpoint: (id: string) => `/presupuestos/${id}/cronograma/exportar`,
-    nombre: (pid: string) => `cronograma_${pid}.pdf`,
-  },
-] as const;
