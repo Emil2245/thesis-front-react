@@ -1,6 +1,6 @@
 # Bitácora
 
-**Ola actual:** 3-bis · **Actualizada:** 2026-09-06
+**Ola actual:** 4 · **Actualizada:** 2026-09-06
 
 > La lleva el orquestador ([`ORQUESTADOR.md`](ORQUESTADOR.md)). Se escribe **en el momento** en que
 > algo cambia de estado, no al final de la sesión: si la sesión se corta, lo que no está escrito
@@ -17,8 +17,8 @@
 | 2 | 054 descuento global + bugs SILENT | ✅ verde | — | 82edeae | fusionado a main |
 | 2 | 059 formas de DTO | ✅ verde | — | e182d2a | fusionado a main · ola 2 cerrada |
 | 3 | 057 tests de hook | ✅ verde | — | ad4c0f3 | fusionado a main · ola 3 cerrada |
-| 3-bis | **062 FormData rota + banner fantasma** | 🔄 en curso | .claude/worktrees/ola3bis-062 | — | plan nuevo, hallazgos del 057 |
-| 4 | 028 Zod en el seam | ⏳ pendiente | — | — | esquemas salen del 057 |
+| 3-bis | **062 FormData rota + banner fantasma** | ✅ verde | — | 921acfd | fusionado a main |
+| 4 | 028 Zod en el seam | 🔄 en curso | .claude/worktrees/ola4-028 | — | despachado 2026-09-06 |
 | 5 | 055 cronograma (reb. 1–4) | ⏳ pendiente | — | — | cierra sin la rebanada 5 |
 | 5 | 048 plantillas APU | ⏳ pendiente | — | — | |
 | 5 | 049 plantillas de proyecto | ⏳ pendiente | — | — | |
@@ -42,6 +42,17 @@ Baseline original del handoff: **45 archivos, 207 tests, verde** · backend `ori
 docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
+
+- 2026-09-06 — **062 aceptado con una desviación de método, comprobada.** El plan pedía leer el
+  cuerpo con `request.formData()`; bajo jsdom eso es imposible (el `File` es de jsdom y el
+  `Request` de undici, que descarta los bytes del `File` ajeno). Los tests asertan el
+  `Content-Type: multipart/form-data; boundary=…` y el marco de las partes. **Verifiqué yo la
+  guarda**: reintroduje la cabecera en `client.ts` y los dos tests de subida se pusieron rojos.
+- 2026-09-06 — **Efecto colateral real del 062, cazado por el ejecutor.** Quitar el `Content-Type`
+  global rompía `PATCH /apus/{id}/porcentaje-indirecto`, que manda un escalar JSON crudo: axios
+  solo pone la cabecera sola para objetos planos, y sin ella no serializaba el `null` de «volver a
+  heredar». Arreglado en ese único sitio con `patch(url, body, config)`. Es el único cuerpo
+  escalar del repo.
 
 - 2026-09-06 — **`main` empujado a `origin`** con permiso del humano: `f823fc6..ad4c0f3`, 28
   commits. El remoto llevaba parado desde el 29 de agosto. El `isolation: "worktree"` del `Agent`
