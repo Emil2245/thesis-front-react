@@ -177,3 +177,20 @@ usuarios que no existe. Dejarlo anotado, no construirlo.
 - `/admin/bases/:id` existe, tiene test y reutiliza los componentes de insumos.
 - El gate es por página, no por módulo.
 - `AdminParametrosPage` manda los 11 campos y no tiene ningún `as never`.
+
+---
+
+## Añadido 2026-09-06 (ola 4) — los handlers de admin mienten sobre la paginación
+
+Encontrado por el plan `028`. `src/test/handlers.ts` devuelve
+`{contenido, total, pagina, tamano}` para `/admin/usuarios`, `/admin/bases` y `/admin/logs`.
+
+**Esa forma no existe.** El backend pagina con `Page<T>`:
+
+```java
+public record Page<T>(List<T> items, long total, int page, int size, int totalPaginas) {}
+```
+
+Los otros listados ya se corrigieron y migraron a `getValidado`; estos tres se quedaron porque sus
+hooks no están migrados. Al encender el módulo admin, migra también sus handlers y sus llamadas —
+si no, este plan enciende pantallas contra un mock inventado y el gate lo deja pasar en verde.

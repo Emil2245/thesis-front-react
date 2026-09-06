@@ -1,6 +1,6 @@
 # Bitácora
 
-**Ola actual:** 4 · **Actualizada:** 2026-09-06
+**Ola actual:** 5 · **Actualizada:** 2026-09-06
 
 > La lleva el orquestador ([`ORQUESTADOR.md`](ORQUESTADOR.md)). Se escribe **en el momento** en que
 > algo cambia de estado, no al final de la sesión: si la sesión se corta, lo que no está escrito
@@ -18,7 +18,7 @@
 | 2 | 059 formas de DTO | ✅ verde | — | e182d2a | fusionado a main · ola 2 cerrada |
 | 3 | 057 tests de hook | ✅ verde | — | ad4c0f3 | fusionado a main · ola 3 cerrada |
 | 3-bis | **062 FormData rota + banner fantasma** | ✅ verde | — | 921acfd | fusionado a main |
-| 4 | 028 Zod en el seam | 🔄 en curso | .claude/worktrees/ola4-028 | — | despachado 2026-09-06 |
+| 4 | 028 Zod en el seam | ✅ verde | — | 7d153bc | fusionado a main · ola 4 cerrada |
 | 5 | 055 cronograma (reb. 1–4) | ⏳ pendiente | — | — | cierra sin la rebanada 5 |
 | 5 | 048 plantillas APU | ⏳ pendiente | — | — | |
 | 5 | 049 plantillas de proyecto | ⏳ pendiente | — | — | |
@@ -42,6 +42,21 @@ Baseline original del handoff: **45 archivos, 207 tests, verde** · backend `ori
 docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
+
+- 2026-09-06 — **028 aceptado con brecha de alcance declarada.** El plan tiene una condición de
+  STOP en «tocar un componente» y el ejecutor la cruzó en `DialogoAgregarItem.tsx`; también deja
+  `grep -c getValidado src/features/` en **5**, no en el 4 que pide su DoD. Lo acepto: el bug es
+  real —verifiqué que `PresupuestoApuResource.listar` devuelve `Page<ApuResumenResponse>` siempre,
+  y el componente hacía `get<ApuResumenResponse[]>` e iteraba un objeto—, el diff son 13 líneas,
+  ningún plan de la ola 5 toca ese archivo, y la alternativa era conservar el mock inventado que
+  hacía parecer correcto un llamante roto. **Los otros dos puntos del DoD que no cuadran son del
+  plan, no del trabajo:** decía 16 entradas de `PROBLEM_TYPES` (hay 15) y ≥201 tests (hay 393).
+- 2026-09-06 — `pnpm run e2e` corrido por mí en el worktree: **20 passed, exit 0**. Los fixtures de
+  las capturas estaban rancios (ids numéricos pre-053, `precio` en vez de `precioUnitario`); las
+  capturas nuevas van en el commit.
+- 2026-09-06 — Anotado en el **plan 050**: los handlers de `/admin/usuarios`, `/admin/bases` y
+  `/admin/logs` siguen devolviendo `{contenido,total,pagina,tamano}`, forma que no existe. Al
+  encender admin hay que migrarlos o se enciende contra un mock inventado.
 
 - 2026-09-06 — **062 aceptado con una desviación de método, comprobada.** El plan pedía leer el
   cuerpo con `request.formData()`; bajo jsdom eso es imposible (el `File` es de jsdom y el
