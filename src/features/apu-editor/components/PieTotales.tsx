@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Edit2Icon, PercentIcon, CalculatorIcon } from "lucide-react";
+import { Edit2Icon, CalculatorIcon } from "lucide-react";
 import {
   ESCALA_PORCENTAJE,
   parsearEntradaNumerica,
@@ -17,7 +17,6 @@ import { MOTIVO_SIN_BACKEND } from "@/lib/disponibilidad";
 interface PieTotalesProps {
   apu: ApuResponse;
   onEditarPorcentajeCi: (valor: string | null) => Promise<void>;
-  onAbrirDescuento: () => void;
   onAbrirDesglose: () => void;
 }
 
@@ -30,12 +29,7 @@ function Linea({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   );
 }
 
-export function PieTotales({
-  apu,
-  onEditarPorcentajeCi,
-  onAbrirDescuento,
-  onAbrirDesglose,
-}: PieTotalesProps) {
+export function PieTotales({ apu, onEditarPorcentajeCi, onAbrirDesglose }: PieTotalesProps) {
   const [editandoCi, setEditandoCi] = useState(false);
   const [ciValor, setCiValor] = useState("");
 
@@ -138,17 +132,7 @@ export function PieTotales({
         </div>
       </TarjetaTabla>
 
-      <div className="grid grid-cols-2 gap-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <Button variant="outline" className="w-full" onClick={onAbrirDescuento} disabled>
-                <PercentIcon data-icon="inline-start" /> Descuento
-              </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>{MOTIVO_SIN_BACKEND}</TooltipContent>
-        </Tooltip>
+      <div className="grid gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
             <span>
@@ -160,10 +144,6 @@ export function PieTotales({
           <TooltipContent>{MOTIVO_SIN_BACKEND}</TooltipContent>
         </Tooltip>
       </div>
-
-      <p className="text-xs leading-relaxed text-pretty text-muted-foreground">
-        El descuento se aplica al costo directo del rubro. No modifica los precios de tus insumos.
-      </p>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, patch, post, put, del } from "@/api/request";
 import { qk } from "@/api/queryKeys";
-import { parsearEntradaDecimal } from "@/lib/decimal";
+import { parsearEntradaDecimal, type Decimal } from "@/lib/decimal";
 import { celdaCantidadSchema, celdaRendimientoSchema, precioOverrideSchema } from "../schemas";
 import type {
   ApuResponse,
@@ -11,7 +11,6 @@ import type {
   ApuPatchRequest,
   ApuDetallePatchRequest,
   ApuDetalleCrearRequest,
-  DescuentoRubroRequest,
 } from "@/api/contract";
 import type { ApiError } from "@/api/problem";
 
@@ -50,7 +49,6 @@ export interface UseApuEditor {
   eliminarFila(detalleId: string): Promise<void>;
   editarEncabezado(patchReq: ApuPatchRequest): Promise<void>;
   editarPorcentajeCi(valor: string | null): Promise<void>;
-  aplicarDescuento(porcentaje: string): Promise<void>;
   guardarEspecificacionTecnica(texto: string): Promise<void>;
 }
 
@@ -152,9 +150,12 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
     },
   });
 
-  const descuentoMutation = useMutation({
-    mutationFn: (body: DescuentoRubroRequest) =>
-      post<ApuResponse>(`/apus/${apuId}/descuento`, body),
+  // El %CI no cabe en ApuPatchRequest: el backend lo descartaba en silencio.
+  // Endpoint propio, body un decimal crudo (o null para volver a heredar del
+  // proyecto), no un objeto — plan 054 §2.
+  const porcentajeCiMutation = useMutation({
+    mutationFn: (valor: Decimal | null) =>
+      patch<ApuResponse>(`/apus/${apuId}/porcentaje-indirecto`, valor),
     onSuccess: (response) => {
       qc.setQueryData(qk.apu(apuId), response);
       if (presupuestoId) {
@@ -292,20 +293,9 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
 
   const editarPorcentajeCi = useCallback(
     async (valor: string | null) => {
-      await encabezadoMutation.mutateAsync({
-        porcentajeIndirecto: valor === null ? null : parsearEntradaDecimal(valor),
-      });
+      await porcentajeCiMutation.mutateAsync(valor === null ? null : parsearEntradaDecimal(valor));
     },
-    [encabezadoMutation],
-  );
-
-  const aplicarDescuento = useCallback(
-    async (porcentaje: string) => {
-      await descuentoMutation.mutateAsync({
-        porcentaje: parsearEntradaDecimal(porcentaje)!,
-      });
-    },
-    [descuentoMutation],
+    [porcentajeCiMutation],
   );
 
   const guardarEspecificacionTecnica = useCallback(
@@ -325,11 +315,12 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
       agregarMutation.isPending ||
       eliminarMutation.isPending ||
       encabezadoMutation.isPending ||
-      descuentoMutation.isPending,
+      porcentajeCiMutation.isPending,
     error: (editMutation.error ??
       agregarMutation.error ??
       eliminarMutation.error ??
-      encabezadoMutation.error) as ApiError | null,
+      encabezadoMutation.error ??
+      porcentajeCiMutation.error) as ApiError | null,
     editarCelda,
     restaurarHerencia,
     reordenarFila,
@@ -337,7 +328,6 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
     eliminarFila,
     editarEncabezado,
     editarPorcentajeCi,
-    aplicarDescuento,
     guardarEspecificacionTecnica,
   };
 }

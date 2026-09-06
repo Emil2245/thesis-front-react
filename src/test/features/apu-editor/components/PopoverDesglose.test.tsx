@@ -18,7 +18,6 @@ describe("PopoverDesglose", () => {
           ],
           subtotales: { M: "400.00", N: "400.00", O: "0.00", P: "0.00" },
           cd: "800.00",
-          cdAjustado: "800.00",
           ci: "120.00",
           ct: "920.00",
         }),
@@ -33,6 +32,17 @@ describe("PopoverDesglose", () => {
       expect(screen.getByText("5% × 8.99")).toBeInTheDocument();
       expect(screen.getByText("Suma M+N+O+P")).toBeInTheDocument();
     });
+  });
+
+  // El paso CD_ajustado se retiró del motor (rollout 2026-08-31): la cadena
+  // activa es CD → CI → CT y ApuCalculoResponse ya no trae cdAjustado.
+  it("no muestra CD Ajustado", async () => {
+    renderConProviders(
+      <PopoverDesglose abierto onClose={() => {}} apuId={"018f8a40-0000-7000-8000-000000000001"} />,
+    );
+
+    await waitFor(() => expect(screen.getByText("Suma M+N+O+P")).toBeInTheDocument());
+    expect(screen.queryByText(/CD Ajustado/i)).not.toBeInTheDocument();
   });
 
   it("muestra subtotales por bloque", async () => {

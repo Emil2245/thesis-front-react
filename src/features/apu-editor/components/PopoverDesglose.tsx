@@ -65,10 +65,6 @@ export function PopoverDesglose({ abierto, onClose, apuId }: PopoverDesgloseProp
                 <span className="num font-medium">{data.cd}</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span>CD Ajustado</span>
-                <span className="num font-medium">{data.cdAjustado}</span>
-              </div>
-              <div className="flex justify-between text-xs">
                 <span>CI</span>
                 <span className="num font-medium">{data.ci}</span>
               </div>
