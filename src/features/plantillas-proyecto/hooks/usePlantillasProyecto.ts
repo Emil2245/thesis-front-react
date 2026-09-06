@@ -6,7 +6,7 @@ import type {
   PlantillaProyectoResponse,
   PlantillaProyectoCrearRequest,
   ProyectoDesdePlantillaRequest,
-  ProyectoResponse,
+  ProyectoDesdePlantillaResponse,
 } from "@/api/contract";
 
 export function usePlantillasProyecto() {
@@ -16,11 +16,12 @@ export function usePlantillasProyecto() {
   });
 }
 
-export function useGuardarPlantillaProyecto() {
+/** El proyecto va en la ruta: sin él no hay endpoint, así que es argumento del hook. */
+export function useGuardarPlantillaProyecto(proyectoId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: PlantillaProyectoCrearRequest) =>
-      post<PlantillaProyectoResponse>("/plantillas-proyecto", body),
+      post<PlantillaProyectoResponse>(`/proyectos/${proyectoId}/guardar-plantilla`, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.plantillasProyecto() });
       toast.success("Plantilla guardada");
@@ -38,7 +39,9 @@ export function useCrearDesdePlantilla() {
     }: {
       plantillaId: string;
       body: ProyectoDesdePlantillaRequest;
-    }) => post<ProyectoResponse>(`/proyectos/desde-plantilla/${plantillaId}`, body),
+      // Se devuelve el envoltorio sin aplanar: `advertencias` es información real
+      // y la pantalla debe poder mostrarla más adelante.
+    }) => post<ProyectoDesdePlantillaResponse>(`/proyectos/desde-plantilla/${plantillaId}`, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.proyectos() });
       toast.success("Proyecto creado desde la plantilla");

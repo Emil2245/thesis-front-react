@@ -4,6 +4,7 @@ import type {
   ProyectoResponse,
   PresupuestoVersionResponse,
   PlantillaProyectoResponse,
+  ProyectoDesdePlantillaResponse,
 } from "@/api/contract";
 import type { Problem } from "@/api/problem";
 import { tokenFixture } from "./fixtures/auth";
@@ -326,7 +327,7 @@ export const handlers = [
   http.delete(`${API}/proyectos/:id`, () => HttpResponse.json(null, { status: 204 })),
   http.put(`${API}/proyectos/:id/logo`, () => HttpResponse.json(null, { status: 204 })),
 
-  // ———— Plantillas de proyecto (plan 035, sin backend real) ————
+  // ———— Plantillas de proyecto (plan 049) ————
   // `snapshotEstructura` es un JsonNode opaco y va en la respuesta de main; es
   // lo que necesita el preview del snapshot (S-36/S-40).
   http.get(`${API}/plantillas-proyecto`, () =>
@@ -340,31 +341,37 @@ export const handlers = [
       },
     ]),
   ),
+  // El snapshot lo construye el backend: `proyectoId` va en la ruta y el cuerpo
+  // solo lleva `nombre` y `descripcion?` (PlantillaProyectoGuardarResource).
   http.post(
-    `${API}/plantillas-proyecto`,
+    `${API}/proyectos/:proyectoId/guardar-plantilla`,
     async ({ request }) =>
-      (await soloCampos(request, "nombre", "descripcion", "proyectoId")) ??
+      (await soloCampos(request, "nombre", "descripcion")) ??
       HttpResponse.json(
         {
           id: "018f8a60-0000-7000-8000-000000000002",
           nombre: "Nueva plantilla",
           snapshotEstructura: { capitulos: [] },
           fechaCreacion: "2026-01-02T00:00:00Z",
-        },
+        } satisfies PlantillaProyectoResponse,
         { status: 201 },
       ),
   ),
   http.delete(`${API}/plantillas-proyecto/:id`, () => HttpResponse.json(null, { status: 204 })),
+  // 201 sin advertencias / 200 con ellas, y siempre el envoltorio
+  // `ProyectoDesdePlantillaResponse{proyecto, advertencias?}`, no el proyecto a secas.
   http.post(
     `${API}/proyectos/desde-plantilla/:id`,
     async ({ request }) =>
       (await soloCampos(request, "nombre")) ??
       HttpResponse.json(
         {
-          ...proyectoDetalleFixture,
-          id: PROYECTO_DESDE_PLANTILLA,
-          nombreProyecto: "Nuevo desde plantilla",
-        },
+          proyecto: {
+            ...proyectoDetalleFixture,
+            id: PROYECTO_DESDE_PLANTILLA,
+            nombreProyecto: "Nuevo desde plantilla",
+          },
+        } satisfies ProyectoDesdePlantillaResponse,
         { status: 201 },
       ),
   ),

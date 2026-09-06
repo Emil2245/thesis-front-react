@@ -29,26 +29,9 @@ import {
 } from "@/components/ui/dialog";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
-import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
 import { FolderPlusIcon, Trash2Icon } from "lucide-react";
 
-// El backend no tiene /plantillas-proyecto ni /proyectos/desde-plantilla
-// todavía (plan 035). Para reactivar: borra este bloque, quita
-// "plantillas-proyecto" de MODULOS_SIN_BACKEND y exporta
-// PlantillasProyectoPageActiva como PlantillasProyectoPage.
 export function PlantillasProyectoPage() {
-  return (
-    <>
-      <EncabezadoPagina titulo="Plantillas de proyecto" />
-      <ModuloNoDisponible
-        modulo="Las plantillas de proyecto"
-        descripcion="El servidor todavía no expone las plantillas de proyecto. La pantalla está construida y se activará cuando el endpoint exista."
-      />
-    </>
-  );
-}
-
-export function PlantillasProyectoPageActiva() {
   const { data: plantillas, isPending } = usePlantillasProyecto();
   const eliminar = useEliminarPlantillaProyecto();
   const crearDesdePlantilla = useCrearDesdePlantilla();
@@ -58,9 +41,10 @@ export function PlantillasProyectoPageActiva() {
   const [nombreNuevo, setNombreNuevo] = useState("");
 
   const handleCrear = async () => {
-    if (!nombreNuevo.trim()) return;
-    const proyecto = await crearDesdePlantilla.mutateAsync({
-      plantillaId: usarId ?? "",
+    if (!nombreNuevo.trim() || !usarId) return;
+    // El backend envuelve el proyecto en `{proyecto, advertencias?}`.
+    const { proyecto } = await crearDesdePlantilla.mutateAsync({
+      plantillaId: usarId,
       body: { nombre: nombreNuevo.trim() },
     });
     setUsarId(null);

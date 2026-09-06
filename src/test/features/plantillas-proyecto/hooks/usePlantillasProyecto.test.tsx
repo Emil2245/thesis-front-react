@@ -12,6 +12,7 @@ import {
   useEliminarPlantillaProyecto,
 } from "@/features/plantillas-proyecto/hooks/usePlantillasProyecto";
 import { PROYECTO_1 } from "@/test/fixtures/proyectos";
+import { PROYECTO_DESDE_PLANTILLA } from "@/test/handlers";
 
 const PLANTILLA_ID = "018f8a60-0000-7000-8000-000000000001";
 
@@ -19,8 +20,8 @@ function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={crearQueryClient()}>{children}</QueryClientProvider>;
 }
 
-// El módulo está tapado por `<ModuloNoDisponible>` (plan 049), así que el hook
-// se prueba directo. Se afirma la petición que sale, no `isSuccess`.
+// Se afirma la petición que sale, no `isSuccess`: la respuesta del mock está
+// bien por construcción y no puede delatar una ruta o un campo equivocados.
 describe("usePlantillasProyecto", () => {
   it("lista las plantillas con GET /plantillas-proyecto", async () => {
     const peticiones = espiar();
@@ -31,45 +32,39 @@ describe("usePlantillasProyecto", () => {
     expect(ultima(peticiones, "GET", "/plantillas-proyecto")).toBeDefined();
   });
 
-  // ponytail: la ruta de guardado es hoy `POST /plantillas-proyecto`, pero el
-  // handoff dice que el backend la expone en `POST /proyectos/{id}/guardar-plantilla`.
-  // Este test fija la ruta de hoy a propósito: cuando el plan 049 la mueva, se
-  // pone en rojo y avisa. El arreglo es del 049, no de aquí.
-  it("guarda la plantilla con el cuerpo y la ruta de hoy", async () => {
+  // El proyecto va en la ruta (PlantillaProyectoGuardarResource), no en el cuerpo.
+  it("guarda la plantilla con POST /proyectos/{id}/guardar-plantilla", async () => {
     const peticiones = espiar();
-    const { result } = renderHook(() => useGuardarPlantillaProyecto(), { wrapper });
-    const body = {
-      nombre: "Base vial",
-      descripcion: "Estructura estándar",
-      proyectoId: PROYECTO_1,
-    };
+    const { result } = renderHook(() => useGuardarPlantillaProyecto(PROYECTO_1), { wrapper });
+    const body = { nombre: "Base vial", descripcion: "Estructura estándar" };
 
     await result.current.mutateAsync(body);
 
-    const p = ultima(peticiones, "POST", "/plantillas-proyecto");
+    const p = ultima(peticiones, "POST", `/proyectos/${PROYECTO_1}/guardar-plantilla`);
     await waitFor(() => expect(p?.cuerpo).toEqual(body));
   });
 
   it("el seam rechaza un campo que el backend de plantillas no acepta", async () => {
-    const { result } = renderHook(() => useGuardarPlantillaProyecto(), { wrapper });
+    const { result } = renderHook(() => useGuardarPlantillaProyecto(PROYECTO_1), { wrapper });
 
     await expect(
       result.current.mutateAsync({
         nombre: "Base vial",
         proyectoId: PROYECTO_1,
-        snapshotEstructura: {},
       } as never),
     ).rejects.toThrow();
   });
 
-  it("useCrearDesdePlantilla lleva el plantillaId en la ruta y solo `nombre` en el cuerpo", async () => {
+  it("useCrearDesdePlantilla lleva el plantillaId en la ruta y devuelve el envoltorio", async () => {
     const peticiones = espiar();
     const { result } = renderHook(() => useCrearDesdePlantilla(), { wrapper });
 
-    await result.current.mutateAsync({
+    const salida = await result.current.mutateAsync({
       plantillaId: PLANTILLA_ID,
       body: { nombre: "Proyecto nuevo" },
     });
+
+    expect(salida.proyecto.id).toBe(PROYECTO_DESDE_PLANTILLA);
 
     const p = ultima(peticiones, "POST", `/proyectos/desde-plantilla/${PLANTILLA_ID}`);
     await waitFor(() => expect(p?.cuerpo).toEqual({ nombre: "Proyecto nuevo" }));
