@@ -1,6 +1,6 @@
 # Plan 061 — Política de dinero: editable `number`, lectura `string`
 
-**Status:** TODO
+**Status:** DONE
 **Escrito contra:** frontend `8cc08b5` · backend `origin/main` @ `c337950`
 **Decisión tomada por:** el humano, 2026-09-06 — cierra la pregunta abierta #2 del handoff
 **Esfuerzo:** M (4–6 h) · **Riesgo:** MEDIO — es política transversal

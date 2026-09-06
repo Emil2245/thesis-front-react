@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { porcentajeAFraccion } from "@/lib/decimal";
 
 export const proyectoSchema = z.object({
   nombreProyecto: z.string().min(1, "El nombre es obligatorio").max(200),
@@ -57,10 +58,10 @@ export function crearParametrosSchema(r: RangosValidacion = RANGOS_DEFAULT) {
     })
     .transform((v) => ({
       ...v,
-      porcentajeHerramientaMenor: Number((v.porcentajeHerramientaMenor / 100).toFixed(6)),
+      porcentajeHerramientaMenor: porcentajeAFraccion(v.porcentajeHerramientaMenor),
       porcentajeIndirecto:
-        v.porcentajeIndirecto != null ? Number((v.porcentajeIndirecto / 100).toFixed(6)) : null,
-      iva: Number((v.iva / 100).toFixed(6)),
+        v.porcentajeIndirecto != null ? porcentajeAFraccion(v.porcentajeIndirecto) : null,
+      iva: porcentajeAFraccion(v.iva),
     }));
 }
 
