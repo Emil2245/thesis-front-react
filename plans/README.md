@@ -359,7 +359,7 @@ Anyone executing any plan should know these before writing a line.
 
 `../thesis-docs/plan/architecture/08-codebase-design.md §8`: *"ninguna fórmula de §16 existe en TypeScript"*. Every cost, subtotal, HM value, CD, CI and CT comes from the server. RNF-04's *"cálculo en tiempo real"* means **no page reload, at cell-commit granularity** — commit a cell → `PATCH` → repaint from the returned DTO, with an optimistic *pendiente* state that shows no guessed number.
 
-The thesis's headline dependent variable is `exactitud_calculo` = **0 % deviation** against certified reference cases. A second implementation of the money math in TypeScript would put that at risk for a cosmetic gain. Plan 015 mechanises the guard as a CI grep for `toFixed`/`parseFloat` outside `src/lib/decimal.ts`.
+The thesis's headline dependent variable is `exactitud_calculo` = **0 % deviation** against certified reference cases. A second implementation of the money math in TypeScript would put that at risk for a cosmetic gain. La guarda existe desde el plan 061: `pnpm run guard:adr9`, encadenada dentro de `pnpm run verify`. Vive en `package.json` y no en un workflow porque este repo tiene `.github/` en `.gitignore`.
 
 ### 2. El dinero se parte en dos ejes — CORREGIDO 2026-09-06
 

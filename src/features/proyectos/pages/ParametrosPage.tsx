@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { crearParametrosSchema, type RangosValidacion } from "../schemas";
 import { useParametros, useActualizarParametros } from "../hooks/useParametros";
 import { useParametrosSistema } from "@/features/admin/hooks/useParametrosSistema";
+import { fraccionAPorcentaje } from "@/lib/decimal";
 import { CargandoTabla } from "@/components/comunes/CargandoTabla";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { Button } from "@/components/ui/button";
@@ -51,10 +52,12 @@ export function ParametrosPage() {
 
   const rangos = useMemo<RangosValidacion>(
     () => ({
-      hmMax: sistema?.rangoHmMax ? Number(sistema.rangoHmMax) * 100 : 20,
-      ciMax: sistema?.rangoCiMax ? Number(sistema.rangoCiMax) * 100 : 100,
-      ivaMax: sistema?.rangoIvaMax ? Number(sistema.rangoIvaMax) * 100 : 30,
-      descuentoMax: sistema?.rangoDescuentoMax ? Number(sistema.rangoDescuentoMax) * 100 : 50,
+      hmMax: sistema?.rangoHmMax ? fraccionAPorcentaje(sistema.rangoHmMax) : 20,
+      ciMax: sistema?.rangoCiMax ? fraccionAPorcentaje(sistema.rangoCiMax) : 100,
+      ivaMax: sistema?.rangoIvaMax ? fraccionAPorcentaje(sistema.rangoIvaMax) : 30,
+      descuentoMax: sistema?.rangoDescuentoMax
+        ? fraccionAPorcentaje(sistema.rangoDescuentoMax)
+        : 50,
     }),
     [sistema],
   );
@@ -65,11 +68,11 @@ export function ParametrosPage() {
     resolver: zodResolver(schema),
     values: params
       ? {
-          porcentajeHerramientaMenor: Number(params.porcentajeHerramientaMenor) * 100,
+          porcentajeHerramientaMenor: fraccionAPorcentaje(params.porcentajeHerramientaMenor),
           porcentajeIndirecto: params.porcentajeIndirecto
-            ? Number(params.porcentajeIndirecto) * 100
+            ? fraccionAPorcentaje(params.porcentajeIndirecto)
             : null,
-          iva: Number(params.iva) * 100,
+          iva: fraccionAPorcentaje(params.iva),
           moneda: params.moneda,
           mostrarSeccionesVacias: params.mostrarSeccionesVacias,
           sufijosSeccionActivos: params.sufijosSeccionActivos,

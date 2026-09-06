@@ -7,7 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Edit2Icon, PercentIcon, CalculatorIcon } from "lucide-react";
-import { parsearEntradaDecimal } from "@/lib/decimal";
+import {
+  ESCALA_PORCENTAJE,
+  parsearEntradaNumerica,
+  porcentajeAFraccionDecimal,
+} from "@/lib/decimal";
 import { MOTIVO_SIN_BACKEND } from "@/lib/disponibilidad";
 
 interface PieTotalesProps {
@@ -45,11 +49,9 @@ export function PieTotales({
     if (trimmed === "" || trimmed === "0") {
       await onEditarPorcentajeCi(null);
     } else {
-      const parsed = parsearEntradaDecimal(trimmed);
-      if (parsed === null) return;
-      const num = Number(parsed);
-      const pct = (num / 100).toFixed(6);
-      await onEditarPorcentajeCi(pct);
+      const pct = parsearEntradaNumerica(trimmed, ESCALA_PORCENTAJE);
+      if (pct === null) return;
+      await onEditarPorcentajeCi(porcentajeAFraccionDecimal(pct));
     }
     setEditandoCi(false);
   };

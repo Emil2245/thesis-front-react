@@ -49,6 +49,39 @@ export function parsearEntradaDecimal(entrada: string): Decimal | null {
   return asDecimal(limpio);
 }
 
+// Escalas que fija el backend: dinero 6 decimales, porcentajes y avances 4.
+export const ESCALA_DINERO = 6;
+export const ESCALA_PORCENTAJE = 4;
+
+// Un porcentaje a escala 4 (12,3456 %) es una fracción a escala 6 (0,123456).
+const ESCALA_FRACCION = ESCALA_PORCENTAJE + 2;
+
+/**
+ * Recorta la cola que arrastra cualquier operación en float64:
+ * `395115.32 - 355603.788` da `39511.53200000001`, no `39511.532`.
+ *
+ * Este módulo es el único sitio del repo autorizado a usar `toFixed`/`parseFloat` (ADR 9).
+ */
+export const cuantizar = (valor: number, escala: number): number => Number(valor.toFixed(escala));
+
+/** Frontera de entrada: lo que teclea el usuario se cuantiza una sola vez, aquí. */
+export function parsearEntradaNumerica(entrada: string, escala: number): number | null {
+  const decimal = parsearEntradaDecimal(entrada);
+  return decimal === null ? null : cuantizar(Number(decimal), escala);
+}
+
+/** 12,5 % → 0.125 */
+export const porcentajeAFraccion = (porcentaje: number): number =>
+  cuantizar(porcentaje / 100, ESCALA_FRACCION);
+
+/** 12,5 % → "0.125000", para los endpoints que exigen decimal string. */
+export const porcentajeAFraccionDecimal = (porcentaje: number): Decimal =>
+  asDecimal(porcentajeAFraccion(porcentaje).toFixed(ESCALA_DINERO));
+
+/** 0.125 → 12,5 % */
+export const fraccionAPorcentaje = (fraccion: Decimal | number): number =>
+  cuantizar(Number(fraccion) * 100, ESCALA_PORCENTAJE);
+
 export function compararDecimal(a: Decimal, b: Decimal): number {
   const na = Number(a);
   const nb = Number(b);

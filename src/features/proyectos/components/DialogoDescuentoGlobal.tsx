@@ -6,7 +6,7 @@ import { crearDescuentoSchema, type DescuentoFormData } from "../schemas";
 import { usePreviewDescuento, useAplicarDescuento } from "../hooks/useDescuentoGlobal";
 import { useParametrosSistema } from "@/features/admin/hooks/useParametrosSistema";
 import type { DescuentoGlobalPreviewResponse } from "@/api/contract";
-import { asDecimal } from "@/lib/decimal";
+import { fraccionAPorcentaje, porcentajeAFraccionDecimal } from "@/lib/decimal";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -38,7 +38,7 @@ export function DialogoDescuentoGlobal({
   presupuestoId: number | null;
 }) {
   const { data: sistema } = useParametrosSistema();
-  const maxDesc = sistema?.rangoDescuentoMax ? Number(sistema.rangoDescuentoMax) * 100 : 50;
+  const maxDesc = sistema?.rangoDescuentoMax ? fraccionAPorcentaje(sistema.rangoDescuentoMax) : 50;
   const schema = useMemo(() => crearDescuentoSchema(maxDesc), [maxDesc]);
 
   const form = useForm<DescuentoFormData>({
@@ -72,7 +72,7 @@ export function DialogoDescuentoGlobal({
     if (presupuestoId == null) return;
     await aplicar.mutateAsync({
       presupuestoId,
-      porcentaje: asDecimal((porcentaje / 100).toFixed(6)),
+      porcentaje: porcentajeAFraccionDecimal(porcentaje),
     });
     toast.success("Descuento aplicado");
     onClose();
