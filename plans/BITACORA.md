@@ -1,6 +1,6 @@
 # Bitácora
 
-**Ola actual:** 3 · **Actualizada:** 2026-09-06
+**Ola actual:** 3-bis · **Actualizada:** 2026-09-06
 
 > La lleva el orquestador ([`ORQUESTADOR.md`](ORQUESTADOR.md)). Se escribe **en el momento** en que
 > algo cambia de estado, no al final de la sesión: si la sesión se corta, lo que no está escrito
@@ -16,7 +16,8 @@
 | 1 | 053 ids UUID | ✅ verde | — | 9564e39 | fusionado a main |
 | 2 | 054 descuento global + bugs SILENT | ✅ verde | — | 82edeae | fusionado a main |
 | 2 | 059 formas de DTO | ✅ verde | — | e182d2a | fusionado a main · ola 2 cerrada |
-| 3 | 057 tests de hook | 🔄 en curso | .claude/worktrees/ola3-057 | — | despachado 2026-09-06 |
+| 3 | 057 tests de hook | ✅ verde | — | ad4c0f3 | fusionado a main · ola 3 cerrada |
+| 3-bis | **062 FormData rota + banner fantasma** | 🔄 en curso | .claude/worktrees/ola3bis-062 | — | plan nuevo, hallazgos del 057 |
 | 4 | 028 Zod en el seam | ⏳ pendiente | — | — | esquemas salen del 057 |
 | 5 | 055 cronograma (reb. 1–4) | ⏳ pendiente | — | — | cierra sin la rebanada 5 |
 | 5 | 048 plantillas APU | ⏳ pendiente | — | — | |
@@ -41,6 +42,23 @@ Baseline original del handoff: **45 archivos, 207 tests, verde** · backend `ori
 docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
+
+- 2026-09-06 — **`main` empujado a `origin`** con permiso del humano: `f823fc6..ad4c0f3`, 28
+  commits. El remoto llevaba parado desde el 29 de agosto. El `isolation: "worktree"` del `Agent`
+  tool volvería a funcionar, pero sigo con el worktree manual: está probado y controlo la base.
+- 2026-09-06 — **Banner `CI_NO_CONFIGURADO`: decidido por el humano, se calcula en el cliente**
+  desde `ParametrosProyectoResponse.porcentajeIndirecto == null`. Verificado en `Motor.java:110-112`
+  que `null` es «no configurado» y `0` es una elección válida del usuario. Ejecuta el plan 062.
+- 2026-09-06 — ⚠️ **Plan 062 escrito** (§7 caso 2): el `057` destapó que `src/api/client.ts` fija
+  `Content-Type: application/json` en la instancia axios, y axios 1.19 convierte **todo `FormData`
+  a JSON**. Import CSV de insumos y subida de logo llevan rotos desde siempre, con los tests en
+  verde porque los handlers no miraban el cuerpo. Va en una ola 3-bis, antes del 028.
+- 2026-09-06 — Anotado en el **plan 051**: `descargar()` en `request.ts` devuelve solo `.data`, así
+  que la premisa del 051 de leer el nombre de `Content-Disposition` es hoy inalcanzable. El arreglo
+  va en `request.ts` y es su primera rebanada.
+- 2026-09-06 — **057 aceptado**: cero archivos de producción tocados (comprobado con
+  `git diff --name-only`), 66 archivos / 387 tests. Los 4 hooks sin test son los que el propio plan
+  exime en su línea 111 porque el `050` los borra.
 
 - 2026-09-06 — **059 aceptado.** Verifiqué dos hallazgos suyos contra el backend y los dos son
   ciertos: `ApuDetalleCrearRequest` exige `seccionTipo` `@NotNull` (añadir línea de APU era un 400

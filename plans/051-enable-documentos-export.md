@@ -114,3 +114,23 @@ pronto; un aviso dice la verdad.
   y hay un test que comprueba que el nombre de archivo sale de la cabecera.
 - Un test del 400 con `formato=pdf`.
 - `documentos` fuera de `MODULOS_SIN_BACKEND`.
+
+---
+
+## Añadido 2026-09-06 (ola 3) — `descargar()` hace imposible leer `Content-Disposition`
+
+Encontrado por el plan `057`. **Este plan asume algo que hoy es falso.**
+
+```ts
+// src/api/request.ts
+export const descargar = async (url: string, params?: unknown): Promise<Blob> =>
+  (await http.get(url, { params, responseType: "blob" })).data;
+```
+
+Devuelve solo `.data`, así que **ningún llamante puede leer las cabeceras**. Los puntos de este
+plan que dicen «el nombre del archivo viene en `Content-Disposition`» no son implementables sin
+tocar antes `request.ts`.
+
+El arreglo va en `src/api/request.ts`, no en `useExportar`: que `descargar` devuelva el nombre
+además del blob (`{ blob, nombreArchivo }`, sacando el `filename` de la cabecera), o que devuelva
+la respuesta entera. Hazlo en la primera rebanada de este plan, antes que nada.
