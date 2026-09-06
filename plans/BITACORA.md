@@ -20,12 +20,13 @@
 | 3-bis | **062 FormData rota + banner fantasma** | ✅ verde | — | 921acfd | fusionado a main |
 | 4 | 028 Zod en el seam | ✅ verde | — | 7d153bc | fusionado a main · ola 4 cerrada |
 | 5 | 055 cronograma (reb. 1–4) | ✅ verde | — | a126d80 | fusionado · cierra sin la reb. 5 |
-| 5 | 048 plantillas APU | ⏳ pendiente | — | — | |
-| 5 | 049 plantillas de proyecto | ⏳ pendiente | — | — | |
-| 5 | 050 admin + S-39 | 🔄 en curso | .claude/worktrees/ola5-050-058 | — | tanda 1, con el 058 |
+| 5 | 048 plantillas APU | 🔄 en curso | .claude/worktrees/ola5-048-052 | — | tanda 2, con el 052 |
+| 5 | 049 plantillas de proyecto | 🔄 en curso | .claude/worktrees/ola5-049 | — | tanda 2 |
+| 5 | 050 admin + S-39 | ✅ verde | — | cccb1b0 | fusionado · S-39 parcial, ver plan |
 | 5 | 051 export ET DOCX | ✅ verde | — | 065c90a | fusionado · tanda 1 |
-| 5 | 052 acciones deshabilitadas | ⏳ pendiente | — | — | necesita 059 cerrado |
-| 5 | 058 **reescrito**: procedencia del insumo | 🔄 en curso | .claude/worktrees/ola5-050-058 | — | tanda 1, con el 050 |
+| 5 | 052 acciones deshabilitadas | 🔄 en curso | .claude/worktrees/ola5-048-052 | — | tanda 2, comparte EditorApuPage con el 048 |
+| 5 | 058 **reescrito**: procedencia del insumo | ✅ verde | — | cccb1b0 | fusionado · tanda 1 cerrada |
+| 6 | **063 ErrorPayload ≠ RFC 7807** | ⏳ pendiente | — | — | plan nuevo, va **antes** del 060 |
 | 6 | 060 limpieza | ⏳ pendiente | — | — | último |
 
 ### Fuera de las olas
@@ -42,6 +43,24 @@ Baseline original del handoff: **45 archivos, 207 tests, verde** · backend `ori
 docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
+
+- 2026-09-06 — 🔴 **Hallazgo grave, plan 063 escrito** (§7 caso 2): **el backend no habla RFC 7807
+  en ningún sitio.** `GlobalExceptionMapper` envuelve todo en
+  `ErrorPayload(String codigo, String mensaje)` — dos campos, sin `type`. El frontend espera
+  `Problem{type,title,status}` y `ApiError.slug` lee `problem.type`, así que **`is()` devuelve
+  `false` siempre** y las 17 ramas de error específicas de 8 archivos están muertas en producción:
+  las 4 pantallas de auth, `insumo-en-uso`, `apu-referenciado`, `codigo-duplicado`, CSV. Sigue
+  invisible porque los 9 `problema()` de `handlers.ts` fabrican RFC 7807 — **el mock era la
+  especificación**, otra vez. Ojo: `ProblemaException:10` y `DocumentoResource:32` dicen
+  «problem+json» en **comentarios que mienten**; la línea 22 construye un `ErrorPayload`.
+- 2026-09-06 — ⚠️ **Plan 050 corregido: la premisa de S-39 era falsa** (§7 caso 1). Sus «4
+  endpoints» son los cuatro de **escritura**; el único `@GET` de `AdminBaseCentralResource` lista
+  bases, no insumos. **Los insumos de una base central no se pueden listar**, así que no hay tabla
+  y sin tabla no hay editar ni borrar. Construido hasta donde el backend permite (crear + import
+  CSV), con la pantalla diciéndolo. Pregunta para el backend anotada en el plan.
+- 2026-09-06 — **Choque de la tanda 1 resuelto por el orquestador**, como estaba previsto: tres
+  conflictos (`disponibilidad.ts`, `handlers.ts`, `Sidebar.test.tsx`), todos de combinar y no de
+  elegir. `verify` tras resolver: 70 archivos / 431 tests, y `e2e` 20/20.
 
 - 2026-09-06 — **055 aceptado, incluidos sus dos archivos compartidos.** Verifiqué la
   justificación de tocar `decimal.ts`: `PesoPonderadoCalculador:31` hace

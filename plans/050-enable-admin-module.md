@@ -194,3 +194,29 @@ public record Page<T>(List<T> items, long total, int page, int size, int totalPa
 Los otros listados ya se corrigieron y migraron a `getValidado`; estos tres se quedaron porque sus
 hooks no están migrados. Al encender el módulo admin, migra también sus handlers y sus llamadas —
 si no, este plan enciende pantallas contra un mock inventado y el gate lo deja pasar en verde.
+
+---
+
+## ⚠️ Corregido 2026-09-06 — la premisa de S-39 era falsa
+
+Este plan listaba S-39 como «✅ 4 endpoints». Verificado en `AdminBaseCentralResource` de
+`origin/main @ c337950`: **los cuatro endpoints de insumos son de escritura.**
+
+```
+POST   /admin/bases-centrales/{id}/insumos          crear
+PUT    /admin/bases-centrales/{id}/insumos/{iid}    editar
+DELETE /admin/bases-centrales/{id}/insumos/{iid}    eliminar
+POST   /admin/bases-centrales/{id}/insumos/import   importar CSV
+```
+
+El único `@GET` del recurso lista **bases**, no insumos. No existe
+`GET /admin/bases-centrales/{id}/insumos`, ni equivalente en `BaseInsumosResource`, y el selector
+toma solo `q`/`soloCentrales` y está acotado a proyecto. **Los insumos de una base central no se
+pueden listar.**
+
+Sin lectura no hay tabla, y sin tabla no hay editar ni borrar por fila. S-39 se construyó hasta
+donde el backend permite: **crear insumo + importar CSV**, que es el flujo real de mantenimiento
+F-05, con la pantalla diciendo en su propio texto que falta el listado.
+
+**Pregunta para el backend:** ¿se añade `GET /admin/bases-centrales/{id}/insumos`? Si llega, S-39
+se reabre y la tabla es `TablaInsumos` con el mismo descriptor de destino que ya existe.
