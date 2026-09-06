@@ -23,7 +23,9 @@ async function setupPresupuestoPage() {
     <Routes>
       <Route path="/proyectos/:id/presupuesto" element={<PresupuestoPage />} />
     </Routes>,
-    { ruta: "/proyectos/1/presupuesto?v=0198c1a0-0000-7000-8000-000000000011" },
+    {
+      ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/presupuesto?v=0198c1a0-0000-7000-8000-000000000011",
+    },
   );
   await waitFor(() => expect(screen.getByText(/v2/)).toBeInTheDocument());
   return { user: result.user, result };
@@ -34,7 +36,7 @@ async function setupVersionesPage() {
     <Routes>
       <Route path="/proyectos/:id/versiones" element={<VersionesPage />} />
     </Routes>,
-    { ruta: "/proyectos/1/versiones" },
+    { ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/versiones" },
   );
   await waitFor(() => expect(screen.getByText("Versiones del presupuesto")).toBeInTheDocument());
   await waitFor(() => expect(screen.getByText("v1")).toBeInTheDocument());

@@ -48,6 +48,29 @@ import {
 
 const API = "*/api/v1";
 
+// Los ids de la fila de Herramienta Menor y del proyecto creado desde plantilla
+// eran numéricos y ningún test podía ver que el seam los manda como UUID.
+export const DETALLE_HM = "018f8a50-0000-7000-8000-000000000200";
+// Estas dos ramas de 409 comparaban `Number(params.id)` contra 99 y 2: con
+// UUIDs eso es NaN y nunca entraban. Eran handlers de error inalcanzables.
+export const INSUMO_EN_USO = "018f8a20-0000-7000-8000-000000000099";
+export const APU_REFERENCIADO = "018f8a40-0000-7000-8000-000000000099";
+export const PROYECTO_DESDE_PLANTILLA = "018f8a10-0000-7000-8000-000000000099";
+
+const CAMPOS_PROYECTO = [
+  "nombreProyecto",
+  "codigo",
+  "descripcion",
+  "anio",
+  "fechaInicio",
+  "plazoEjecucion",
+  "plazoUnidad",
+  "direccionInstitucional",
+  "subdireccionInstitucional",
+] as const;
+
+const CAMPOS_FIRMANTE = ["nombre", "cargo", "rol", "orden"] as const;
+
 export const problema = (
   status: number,
   type: string,
@@ -102,6 +125,28 @@ const versionesStub: PresupuestoVersionResponse[] = [
 ];
 
 export const handlers = [
+  // El backend expone esta lectura en /proyectos/parametros-sistema, sin rol
+  // de admin (plan 027); la escritura no existe todavía y AdminParametrosPage
+  // la mantiene deshabilitada.
+  //
+  // Va ANTES que `/proyectos/:id`: MSW casa por orden, así que la ruta con
+  // parámetro se tragaba ésta y devolvía el 404 de «proyecto no encontrado».
+  // La página caía a sus valores por defecto y el test la veía «funcionando».
+  http.get(`${API}/proyectos/parametros-sistema`, () =>
+    HttpResponse.json(parametrosSistemaFixture),
+  ),
+  http.put(
+    `${API}/proyectos/parametros-sistema`,
+    async ({ request }) =>
+      (await soloCampos(
+        request,
+        "porcentajeHerramientaMenor",
+        "porcentajeIndirecto",
+        "iva",
+        "moneda",
+      )) ?? HttpResponse.json(parametrosSistemaFixture),
+  ),
+
   // ———— Proyectos ————
   http.get(`${API}/proyectos`, ({ request }) => {
     const url = new URL(request.url);
@@ -119,10 +164,22 @@ export const handlers = [
     if (!p) return HttpResponse.json(null, { status: 404 });
     return HttpResponse.json({ ...proyectoDetalleFixture, ...p });
   }),
-  http.post(`${API}/proyectos`, () => HttpResponse.json(proyectoDetalleFixture, { status: 201 })),
-  http.put(`${API}/proyectos/:id`, () => HttpResponse.json(proyectoDetalleFixture)),
-  http.post(`${API}/proyectos/:id/duplicar`, () =>
-    HttpResponse.json(proyectoDetalleFixture, { status: 201 }),
+  http.post(
+    `${API}/proyectos`,
+    async ({ request }) =>
+      (await soloCampos(request, ...CAMPOS_PROYECTO)) ??
+      HttpResponse.json(proyectoDetalleFixture, { status: 201 }),
+  ),
+  http.put(
+    `${API}/proyectos/:id`,
+    async ({ request }) =>
+      (await soloCampos(request, ...CAMPOS_PROYECTO)) ?? HttpResponse.json(proyectoDetalleFixture),
+  ),
+  http.post(
+    `${API}/proyectos/:id/duplicar`,
+    async ({ request }) =>
+      (await soloCampos(request, "nombre", "codigo")) ??
+      HttpResponse.json(proyectoDetalleFixture, { status: 201 }),
   ),
   http.delete(`${API}/proyectos/:id`, () => HttpResponse.json(null, { status: 204 })),
   http.put(`${API}/proyectos/:id/logo`, () => HttpResponse.json(null, { status: 204 })),
@@ -141,36 +198,63 @@ export const handlers = [
       },
     ]),
   ),
-  http.post(`${API}/plantillas-proyecto`, () =>
-    HttpResponse.json<PlantillaProyectoResponse>(
-      {
-        id: "018f8a60-0000-7000-8000-000000000002",
-        nombre: "Nueva plantilla",
-        snapshotEstructura: { capitulos: [] },
-        fechaCreacion: "2026-01-02T00:00:00Z",
-      },
-      { status: 201 },
-    ),
+  http.post(
+    `${API}/plantillas-proyecto`,
+    async ({ request }) =>
+      (await soloCampos(request, "nombre", "descripcion", "proyectoId")) ??
+      HttpResponse.json(
+        {
+          id: "018f8a60-0000-7000-8000-000000000002",
+          nombre: "Nueva plantilla",
+          snapshotEstructura: { capitulos: [] },
+          fechaCreacion: "2026-01-02T00:00:00Z",
+        },
+        { status: 201 },
+      ),
   ),
   http.delete(`${API}/plantillas-proyecto/:id`, () => HttpResponse.json(null, { status: 204 })),
-  http.post(`${API}/proyectos/desde-plantilla/:id`, () =>
-    HttpResponse.json(
-      { ...proyectoDetalleFixture, id: 99, nombreProyecto: "Nuevo desde plantilla" },
-      { status: 201 },
-    ),
+  http.post(
+    `${API}/proyectos/desde-plantilla/:id`,
+    async ({ request }) =>
+      (await soloCampos(request, "nombre")) ??
+      HttpResponse.json(
+        {
+          ...proyectoDetalleFixture,
+          id: PROYECTO_DESDE_PLANTILLA,
+          nombreProyecto: "Nuevo desde plantilla",
+        },
+        { status: 201 },
+      ),
   ),
 
   http.get(`${API}/proyectos/:id/firmantes`, () => HttpResponse.json(firmantesFixture)),
-  http.post(`${API}/proyectos/:id/firmantes`, () =>
-    HttpResponse.json(firmantesFixture[0], { status: 201 }),
+  http.post(
+    `${API}/proyectos/:id/firmantes`,
+    async ({ request }) =>
+      (await soloCampos(request, ...CAMPOS_FIRMANTE)) ??
+      HttpResponse.json(firmantesFixture[0], { status: 201 }),
   ),
-  http.put(`${API}/proyectos/:id/firmantes/:fid`, () => HttpResponse.json(firmantesFixture[0])),
+  http.put(
+    `${API}/proyectos/:id/firmantes/:fid`,
+    async ({ request }) =>
+      (await soloCampos(request, ...CAMPOS_FIRMANTE)) ?? HttpResponse.json(firmantesFixture[0]),
+  ),
   http.delete(`${API}/proyectos/:id/firmantes/:fid`, () =>
     HttpResponse.json(null, { status: 204 }),
   ),
 
   http.get(`${API}/proyectos/:id/parametros`, () => HttpResponse.json(parametrosFixture)),
-  http.put(`${API}/proyectos/:id/parametros`, () => HttpResponse.json(parametrosFixture)),
+  http.put(
+    `${API}/proyectos/:id/parametros`,
+    async ({ request }) =>
+      (await soloCampos(
+        request,
+        "porcentajeHerramientaMenor",
+        "porcentajeIndirecto",
+        "iva",
+        "moneda",
+      )) ?? HttpResponse.json(parametrosFixture),
+  ),
 
   // ———— Descuento global ————
   http.get(`${API}/presupuestos/:id/descuento-global/preview`, () =>
@@ -190,33 +274,87 @@ export const handlers = [
       totalGeneralProyectado: "950.000000" as never,
     }),
   ),
-  http.post(`${API}/presupuestos/:id/descuento-global`, () =>
-    HttpResponse.json(null, { status: 200 }),
+  http.post(
+    `${API}/presupuestos/:id/descuento-global`,
+    async ({ request }) =>
+      (await soloCampos(request, "porcentaje")) ?? HttpResponse.json(null, { status: 200 }),
   ),
 
   http.get(`${API}/proyectos/:id/presupuestos`, () => HttpResponse.json(versionesStub)),
 
   // ———— Auth ————
-  http.post(`${API}/auth/login`, () => HttpResponse.json(tokenFixture)),
-  http.post(`${API}/auth/refresh`, () => HttpResponse.json(tokenFixture)),
-  http.post(`${API}/auth/registro`, () => HttpResponse.json(null, { status: 201 })),
-  http.post(`${API}/auth/verificar-email`, () => HttpResponse.json(null, { status: 204 })),
-  http.post(`${API}/auth/reenviar-verificacion`, () => HttpResponse.json(null, { status: 202 })),
-  http.post(`${API}/auth/recuperar`, () => HttpResponse.json(null, { status: 202 })),
-  http.post(`${API}/auth/restablecer`, () => HttpResponse.json(null, { status: 204 })),
-  http.post(`${API}/auth/logout`, () => HttpResponse.json(null, { status: 204 })),
+  http.post(
+    `${API}/auth/login`,
+    async ({ request }) =>
+      (await soloCampos(request, "email", "password", "recordarSesion")) ??
+      HttpResponse.json(tokenFixture),
+  ),
+  http.post(
+    `${API}/auth/refresh`,
+    async ({ request }) =>
+      (await soloCampos(request, "refreshToken")) ?? HttpResponse.json(tokenFixture),
+  ),
+  http.post(
+    `${API}/auth/registro`,
+    async ({ request }) =>
+      (await soloCampos(request, "nombre", "email", "password", "passwordConfirmacion")) ??
+      HttpResponse.json(null, { status: 201 }),
+  ),
+  http.post(
+    `${API}/auth/verificar-email`,
+    async ({ request }) =>
+      (await soloCampos(request, "token")) ?? HttpResponse.json(null, { status: 204 }),
+  ),
+  http.post(
+    `${API}/auth/reenviar-verificacion`,
+    async ({ request }) =>
+      (await soloCampos(request, "email")) ?? HttpResponse.json(null, { status: 202 }),
+  ),
+  http.post(
+    `${API}/auth/recuperar`,
+    async ({ request }) =>
+      (await soloCampos(request, "email")) ?? HttpResponse.json(null, { status: 202 }),
+  ),
+  http.post(
+    `${API}/auth/restablecer`,
+    async ({ request }) =>
+      (await soloCampos(request, "token", "password", "passwordConfirmacion")) ??
+      HttpResponse.json(null, { status: 204 }),
+  ),
+  http.post(
+    `${API}/auth/logout`,
+    async ({ request }) =>
+      (await soloCampos(request, "refreshToken")) ?? HttpResponse.json(null, { status: 204 }),
+  ),
   http.get(`${API}/perfil`, () => HttpResponse.json(tokenFixture.usuario)),
-  http.put(`${API}/perfil`, () => HttpResponse.json(tokenFixture.usuario)),
-  http.put(`${API}/perfil/password`, () => HttpResponse.json(null, { status: 204 })),
+  http.put(
+    `${API}/perfil`,
+    async ({ request }) =>
+      (await soloCampos(request, "nombre", "email")) ?? HttpResponse.json(tokenFixture.usuario),
+  ),
+  http.put(
+    `${API}/perfil/password`,
+    async ({ request }) =>
+      (await soloCampos(request, "passwordActual", "passwordNueva", "passwordConfirmacion")) ??
+      HttpResponse.json(null, { status: 204 }),
+  ),
 
   // ———— Insumos (Plan 008) ————
   http.get(`${API}/proyectos/:id/insumos`, () => HttpResponse.json(pagina(insumosFixture))),
-  http.post(`${API}/proyectos/:id/insumos`, () =>
-    HttpResponse.json(insumosFixture[0], { status: 201 }),
+  http.post(
+    `${API}/proyectos/:id/insumos`,
+    async ({ request }) =>
+      (await soloCampos(request, "codigo", "tipo", "descripcion", "unidad", "precioUnitario")) ??
+      HttpResponse.json(insumosFixture[0], { status: 201 }),
   ),
-  http.put(`${API}/proyectos/:id/insumos/:iid`, () => HttpResponse.json(insumosFixture[0])),
+  http.put(
+    `${API}/proyectos/:id/insumos/:iid`,
+    async ({ request }) =>
+      (await soloCampos(request, "descripcion", "unidad", "precioUnitario")) ??
+      HttpResponse.json(insumosFixture[0]),
+  ),
   http.delete(`${API}/proyectos/:id/insumos/:iid`, ({ params }) => {
-    if (Number(params.iid) === 99) {
+    if (params.iid === INSUMO_EN_USO) {
       return problema(409, "insumo-en-uso", "El insumo está en uso", { usos: insumoUsoFixture });
     }
     return HttpResponse.json(null, { status: 204 });
@@ -226,8 +364,11 @@ export const handlers = [
   http.post(`${API}/proyectos/:id/insumos/importar`, () =>
     HttpResponse.json(importResultadoFixture),
   ),
-  http.post(`${API}/proyectos/:id/insumos/copiar`, () =>
-    HttpResponse.json(copiaBaseResultadoFixture),
+  http.post(
+    `${API}/proyectos/:id/insumos/copiar`,
+    async ({ request }) =>
+      (await soloCampos(request, "fuenteTipo", "baseId", "proyectoId")) ??
+      HttpResponse.json(copiaBaseResultadoFixture),
   ),
   http.get(`${API}/proyectos/:id/insumos/selector`, () =>
     HttpResponse.json(pagina(insumosBusquedaFixture)),
@@ -235,8 +376,11 @@ export const handlers = [
   http.get(`${API}/bases-centrales`, () => HttpResponse.json(basesCentralesFixture)),
 
   // ———— APU editor (Plan 009) ————
-  http.post(`${API}/presupuestos/:id/apus`, () =>
-    HttpResponse.json(apuDetalleFixture, { status: 201 }),
+  http.post(
+    `${API}/presupuestos/:id/apus`,
+    async ({ request }) =>
+      (await soloCampos(request, "codigo", "descripcion", "unidad", "plantillaId")) ??
+      HttpResponse.json(apuDetalleFixture, { status: 201 }),
   ),
   http.get(`${API}/apus/:id`, () => HttpResponse.json(apuConHmFixture)),
   // ApuPatchRequest del backend es (codigo, descripcion, unidad) y nada más.
@@ -247,20 +391,35 @@ export const handlers = [
       HttpResponse.json(apuConHmFixture),
   ),
   // El %CI tiene endpoint propio y recibe un BigDecimal crudo, no un objeto.
-  http.patch(`${API}/apus/:id/porcentaje-indirecto`, () => HttpResponse.json(apuConHmFixture)),
+  // El body es el decimal desnudo. Mandar `{ porcentajeIndirecto: … }` era el
+  // bug del plan 054: Jackson lo rechaza, no lo desenvuelve.
+  http.patch(`${API}/apus/:id/porcentaje-indirecto`, async ({ request }) => {
+    const cuerpo = await request.json().catch(() => null);
+    if (cuerpo !== null && typeof cuerpo === "object") {
+      return problema(400, "cuerpo-invalido", "Se espera un decimal, no un objeto");
+    }
+    return HttpResponse.json(apuConHmFixture);
+  }),
   // La ET tiene su propio GET; no viaja dentro de ApuResponse.
   http.get(`${API}/apus/:id/especificacion-tecnica`, ({ params }) =>
     HttpResponse.json({ apuId: params.id, contenido: null }),
   ),
-  http.put(`${API}/apus/:id/especificacion-tecnica`, () => HttpResponse.json(apuDetalleFixture)),
+  http.put(
+    `${API}/apus/:id/especificacion-tecnica`,
+    async ({ request }) =>
+      (await soloCampos(request, "texto")) ?? HttpResponse.json(apuDetalleFixture),
+  ),
   http.delete(`${API}/apus/:id`, ({ params }) => {
-    if (Number(params.id) === 2) {
+    if (params.id === APU_REFERENCIADO) {
       return problema(409, "apu-referenciado", "El APU está referenciado por otros elementos");
     }
     return HttpResponse.json(null, { status: 204 });
   }),
-  http.post(`${API}/apus/:id/duplicar`, () =>
-    HttpResponse.json(apuDetalleFixture, { status: 201 }),
+  http.post(
+    `${API}/apus/:id/duplicar`,
+    async ({ request }) =>
+      (await soloCampos(request, "copiarET")) ??
+      HttpResponse.json(apuDetalleFixture, { status: 201 }),
   ),
   // ApuDetalleCrearRequest: seccionTipo, insumoId y cantidad son @NotNull. Sin
   // ellos el backend devuelve 400, que es lo que pasaba al añadir una línea.
@@ -277,8 +436,10 @@ export const handlers = [
         : HttpResponse.json(apuConHmFixture, { status: 201 }))
     );
   }),
-  http.patch(`${API}/apus/:id/detalles/:did`, ({ params }) => {
-    if (Number(params.did) === 200) {
+  http.patch(`${API}/apus/:id/detalles/:did`, async ({ params, request }) => {
+    const sobra = await soloCampos(request, "cantidad", "rendimiento", "precioOverride", "orden");
+    if (sobra) return sobra;
+    if (params.did === DETALLE_HM) {
       return problema(
         409,
         "fila-protegida",
@@ -288,7 +449,7 @@ export const handlers = [
     return HttpResponse.json(apuConHmFixture);
   }),
   http.delete(`${API}/apus/:id/detalles/:did`, ({ params }) => {
-    if (Number(params.did) === 200) {
+    if (params.did === DETALLE_HM) {
       return problema(
         409,
         "fila-protegida",
@@ -358,19 +519,22 @@ export const handlers = [
   http.delete(`${API}/plantillas-apu/:id`, () => HttpResponse.json(null, { status: 204 })),
 
   // ———— Presupuesto (Plan 011) ————
-  http.post(`${API}/proyectos/:id/presupuestos`, () =>
-    HttpResponse.json(
-      {
-        presupuestoId: PRESUPUESTO_V3,
-        version: 3,
-        esVigente: false,
-        origenId: PRESUPUESTO_V2,
-        notas: "Nueva versión",
-        totalGeneral: "18500.000000" as never,
-        fechaCreacion: "2026-07-23T00:00:00",
-      },
-      { status: 201 },
-    ),
+  http.post(
+    `${API}/proyectos/:id/presupuestos`,
+    async ({ request }) =>
+      (await soloCampos(request, "origenId", "notas")) ??
+      HttpResponse.json(
+        {
+          presupuestoId: PRESUPUESTO_V3,
+          version: 3,
+          esVigente: false,
+          origenId: PRESUPUESTO_V2,
+          notas: "Nueva versión",
+          totalGeneral: "18500.000000" as never,
+          fechaCreacion: "2026-07-23T00:00:00",
+        },
+        { status: 201 },
+      ),
   ),
   http.post(`${API}/presupuestos/:id/vigente`, () =>
     HttpResponse.json({
@@ -410,21 +574,35 @@ export const handlers = [
   http.get(`${API}/presupuestos/:id/resumen`, () => HttpResponse.json(resumenComponentesFixture)),
   http.get(`${API}/presupuestos/:id/comparar`, () => HttpResponse.json(comparacionFixture)),
   http.get(`${API}/presupuestos/:id/validacion`, () => HttpResponse.json(validacionFixture)),
-  http.post(`${API}/presupuestos/:id/capitulos`, () =>
-    HttpResponse.json(presupuestoFixture, { status: 201 }),
+  http.post(
+    `${API}/presupuestos/:id/capitulos`,
+    async ({ request }) =>
+      (await soloCampos(request, "descripcion", "parentId", "orden")) ??
+      HttpResponse.json(presupuestoFixture, { status: 201 }),
   ),
-  http.put(`${API}/presupuestos/:id/capitulos/:cid`, () => HttpResponse.json(presupuestoFixture)),
-  http.patch(`${API}/presupuestos/:id/capitulos/:cid/mover`, () =>
-    HttpResponse.json(presupuestoFixture),
+  http.put(
+    `${API}/presupuestos/:id/capitulos/:cid`,
+    async ({ request }) =>
+      (await soloCampos(request, "descripcion")) ?? HttpResponse.json(presupuestoFixture),
+  ),
+  http.patch(
+    `${API}/presupuestos/:id/capitulos/:cid/mover`,
+    async ({ request }) =>
+      (await soloCampos(request, "parentId", "orden")) ?? HttpResponse.json(presupuestoFixture),
   ),
   http.delete(`${API}/presupuestos/:id/capitulos/:cid`, () =>
     HttpResponse.json(presupuestoFixture),
   ),
-  http.post(`${API}/presupuestos/:id/capitulos/:cid/rubros`, () =>
-    HttpResponse.json(presupuestoFixture, { status: 201 }),
+  http.post(
+    `${API}/presupuestos/:id/capitulos/:cid/rubros`,
+    async ({ request }) =>
+      (await soloCampos(request, "apuId", "cantidad")) ??
+      HttpResponse.json(presupuestoFixture, { status: 201 }),
   ),
-  http.patch(`${API}/presupuestos/:id/capitulos/:cid/rubros/:rid`, () =>
-    HttpResponse.json(presupuestoFixture),
+  http.patch(
+    `${API}/presupuestos/:id/capitulos/:cid/rubros/:rid`,
+    async ({ request }) =>
+      (await soloCampos(request, "cantidad")) ?? HttpResponse.json(presupuestoFixture),
   ),
   http.delete(`${API}/presupuestos/:id/capitulos/:cid/rubros/:rid`, () =>
     HttpResponse.json(presupuestoFixture),
@@ -442,14 +620,25 @@ export const handlers = [
     }
     return HttpResponse.json(cronogramaFixture);
   }),
-  http.post(`${API}/presupuestos/:id/cronograma`, () =>
-    HttpResponse.json(cronogramaFixture, { status: 201 }),
+  http.post(
+    `${API}/presupuestos/:id/cronograma`,
+    async ({ request }) =>
+      (await soloCampos(request, "unidadTiempo", "numeroPeriodos")) ??
+      HttpResponse.json(cronogramaFixture, { status: 201 }),
   ),
-  http.put(`${API}/cronogramas/:id`, () =>
-    HttpResponse.json({ ...cronogramaFixture, desactualizado: false }),
+  // ponytail: ruta actual del frontend. El plan 055 la mueve a
+  // `/cronogramas/{id}/configuracion`, que es la del backend; cuando lo haga,
+  // este handler y su test se mueven con ella.
+  http.put(
+    `${API}/cronogramas/:id`,
+    async ({ request }) =>
+      (await soloCampos(request, "unidadTiempo", "numeroPeriodos", "confirmarPerdida")) ??
+      HttpResponse.json({ ...cronogramaFixture, desactualizado: false }),
   ),
-  http.patch(`${API}/cronogramas/:id/actividades/:actId`, () =>
-    HttpResponse.json(cronogramaFixture),
+  http.patch(
+    `${API}/cronogramas/:id/actividades/:actId`,
+    async ({ request }) =>
+      (await soloCampos(request, "avancePorPeriodo")) ?? HttpResponse.json(cronogramaFixture),
   ),
   http.post(`${API}/cronogramas/:id/revisado`, () => {
     const revisado = Date.now().toString();
@@ -498,7 +687,12 @@ export const handlers = [
     if (rol) result = result.filter((u) => u.rol === rol);
     return HttpResponse.json({ contenido: result, total: result.length, pagina: 0, tamano: 20 });
   }),
-  http.post(`${API}/admin/usuarios/invitar`, () => HttpResponse.json(null, { status: 204 })),
+  http.post(
+    `${API}/admin/usuarios/invitar`,
+    async ({ request }) =>
+      (await soloCampos(request, "nombre", "email", "rol")) ??
+      HttpResponse.json(null, { status: 204 }),
+  ),
   http.patch(`${API}/admin/usuarios/:id`, ({ params }) => {
     const user = usuariosAdminFixture.find((u) => u.id === Number(params.id));
     return HttpResponse.json(user ?? { ...usuariosAdminFixture[0] });
@@ -514,15 +708,22 @@ export const handlers = [
       tamano: 20,
     }),
   ),
-  http.post(`${API}/admin/bases`, () =>
-    HttpResponse.json(basesCentralesFixtureAdmin[0], { status: 201 }),
+  http.post(
+    `${API}/admin/bases`,
+    async ({ request }) =>
+      (await soloCampos(request, "nombre")) ??
+      HttpResponse.json(basesCentralesFixtureAdmin[0], { status: 201 }),
   ),
   http.get(`${API}/admin/bases/:id`, () => HttpResponse.json(basesCentralesFixtureAdmin[0])),
-  http.put(`${API}/admin/bases/:id`, () => HttpResponse.json(basesCentralesFixtureAdmin[0])),
+  http.put(
+    `${API}/admin/bases/:id`,
+    async ({ request }) =>
+      (await soloCampos(request, "nombre")) ?? HttpResponse.json(basesCentralesFixtureAdmin[0]),
+  ),
   http.delete(`${API}/admin/bases/:id`, () => HttpResponse.json(null, { status: 204 })),
   http.post(`${API}/admin/bases/:id/archivar`, ({ params }) =>
     HttpResponse.json({
-      id: Number(params.id),
+      id: String(params.id),
       nombre: "Base test",
       tipo: "CENTRAL",
       archivada: true,
@@ -531,24 +732,20 @@ export const handlers = [
   ),
 
   http.get(`${API}/admin/plantillas`, () => HttpResponse.json(plantillasSistemaFixture)),
-  http.post(`${API}/admin/plantillas`, () =>
-    HttpResponse.json(plantillasSistemaFixture[0], { status: 201 }),
+  http.post(
+    `${API}/admin/plantillas`,
+    async ({ request }) =>
+      (await soloCampos(request, "nombre", "descripcion", "desdeApuId")) ??
+      HttpResponse.json(plantillasSistemaFixture[0], { status: 201 }),
   ),
   http.delete(`${API}/admin/plantillas/:id`, () => HttpResponse.json(null, { status: 204 })),
 
-  // El backend expone esta lectura en /proyectos/parametros-sistema, sin rol
-  // de admin (plan 027); la escritura no existe todavía y AdminParametrosPage
-  // la mantiene deshabilitada.
-  http.get(`${API}/proyectos/parametros-sistema`, () =>
-    HttpResponse.json(parametrosSistemaFixture),
-  ),
-  http.put(`${API}/proyectos/parametros-sistema`, () =>
-    HttpResponse.json(parametrosSistemaFixture),
-  ),
-
   http.get(`${API}/admin/valores-referencia`, () => HttpResponse.json(valoresReferenciaFixture)),
-  http.put(`${API}/admin/valores-referencia/:clave`, () =>
-    HttpResponse.json(valoresReferenciaFixture[0]),
+  http.put(
+    `${API}/admin/valores-referencia/:clave`,
+    async ({ request }) =>
+      (await soloCampos(request, "valor", "descripcion", "fuente")) ??
+      HttpResponse.json(valoresReferenciaFixture[0]),
   ),
 
   http.get(`${API}/admin/logs`, ({ request }) => {

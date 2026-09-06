@@ -13,7 +13,9 @@ function renderEditor() {
     <Routes>
       <Route path="/proyectos/:id/apus/:apuId" element={<EditorApuPage />} />
     </Routes>,
-    { ruta: "/proyectos/1/apus/1" },
+    {
+      ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/apus/018f8a40-0000-7000-8000-000000000001",
+    },
   );
 }
 
@@ -51,18 +53,18 @@ describe("EditorApuPage", () => {
         peticionVersiones = new URL(request.url).pathname;
         return HttpResponse.json([
           {
-            id: 10,
-            numero: 1,
+            presupuestoId: "0198c1a0-0000-7000-8000-000000000010",
+            version: 1,
+            esVigente: false,
             notas: "Primera versión",
-            vigente: false,
             totalGeneral: "1000.000000" as never,
             fechaCreacion: "2026-02-01T00:00:00",
           },
           {
-            id: 11,
-            numero: 2,
+            presupuestoId: "0198c1a0-0000-7000-8000-000000000011",
+            version: 2,
+            esVigente: true,
             notas: "Segunda versión",
-            vigente: true,
             totalGeneral: "1200.000000" as never,
             fechaCreacion: "2026-03-01T00:00:00",
           },
@@ -79,6 +81,8 @@ describe("EditorApuPage", () => {
 
     // El editor resuelve la versión activa del selector (vigente = 11), no del
     // parámetro de ruta; sin versiones no habría presupuesto que invalidar.
-    expect(peticionVersiones).toBe("/api/v1/proyectos/1/presupuestos");
+    expect(peticionVersiones).toBe(
+      "/api/v1/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/presupuestos",
+    );
   });
 });

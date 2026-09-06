@@ -17,7 +17,7 @@ describe("InsumosPage", () => {
       <Routes>
         <Route path="/proyectos/:id/insumos" element={<InsumosPage />} />
       </Routes>,
-      { ruta: "/proyectos/1/insumos" },
+      { ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/insumos" },
     );
 
     await waitFor(() => {
@@ -32,7 +32,7 @@ describe("InsumosPage", () => {
       <Routes>
         <Route path="/proyectos/:id/insumos" element={<InsumosPage />} />
       </Routes>,
-      { ruta: "/proyectos/1/insumos" },
+      { ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/insumos" },
     );
 
     await waitFor(() => {

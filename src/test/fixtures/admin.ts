@@ -81,7 +81,7 @@ export const logsFixture: LogActividadResponse[] = [
     usuarioId: 2,
     usuarioNombre: "Usuario Normal",
     evento: "PROYECTO_CREADO",
-    detalle: { proyectoId: 1 },
+    detalle: { proyectoId: "018f8a10-0000-7000-8000-000000000001" },
     fecha: "2026-07-20T11:00:00",
   },
   {

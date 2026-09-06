@@ -20,7 +20,7 @@ async function setupCronogramaPage(version = "0198c1a0-0000-7000-8000-0000000000
     <Routes>
       <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
     </Routes>,
-    { ruta: `/proyectos/1/cronograma?v=${version}` },
+    { ruta: `/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/cronograma?v=${version}` },
   );
   await waitFor(() => expect(screen.getByText("Cronograma")).toBeInTheDocument());
   // La versión activa se resuelve de forma asíncrona (selector de la barra
@@ -37,7 +37,9 @@ describe("CronogramaPage", () => {
       <Routes>
         <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
       </Routes>,
-      { ruta: "/proyectos/1/cronograma?v=0198c1a0-0000-7000-8000-0000000009f9" },
+      {
+        ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/cronograma?v=0198c1a0-0000-7000-8000-0000000009f9",
+      },
     );
     await waitFor(() => {
       expect(screen.getByText(/no hay cronograma/i)).toBeInTheDocument();
@@ -109,7 +111,9 @@ describe("CronogramaPage", () => {
       <Routes>
         <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
       </Routes>,
-      { ruta: "/proyectos/1/cronograma?v=0198c1a0-0000-7000-8000-0000000009f9" },
+      {
+        ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/cronograma?v=0198c1a0-0000-7000-8000-0000000009f9",
+      },
     );
     await waitFor(() => {
       expect(screen.getByText(/no hay cronograma/i)).toBeInTheDocument();
@@ -133,7 +137,9 @@ describe("CronogramaPage", () => {
       <Routes>
         <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
       </Routes>,
-      { ruta: "/proyectos/1/cronograma?v=0198c1a0-0000-7000-8000-000000000011" },
+      {
+        ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/cronograma?v=0198c1a0-0000-7000-8000-000000000011",
+      },
     );
     await waitFor(() => {
       expect(screen.getByText("Desactualizado")).toBeInTheDocument();
