@@ -1,6 +1,6 @@
 # Bitácora
 
-**Ola actual:** 5 · **Actualizada:** 2026-09-06
+**Ola actual:** 6 · **Actualizada:** 2026-09-06
 
 > La lleva el orquestador ([`ORQUESTADOR.md`](ORQUESTADOR.md)). Se escribe **en el momento** en que
 > algo cambia de estado, no al final de la sesión: si la sesión se corta, lo que no está escrito
@@ -20,13 +20,13 @@
 | 3-bis | **062 FormData rota + banner fantasma** | ✅ verde | — | 921acfd | fusionado a main |
 | 4 | 028 Zod en el seam | ✅ verde | — | 7d153bc | fusionado a main · ola 4 cerrada |
 | 5 | 055 cronograma (reb. 1–4) | ✅ verde | — | a126d80 | fusionado · cierra sin la reb. 5 |
-| 5 | 048 plantillas APU | 🔄 en curso | .claude/worktrees/ola5-048-052 | — | tanda 2, con el 052 |
+| 5 | 048 plantillas APU | ✅ verde | — | 21275ad | fusionado |
 | 5 | 049 plantillas de proyecto | ✅ verde | — | 0e6aa46 | fusionado · tanda 2 |
 | 5 | 050 admin + S-39 | ✅ verde | — | cccb1b0 | fusionado · S-39 parcial, ver plan |
 | 5 | 051 export ET DOCX | ✅ verde | — | 065c90a | fusionado · tanda 1 |
-| 5 | 052 acciones deshabilitadas | 🔄 en curso | .claude/worktrees/ola5-048-052 | — | tanda 2, comparte EditorApuPage con el 048 |
+| 5 | 052 acciones deshabilitadas | ✅ verde | — | 21275ad | fusionado · **ola 5 cerrada** |
 | 5 | 058 **reescrito**: procedencia del insumo | ✅ verde | — | cccb1b0 | fusionado · tanda 1 cerrada |
-| 6 | **063 ErrorPayload ≠ RFC 7807** | ⏳ pendiente | — | — | plan nuevo, va **antes** del 060 |
+| 6 | **063 ErrorPayload ≠ RFC 7807** | 🔄 en curso | .claude/worktrees/ola6-063 | — | va antes del 060 |
 | 6 | 060 limpieza | ⏳ pendiente | — | — | último |
 
 ### Fuera de las olas
@@ -43,6 +43,20 @@ Baseline original del handoff: **45 archivos, 207 tests, verde** · backend `ori
 docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
+
+- 2026-09-06 — ✅ **Ola 5 cerrada.** `main`: 70 archivos, **438 tests**, `e2e` 20/20. Capturas
+  regeneradas y commiteadas (la deuda que dejó el ejecutor del 049 para evitar conflictos binarios).
+- 2026-09-06 — **048 y 052 aceptados.** El 052 encendió el desglose y estuvo bien: su propio plan
+  dice «después del `059` para el desglose», y el 059 cerró en la ola 2. Mi prompt fue ambiguo, el
+  plan no.
+- 2026-09-06 — ⚠️ **Corrección a un hallazgo del ejecutor del 052.** Afirmó que
+  `DropdownMenuItem disabled` de Radix dispara `onClick` igual, y que por tanto el POST de duplicar
+  salía en producción. **Es un artefacto de jsdom, no un bug.** La clase de shadcn lleva
+  `data-disabled:pointer-events-none` (`components/ui/dropdown-menu.tsx:74`), así que en un
+  navegador el clic no llega. Los otros tres `disabled` —duplicar proyecto, ver uso de insumo,
+  ResumenProyectoPage— están bien deshabilitados. Anotado para que nadie añada guardas redundantes.
+- 2026-09-06 — Choque de la tanda 2 resuelto: `disponibilidad.ts` y `Sidebar.test.tsx`. Cada rama
+  quitaba una entrada distinta del `Set`; la resolución es quitar **las dos**, no elegir una.
 
 - 2026-09-06 — **049 aceptado.** Verifiqué sus cuatro defectos contra el backend: el endpoint real
   es `POST /proyectos/{proyectoId}/guardar-plantilla` (`PlantillaProyectoGuardarResource:21`), y la
