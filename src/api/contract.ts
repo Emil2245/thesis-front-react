@@ -107,27 +107,29 @@ export interface ProyectoResponse {
 // El backend aún no envía alertas; opcional hasta que las implemente.
 export type ProyectoDetalleResponse = ProyectoResponse & { alertas?: string[] };
 
+// Asimetría real del backend, no error del frontend: `plazoUnidad` es `String`
+// en los requests y el enum `PlazoUnidad` en la respuesta. Se tipa como viaja.
 export interface ProyectoCrearRequest {
+  nombreProyecto: string;
+  codigo?: string;
+  descripcion?: string;
+  anio: number;
+  fechaInicio?: string;
+  plazoEjecucion: number;
+  plazoUnidad: string;
+  direccionInstitucional: string;
+  subdireccionInstitucional?: string;
+}
+
+export interface ProyectoEditarRequest {
   nombreProyecto: string;
   codigo?: string;
   descripcion?: string;
   anio?: number;
   fechaInicio?: string;
   plazoEjecucion?: number;
-  plazoUnidad?: "SEMANA" | "MES";
-  direccionInstitucional?: string;
-  subdireccionInstitucional?: string;
-}
-
-export interface ProyectoEditarRequest {
-  nombreProyecto?: string;
-  codigo?: string;
-  descripcion?: string;
-  anio?: number;
-  fechaInicio?: string;
-  plazoEjecucion?: number;
-  plazoUnidad?: "SEMANA" | "MES";
-  direccionInstitucional?: string;
+  plazoUnidad?: string;
+  direccionInstitucional: string;
   subdireccionInstitucional?: string;
 }
 
@@ -140,6 +142,9 @@ export interface PlantillaProyectoResponse {
   id: string;
   nombre: string;
   descripcion?: string;
+  // JsonNode opaco: el backend no fija su forma, así que aquí es `unknown` y lo
+  // estrecha quien lo consuma. Inventarle una interfaz sería un contrato imaginario.
+  snapshotEstructura: unknown;
   fechaCreacion: string;
 }
 
@@ -215,6 +220,8 @@ export interface DescuentoGlobalRequest {
 // ————— Insumos y bases (§11) —————
 export type TipoInsumo = "EQUIPO" | "MANO_OBRA" | "MATERIAL" | "TRANSPORTE";
 
+// `fuente` y `baseNombre` no están aquí: son de InsumoBusquedaResponse, el DTO
+// del selector multi-fuente. Los listados de insumos del proyecto no los traen.
 export interface InsumoResponse {
   id: string;
   codigo: string;
@@ -223,9 +230,8 @@ export interface InsumoResponse {
   unidad: string;
   precioUnitario: number;
   fechaActualizacion: string;
+  /** «> 3 meses sin actualizar» (RNF-08): lo calcula el backend, no se deriva aquí. */
   desactualizado: boolean;
-  fuente?: "LOCAL" | "CENTRAL";
-  baseNombre?: string;
 }
 
 export interface InsumoCrearRequest {
@@ -242,14 +248,18 @@ export interface InsumoEditarRequest {
   precioUnitario?: number;
 }
 
+// GET /proyectos/{id}/insumos/{insumoId}/usos — `usos` en plural.
 export interface InsumoUsoResponse {
   apuId: string;
-  apuCodigo: string;
-  apuDescripcion: string;
-  detalleId: string;
-  cantidad: Decimal;
+  codigo: string;
+  descripcion: string;
+  /** Bloque M/N/O/P donde aparece el insumo. */
+  bloque: string;
+  /** El APU tiene un precio manual para este insumo: explica el bloqueo de borrado (S-19). */
+  override: boolean;
 }
 
+// InsumoResponse + fuente, para el selector multi-fuente (P-16/P-21).
 export interface InsumoBusquedaResponse {
   id: string;
   codigo: string;
@@ -257,8 +267,12 @@ export interface InsumoBusquedaResponse {
   tipo: TipoInsumo;
   unidad: string;
   precioUnitario: number;
-  fuente?: "LOCAL" | "CENTRAL";
-  baseNombre?: string;
+  fechaActualizacion: string;
+  desactualizado: boolean;
+  // El backend emite "PROYECTO", no "LOCAL": el filtro de la UI sí usa LOCAL,
+  // pero eso es un parámetro de búsqueda, no el valor que vuelve.
+  fuente: "CENTRAL" | "PROYECTO";
+  baseNombre: string | null;
 }
 
 export interface ImportResultadoResponse {
@@ -308,6 +322,9 @@ export interface ApuDetalleResponse {
   costo: number;
 }
 
+// @JsonInclude(NON_NULL): los campos nulos no vienen en el JSON, así que todo
+// opcional es `?` y no `| null`. No lleva `porcentajeDescuento` (retirado el
+// 2026-08-31) ni `especificacionTecnica`: la ET se lee con su propio GET.
 export interface ApuResponse {
   id: string;
   codigo: string;
@@ -315,10 +332,11 @@ export interface ApuResponse {
   unidad: string;
   costoDirecto: number;
   costoTotal: number;
-  porcentajeIndirecto?: number | null;
+  /** Override del APU; ausente cuando hereda del proyecto. */
+  porcentajeIndirecto?: number;
+  /** El %CI realmente aplicado tras la herencia: distingue heredado de override (P-23). */
   porcentajeIndirectoEfectivo: number;
   costoIndirecto: number;
-  especificacionTecnica?: string | null;
   secciones: Array<{
     tipo: SeccionTipo;
     orden: number;
@@ -330,6 +348,17 @@ export interface ApuResponse {
 
 export interface EspecificacionTecnicaRequest {
   texto: string;
+}
+
+/** GET /apus/{apuId}/especificacion-tecnica. `contenido` es null si no hay ET. */
+export interface EspecificacionTecnicaResponse {
+  apuId: string;
+  contenido: string | null;
+}
+
+/** Body ausente o `copiarET: null` → no copiar la ET del APU origen. */
+export interface ApuDuplicarRequest {
+  copiarET?: boolean;
 }
 
 export interface ApuResumenResponse {
@@ -358,9 +387,13 @@ export interface ApuPatchRequest {
   unidad?: string;
 }
 
+// Los tres primeros son @NotNull en main: sin `seccionTipo` el POST es un 400.
+// `cantidad` y `rendimiento` son @DecimalMin("0.000001"): mandar 0 también es
+// un 400, así que `rendimiento` se omite en vez de enviarse a cero.
 export interface ApuDetalleCrearRequest {
-  insumoId?: string;
-  cantidad?: Decimal;
+  seccionTipo: SeccionTipo;
+  insumoId: string;
+  cantidad: Decimal;
   rendimiento?: Decimal;
 }
 
@@ -371,12 +404,43 @@ export interface ApuDetallePatchRequest {
   orden?: number;
 }
 
+// El desglose de cálculo (P-27) es dinero como `number`, no `Decimal` string:
+// ésa es la partición del §2 del handoff. `operacion` es la fórmula en texto que
+// el backend ya compone ("4.690900 × 0.180000"); la UI la muestra, no la arma.
+// ApuCalculoResponse no lleva @JsonInclude(NON_NULL): los nulos sí viajan.
+export interface ApuCalculoLinea {
+  detalleId: string;
+  orden: number;
+  seccion: SeccionTipo;
+  esHerramientaMenor: boolean;
+  // La fila de Herramienta Menor no tiene insumo.
+  insumoId: string | null;
+  descripcion: string;
+  cantidad: number | null;
+  rendimiento: number | null;
+  precioEfectivo: number | null;
+  costoHora: number | null;
+  operacion: string;
+  resultado: number;
+}
+
+export interface ApuCalculoSeccion {
+  tipo: SeccionTipo;
+  subtotal: number;
+  operacion: string;
+  resultado: number;
+  lineas: ApuCalculoLinea[];
+}
+
 export interface ApuCalculoResponse {
-  formulas: Array<{ concepto: string; formula: string; resultado: string }>;
-  subtotales: Record<string, string>;
-  cd: string;
-  ci: string;
-  ct: string;
+  apuId: string;
+  codigo: string;
+  // ciAplicado = COALESCE(apu.porcentajeIndirecto, proyecto.porcentajeIndirecto, 0).
+  // No existe `descuento`: la cadena activa del motor es CD → CI → CT.
+  parametros: { hm: number; ciDefault: number | null; ciAplicado: number };
+  secciones: ApuCalculoSeccion[];
+  // No existe `cdAjustado`: un contract test del backend lo custodia.
+  resumen: { cd: number; ci: number; ct: number };
 }
 
 export interface PlantillaApuResumenResponse {
@@ -512,7 +576,7 @@ export interface ComparacionVersionesResponse {
 }
 
 export interface RubroRefResponse {
-  rubroId: string;
+  id: string;
   item: string;
   codigo: string;
   descripcion: string;

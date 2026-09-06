@@ -5,11 +5,21 @@ export const proyectoSchema = z.object({
   nombreProyecto: z.string().min(1, "El nombre es obligatorio").max(200),
   codigo: z.string().max(50).optional(),
   descripcion: z.string().max(2000).optional(),
-  anio: z.number().int().min(2000, "Año inválido").max(2100, "Año inválido").optional(),
+  // @NotNull / @NotBlank en main: opcionales aquí, el formulario dejaba enviar
+  // un cuerpo que el backend rechaza con 400.
+  anio: z
+    .number({ message: "El año es obligatorio" })
+    .int()
+    .min(2000, "Año inválido")
+    .max(2100, "Año inválido"),
   fechaInicio: z.string().optional(),
-  plazoEjecucion: z.number().int().min(1, "Plazo inválido").max(600, "Plazo inválido").optional(),
-  plazoUnidad: z.enum(["SEMANA", "MES"]).optional(),
-  direccionInstitucional: z.string().max(200).optional(),
+  plazoEjecucion: z
+    .number({ message: "El plazo es obligatorio" })
+    .int()
+    .min(1, "Plazo inválido")
+    .max(600, "Plazo inválido"),
+  plazoUnidad: z.enum(["SEMANA", "MES"], { message: "La unidad de plazo es obligatoria" }),
+  direccionInstitucional: z.string().min(1, "La dirección es obligatoria").max(200),
   subdireccionInstitucional: z.string().max(200).optional(),
   duplicarDesde: z
     .discriminatedUnion("tipo", [

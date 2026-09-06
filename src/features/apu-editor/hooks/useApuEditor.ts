@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, patch, post, put, del } from "@/api/request";
 import { qk } from "@/api/queryKeys";
-import { parsearEntradaDecimal, type Decimal } from "@/lib/decimal";
+import { asDecimal, parsearEntradaDecimal, type Decimal } from "@/lib/decimal";
 import { celdaCantidadSchema, celdaRendimientoSchema, precioOverrideSchema } from "../schemas";
 import type {
   ApuResponse,
@@ -11,6 +11,7 @@ import type {
   ApuPatchRequest,
   ApuDetallePatchRequest,
   ApuDetalleCrearRequest,
+  EspecificacionTecnicaResponse,
 } from "@/api/contract";
 import type { ApiError } from "@/api/problem";
 
@@ -34,6 +35,8 @@ export interface SeccionEditor {
 
 export interface UseApuEditor {
   apu: ApuResponse | undefined;
+  /** La ET no viaja en ApuResponse: tiene su propio GET. */
+  especificacionTecnica: string | null | undefined;
   secciones: SeccionEditor[];
   cargando: boolean;
   guardando: boolean;
@@ -45,7 +48,7 @@ export interface UseApuEditor {
   ): Promise<void>;
   restaurarHerencia(detalleId: string): Promise<void>;
   reordenarFila(detalleId: string, nuevoOrden: number): Promise<void>;
-  agregarFila(sel: { insumoId: string }): Promise<void>;
+  agregarFila(sel: { seccionTipo: SeccionTipo; insumoId: string }): Promise<void>;
   eliminarFila(detalleId: string): Promise<void>;
   editarEncabezado(patchReq: ApuPatchRequest): Promise<void>;
   editarPorcentajeCi(valor: string | null): Promise<void>;
@@ -80,6 +83,13 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
   const { data: apu, isPending: cargando } = useQuery({
     queryKey: qk.apu(apuId),
     queryFn: () => get<ApuResponse>(`/apus/${apuId}`),
+  });
+
+  // La ET se leía a ciegas: el frontend sólo hacía PUT y nunca este GET, así que
+  // el panel no podía mostrar lo guardado sin recargar el APU entero.
+  const { data: especificacion } = useQuery({
+    queryKey: qk.apuEspecificacion(apuId),
+    queryFn: () => get<EspecificacionTecnicaResponse>(`/apus/${apuId}/especificacion-tecnica`),
   });
 
   const secciones = useMemo<SeccionEditor[]>(() => {
@@ -259,9 +269,12 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
   );
 
   const agregarFila = useCallback(
-    async (sel: { insumoId: string }) => {
+    async (sel: { seccionTipo: SeccionTipo; insumoId: string }) => {
       try {
-        await agregarMutation.mutateAsync(sel);
+        // `cantidad` es @NotNull con mínimo 0.000001: el selector no la pide,
+        // así que la fila nace en 1 y el usuario la corrige en su celda.
+        // `rendimiento` se omite; mandarlo a 0 sería otro 400.
+        await agregarMutation.mutateAsync({ ...sel, cantidad: asDecimal("1") });
       } catch {
         // handled by react-query
       }
@@ -301,13 +314,14 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
   const guardarEspecificacionTecnica = useCallback(
     async (texto: string) => {
       await put(`/apus/${apuId}/especificacion-tecnica`, { texto });
-      qc.invalidateQueries({ queryKey: qk.apu(apuId) });
+      qc.invalidateQueries({ queryKey: qk.apuEspecificacion(apuId) });
     },
     [apuId, qc],
   );
 
   return {
     apu,
+    especificacionTecnica: especificacion?.contenido,
     secciones,
     cargando,
     guardando:

@@ -23,6 +23,7 @@ export function EditorApuPage() {
 
   const {
     apu,
+    especificacionTecnica,
     secciones,
     cargando,
     editarCelda,
@@ -81,7 +82,7 @@ export function EditorApuPage() {
           ))}
 
           <PanelEspecificacionTecnica
-            texto={apu.especificacionTecnica}
+            texto={especificacionTecnica}
             onGuardar={guardarEspecificacionTecnica}
           />
 

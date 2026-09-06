@@ -1,6 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
-import { get } from "@/api/request";
-import { qk } from "@/api/queryKeys";
+import { useInsumoUsos } from "../hooks/useInsumoUsos";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,7 +17,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CargandoTabla } from "@/components/comunes/CargandoTabla";
-import { formatearNumero } from "@/lib/decimal";
 import type { InsumoUsoResponse } from "@/api/contract";
 
 export function DialogoUsoInsumo({
@@ -35,11 +32,9 @@ export function DialogoUsoInsumo({
   insumoId: string;
   usosPrecargados?: InsumoUsoResponse[];
 }) {
-  const { data: usos, isPending } = useQuery({
-    queryKey: qk.insumoUso(proyectoId, insumoId),
-    queryFn: () => get<InsumoUsoResponse[]>(`/proyectos/${proyectoId}/insumos/${insumoId}/uso`),
-    enabled: !usosPrecargados && abierto,
-    initialData: usosPrecargados,
+  const { data: usos, isPending } = useInsumoUsos(proyectoId, insumoId, {
+    habilitado: abierto,
+    precargados: usosPrecargados,
   });
 
   return (
@@ -60,16 +55,19 @@ export function DialogoUsoInsumo({
               <TableRow>
                 <TableHead>Código</TableHead>
                 <TableHead>Descripción</TableHead>
-                <TableHead className="text-right">Cantidad</TableHead>
+                <TableHead>Bloque</TableHead>
+                <TableHead>Precio</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {usos?.map((u) => (
-                <TableRow key={u.detalleId}>
-                  <TableCell className="font-mono text-xs">{u.apuCodigo}</TableCell>
-                  <TableCell>{u.apuDescripcion}</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatearNumero(u.cantidad)}
+                <TableRow key={u.apuId}>
+                  <TableCell className="font-mono text-xs">{u.codigo}</TableCell>
+                  <TableCell>{u.descripcion}</TableCell>
+                  <TableCell className="font-mono text-xs">{u.bloque}</TableCell>
+                  {/* `override` explica por qué no se puede borrar (S-19). */}
+                  <TableCell className="text-xs text-muted-foreground">
+                    {u.override ? "Manual" : "Heredado"}
                   </TableCell>
                 </TableRow>
               ))}

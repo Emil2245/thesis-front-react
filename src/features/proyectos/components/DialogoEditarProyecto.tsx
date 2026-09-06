@@ -31,7 +31,8 @@ const editarSchema = z.object({
   fechaInicio: z.string().optional(),
   plazoEjecucion: z.number().int().min(1).max(600).optional(),
   plazoUnidad: z.enum(["SEMANA", "MES"]).optional(),
-  direccionInstitucional: z.string().optional(),
+  // @NotBlank en ProyectoEditarRequest, igual que nombreProyecto.
+  direccionInstitucional: z.string().min(1, "La dirección es obligatoria"),
   subdireccionInstitucional: z.string().optional(),
   anio: z.number().int().min(2000).max(2100).optional(),
 });
@@ -79,7 +80,7 @@ export function DialogoEditarProyecto({
       fechaInicio: data.fechaInicio || undefined,
       plazoEjecucion: data.plazoEjecucion || undefined,
       plazoUnidad: data.plazoUnidad || undefined,
-      direccionInstitucional: data.direccionInstitucional || undefined,
+      direccionInstitucional: data.direccionInstitucional,
       subdireccionInstitucional: data.subdireccionInstitucional || undefined,
       anio: data.anio,
     });

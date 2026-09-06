@@ -17,7 +17,6 @@ export const insumosFixture: InsumoResponse[] = [
     precioUnitario: 12.5,
     fechaActualizacion: "2026-03-15T00:00:00",
     desactualizado: false,
-    fuente: "LOCAL",
   },
   {
     id: "018f8a20-0000-7000-8000-000000000011",
@@ -28,7 +27,6 @@ export const insumosFixture: InsumoResponse[] = [
     precioUnitario: 18,
     fechaActualizacion: "2025-11-20T00:00:00",
     desactualizado: true,
-    fuente: "LOCAL",
   },
   {
     id: "018f8a20-0000-7000-8000-000000000012",
@@ -39,7 +37,6 @@ export const insumosFixture: InsumoResponse[] = [
     precioUnitario: 22,
     fechaActualizacion: "2026-01-10T00:00:00",
     desactualizado: false,
-    fuente: "LOCAL",
   },
   {
     id: "018f8a20-0000-7000-8000-000000000013",
@@ -50,7 +47,6 @@ export const insumosFixture: InsumoResponse[] = [
     precioUnitario: 8.5,
     fechaActualizacion: "2026-02-01T00:00:00",
     desactualizado: false,
-    fuente: "LOCAL",
   },
   {
     id: "018f8a20-0000-7000-8000-000000000014",
@@ -61,7 +57,6 @@ export const insumosFixture: InsumoResponse[] = [
     precioUnitario: 4.25,
     fechaActualizacion: "2026-02-01T00:00:00",
     desactualizado: false,
-    fuente: "LOCAL",
   },
   {
     id: "018f8a20-0000-7000-8000-000000000015",
@@ -72,7 +67,6 @@ export const insumosFixture: InsumoResponse[] = [
     precioUnitario: 45,
     fechaActualizacion: "2026-03-01T00:00:00",
     desactualizado: false,
-    fuente: "LOCAL",
   },
   {
     id: "018f8a20-0000-7000-8000-000000000016",
@@ -83,7 +77,6 @@ export const insumosFixture: InsumoResponse[] = [
     precioUnitario: 25,
     fechaActualizacion: "2025-09-15T00:00:00",
     desactualizado: true,
-    fuente: "LOCAL",
   },
   {
     id: "018f8a20-0000-7000-8000-000000000017",
@@ -94,7 +87,6 @@ export const insumosFixture: InsumoResponse[] = [
     precioUnitario: 35,
     fechaActualizacion: "2026-04-10T00:00:00",
     desactualizado: false,
-    fuente: "LOCAL",
   },
 ];
 
@@ -130,7 +122,10 @@ export const insumosBusquedaFixture: InsumoBusquedaResponse[] = [
     tipo: "MATERIAL",
     unidad: "kg",
     precioUnitario: 12.5,
-    fuente: "LOCAL",
+    fechaActualizacion: "2026-03-15T00:00:00",
+    desactualizado: false,
+    fuente: "PROYECTO",
+    baseNombre: null,
   },
   {
     id: "018f8a20-0000-7000-8000-000000000013",
@@ -139,7 +134,10 @@ export const insumosBusquedaFixture: InsumoBusquedaResponse[] = [
     tipo: "MANO_OBRA",
     unidad: "h",
     precioUnitario: 8.5,
-    fuente: "LOCAL",
+    fechaActualizacion: "2026-03-15T00:00:00",
+    desactualizado: false,
+    fuente: "PROYECTO",
+    baseNombre: null,
   },
   {
     id: "018f8a20-0000-7000-8000-000000000100",
@@ -148,6 +146,8 @@ export const insumosBusquedaFixture: InsumoBusquedaResponse[] = [
     tipo: "MATERIAL",
     unidad: "kg",
     precioUnitario: 11.2,
+    fechaActualizacion: "2026-03-15T00:00:00",
+    desactualizado: false,
     fuente: "CENTRAL",
     baseNombre: "Base IESS 2026",
   },
@@ -176,16 +176,16 @@ export const importResultadoConErroresFixture: ImportResultadoResponse = {
 export const insumoUsoFixture: InsumoUsoResponse[] = [
   {
     apuId: "018f8a40-0000-7000-8000-000000000001",
-    apuCodigo: "APU-001",
-    apuDescripcion: "Excavación",
-    detalleId: "018f8a50-0000-7000-8000-000000000100",
-    cantidad: "2.000000" as never,
+    codigo: "APU-001",
+    descripcion: "Excavación a máquina",
+    bloque: "M",
+    override: true,
   },
   {
     apuId: "018f8a40-0000-7000-8000-000000000002",
-    apuCodigo: "APU-002",
-    apuDescripcion: "Relleno compactado",
-    detalleId: "018f8a50-0000-7000-8000-000000000101",
-    cantidad: "1.500000" as never,
+    codigo: "APU-002",
+    descripcion: "Relleno compactado",
+    bloque: "O",
+    override: false,
   },
 ];
