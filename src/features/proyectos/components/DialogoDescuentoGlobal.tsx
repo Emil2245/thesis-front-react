@@ -27,16 +27,40 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
 
-export function DialogoDescuentoGlobal({
-  abierto,
-  onClose,
-  presupuestoId,
-}: {
+interface DialogoDescuentoGlobalProps {
   abierto: boolean;
   onClose: () => void;
   presupuestoId: string | null;
-}) {
+}
+
+// El backend no tiene /descuento-global (plan 054): la especificación se cerró
+// el 2026-08-31 pero no hay implementación en origin/main, así que el diálogo
+// activo daría 404. Para reactivar: borra este bloque, quita "descuento-global"
+// de MODULOS_SIN_BACKEND y exporta DialogoDescuentoGlobalActivo como
+// DialogoDescuentoGlobal.
+export function DialogoDescuentoGlobal({ abierto, onClose }: DialogoDescuentoGlobalProps) {
+  return (
+    <Dialog open={abierto} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Descuento global</DialogTitle>
+        </DialogHeader>
+        <ModuloNoDisponible
+          modulo="El descuento global"
+          descripcion="El servidor todavía no expone el descuento global de la versión vigente. La pantalla está construida y se activará cuando el endpoint exista."
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function DialogoDescuentoGlobalActivo({
+  abierto,
+  onClose,
+  presupuestoId,
+}: DialogoDescuentoGlobalProps) {
   const { data: sistema } = useParametrosSistema();
   const maxDesc = sistema?.rangoDescuentoMax ? fraccionAPorcentaje(sistema.rangoDescuentoMax) : 50;
   const schema = useMemo(() => crearDescuentoSchema(maxDesc), [maxDesc]);
@@ -84,7 +108,10 @@ export function DialogoDescuentoGlobal({
         <DialogHeader>
           <DialogTitle>Descuento global</DialogTitle>
           <DialogDescription>
-            Aplica un porcentaje de descuento a todos los APUs de la versión vigente.
+            Reduce las columnas de precio de tu base de proyecto (tarifa en EQUIPO y TRANSPORTE,
+            precio unitario en MATERIAL) en todos los APUs de la versión vigente. MANO DE OBRA queda
+            exenta por ley, y la Herramienta Menor no se descuenta porque se deriva de ella.
+            Reversible poniendo 0 %.
           </DialogDescription>
         </DialogHeader>
 
@@ -106,8 +133,8 @@ export function DialogoDescuentoGlobal({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Código</TableHead>
+                    <TableHead className="text-right">CD antes</TableHead>
                     <TableHead className="text-right">CD</TableHead>
-                    <TableHead className="text-right">CD ajustado</TableHead>
                     <TableHead className="text-right">CI</TableHead>
                     <TableHead className="text-right">CT</TableHead>
                   </TableRow>
@@ -116,8 +143,8 @@ export function DialogoDescuentoGlobal({
                   {previewData.porApu.map((apu) => (
                     <TableRow key={apu.apuId}>
                       <TableCell className="font-mono text-xs">{apu.codigo}</TableCell>
+                      <TableCell className="text-right tabular-nums">{apu.cdAntes}</TableCell>
                       <TableCell className="text-right tabular-nums">{apu.cd}</TableCell>
-                      <TableCell className="text-right tabular-nums">{apu.cdAjustado}</TableCell>
                       <TableCell className="text-right tabular-nums">{apu.ci}</TableCell>
                       <TableCell className="text-right tabular-nums">{apu.ct}</TableCell>
                     </TableRow>

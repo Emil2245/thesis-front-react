@@ -54,6 +54,20 @@ export const problema = (
     { status, headers: { "Content-Type": "application/problem+json" } },
   );
 
+// Los handlers aceptaban cualquier body, así que el seam no podía ver un campo
+// de más ni uno mal nombrado: así pasaron `porcentajeIndirecto` en
+// PATCH /apus/{id} y `descripcion` en PUT /plantillas-apu/{id} (plan 054), los
+// dos descartados en silencio por Jackson con un 200 de vuelta. El arreglo de
+// fondo es la validación Zod del plan 028; esto cierra los agujeros conocidos.
+// ponytail: lista blanca por endpoint, sirve hasta que el 028 valide el seam entero.
+const soloCampos = async (request: Request, ...permitidos: string[]) => {
+  const cuerpo = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+  const sobran = Object.keys(cuerpo).filter((k) => !permitidos.includes(k));
+  return sobran.length === 0
+    ? null
+    : problema(400, "campo-desconocido", `El backend no acepta: ${sobran.join(", ")}`);
+};
+
 export const pagina = <T>(items: T[]) => ({
   items,
   page: 0,
@@ -153,8 +167,8 @@ export const handlers = [
         {
           apuId: "018f8a40-0000-7000-8000-000000000001",
           codigo: "APU-001",
-          cd: "100.000000" as never,
-          cdAjustado: "95.000000" as never,
+          cdAntes: "100.000000" as never,
+          cd: "95.000000" as never,
           ci: "15.000000" as never,
           ct: "110.000000" as never,
         },
@@ -211,7 +225,15 @@ export const handlers = [
     HttpResponse.json(apuDetalleFixture, { status: 201 }),
   ),
   http.get(`${API}/apus/:id`, () => HttpResponse.json(apuConHmFixture)),
-  http.patch(`${API}/apus/:id`, () => HttpResponse.json(apuConHmFixture)),
+  // ApuPatchRequest del backend es (codigo, descripcion, unidad) y nada más.
+  http.patch(
+    `${API}/apus/:id`,
+    async ({ request }) =>
+      (await soloCampos(request, "codigo", "descripcion", "unidad")) ??
+      HttpResponse.json(apuConHmFixture),
+  ),
+  // El %CI tiene endpoint propio y recibe un BigDecimal crudo, no un objeto.
+  http.patch(`${API}/apus/:id/porcentaje-indirecto`, () => HttpResponse.json(apuConHmFixture)),
   http.put(`${API}/apus/:id/especificacion-tecnica`, () => HttpResponse.json(apuDetalleFixture)),
   http.delete(`${API}/apus/:id`, ({ params }) => {
     if (Number(params.id) === 2) {
@@ -243,8 +265,7 @@ export const handlers = [
     }
     return HttpResponse.json(apuConHmFixture);
   }),
-  // ———— APU descuento y cálculo (Plan 010) ————
-  http.post(`${API}/apus/:id/descuento`, () => HttpResponse.json(apuConHmFixture)),
+  // ———— APU cálculo (Plan 010) ————
   http.get(`${API}/apus/:id/calculo`, () =>
     HttpResponse.json({
       formulas: [
@@ -253,22 +274,24 @@ export const handlers = [
       ],
       subtotales: { M: "400.00", N: "400.00", O: "0.00", P: "0.00" },
       cd: "800.00",
-      cdAjustado: "800.00",
       ci: "120.00",
       ct: "920.00",
     }),
   ),
-  http.post(`${API}/apus/:id/guardar-plantilla`, () =>
-    HttpResponse.json(
-      {
-        id: "018f8a1e-0000-7000-8000-000000000099",
-        nombre: "Mi plantilla",
-        tipo: "PERSONAL",
-        createdAt: "2026-07-23T00:00:00",
-        updatedAt: "2026-07-23T00:00:00",
-      },
-      { status: 201 },
-    ),
+  http.post(
+    `${API}/apus/:id/guardar-plantilla`,
+    async ({ request }) =>
+      (await soloCampos(request, "nombre", "descripcionRubro")) ??
+      HttpResponse.json(
+        {
+          id: "018f8a1e-0000-7000-8000-000000000099",
+          nombre: "Mi plantilla",
+          tipo: "PERSONAL",
+          createdAt: "2026-07-23T00:00:00",
+          updatedAt: "2026-07-23T00:00:00",
+        },
+        { status: 201 },
+      ),
   ),
   // ———— Plantillas ————
   http.get(`${API}/plantillas-apu`, ({ request }) => {
@@ -299,14 +322,17 @@ export const handlers = [
     ]);
   }),
   http.get(`${API}/plantillas-apu/:id`, () => HttpResponse.json(plantillaDetalleFixture)),
-  http.put(`${API}/plantillas-apu/:id`, () =>
-    HttpResponse.json({
-      id: "018f8a1e-0000-7000-8000-000000000002",
-      nombre: "Renombrada",
-      tipo: "PERSONAL",
-      createdAt: "2026-07-20T00:00:00",
-      updatedAt: "2026-07-20T00:00:00",
-    }),
+  http.put(
+    `${API}/plantillas-apu/:id`,
+    async ({ request }) =>
+      (await soloCampos(request, "nombre", "descripcionRubro")) ??
+      HttpResponse.json({
+        id: "018f8a1e-0000-7000-8000-000000000002",
+        nombre: "Renombrada",
+        tipo: "PERSONAL",
+        createdAt: "2026-07-20T00:00:00",
+        updatedAt: "2026-07-20T00:00:00",
+      }),
   ),
   http.delete(`${API}/plantillas-apu/:id`, () => HttpResponse.json(null, { status: 204 })),
 

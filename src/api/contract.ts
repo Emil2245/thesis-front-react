@@ -196,8 +196,11 @@ export interface DescuentoGlobalPreviewResponse {
   porApu: Array<{
     apuId: string;
     codigo: string;
+    // El descuento reduce columnas de la base PROYECTO (tarifa en EQUIPO y
+    // TRANSPORTE, precio_unitario en MATERIAL); cdAntes es el CD previo. No
+    // existe un "cdAjustado": la cadena activa del motor es CD → CI → CT.
+    cdAntes: Decimal;
     cd: Decimal;
-    cdAjustado: Decimal;
     ci: Decimal;
     ct: Decimal;
   }>;
@@ -314,7 +317,6 @@ export interface ApuResponse {
   costoTotal: number;
   porcentajeIndirecto?: number | null;
   porcentajeIndirectoEfectivo: number;
-  porcentajeDescuento: number;
   costoIndirecto: number;
   especificacionTecnica?: string | null;
   secciones: Array<{
@@ -347,11 +349,13 @@ export interface ApuCrearRequest {
   plantillaId?: string;
 }
 
+// El record del backend es ApuPatchRequest(codigo, descripcion, unidad): no
+// añadir campos aquí. El %CI se edita con PATCH /apus/{id}/porcentaje-indirecto
+// y un decimal crudo como body (plan 054 §2).
 export interface ApuPatchRequest {
   codigo?: string;
   descripcion?: string;
   unidad?: string;
-  porcentajeIndirecto?: Decimal | null;
 }
 
 export interface ApuDetalleCrearRequest {
@@ -367,15 +371,10 @@ export interface ApuDetallePatchRequest {
   orden?: number;
 }
 
-export interface DescuentoRubroRequest {
-  porcentaje: Decimal;
-}
-
 export interface ApuCalculoResponse {
   formulas: Array<{ concepto: string; formula: string; resultado: string }>;
   subtotales: Record<string, string>;
   cd: string;
-  cdAjustado: string;
   ci: string;
   ct: string;
 }
@@ -403,7 +402,7 @@ export interface PlantillaApuCrearRequest {
 
 export interface PlantillaApuEditarRequest {
   nombre?: string;
-  descripcion?: string;
+  descripcionRubro?: string;
 }
 
 export interface PlantillaApuDetalleResponse extends PlantillaApuResumenResponse {

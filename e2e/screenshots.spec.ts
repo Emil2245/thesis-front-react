@@ -165,8 +165,6 @@ const apuDetalle = {
   vinculado: false,
   porcentajeIndirecto: null,
   porcentajeIndirectoEfectivo: "0.150000",
-  porcentajeDescuento: "0.000000",
-  cdAjustado: "800.000000",
   costoIndirecto: "120.000000",
   secciones: [
     {

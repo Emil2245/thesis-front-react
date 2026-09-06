@@ -19,7 +19,6 @@ describe("PieTotales", () => {
       <PieTotales
         apu={apuDetalleFixture}
         onEditarPorcentajeCi={() => Promise.resolve()}
-        onAbrirDescuento={() => {}}
         onAbrirDesglose={() => {}}
       />,
     );
@@ -33,7 +32,6 @@ describe("PieTotales", () => {
       <PieTotales
         apu={apuDetalleFixture}
         onEditarPorcentajeCi={() => Promise.resolve()}
-        onAbrirDescuento={() => {}}
         onAbrirDesglose={() => {}}
       />,
     );
@@ -45,23 +43,25 @@ describe("PieTotales", () => {
       <PieTotales
         apu={apuConPorcentajePropio()}
         onEditarPorcentajeCi={() => Promise.resolve()}
-        onAbrirDescuento={() => {}}
         onAbrirDesglose={() => {}}
       />,
     );
     expect(screen.getByText("Valor propio")).toBeInTheDocument();
   });
 
-  it("muestra botones Descuento y Desglose deshabilitados (sin endpoint en el backend)", () => {
+  // El descuento de rubro no está pendiente: fue retirado (plan backend 015 y
+  // rollout docs 2026-08-31, P-24/S-24 WITHDRAWN). Dejar el botón deshabilitado
+  // prometía algo que el backend decidió no tener.
+  it("no ofrece ningún control de descuento del rubro", () => {
     renderConProviders(
       <PieTotales
         apu={apuDetalleFixture}
         onEditarPorcentajeCi={() => Promise.resolve()}
-        onAbrirDescuento={() => {}}
         onAbrirDesglose={() => {}}
       />,
     );
-    expect(screen.getByRole("button", { name: /descuento/i })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /descuento/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/El descuento se aplica al costo directo/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /desglose/i })).toBeDisabled();
   });
 });

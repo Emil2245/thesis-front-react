@@ -5,7 +5,6 @@ import { useVersionActiva } from "@/shell/contexto";
 import { EncabezadoApu } from "../components/EncabezadoApu";
 import { GridSeccion } from "../components/GridSeccion";
 import { PieTotales } from "../components/PieTotales";
-import { DialogoDescuentoRubro } from "../components/DialogoDescuentoRubro";
 import { DialogoGuardarPlantilla } from "../components/DialogoGuardarPlantilla";
 import { PopoverDesglose } from "../components/PopoverDesglose";
 import { PanelEspecificacionTecnica } from "../components/PanelEspecificacionTecnica";
@@ -32,11 +31,9 @@ export function EditorApuPage() {
     eliminarFila,
     editarEncabezado,
     editarPorcentajeCi,
-    aplicarDescuento,
     guardarEspecificacionTecnica,
   } = useApuEditor(parsedApuId, presupuestoId || undefined);
 
-  const [descuentoDialogAbierto, setDescuentoDialogAbierto] = useState(false);
   const [guardarPlantillaDialogAbierto, setGuardarPlantillaDialogAbierto] = useState(false);
   const [desgloseAbierto, setDesgloseAbierto] = useState(false);
 
@@ -111,18 +108,10 @@ export function EditorApuPage() {
           <PieTotales
             apu={apu}
             onEditarPorcentajeCi={editarPorcentajeCi}
-            onAbrirDescuento={() => setDescuentoDialogAbierto(true)}
             onAbrirDesglose={() => setDesgloseAbierto(true)}
           />
         </div>
       </div>
-
-      <DialogoDescuentoRubro
-        abierto={descuentoDialogAbierto}
-        onClose={() => setDescuentoDialogAbierto(false)}
-        apu={apu}
-        onAplicarDescuento={aplicarDescuento}
-      />
 
       <DialogoGuardarPlantilla
         abierto={guardarPlantillaDialogAbierto}

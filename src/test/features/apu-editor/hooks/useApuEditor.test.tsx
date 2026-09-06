@@ -137,6 +137,45 @@ describe("useApuEditor", () => {
     expect(sentBody).toEqual({ precioOverride: null });
   });
 
+  // Plan 054 §2: ApuPatchRequest del backend es (codigo, descripcion, unidad).
+  // porcentajeIndirecto iba dentro de ese body y Jackson lo descartaba en
+  // silencio; su endpoint real recibe un BigDecimal crudo, no un objeto.
+  it("editarPorcentajeCi manda el decimal crudo a PATCH /apus/:id/porcentaje-indirecto", async () => {
+    let cuerpo = "sin-peticion";
+    server.use(
+      http.patch(`${API}/apus/:id/porcentaje-indirecto`, async ({ request }) => {
+        cuerpo = await request.text();
+        return HttpResponse.json(apuDetalleFixture);
+      }),
+    );
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    await act(async () => {
+      await result.current.editarPorcentajeCi("0.20");
+    });
+
+    expect(cuerpo).toBe("0.20");
+  });
+
+  it("editarPorcentajeCi(null) manda null crudo para volver a heredar del proyecto", async () => {
+    let cuerpo = "sin-peticion";
+    server.use(
+      http.patch(`${API}/apus/:id/porcentaje-indirecto`, async ({ request }) => {
+        cuerpo = await request.text();
+        return HttpResponse.json(apuDetalleFixture);
+      }),
+    );
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    await act(async () => {
+      await result.current.editarPorcentajeCi(null);
+    });
+
+    expect(cuerpo).toBe("null");
+  });
+
   it("editing a cell invalidates presupuesto and cronograma keys", async () => {
     server.use(
       http.patch(`${API}/apus/:id/detalles/:did`, () => HttpResponse.json(apuDetalleFixture)),
