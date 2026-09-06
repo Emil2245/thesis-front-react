@@ -7,8 +7,10 @@
  *
  * Dos motivos distintos conviven aquí, y no conviene confundirlos:
  *
- * - Backend presente, front sin alinear todavía: "plantillas" (plan 048),
- *   "plantillas-proyecto" (plan 049). Salen del conjunto en cuanto se alineen.
+ * - Backend presente, front sin alinear todavía: "plantillas-proyecto" (plan
+ *   049). Sale del conjunto en cuanto se alinee. "plantillas" salió con el
+ *   plan 048: `PlantillaApuResource` sirve los cuatro endpoints en origin/main
+ *   y el front ya los llama con ids UUID.
  * - Backend parcial, y aun así encendido: "documentos" salió del conjunto con el
  *   plan 051. El backend solo genera la especificación técnica en DOCX, pero la
  *   genera de verdad, y la pantalla dice en su propio texto qué falta. Un módulo
@@ -27,7 +29,6 @@
  * backend existe.
  */
 export const MODULOS_SIN_BACKEND = new Set([
-  "plantillas",
   "plantillas-proyecto",
   "admin-usuarios",
   "admin-plantillas",

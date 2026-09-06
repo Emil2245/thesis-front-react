@@ -58,6 +58,27 @@ describe("AppSidebar", () => {
     expect(within(filaUsuarios).getByText("pronto")).toBeInTheDocument();
   });
 
+  // Plan 048: PlantillaApuResource existe en origin/main con los cuatro
+  // endpoints, así que «Plantillas APU» sale del gate. «Plantillas de
+  // proyecto» sigue dentro (plan 049).
+  it("Plantillas APU ya no está pendiente, Plantillas de proyecto sí", () => {
+    useSesionStore.setState({ usuario: usuarioFixture, cargando: false });
+    renderConProviders(
+      <SidebarProvider>
+        <Routes>
+          <Route path="/" element={<AppSidebar />} />
+        </Routes>
+      </SidebarProvider>,
+      { ruta: "/" },
+    );
+
+    const filaPlantillas = screen.getByText("Plantillas APU").closest("a")!;
+    expect(within(filaPlantillas).queryByText("pronto")).not.toBeInTheDocument();
+
+    const filaPlantillasProyecto = screen.getByText("Plantillas de proyecto").closest("a")!;
+    expect(within(filaPlantillasProyecto).getByText("pronto")).toBeInTheDocument();
+  });
+
   it("Presupuesto, Cronograma, Insumos y Documentos no tienen insignia pendiente", async () => {
     useSesionStore.setState({ usuario: usuarioFixture, cargando: false });
     renderConProviders(
