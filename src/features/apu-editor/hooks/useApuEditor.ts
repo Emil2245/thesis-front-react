@@ -75,7 +75,7 @@ const ETIQUETA: Record<SeccionTipo, string> = {
   TRANSPORTE: "Transporte",
 };
 
-export function useApuEditor(apuId: string, presupuestoId?: number): UseApuEditor {
+export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEditor {
   const qc = useQueryClient();
   const [estadoCeldas, setEstadoCeldas] = useState<Map<string, EstadoCelda>>(new Map());
 

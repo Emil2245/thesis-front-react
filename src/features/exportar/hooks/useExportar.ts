@@ -5,11 +5,11 @@ import { qk } from "@/api/queryKeys";
 import type { ValidacionPresupuestoResponse } from "@/api/contract";
 import { toast } from "sonner";
 
-export function useValidacionExport(presupuestoId: number) {
+export function useValidacionExport(presupuestoId: string) {
   return useQuery({
     queryKey: qk.presupuestoValidacion(presupuestoId),
     queryFn: () => get<ValidacionPresupuestoResponse>(`/presupuestos/${presupuestoId}/validacion`),
-    enabled: presupuestoId > 0,
+    enabled: !!presupuestoId,
   });
 }
 
@@ -37,25 +37,25 @@ export const opcionesExport = [
   {
     key: "presupuesto-pdf",
     label: "Presupuesto (PDF)",
-    endpoint: (id: number) => `/presupuestos/${id}/exportar/pdf`,
+    endpoint: (id: string) => `/presupuestos/${id}/exportar/pdf`,
     nombre: (pid: string) => `presupuesto_${pid}.pdf`,
   },
   {
     key: "presupuesto-excel",
     label: "Presupuesto (Excel)",
-    endpoint: (id: number) => `/presupuestos/${id}/exportar/excel`,
+    endpoint: (id: string) => `/presupuestos/${id}/exportar/excel`,
     nombre: (pid: string) => `presupuesto_${pid}.xlsx`,
   },
   {
     key: "apus",
     label: "APUs",
-    endpoint: (id: number) => `/presupuestos/${id}/apus/exportar`,
+    endpoint: (id: string) => `/presupuestos/${id}/apus/exportar`,
     nombre: (pid: string) => `apus_${pid}.pdf`,
   },
   {
     key: "cronograma",
     label: "Cronograma",
-    endpoint: (id: number) => `/presupuestos/${id}/cronograma/exportar`,
+    endpoint: (id: string) => `/presupuestos/${id}/cronograma/exportar`,
     nombre: (pid: string) => `cronograma_${pid}.pdf`,
   },
 ] as const;

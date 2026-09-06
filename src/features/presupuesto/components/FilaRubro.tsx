@@ -1,16 +1,15 @@
-import { Dot, Trash2, AlertTriangle } from "lucide-react";
+import { Dot, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatearMoneda } from "@/lib/decimal";
 import type { RubroResponse } from "@/api/contract";
 
 interface FilaRubroProps {
   rubro: RubroResponse;
   nivel: number;
-  onEliminar: (rubroId: number) => void;
-  onCantidadChange: (rubroId: number, cantidad: string) => void;
+  onEliminar: (rubroId: string) => void;
+  onCantidadChange: (rubroId: string, cantidad: string) => void;
 }
 
 export function FilaRubro({ rubro, nivel, onEliminar, onCantidadChange }: FilaRubroProps) {
@@ -42,16 +41,6 @@ export function FilaRubro({ rubro, nivel, onEliminar, onCantidadChange }: FilaRu
         {formatearMoneda(rubro.precioTotal)}
       </span>
       <div className="flex items-center gap-1 w-16 justify-end">
-        {rubro.alertas.length > 0 && (
-          <Tooltip>
-            <TooltipTrigger>
-              <AlertTriangle className="size-3.5 text-advertencia-texto" />
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{rubro.alertas.join(", ")}</p>
-            </TooltipContent>
-          </Tooltip>
-        )}
         <Button
           variant="ghost"
           size="icon"

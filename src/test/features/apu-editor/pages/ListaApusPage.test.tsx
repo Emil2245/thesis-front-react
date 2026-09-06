@@ -68,11 +68,11 @@ describe("ListaApusPage", () => {
       expect(screen.getByText("APU-001")).toBeInTheDocument();
     });
 
-    // El id 11 es la versión vigente en versionesStub, no el id del proyecto.
-    expect(pedidos).toContain("/api/v1/presupuestos/11/apus");
+    // PRESUPUESTO_V2 es la versión vigente en versionesStub, no el id del proyecto.
+    expect(pedidos).toContain("/api/v1/presupuestos/0198c1a0-0000-7000-8000-000000000011/apus");
   });
 
-  it("respeta ?v=10 aunque no sea la vigente", async () => {
+  it("respeta ?v= a una versión que no es la vigente", async () => {
     const pedidos: string[] = [];
     server.use(
       http.get(`${API}/presupuestos/:id/apus`, ({ request }) => {
@@ -86,12 +86,12 @@ describe("ListaApusPage", () => {
       }),
     );
 
-    renderLista("/proyectos/1/apus?v=10");
+    renderLista("/proyectos/1/apus?v=0198c1a0-0000-7000-8000-000000000010");
     await waitFor(() => {
       expect(screen.getByText("APU-001")).toBeInTheDocument();
     });
 
-    expect(pedidos).toContain("/api/v1/presupuestos/10/apus");
+    expect(pedidos).toContain("/api/v1/presupuestos/0198c1a0-0000-7000-8000-000000000010/apus");
   });
 
   it("muestra el estado vacío cuando el proyecto no tiene versiones", async () => {

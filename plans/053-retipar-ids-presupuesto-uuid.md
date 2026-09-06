@@ -1,6 +1,6 @@
 # Plan 053 — Re-tipar ids de presupuesto · capítulo · rubro a UUID string
 
-**Status:** TODO
+**Status:** HECHO en `ola1-053`, 2026-09-06. `pnpm run verify` en verde (47 archivos, 226 tests, build ok).
 **Escrito contra:** frontend `8cc08b5` · backend `origin/main` @ `c337950`
 **Fuente de verdad:** `PresupuestoResponse`, `CapituloResponse`, `RubroResponse`,
 `CapituloResource`, `RubroResource`, `PresupuestoVersionResource` en `origin/main`
@@ -121,3 +121,51 @@ fallos reales desde entonces. Quitarlo y dejar que el error suba.
 - Cero `number` para ids de presupuesto/capítulo/rubro en `src/api/contract.ts`.
 - Cero ocurrencias de `TODO(047)` y de `RubroResponse.alertas` en `src/`.
 - Los 4 tests de guard existen y fallan si se revierte el fix.
+
+## Notas de ejecución (2026-09-06, rama `ola1-053`)
+
+Backend reverificado contra `origin/main` @ `c337950` antes de tocar nada: la
+premisa del plan se sostiene entera. Todos los ids de `PresupuestoResponse`,
+`CapituloResponse`, `RubroResponse`, `PresupuestoVersionResponse` y los DTOs de
+cronograma son `UUID`; todos los path params son `String` + `UuidV7.parse`;
+`RubroResponse.alertas` no existe; `GET /proyectos/{id}/presupuestos` sí existe
+en `ProyectoResource`. Solo `UsuarioResponse.id` y `PerfilResponse.id` son
+`Long`, y no se tocaron.
+
+Los 6 tests de regresión viven en
+`src/test/features/presupuesto/hooks/guards-uuid.test.tsx`. Los 5 de guard se
+verificaron en rojo revirtiendo los guards a `presupuestoId > 0` y a
+`Number(searchParams.get("v")) || 0`: los 5 fallan. El de `parentId` no falla en
+runtime sino en `typecheck` — revertir `parentId?: string` a `number` rompe la
+llamada del test.
+
+### Desviaciones del plan
+
+- **`?? undefined` → `?? ""`.** El plan pedía `searchParams.get("v") ?? undefined`
+  en `ExportPage` y `presupuestoId ?? undefined` en `CronogramaPage`. Se usó
+  `?? ""`: el guard pasó a ser `!!presupuestoId`, así que `""` lo apaga igual
+  que `undefined` y evita propagar `string | undefined` por toda la firma de los
+  hooks. Mismo efecto, menos tipos.
+- **El catch mentiroso estaba duplicado.** El plan señala
+  `usePresupuesto.ts:44`, pero `src/shell/contexto.ts` tenía copiado el mismo
+  `useVersiones` con el mismo tragado del 404. Se quitó en los dos: parchear
+  solo el que nombra el plan dejaba el otro escondiendo fallos.
+
+### Hallazgos que NO se arreglaron aquí
+
+- **`RubroRefResponse.rubroId` no existe en el backend.** El DTO real es
+  `RubroRefResponse(UUID id, String item, String codigo, String descripcion)`:
+  el campo se llama `id`, no `rubroId`. Hoy `ExportPage` lo usa solo como `key`
+  de React, así que el síntoma es invisible. Es forma de DTO, no tipo de id →
+  le toca al **plan 059**.
+- **`src/shell/contexto.ts::useVersiones` y
+  `src/features/presupuesto/hooks/usePresupuesto.ts::useVersiones` son el mismo
+  hook duplicado** (misma queryKey, misma petición). Unificarlos implica que
+  `shell/` importe de `features/`, que es una dirección nueva de dependencia:
+  decisión de arquitectura, no de este plan. Candidato para el **060**.
+- **`useParametros.ts` invalidaba `qk.apus(0)`**, una key que nunca casó con
+  nada. Se borró la línea: el `["presupuesto"]` de la línea siguiente ya
+  invalida los APUs de cualquier presupuesto. (Esto sí se arregló, se anota por
+  ser un cambio fuera del alcance literal del plan.)
+- **`e2e/screenshots.spec.ts`** sigue con 5 ids numéricos. Anotado en
+  `plans/021-reparar-suite-de-capturas-e2e.md`, su dueño.

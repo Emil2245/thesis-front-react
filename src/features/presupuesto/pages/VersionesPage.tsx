@@ -28,23 +28,23 @@ export function VersionesPage() {
   const { crear, marcarVigente, eliminar } = useVersionMutaciones(pid);
 
   const [nuevaDialog, setNuevaDialog] = useState(false);
-  const [compararId, setCompararId] = useState<number | null>(null);
-  const [versionAEliminar, setVersionAEliminar] = useState<number | null>(null);
+  const [compararId, setCompararId] = useState<string | null>(null);
+  const [versionAEliminar, setVersionAEliminar] = useState<string | null>(null);
 
   const vigente = versiones?.find((v) => v.esVigente);
   const { data: comparacion, isLoading: compLoading } = useComparacion(
-    vigente?.presupuestoId ?? 0,
+    vigente?.presupuestoId ?? "",
     compararId ?? undefined,
   );
 
   const handleMarcarVigente = useCallback(
-    (versionId: number) => {
+    (versionId: string) => {
       marcarVigente.mutate(versionId);
     },
     [marcarVigente],
   );
 
-  const handleEliminar = useCallback((versionId: number) => {
+  const handleEliminar = useCallback((versionId: string) => {
     setVersionAEliminar(versionId);
   }, []);
 

@@ -419,22 +419,23 @@ export interface PlantillaSistemaCrearRequest {
 
 // ————— Presupuesto y versiones (§11) —————
 export interface PresupuestoVersionResponse {
-  presupuestoId: number;
+  presupuestoId: string;
   version: number;
   esVigente: boolean;
-  origenId: number;
+  // La versión inicial no nace de ninguna otra.
+  origenId?: string | null;
   notas?: string;
   fechaCreacion: string;
   totalGeneral: Decimal;
 }
 
 export interface PresupuestoVersionCrearRequest {
-  origenId: number;
+  origenId: string;
   notas?: string;
 }
 
 export interface CapituloResponse {
-  id: number;
+  id: string;
   item: string;
   descripcion: string;
   orden: number;
@@ -444,7 +445,7 @@ export interface CapituloResponse {
 }
 
 export interface RubroResponse {
-  id: number;
+  id: string;
   item: string;
   codigo: string;
   descripcion: string;
@@ -452,12 +453,11 @@ export interface RubroResponse {
   cantidad: Decimal;
   precioUnitario: Decimal;
   precioTotal: Decimal;
-  apuId: number;
-  alertas: string[];
+  apuId: string;
 }
 
 export interface PresupuestoResponse {
-  presupuestoId: number;
+  presupuestoId: string;
   version: number;
   esVigente: boolean;
   totalGeneral: Decimal;
@@ -466,7 +466,7 @@ export interface PresupuestoResponse {
 
 export interface CapituloCrearRequest {
   descripcion: string;
-  parentId?: number;
+  parentId?: string;
   orden?: number;
 }
 
@@ -475,14 +475,11 @@ export interface CapituloEditarRequest {
 }
 
 export interface CapituloMoverRequest {
-  parentId?: number | null;
+  parentId?: string | null;
   orden: number;
 }
 
 export interface RubroCrearRequest {
-  // TODO(047): el backend declara apuId como Long, pero /presupuestos/{id}/apus
-  // devuelve UUIDv7. El frontend sólo dispone del UUID, así que agregar un rubro
-  // no funciona hasta que el backend unifique el tipo.
   apuId: string;
   cantidad: Decimal;
 }
@@ -505,7 +502,7 @@ export interface CapituloComparacionItem {
 }
 
 export interface PresupuestoComparacionItem {
-  presupuestoId: number;
+  presupuestoId: string;
   version: number;
   totalGeneral: Decimal;
   porCapituloRaiz: CapituloComparacionItem[];
@@ -516,7 +513,7 @@ export interface ComparacionVersionesResponse {
 }
 
 export interface RubroRefResponse {
-  rubroId: number;
+  rubroId: string;
   item: string;
   codigo: string;
   descripcion: string;
@@ -533,8 +530,8 @@ export interface ValidacionPresupuestoResponse {
 export type UnidadTiempo = "SEMANA" | "MES";
 
 export interface ActividadResponse {
-  id: number;
-  rubroId: number;
+  id: string;
+  rubroId: string;
   item: string;
   descripcion: string;
   precioTotal: Decimal;
@@ -544,8 +541,8 @@ export interface ActividadResponse {
 }
 
 export interface CronogramaResponse {
-  id: number;
-  presupuestoId: number;
+  id: string;
+  presupuestoId: string;
   unidadTiempo: UnidadTiempo;
   numeroPeriodos: number;
   totalGeneral: Decimal;

@@ -11,7 +11,7 @@ import type { ComparacionVersionesResponse } from "@/api/contract";
 const data: ComparacionVersionesResponse = {
   versiones: [
     {
-      presupuestoId: 1,
+      presupuestoId: "0198c1a0-0000-7000-8000-000000000010",
       version: 1,
       totalGeneral: asDecimal("355603.788000"),
       porCapituloRaiz: [
@@ -19,7 +19,7 @@ const data: ComparacionVersionesResponse = {
       ],
     },
     {
-      presupuestoId: 2,
+      presupuestoId: "0198c1a0-0000-7000-8000-000000000011",
       version: 2,
       totalGeneral: asDecimal("395115.320000"),
       porCapituloRaiz: [

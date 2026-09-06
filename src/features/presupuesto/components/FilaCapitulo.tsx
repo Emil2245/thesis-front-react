@@ -17,11 +17,11 @@ interface FilaCapituloProps {
   nivel: number;
   expandido: boolean;
   onToggle: () => void;
-  onAgregarSub: (padreId: number) => void;
+  onAgregarSub: (padreId: string) => void;
   onEditar: (capitulo: CapituloResponse) => void;
   onEliminar: (capitulo: CapituloResponse) => void;
   onMover: (capitulo: CapituloResponse) => void;
-  onAgregarRubro: (capituloId: number) => void;
+  onAgregarRubro: (capituloId: string) => void;
 }
 
 export function FilaCapitulo({

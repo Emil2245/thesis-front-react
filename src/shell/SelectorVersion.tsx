@@ -23,16 +23,13 @@ export function SelectorVersion() {
   }
 
   return (
-    <Select
-      value={activa ? String(activa.presupuestoId) : undefined}
-      onValueChange={(value) => cambiar(Number(value))}
-    >
+    <Select value={activa?.presupuestoId} onValueChange={cambiar}>
       <SelectTrigger className="w-44" aria-label="Seleccionar versión">
         <SelectValue placeholder="Versión…" />
       </SelectTrigger>
       <SelectContent>
         {versiones.map((v) => (
-          <SelectItem key={v.presupuestoId} value={String(v.presupuestoId)}>
+          <SelectItem key={v.presupuestoId} value={v.presupuestoId}>
             Versión {v.version}
             {v.esVigente ? " (vigente)" : ""}
           </SelectItem>

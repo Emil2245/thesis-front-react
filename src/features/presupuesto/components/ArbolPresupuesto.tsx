@@ -5,13 +5,13 @@ import type { CapituloResponse, PresupuestoResponse } from "@/api/contract";
 
 interface ArbolPresupuestoProps {
   presupuesto: PresupuestoResponse;
-  onAgregarSub: (padreId: number) => void;
+  onAgregarSub: (padreId: string) => void;
   onEditarCapitulo: (capitulo: CapituloResponse) => void;
   onEliminarCapitulo: (capitulo: CapituloResponse) => void;
   onMoverCapitulo: (capitulo: CapituloResponse) => void;
-  onAgregarRubro: (capituloId: number) => void;
-  onEliminarRubro: (capituloId: number, rubroId: number) => void;
-  onCantidadChange: (capituloId: number, rubroId: number, cantidad: string) => void;
+  onAgregarRubro: (capituloId: string) => void;
+  onEliminarRubro: (capituloId: string, rubroId: string) => void;
+  onCantidadChange: (capituloId: string, rubroId: string, cantidad: string) => void;
 }
 
 export function ArbolPresupuesto({
@@ -24,9 +24,9 @@ export function ArbolPresupuesto({
   onEliminarRubro,
   onCantidadChange,
 }: ArbolPresupuestoProps) {
-  const [expandidos, setExpandidos] = useState<Set<number>>(() => new Set());
+  const [expandidos, setExpandidos] = useState<Set<string>>(() => new Set());
 
-  const toggle = useCallback((id: number) => {
+  const toggle = useCallback((id: string) => {
     setExpandidos((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);

@@ -21,7 +21,7 @@ import type { PresupuestoVersionResponse } from "@/api/contract";
 interface DialogoNuevaVersionProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (versionOrigenId: number, notas?: string) => void;
+  onConfirm: (versionOrigenId: string, notas?: string) => void;
   versiones: PresupuestoVersionResponse[];
 }
 
@@ -49,7 +49,7 @@ export function DialogoNuevaVersion({
               </SelectTrigger>
               <SelectContent>
                 {versiones.map((v) => (
-                  <SelectItem key={v.presupuestoId} value={String(v.presupuestoId)}>
+                  <SelectItem key={v.presupuestoId} value={v.presupuestoId}>
                     v{v.version} {v.esVigente ? "(vigente)" : ""} —{" "}
                     {new Date(v.fechaCreacion).toLocaleDateString()}
                   </SelectItem>
@@ -74,7 +74,7 @@ export function DialogoNuevaVersion({
           <Button
             onClick={() => {
               if (versionOrigenId) {
-                onConfirm(Number(versionOrigenId), notas || undefined);
+                onConfirm(versionOrigenId, notas || undefined);
                 setNotas("");
                 setVersionOrigenId("");
               }

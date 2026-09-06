@@ -21,7 +21,7 @@ import type { CapituloResponse } from "@/api/contract";
 interface DialogoMoverCapituloProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (parentId: number | null, orden: number) => void;
+  onConfirm: (parentId: string | null, orden: number) => void;
   capitulo: CapituloResponse;
   capitulos: CapituloResponse[];
 }
@@ -54,7 +54,7 @@ export function DialogoMoverCapitulo({
               <SelectContent>
                 <SelectItem value="raiz">Raíz (sin padre)</SelectItem>
                 {capitulosDisponibles.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
+                  <SelectItem key={c.id} value={c.id}>
                     {c.item} - {c.descripcion}
                   </SelectItem>
                 ))}
@@ -78,7 +78,7 @@ export function DialogoMoverCapitulo({
           </Button>
           <Button
             onClick={() => {
-              onConfirm(nuevoPadreId === "raiz" ? null : Number(nuevoPadreId), Number(orden));
+              onConfirm(nuevoPadreId === "raiz" ? null : nuevoPadreId, Number(orden));
             }}
           >
             Mover

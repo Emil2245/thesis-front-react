@@ -53,7 +53,7 @@ export function ExportPage() {
 export function ExportPageActiva() {
   const { id: proyectoId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
-  const versionId = Number(searchParams.get("v")) || 0;
+  const versionId = searchParams.get("v") ?? "";
 
   const { data: validacion, isLoading: valLoading } = useValidacionExport(versionId);
   const { descargarConFallback } = useExportar();
@@ -61,7 +61,7 @@ export function ExportPageActiva() {
 
   const handleExport = async (opcion: (typeof opcionesExport)[number]) => {
     setDescargando(opcion.key);
-    await descargarConFallback(opcion.endpoint(versionId), opcion.nombre(proyectoId ?? "0"));
+    await descargarConFallback(opcion.endpoint(versionId), opcion.nombre(proyectoId ?? ""));
     setDescargando(null);
   };
 

@@ -4,7 +4,7 @@ import { qk } from "@/api/queryKeys";
 import type { PresupuestoResponse, CapituloMoverRequest } from "@/api/contract";
 import { toast } from "sonner";
 
-export function useCapituloMutaciones(presupuestoId: number) {
+export function useCapituloMutaciones(presupuestoId: string) {
   const queryClient = useQueryClient();
 
   const onSuccess = (data: PresupuestoResponse) => {
@@ -12,7 +12,7 @@ export function useCapituloMutaciones(presupuestoId: number) {
   };
 
   const crear = useMutation({
-    mutationFn: (body: { descripcion: string; parentId?: number }) =>
+    mutationFn: (body: { descripcion: string; parentId?: string }) =>
       post<PresupuestoResponse>(`/presupuestos/${presupuestoId}/capitulos`, body),
     onSuccess: (data) => {
       onSuccess(data);
@@ -22,7 +22,7 @@ export function useCapituloMutaciones(presupuestoId: number) {
   });
 
   const editar = useMutation({
-    mutationFn: ({ capituloId, descripcion }: { capituloId: number; descripcion: string }) =>
+    mutationFn: ({ capituloId, descripcion }: { capituloId: string; descripcion: string }) =>
       put<PresupuestoResponse>(`/presupuestos/${presupuestoId}/capitulos/${capituloId}`, {
         descripcion,
       }),
@@ -34,7 +34,7 @@ export function useCapituloMutaciones(presupuestoId: number) {
   });
 
   const mover = useMutation({
-    mutationFn: ({ capituloId, body }: { capituloId: number; body: CapituloMoverRequest }) =>
+    mutationFn: ({ capituloId, body }: { capituloId: string; body: CapituloMoverRequest }) =>
       patch<PresupuestoResponse>(
         `/presupuestos/${presupuestoId}/capitulos/${capituloId}/mover`,
         body,
@@ -47,7 +47,7 @@ export function useCapituloMutaciones(presupuestoId: number) {
   });
 
   const eliminar = useMutation({
-    mutationFn: (capituloId: number) =>
+    mutationFn: (capituloId: string) =>
       del<PresupuestoResponse>(`/presupuestos/${presupuestoId}/capitulos/${capituloId}`),
     onSuccess: (data) => {
       onSuccess(data);

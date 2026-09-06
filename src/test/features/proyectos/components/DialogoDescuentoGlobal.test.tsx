@@ -10,7 +10,13 @@ const API = "*/api/v1";
 
 describe("DialogoDescuentoGlobal", () => {
   it("renderiza el diálogo", () => {
-    renderConProviders(<DialogoDescuentoGlobal abierto onClose={() => {}} presupuestoId={1} />);
+    renderConProviders(
+      <DialogoDescuentoGlobal
+        abierto
+        onClose={() => {}}
+        presupuestoId="0198c1a0-0000-7000-8000-000000000011"
+      />,
+    );
     expect(screen.getByText(/descuento global/i)).toBeInTheDocument();
   });
 
@@ -21,7 +27,13 @@ describe("DialogoDescuentoGlobal", () => {
         HttpResponse.json({ ...parametrosSistemaFixture, rangoDescuentoMax: "0.2900" }),
       ),
     );
-    renderConProviders(<DialogoDescuentoGlobal abierto onClose={() => {}} presupuestoId={1} />);
+    renderConProviders(
+      <DialogoDescuentoGlobal
+        abierto
+        onClose={() => {}}
+        presupuestoId="0198c1a0-0000-7000-8000-000000000011"
+      />,
+    );
     await waitFor(() => expect(screen.getByText("Porcentaje (0–29 %)")).toBeInTheDocument());
   });
 });

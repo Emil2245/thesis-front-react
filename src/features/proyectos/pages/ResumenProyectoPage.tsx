@@ -52,8 +52,8 @@ export function ResumenProyectoPage() {
   const [guardarPlantillaAbierto, setGuardarPlantillaAbierto] = useState(false);
   const eliminar = useEliminarProyecto();
   const { presupuestoId, activa } = useVersionActiva();
-  const { data: presupuesto } = usePresupuesto(presupuestoId ?? 0);
-  const { data: resumen } = useResumen(presupuestoId ?? 0);
+  const { data: presupuesto } = usePresupuesto(presupuestoId ?? "");
+  const { data: resumen } = useResumen(presupuestoId ?? "");
 
   if (isPending) return <CargandoTabla />;
   if (!proyecto) return <p className="text-muted-foreground">Proyecto no encontrado</p>;

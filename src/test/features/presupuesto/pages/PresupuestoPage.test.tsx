@@ -23,7 +23,7 @@ async function setupPresupuestoPage() {
     <Routes>
       <Route path="/proyectos/:id/presupuesto" element={<PresupuestoPage />} />
     </Routes>,
-    { ruta: "/proyectos/1/presupuesto?v=11" },
+    { ruta: "/proyectos/1/presupuesto?v=0198c1a0-0000-7000-8000-000000000011" },
   );
   await waitFor(() => expect(screen.getByText(/v2/)).toBeInTheDocument());
   return { user: result.user, result };
@@ -195,17 +195,17 @@ describe("PresupuestoPage", () => {
   });
 
   it("confirmar la confirmación elimina el capítulo", async () => {
-    let cidEliminado = -1;
+    let cidEliminado = "";
     server.use(
       http.delete(`${API}/presupuestos/:id/capitulos/:cid`, ({ params }) => {
-        cidEliminado = Number(params.cid);
+        cidEliminado = String(params.cid);
         return HttpResponse.json(presupuestoFixture);
       }),
     );
     const { user } = await setupPresupuestoPage();
     const dialogo = await abrirDialogoEliminarCapitulo(user);
     await user.click(within(dialogo).getByRole("button", { name: "Eliminar" }));
-    await waitFor(() => expect(cidEliminado).toBe(10));
+    await waitFor(() => expect(cidEliminado).toBe("0198c1a1-0000-7000-8000-000000000010"));
   });
 });
 
@@ -245,10 +245,10 @@ describe("VersionesPage", () => {
   });
 
   it("elimina una versión histórica tras confirmar en el diálogo", async () => {
-    let idEliminado = -1;
+    let idEliminado = "";
     server.use(
       http.delete(`${API}/presupuestos/:id`, ({ params }) => {
-        idEliminado = Number(params.id);
+        idEliminado = String(params.id);
         return HttpResponse.json(null, { status: 204 });
       }),
     );
@@ -257,7 +257,7 @@ describe("VersionesPage", () => {
     await user.click(deleteBtns[0]);
     const dialogo = await screen.findByRole("alertdialog");
     await user.click(within(dialogo).getByRole("button", { name: "Eliminar" }));
-    await waitFor(() => expect(idEliminado).toBe(10));
+    await waitFor(() => expect(idEliminado).toBe("0198c1a0-0000-7000-8000-000000000010"));
   });
 
   it("no permite eliminar la versión vigente", async () => {
