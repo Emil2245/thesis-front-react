@@ -26,8 +26,8 @@
 | 5 | 051 export ET DOCX | ✅ verde | — | 065c90a | fusionado · tanda 1 |
 | 5 | 052 acciones deshabilitadas | ✅ verde | — | 21275ad | fusionado · **ola 5 cerrada** |
 | 5 | 058 **reescrito**: procedencia del insumo | ✅ verde | — | cccb1b0 | fusionado · tanda 1 cerrada |
-| 6 | **063 ErrorPayload ≠ RFC 7807** | 🔄 en curso | .claude/worktrees/ola6-063 | — | va antes del 060 |
-| 6 | 060 limpieza | ⏳ pendiente | — | — | último |
+| 6 | **063 ErrorPayload ≠ RFC 7807** | ✅ verde | — | 6ab61c8 | fusionado |
+| 6 | 060 limpieza | 🔄 en curso | .claude/worktrees/ola6-060 | — | último |
 
 ### Fuera de las olas
 
@@ -43,6 +43,22 @@ Baseline original del handoff: **45 archivos, 207 tests, verde** · backend `ori
 docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
+
+- 2026-09-06 — **063 aceptado, y el ejecutor cazó un error mío.** El comando `git grep` que escribí
+  en la rebanada 1 del plan era **incompleto**: devuelve 4 códigos, y mi instrucción de «borrar lo
+  que no salga» habría eliminado `apu-referenciado`, `codigo-duplicado`, `fila-protegida`,
+  `no-encontrado` y `credenciales-invalidas`, todos reales. El backend construye códigos en cinco
+  sitios y tres no matchean ese patrón. Catálogo verificado: **18 códigos**. Plan corregido.
+- 2026-09-06 — **Tres códigos que el frontend se creía no existen en el backend**, verificado:
+  `insumo-en-uso` (cero ocurrencias — borrar un insumo en uso devuelve **400 `validacion`** con el
+  conteo en el `mensaje`), `csv-invalido` (los errores de fila llegan en un **200** dentro de
+  `ImportResultadoResponse.errores`) y `export-bloqueado` (es `validacion`).
+- 2026-09-06 — 🔴 **Defecto del backend encontrado de paso, para la lista de preguntas:**
+  `InsumoCrudService:83-85` es `private long conteoUsosApu(Long insumoId) { return 0L; }` — un
+  stub. La guarda de las líneas 74-78 nunca dispara, así que **se puede borrar un insumo
+  referenciado por APUs**. Y `GET /{insumoId}/usos` devuelve `List.of()`. No es del frontend.
+- 2026-09-06 — Comprobé yo la regresión del 063: mutando `slug` para que vuelva a leer `type`,
+  **21 tests en 9 archivos se ponen rojos**. La guarda es real.
 
 - 2026-09-06 — ✅ **Ola 5 cerrada.** `main`: 70 archivos, **438 tests**, `e2e` 20/20. Capturas
   regeneradas y commiteadas (la deuda que dejó el ejecutor del 049 para evitar conflictos binarios).

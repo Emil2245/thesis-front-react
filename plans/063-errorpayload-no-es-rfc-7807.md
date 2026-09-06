@@ -90,14 +90,28 @@ dice **dónde** se usa, recibe «Error». El backend le mandó la razón exacta 
 
 **Antes de escribir los `PROBLEM_TYPES` definitivos**, saca la lista real:
 
-```bash
-cd ../thesis-back-quarkus
-git grep -ohE 'ProblemaException\.[a-zA-Z]+\("[a-z-]+"|new ErrorPayload\("[a-z-]+"' origin/main -- '*.java' \
-  | grep -oE '"[a-z-]+"' | sort -u
-```
+> ⚠️ **Corregido 2026-09-06: el comando que había aquí era incompleto y peligroso.** Devolvía
+> **4** códigos (`base-no-archivada`, `servidor`, `validacion`, `vigente-duplicado`), y la
+> instrucción de «borrar lo que no salga» habría eliminado códigos reales como
+> `apu-referenciado`, `codigo-duplicado`, `fila-protegida`, `no-encontrado` o
+> `credenciales-invalidas`. Error del orquestador al escribir el plan; lo cazó el ejecutor.
 
-Los que hoy están en `PROBLEM_TYPES` y no salgan ahí, **bórralos**: son inventados, como lo era
-`reduccion-periodos-requiere-confirmacion` (lo quitó el `055`). Los que salgan y falten, añádelos.
+Este backend construye códigos en **cinco** sitios, y tres son invisibles a un grep de
+`new ErrorPayload("...")`:
+
+1. Las factories estáticas de `ProblemaException` (los codifican dentro).
+2. El `switch` de `GlobalExceptionMapper.codePorEstatus(status)` — de ahí salen
+   `acceso-denegado`, `credenciales-invalidas`, `cooldown-activo`,
+   `token-invalido-o-expirado`, `no-encontrado`, `servidor`.
+3. El helper privado `AuthService.error(status, codigo, mensaje)`.
+4. Los `new ErrorPayload(...)` directos.
+5. Las `ProblemaException.<factory>("...")` con literal.
+
+Recórrelos **los cinco** y cruza el resultado. El catálogo verificado son **18 códigos**.
+
+Los que hoy están en `PROBLEM_TYPES` y no aparezcan en ninguno de los cinco, **bórralos**: son
+inventados, como lo era `reduccion-periodos-requiere-confirmacion` (lo quitó el `055`). Los que
+aparezcan y falten, añádelos.
 
 ### Rebanada 2 — `errores[]` por campo
 
