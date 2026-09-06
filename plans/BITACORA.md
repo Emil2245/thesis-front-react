@@ -13,7 +13,7 @@
 | Ola | Plan | Estado | Worktree | Commit | Nota |
 | --- | ---- | ------ | -------- | ------ | ---- |
 | 0 | 061 política de dinero | ✅ verde | — | 5b1e8fb | fusionado a main · 2º intento |
-| 1 | 053 ids UUID | ✅ verde | — | 20cb1a4 | fusionado a main |
+| 1 | 053 ids UUID | ✅ verde | — | 9564e39 | fusionado a main |
 | 2 | 054 descuento global + bugs SILENT | 🔄 en curso | .claude/worktrees/ola2-054 | — | despachado 2026-09-06 |
 | 2 | 059 formas de DTO | ⏳ pendiente | — | — | después del 054, mismo `ApuResponse` |
 | 3 | 057 tests de hook | ⏳ pendiente | — | — | rebanable por módulo |
