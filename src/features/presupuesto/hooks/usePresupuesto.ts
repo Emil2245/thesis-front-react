@@ -54,10 +54,9 @@ export function useComparacion(presupuestoId: number, conPresupuestoId?: number)
   return useQuery({
     queryKey: [...qk.presupuesto(presupuestoId), "comparar", conPresupuestoId] as const,
     queryFn: () =>
-      get<ComparacionVersionesResponse>(
-        `/presupuestos/${presupuestoId}/comparar`,
-        { con: conPresupuestoId },
-      ),
+      get<ComparacionVersionesResponse>(`/presupuestos/${presupuestoId}/comparar`, {
+        con: conPresupuestoId,
+      }),
     enabled: presupuestoId > 0 && !!conPresupuestoId,
   });
 }

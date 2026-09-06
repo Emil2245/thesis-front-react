@@ -25,7 +25,9 @@ describe("PopoverDesglose", () => {
       ),
     );
 
-    renderConProviders(<PopoverDesglose abierto onClose={() => {}} apuId={"018f8a40-0000-7000-8000-000000000001"} />);
+    renderConProviders(
+      <PopoverDesglose abierto onClose={() => {}} apuId={"018f8a40-0000-7000-8000-000000000001"} />,
+    );
 
     await waitFor(() => {
       expect(screen.getByText("5% × 8.99")).toBeInTheDocument();
@@ -34,7 +36,9 @@ describe("PopoverDesglose", () => {
   });
 
   it("muestra subtotales por bloque", async () => {
-    renderConProviders(<PopoverDesglose abierto onClose={() => {}} apuId={"018f8a40-0000-7000-8000-000000000001"} />);
+    renderConProviders(
+      <PopoverDesglose abierto onClose={() => {}} apuId={"018f8a40-0000-7000-8000-000000000001"} />,
+    );
 
     await waitFor(() => {
       expect(screen.getByText("Subtotales por bloque")).toBeInTheDocument();

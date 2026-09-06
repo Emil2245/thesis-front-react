@@ -20,7 +20,13 @@ const subirArchivo = async (input: HTMLElement) => {
 
 describe("AsistenteImportCsv", () => {
   it("renders step 1 with precioUnitario column hint", async () => {
-    renderConProviders(<AsistenteImportCsv abierto={true} onClose={() => {}} proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"} />);
+    renderConProviders(
+      <AsistenteImportCsv
+        abierto={true}
+        onClose={() => {}}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+      />,
+    );
 
     await waitFor(() => {
       expect(screen.getByText(/Seleccionar archivo/i)).toBeInTheDocument();
@@ -39,7 +45,13 @@ describe("AsistenteImportCsv", () => {
       }),
     );
 
-    renderConProviders(<AsistenteImportCsv abierto={true} onClose={onClose} proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"} />);
+    renderConProviders(
+      <AsistenteImportCsv
+        abierto={true}
+        onClose={onClose}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+      />,
+    );
 
     await subirArchivo(screen.getByLabelText(/Archivo CSV/i));
     await waitFor(() => {
@@ -62,7 +74,13 @@ describe("AsistenteImportCsv", () => {
       ),
     );
 
-    renderConProviders(<AsistenteImportCsv abierto={true} onClose={onClose} proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"} />);
+    renderConProviders(
+      <AsistenteImportCsv
+        abierto={true}
+        onClose={onClose}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+      />,
+    );
 
     await subirArchivo(screen.getByLabelText(/Archivo CSV/i));
     await userEvent.click(screen.getByRole("button", { name: "Importar" }));
@@ -85,7 +103,13 @@ describe("AsistenteImportCsv", () => {
       ),
     );
 
-    renderConProviders(<AsistenteImportCsv abierto={true} onClose={onClose} proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"} />);
+    renderConProviders(
+      <AsistenteImportCsv
+        abierto={true}
+        onClose={onClose}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+      />,
+    );
 
     await subirArchivo(screen.getByLabelText(/Archivo CSV/i));
     await userEvent.click(screen.getByRole("button", { name: "Importar" }));

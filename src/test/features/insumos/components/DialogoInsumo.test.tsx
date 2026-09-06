@@ -14,7 +14,13 @@ describe("DialogoInsumo", () => {
   const onClose = () => {};
 
   it("MANO_OBRA forces unidad h and labels price Jornal/hr", async () => {
-    renderConProviders(<DialogoInsumo abierto={true} onClose={onClose} proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"} />);
+    renderConProviders(
+      <DialogoInsumo
+        abierto={true}
+        onClose={onClose}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+      />,
+    );
 
     await waitFor(() => {
       expect(screen.getByText("Nuevo insumo")).toBeInTheDocument();
@@ -24,7 +30,13 @@ describe("DialogoInsumo", () => {
   });
 
   it("MATERIAL allows free unidad", async () => {
-    renderConProviders(<DialogoInsumo abierto={true} onClose={onClose} proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"} />);
+    renderConProviders(
+      <DialogoInsumo
+        abierto={true}
+        onClose={onClose}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+      />,
+    );
 
     await waitFor(() => {
       expect(screen.getByText("Nuevo insumo")).toBeInTheDocument();
@@ -34,7 +46,13 @@ describe("DialogoInsumo", () => {
   });
 
   it("price 0 and -1 rejected", async () => {
-    renderConProviders(<DialogoInsumo abierto={true} onClose={onClose} proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"} />);
+    renderConProviders(
+      <DialogoInsumo
+        abierto={true}
+        onClose={onClose}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+      />,
+    );
 
     await waitFor(() => {
       expect(screen.getByText("Nuevo insumo")).toBeInTheDocument();
@@ -45,7 +63,13 @@ describe("DialogoInsumo", () => {
   });
 
   it("price 0.10 accepted", async () => {
-    renderConProviders(<DialogoInsumo abierto={true} onClose={onClose} proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"} />);
+    renderConProviders(
+      <DialogoInsumo
+        abierto={true}
+        onClose={onClose}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+      />,
+    );
 
     await waitFor(() => {
       expect(screen.getByText("Nuevo insumo")).toBeInTheDocument();
@@ -54,7 +78,12 @@ describe("DialogoInsumo", () => {
 
   it("on edit, codigo is disabled", async () => {
     renderConProviders(
-      <DialogoInsumo abierto={true} onClose={onClose} proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"} insumo={insumosFixture[0]} />,
+      <DialogoInsumo
+        abierto={true}
+        onClose={onClose}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+        insumo={insumosFixture[0]}
+      />,
     );
 
     await waitFor(() => {
@@ -77,7 +106,13 @@ describe("DialogoInsumo", () => {
       ),
     );
 
-    renderConProviders(<DialogoInsumo abierto={true} onClose={onClose} proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"} />);
+    renderConProviders(
+      <DialogoInsumo
+        abierto={true}
+        onClose={onClose}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+      />,
+    );
 
     await waitFor(() => {
       expect(screen.getByText("Nuevo insumo")).toBeInTheDocument();
@@ -94,7 +129,13 @@ describe("DialogoInsumo", () => {
       }),
     );
 
-    renderConProviders(<DialogoInsumo abierto={true} onClose={onClose} proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"} />);
+    renderConProviders(
+      <DialogoInsumo
+        abierto={true}
+        onClose={onClose}
+        proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"}
+      />,
+    );
 
     await waitFor(() => {
       expect(screen.getByText("Nuevo insumo")).toBeInTheDocument();

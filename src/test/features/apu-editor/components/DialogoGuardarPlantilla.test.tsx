@@ -10,7 +10,11 @@ const API = "*/api/v1";
 describe("DialogoGuardarPlantilla", () => {
   it("nombre vacío muestra error", async () => {
     const { user } = renderConProviders(
-      <DialogoGuardarPlantilla abierto onClose={() => {}} apuId={"018f8a40-0000-7000-8000-000000000001"} />,
+      <DialogoGuardarPlantilla
+        abierto
+        onClose={() => {}}
+        apuId={"018f8a40-0000-7000-8000-000000000001"}
+      />,
     );
 
     await user.click(screen.getByText("Guardar plantilla"));
@@ -34,7 +38,11 @@ describe("DialogoGuardarPlantilla", () => {
     );
 
     const { user } = renderConProviders(
-      <DialogoGuardarPlantilla abierto onClose={onClose} apuId={"018f8a40-0000-7000-8000-000000000001"} />,
+      <DialogoGuardarPlantilla
+        abierto
+        onClose={onClose}
+        apuId={"018f8a40-0000-7000-8000-000000000001"}
+      />,
     );
 
     await user.type(screen.getByLabelText(/Nombre/), "Mi plantilla");
@@ -46,7 +54,13 @@ describe("DialogoGuardarPlantilla", () => {
   });
 
   it("muestra texto de ayuda", () => {
-    renderConProviders(<DialogoGuardarPlantilla abierto onClose={() => {}} apuId={"018f8a40-0000-7000-8000-000000000001"} />);
+    renderConProviders(
+      <DialogoGuardarPlantilla
+        abierto
+        onClose={() => {}}
+        apuId={"018f8a40-0000-7000-8000-000000000001"}
+      />,
+    );
 
     expect(
       screen.getByText(/La plantilla guarda insumos, cantidades y rendimientos/),

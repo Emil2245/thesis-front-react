@@ -14,8 +14,7 @@ function necesitaSelectorVersion(pathname: string, proyectoId: string | null): b
 
 export function Topbar() {
   const { pathname } = useLocation();
-  const proyectoId =
-    pathname.match(/\/proyectos\/([0-9a-fA-F-]{36})/)?.[1] ?? null;
+  const proyectoId = pathname.match(/\/proyectos\/([0-9a-fA-F-]{36})/)?.[1] ?? null;
 
   return (
     <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4">

@@ -20,16 +20,29 @@ export function ComparadorVersiones({ data, isLoading }: ComparadorVersionesProp
   const [vA, vB] = data.versiones;
   const difTotal = Number(vB.totalGeneral) - Number(vA.totalGeneral);
 
-  const capitulosMap = new Map<string, { item: string; descripcion: string; totalA: number; totalB: number }>();
+  const capitulosMap = new Map<
+    string,
+    { item: string; descripcion: string; totalA: number; totalB: number }
+  >();
   for (const cap of vA.porCapituloRaiz) {
-    capitulosMap.set(cap.item, { item: cap.item, descripcion: cap.descripcion, totalA: Number(cap.total), totalB: 0 });
+    capitulosMap.set(cap.item, {
+      item: cap.item,
+      descripcion: cap.descripcion,
+      totalA: Number(cap.total),
+      totalB: 0,
+    });
   }
   for (const cap of vB.porCapituloRaiz) {
     const existing = capitulosMap.get(cap.item);
     if (existing) {
       existing.totalB = Number(cap.total);
     } else {
-      capitulosMap.set(cap.item, { item: cap.item, descripcion: cap.descripcion, totalA: 0, totalB: Number(cap.total) });
+      capitulosMap.set(cap.item, {
+        item: cap.item,
+        descripcion: cap.descripcion,
+        totalA: 0,
+        totalB: Number(cap.total),
+      });
     }
   }
   const capitulos = [...capitulosMap.values()];
@@ -41,8 +54,7 @@ export function ComparadorVersiones({ data, isLoading }: ComparadorVersionesProp
           v{vA.version} → v{vB.version}
         </span>
         <span className="font-mono tabular-nums font-semibold">
-          {formatearMoneda(vA.totalGeneral)} →{" "}
-          {formatearMoneda(vB.totalGeneral)}
+          {formatearMoneda(vA.totalGeneral)} → {formatearMoneda(vB.totalGeneral)}
           <span
             className={cn(
               "ml-2 inline-flex items-center",

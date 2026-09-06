@@ -107,7 +107,11 @@ export function VersionesPage() {
                           Marcar vigente
                         </Button>
                       )}
-                      <Button variant="outline" size="sm" onClick={() => setCompararId(v.presupuestoId)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCompararId(v.presupuestoId)}
+                      >
                         Comparar
                       </Button>
                       {!v.esVigente && (

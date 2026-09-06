@@ -39,11 +39,7 @@ export function ResumenComponentes({ data, isLoading }: ResumenComponentesProps)
 
         <div aria-hidden className="flex h-2 gap-0.5 overflow-hidden rounded-full bg-muted">
           {items.map((item) => (
-            <div
-              key={item.label}
-              className={item.color}
-              style={{ width: `${item.pct * 100}%` }}
-            />
+            <div key={item.label} className={item.color} style={{ width: `${item.pct * 100}%` }} />
           ))}
         </div>
 

@@ -94,6 +94,12 @@ export const FIRMANTE_1 = "01927f50-1a2b-7c3d-8e4f-000000000001";
 export const FIRMANTE_2 = "01927f50-1a2b-7c3d-8e4f-000000000002";
 
 export const firmantesFixture: FirmanteResponse[] = [
-  { id: FIRMANTE_1, nombre: "Ing. Juan Pérez", cargo: "Director de Obra", rol: "CONSOLIDADO", orden: 1 },
+  {
+    id: FIRMANTE_1,
+    nombre: "Ing. Juan Pérez",
+    cargo: "Director de Obra",
+    rol: "CONSOLIDADO",
+    orden: 1,
+  },
   { id: FIRMANTE_2, nombre: "Arq. María López", cargo: "Supervisora", rol: "APROBADO", orden: 1 },
 ];
