@@ -1,6 +1,6 @@
 # Bitácora
 
-**Ola actual:** 1 · **Actualizada:** 2026-09-06
+**Ola actual:** 2 · **Actualizada:** 2026-09-06
 
 > La lleva el orquestador ([`ORQUESTADOR.md`](ORQUESTADOR.md)). Se escribe **en el momento** en que
 > algo cambia de estado, no al final de la sesión: si la sesión se corta, lo que no está escrito
@@ -13,8 +13,8 @@
 | Ola | Plan | Estado | Worktree | Commit | Nota |
 | --- | ---- | ------ | -------- | ------ | ---- |
 | 0 | 061 política de dinero | ✅ verde | — | 5b1e8fb | fusionado a main · 2º intento |
-| 1 | 053 ids UUID | 🔄 en curso | .claude/worktrees/ola1-053 | — | despachado 2026-09-06 |
-| 2 | 054 descuento global + bugs SILENT | ⏳ pendiente | — | — | va antes del 059 |
+| 1 | 053 ids UUID | ✅ verde | — | 20cb1a4 | fusionado a main |
+| 2 | 054 descuento global + bugs SILENT | 🔄 en curso | .claude/worktrees/ola2-054 | — | despachado 2026-09-06 |
 | 2 | 059 formas de DTO | ⏳ pendiente | — | — | después del 054, mismo `ApuResponse` |
 | 3 | 057 tests de hook | ⏳ pendiente | — | — | rebanable por módulo |
 | 4 | 028 Zod en el seam | ⏳ pendiente | — | — | esquemas salen del 057 |
@@ -41,6 +41,15 @@ Baseline original del handoff: **45 archivos, 207 tests, verde** · backend `ori
 docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
+
+- 2026-09-06 — **053 aceptado.** Verifiqué la sensibilidad de los tests de guard yo mismo: revertí
+  `enabled: !!presupuestoId` a `Number(presupuestoId) > 0` en `usePresupuesto.ts:16` y el test
+  correspondiente se puso rojo. El bug era real y grave: con ids UUID, `presupuestoId > 0` era
+  falso siempre, o sea que `usePresupuesto`, `useResumen`, `useValidacion`, `useValidacionExport`,
+  `useCronograma` y `useApus` **nunca disparaban en producción**.
+- 2026-09-06 — Diferidos del 053, todos con dueño: `RubroRefResponse.rubroId` → `059` §4 · ids
+  numéricos de los E2E → `021` · **`useVersiones` duplicado en `shell/contexto.ts` → añadido al
+  `060`** (unificarlo exige que `shell/` importe de `features/`, decisión de arquitectura).
 
 - 2026-09-06 — **061 aceptado con una desviación**: la guarda ADR 9 vive en `package.json` como
   `pnpm run guard:adr9` dentro de `verify`, no como paso de CI. Verificado: `.gitignore:32` ignora

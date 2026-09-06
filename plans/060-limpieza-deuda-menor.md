@@ -126,3 +126,12 @@ Si devuelve algo, el plan que lo debía borrar no terminó.
 - Cero ids numéricos en `e2e/screenshots.spec.ts`, compartiendo constantes con las fixtures.
 - Cero `as never` en `src/`. Si queda alguno, la razón escrita aquí.
 - El `grep` de comentarios mentirosos, vacío.
+
+## `useVersiones` duplicado — añadido 2026-09-06 (ola 1)
+
+`src/shell/contexto.ts:13` define un `useVersiones` copiado del de
+`src/features/presupuesto/hooks/usePresupuesto.ts:36`. El plan `053` quitó de **ambos** el catch
+que se tragaba los 404, que era lo urgente; queda la duplicación.
+
+Unificarlos obliga a que `shell/` importe de `features/`, una dirección de dependencia nueva.
+Decidir aquí: o se acepta esa importación, o `useVersiones` baja a un módulo compartido.
