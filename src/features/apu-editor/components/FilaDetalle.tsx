@@ -102,7 +102,7 @@ export function FilaDetalle({
       <td className="px-2.5">
         <div className="flex items-center gap-2">
           <span className="font-medium">{detalle.descripcion}</span>
-          {detalle.insumoId === null && (
+          {detalle.insumoId == null && (
             <Badge variant="outline" className="text-amber-600 border-amber-300">
               Pendiente
             </Badge>

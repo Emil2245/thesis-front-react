@@ -8,7 +8,7 @@ interface ResumenComponentesProps {
   isLoading: boolean;
 }
 
-const COMPONENTE_META: Record<string, { label: string; color: string }> = {
+export const COMPONENTE_META: Record<string, { label: string; color: string }> = {
   EQUIPO: { label: "Equipo", color: "bg-chart-1" },
   MANO_OBRA: { label: "Mano de obra", color: "bg-exito" },
   MATERIAL: { label: "Material", color: "bg-advertencia" },
