@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 import { crearQueryClient } from "@/test/render";
 import { server } from "@/test/server";
-import { espiar, ultima } from "@/test/espia";
+import { espiar, ultima, cuerpoInvalido } from "@/test/espia";
 import { problema } from "@/test/handlers";
 import { usuarioFixture } from "@/test/fixtures/auth";
 import { ApiError } from "@/api/problem";
@@ -87,7 +87,9 @@ describe("contrato de las mutaciones de auth", () => {
     const { result } = renderHook(() => useLogin(), { wrapper });
 
     const error = await result.current
-      .mutateAsync({ email: "ana@ejemplo.ec", password: "abc12345", recordar: true } as never)
+      .mutateAsync(
+        cuerpoInvalido({ email: "ana@ejemplo.ec", password: "abc12345", recordar: true }),
+      )
       .catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(ApiError);

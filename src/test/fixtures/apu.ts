@@ -5,9 +5,16 @@ import type {
   PlantillaApuDetalleResponse,
 } from "@/api/contract";
 
+// UUIDv7 estables de los APU. Los comparte la suite E2E, que antes traía sus
+// propios ids numéricos (plan 060).
+export const APU_1 = "018f8a40-0000-7000-8000-000000000001";
+export const APU_2 = "018f8a40-0000-7000-8000-000000000002";
+export const APU_3 = "018f8a40-0000-7000-8000-000000000003";
+export const APU_4 = "018f8a40-0000-7000-8000-000000000004";
+
 export const apuResumenFixture: ApuResumenResponse[] = [
   {
-    id: "018f8a40-0000-7000-8000-000000000001",
+    id: APU_1,
     codigo: "APU-001",
     descripcion: "Excavación a máquina",
     unidad: "m3",
@@ -17,7 +24,7 @@ export const apuResumenFixture: ApuResumenResponse[] = [
     vinculado: false,
   },
   {
-    id: "018f8a40-0000-7000-8000-000000000002",
+    id: APU_2,
     codigo: "APU-002",
     descripcion: "Relleno compactado",
     unidad: "m3",
@@ -27,7 +34,7 @@ export const apuResumenFixture: ApuResumenResponse[] = [
     vinculado: true,
   },
   {
-    id: "018f8a40-0000-7000-8000-000000000003",
+    id: APU_3,
     codigo: "APU-003",
     descripcion: "Transporte material",
     unidad: "m3-km",
@@ -37,7 +44,7 @@ export const apuResumenFixture: ApuResumenResponse[] = [
     vinculado: false,
   },
   {
-    id: "018f8a40-0000-7000-8000-000000000004",
+    id: APU_4,
     codigo: "APU-004",
     descripcion: "Hormigón simple",
     unidad: "m3",
@@ -49,7 +56,7 @@ export const apuResumenFixture: ApuResumenResponse[] = [
 ];
 
 export const apuDetalleFixture: ApuResponse = {
-  id: "018f8a40-0000-7000-8000-000000000001",
+  id: APU_1,
   codigo: "APU-001",
   descripcion: "Excavación a máquina",
   unidad: "m3",
@@ -168,7 +175,7 @@ export const apuConHmFixture: ApuResponse = {
 // `operacion` la compone el backend: por línea EQUIPO/MANO_OBRA es
 // «cantidad × precio × rendimiento»; por sección, la suma de los resultados.
 export const apuCalculoFixture: ApuCalculoResponse = {
-  apuId: "018f8a40-0000-7000-8000-000000000001",
+  apuId: APU_1,
   codigo: "APU-001",
   parametros: { hm: 0.05, ciDefault: 0.15, ciAplicado: 0.15 },
   secciones: [

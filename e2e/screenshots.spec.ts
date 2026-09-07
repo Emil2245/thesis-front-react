@@ -1,4 +1,31 @@
 import { test } from "@playwright/test";
+import { APU_1, APU_2, APU_4 } from "../src/test/fixtures/apu";
+import {
+  ACTIVIDAD_1,
+  ACTIVIDAD_2,
+  ACTIVIDAD_3,
+  ACTIVIDAD_4,
+  CRONOGRAMA_ID,
+} from "../src/test/fixtures/cronograma";
+import { basesCentralesFixture } from "../src/test/fixtures/insumos";
+import {
+  CAPITULO_1,
+  CAPITULO_1_1,
+  CAPITULO_2,
+  PRESUPUESTO_V1,
+  PRESUPUESTO_V2,
+  RUBRO_1_1_1,
+  RUBRO_1_1_2,
+  RUBRO_1_2_1,
+  RUBRO_2_1,
+} from "../src/test/fixtures/presupuesto";
+import {
+  FIRMANTE_1,
+  FIRMANTE_2,
+  PROYECTO_1,
+  PROYECTO_2,
+  PROYECTO_3,
+} from "../src/test/fixtures/proyectos";
 import { writeFileSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -20,21 +47,21 @@ const token = { accessToken: "tok", expiraEnSegundos: 3600, refreshToken: "rt-te
 
 const proyectos = [
   {
-    id: "1",
+    id: PROYECTO_1,
     nombreProyecto: "Puente Ambato",
     codigo: "AMB-001",
     estado: "EN_PROCESO",
     updatedAt: "2026-01-15T00:00:00Z",
   },
   {
-    id: "2",
+    id: PROYECTO_2,
     nombreProyecto: "Vía Quito Sur",
     codigo: "UIO-002",
     estado: "BORRADOR",
     updatedAt: "2026-03-20T00:00:00Z",
   },
   {
-    id: "3",
+    id: PROYECTO_3,
     nombreProyecto: "Escuela Milagro",
     codigo: "MIL-003",
     estado: "FINALIZADO",
@@ -42,7 +69,7 @@ const proyectos = [
   },
 ];
 const proyectoDetalle = {
-  id: "1",
+  id: PROYECTO_1,
   nombreProyecto: "Puente Ambato",
   codigo: "AMB-001",
   estado: "EN_PROCESO",
@@ -57,8 +84,14 @@ const proyectoDetalle = {
   updatedAt: "2026-01-15T00:00:00Z",
 };
 const firmantes = [
-  { id: 1, nombre: "Ing. Juan Pérez", cargo: "Director de Obra", rol: "CONSOLIDADO", orden: 1 },
-  { id: 2, nombre: "Arq. María López", cargo: "Supervisora", rol: "APROBADO", orden: 1 },
+  {
+    id: FIRMANTE_1,
+    nombre: "Ing. Juan Pérez",
+    cargo: "Director de Obra",
+    rol: "CONSOLIDADO",
+    orden: 1,
+  },
+  { id: FIRMANTE_2, nombre: "Arq. María López", cargo: "Supervisora", rol: "APROBADO", orden: 1 },
 ];
 const parametros = {
   porcentajeHerramientaMenor: "0.050000",
@@ -124,7 +157,7 @@ const insumos = [
 ];
 const apusResumen = [
   {
-    id: "1",
+    id: APU_1,
     codigo: "APU-001",
     descripcion: "Excavación a máquina",
     unidad: "m3",
@@ -133,7 +166,7 @@ const apusResumen = [
     vinculado: false,
   },
   {
-    id: "2",
+    id: APU_2,
     codigo: "APU-002",
     descripcion: "Relleno compactado",
     unidad: "m3",
@@ -142,7 +175,7 @@ const apusResumen = [
     vinculado: true,
   },
   {
-    id: "4",
+    id: APU_4,
     codigo: "APU-004",
     descripcion: "Hormigón simple",
     unidad: "m3",
@@ -152,7 +185,7 @@ const apusResumen = [
   },
 ];
 const apuDetalle = {
-  id: 1,
+  id: APU_1,
   codigo: "APU-001",
   descripcion: "Excavación a máquina",
   unidad: "m3",
@@ -233,7 +266,7 @@ const apuDetalle = {
 // seleccionada», «No hay cronograma»), incluida la del cronograma.
 const versiones = [
   {
-    presupuestoId: 10,
+    presupuestoId: PRESUPUESTO_V1,
     version: 1,
     notas: "Versión inicial",
     esVigente: false,
@@ -241,7 +274,7 @@ const versiones = [
     fechaCreacion: "2026-06-01T00:00:00",
   },
   {
-    presupuestoId: 11,
+    presupuestoId: PRESUPUESTO_V2,
     version: 2,
     notas: "Corrección APU hormigón",
     esVigente: true,
@@ -250,25 +283,25 @@ const versiones = [
   },
 ];
 const presupuesto = {
-  id: 11,
+  id: PRESUPUESTO_V2,
   version: 2,
   totalGeneral: "18500.000000",
   capitulos: [
     {
-      id: 10,
+      id: CAPITULO_1,
       item: "1",
       descripcion: "Preliminares",
       total: "4500.000000",
       subcapitulos: [
         {
-          id: 11,
+          id: CAPITULO_1_1,
           item: "1.1",
           descripcion: "Instalación de campamento",
           total: "2500.000000",
           subcapitulos: [],
           rubros: [
             {
-              id: 100,
+              id: RUBRO_1_1_1,
               item: "1.1.1",
               codigo: "APU-001",
               descripcion: "Excavación a máquina",
@@ -276,11 +309,11 @@ const presupuesto = {
               cantidad: "50.000000",
               precioUnitario: "40.000000",
               precioTotal: "2000.000000",
-              apuId: 1,
+              apuId: APU_1,
               alertas: [],
             },
             {
-              id: 101,
+              id: RUBRO_1_1_2,
               item: "1.1.2",
               codigo: "APU-002",
               descripcion: "Relleno compactado",
@@ -288,7 +321,7 @@ const presupuesto = {
               cantidad: "20.000000",
               precioUnitario: "25.000000",
               precioTotal: "500.000000",
-              apuId: 2,
+              apuId: APU_2,
               alertas: ["PU_CERO"],
             },
           ],
@@ -297,14 +330,14 @@ const presupuesto = {
       rubros: [],
     },
     {
-      id: 20,
+      id: CAPITULO_2,
       item: "2",
       descripcion: "Obra civil",
       total: "14000.000000",
       subcapitulos: [],
       rubros: [
         {
-          id: 200,
+          id: RUBRO_2_1,
           item: "2.1",
           codigo: "APU-004",
           descripcion: "Hormigón simple",
@@ -312,7 +345,7 @@ const presupuesto = {
           cantidad: "10.000000",
           precioUnitario: "1400.000000",
           precioTotal: "14000.000000",
-          apuId: 4,
+          apuId: APU_4,
           alertas: [],
         },
       ],
@@ -324,8 +357,8 @@ const presupuesto = {
 // tenía valores monetarios con claves 0-based, así que la captura enseñaba
 // pesos de «7.567,57 %» (plan 055).
 const cronograma = {
-  id: 1,
-  presupuestoId: 11,
+  id: CRONOGRAMA_ID,
+  presupuestoId: PRESUPUESTO_V2,
   unidadTiempo: "MES",
   numeroPeriodos: 4,
   totalGeneral: "18500.000000",
@@ -336,8 +369,8 @@ const cronograma = {
   avanceFinal: "100.0000",
   actividades: [
     {
-      id: 100,
-      rubroId: 100,
+      id: ACTIVIDAD_1,
+      rubroId: RUBRO_1_1_1,
       item: "1.1.1",
       codigo: "APU-001",
       descripcion: "Excavación a máquina",
@@ -351,8 +384,8 @@ const cronograma = {
       desviacion: "0.0000",
     },
     {
-      id: 101,
-      rubroId: 101,
+      id: ACTIVIDAD_2,
+      rubroId: RUBRO_1_1_2,
       item: "1.1.2",
       codigo: "APU-002",
       descripcion: "Relleno compactado",
@@ -366,8 +399,8 @@ const cronograma = {
       desviacion: "0.0000",
     },
     {
-      id: 102,
-      rubroId: 102,
+      id: ACTIVIDAD_3,
+      rubroId: RUBRO_1_2_1,
       item: "1.2.1",
       codigo: "APU-003",
       descripcion: "Transporte material",
@@ -384,8 +417,8 @@ const cronograma = {
       desviacion: "0.0000",
     },
     {
-      id: 200,
-      rubroId: 200,
+      id: ACTIVIDAD_4,
+      rubroId: RUBRO_2_1,
       item: "2.1",
       codigo: "APU-004",
       descripcion: "Hormigón simple",
@@ -455,7 +488,9 @@ async function baseAutenticado(page: import("@playwright/test").Page) {
   await page.route(`${API}/auth/refresh`, (route) => route.fulfill(json(token)));
   await page.route(`${API}/perfil`, (route) => route.fulfill(json(usuario)));
   await page.route(`${API}/proyectos*`, (route) => route.fulfill(json(proyectosResponse)));
-  await page.route(`${API}/proyectos/1/presupuestos*`, (route) => route.fulfill(json(versiones)));
+  await page.route(`${API}/proyectos/${PROYECTO_1}/presupuestos*`, (route) =>
+    route.fulfill(json(versiones)),
+  );
   await page.route(`${API}/plantillas-apu*`, (route) => {
     const url = new URL(route.request().url());
     const tipo = url.searchParams.get("tipo");
@@ -486,64 +521,85 @@ test("02-proyectos", async ({ page }, testInfo) => {
 
 test("03-proyecto-detalle", async ({ page }, testInfo) => {
   await baseAutenticado(page);
-  await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
-  await page.route(`${API}/proyectos/1/firmantes*`, (route) => route.fulfill(json(firmantes)));
-  await page.goto("/proyectos/1", { waitUntil: "networkidle", timeout: 30000 });
+  await page.route(`${API}/proyectos/${PROYECTO_1}`, (route) =>
+    route.fulfill(json(proyectoDetalle)),
+  );
+  await page.route(`${API}/proyectos/${PROYECTO_1}/firmantes*`, (route) =>
+    route.fulfill(json(firmantes)),
+  );
+  await page.goto(`/proyectos/${PROYECTO_1}`, { waitUntil: "networkidle", timeout: 30000 });
   await capturar(page, "03-proyecto-detalle", testInfo);
 });
 
 test("04-parametros", async ({ page }, testInfo) => {
   await baseAutenticado(page);
-  await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
-  await page.route(`${API}/proyectos/1/parametros`, (route) => route.fulfill(json(parametros)));
-  await page.goto("/proyectos/1/parametros", { waitUntil: "networkidle", timeout: 30000 });
+  await page.route(`${API}/proyectos/${PROYECTO_1}`, (route) =>
+    route.fulfill(json(proyectoDetalle)),
+  );
+  await page.route(`${API}/proyectos/${PROYECTO_1}/parametros`, (route) =>
+    route.fulfill(json(parametros)),
+  );
+  await page.goto(`/proyectos/${PROYECTO_1}/parametros`, {
+    waitUntil: "networkidle",
+    timeout: 30000,
+  });
   await capturar(page, "04-parametros", testInfo);
 });
 
 test("05-insumos", async ({ page }, testInfo) => {
   await baseAutenticado(page);
-  await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
-  await page.route(`${API}/proyectos/1/insumos*`, (route) =>
+  await page.route(`${API}/proyectos/${PROYECTO_1}`, (route) =>
+    route.fulfill(json(proyectoDetalle)),
+  );
+  await page.route(`${API}/proyectos/${PROYECTO_1}/insumos*`, (route) =>
     route.fulfill(
       json({ contenido: insumos, page: 0, size: 25, totalElementos: 4, totalPaginas: 1 }),
     ),
   );
   await page.route(`${API}/bases-centrales*`, (route) =>
-    route.fulfill(
-      json([
-        { id: 1, nombre: "Base IESS 2026", archivada: false, insumoCount: 93 },
-        { id: 2, nombre: "Base MTOP 2025", archivada: false, insumoCount: 45 },
-      ]),
-    ),
+    route.fulfill(json(basesCentralesFixture.filter((b) => !b.archivada))),
   );
-  await page.goto("/proyectos/1/insumos", { waitUntil: "networkidle", timeout: 30000 });
+  await page.goto(`/proyectos/${PROYECTO_1}/insumos`, { waitUntil: "networkidle", timeout: 30000 });
   await capturar(page, "05-insumos", testInfo);
 });
 
 test("06-apus", async ({ page }, testInfo) => {
   await baseAutenticado(page);
-  await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
+  await page.route(`${API}/proyectos/${PROYECTO_1}`, (route) =>
+    route.fulfill(json(proyectoDetalle)),
+  );
   await page.route(`${API}/presupuestos/*/apus*`, (route) =>
     route.fulfill(json({ items: apusResumen, total: 3, page: 0, size: 25, totalPaginas: 1 })),
   );
-  await page.goto("/proyectos/1/apus", { waitUntil: "networkidle", timeout: 30000 });
+  await page.goto(`/proyectos/${PROYECTO_1}/apus`, { waitUntil: "networkidle", timeout: 30000 });
   await capturar(page, "06-apus", testInfo);
 });
 
 test("07-apu-editor", async ({ page }, testInfo) => {
   await baseAutenticado(page);
-  await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
-  await page.route(`${API}/apus/1`, (route) => route.fulfill(json(apuDetalle)));
-  await page.goto("/proyectos/1/apus/1", { waitUntil: "networkidle", timeout: 30000 });
+  await page.route(`${API}/proyectos/${PROYECTO_1}`, (route) =>
+    route.fulfill(json(proyectoDetalle)),
+  );
+  await page.route(`${API}/apus/${APU_1}`, (route) => route.fulfill(json(apuDetalle)));
+  await page.goto(`/proyectos/${PROYECTO_1}/apus/${APU_1}`, {
+    waitUntil: "networkidle",
+    timeout: 30000,
+  });
   await capturar(page, "07-apu-editor", testInfo);
 });
 
 test("08-presupuesto", async ({ page }, testInfo) => {
   await baseAutenticado(page);
-  await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
-  await page.route(`${API}/proyectos/1/presupuestos*`, (route) => route.fulfill(json(versiones)));
-  await page.route(`${API}/presupuestos/11`, (route) => route.fulfill(json(presupuesto)));
-  await page.route(`${API}/presupuestos/11/resumen`, (route) =>
+  await page.route(`${API}/proyectos/${PROYECTO_1}`, (route) =>
+    route.fulfill(json(proyectoDetalle)),
+  );
+  await page.route(`${API}/proyectos/${PROYECTO_1}/presupuestos*`, (route) =>
+    route.fulfill(json(versiones)),
+  );
+  await page.route(`${API}/presupuestos/${PRESUPUESTO_V2}`, (route) =>
+    route.fulfill(json(presupuesto)),
+  );
+  await page.route(`${API}/presupuestos/${PRESUPUESTO_V2}/resumen`, (route) =>
     route.fulfill(
       json({
         equipo: { total: "4000.000000", porcentaje: "0.2830" },
@@ -554,48 +610,91 @@ test("08-presupuesto", async ({ page }, testInfo) => {
       }),
     ),
   );
-  await page.route(`${API}/presupuestos/11/validacion`, (route) =>
+  await page.route(`${API}/presupuestos/${PRESUPUESTO_V2}/validacion`, (route) =>
     route.fulfill(
       json({
         exportable: false,
         itemsPuCero: [
-          { rubroId: 101, item: "1.1.2", codigo: "APU-002", descripcion: "Relleno compactado" },
+          {
+            rubroId: RUBRO_1_1_2,
+            item: "1.1.2",
+            codigo: "APU-002",
+            descripcion: "Relleno compactado",
+          },
         ],
         itemsCantidadCero: [
-          { rubroId: 102, item: "1.2.1", codigo: "APU-003", descripcion: "Transporte material" },
+          {
+            rubroId: RUBRO_1_2_1,
+            item: "1.2.1",
+            codigo: "APU-003",
+            descripcion: "Transporte material",
+          },
         ],
         itemsSinActividad: [
-          { rubroId: 100, item: "1.1.1", codigo: "APU-001", descripcion: "Excavación a máquina" },
+          {
+            rubroId: RUBRO_1_1_1,
+            item: "1.1.1",
+            codigo: "APU-001",
+            descripcion: "Excavación a máquina",
+          },
         ],
       }),
     ),
   );
-  await page.goto("/proyectos/1/presupuesto", { waitUntil: "networkidle", timeout: 30000 });
+  await page.goto(`/proyectos/${PROYECTO_1}/presupuesto`, {
+    waitUntil: "networkidle",
+    timeout: 30000,
+  });
   await capturar(page, "08-presupuesto", testInfo);
 });
 
 test("09-versiones", async ({ page }, testInfo) => {
   await baseAutenticado(page);
-  await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
-  await page.route(`${API}/proyectos/1/presupuestos*`, (route) => route.fulfill(json(versiones)));
-  await page.route(`${API}/presupuestos/11`, (route) => route.fulfill(json(presupuesto)));
-  await page.goto("/proyectos/1/versiones", { waitUntil: "networkidle", timeout: 30000 });
+  await page.route(`${API}/proyectos/${PROYECTO_1}`, (route) =>
+    route.fulfill(json(proyectoDetalle)),
+  );
+  await page.route(`${API}/proyectos/${PROYECTO_1}/presupuestos*`, (route) =>
+    route.fulfill(json(versiones)),
+  );
+  await page.route(`${API}/presupuestos/${PRESUPUESTO_V2}`, (route) =>
+    route.fulfill(json(presupuesto)),
+  );
+  await page.goto(`/proyectos/${PROYECTO_1}/versiones`, {
+    waitUntil: "networkidle",
+    timeout: 30000,
+  });
   await capturar(page, "09-versiones", testInfo);
 });
 
 test("10-cronograma", async ({ page }, testInfo) => {
   await baseAutenticado(page);
-  await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
-  await page.route(`${API}/proyectos/1/presupuestos*`, (route) => route.fulfill(json(versiones)));
-  await page.route(`${API}/presupuestos/11/cronograma`, (route) => route.fulfill(json(cronograma)));
-  await page.goto("/proyectos/1/cronograma", { waitUntil: "networkidle", timeout: 30000 });
+  await page.route(`${API}/proyectos/${PROYECTO_1}`, (route) =>
+    route.fulfill(json(proyectoDetalle)),
+  );
+  await page.route(`${API}/proyectos/${PROYECTO_1}/presupuestos*`, (route) =>
+    route.fulfill(json(versiones)),
+  );
+  await page.route(`${API}/presupuestos/${PRESUPUESTO_V2}/cronograma`, (route) =>
+    route.fulfill(json(cronograma)),
+  );
+  await page.goto(`/proyectos/${PROYECTO_1}/cronograma`, {
+    waitUntil: "networkidle",
+    timeout: 30000,
+  });
   await capturar(page, "10-cronograma", testInfo);
 });
 
 test("11-documentos", async ({ page }, testInfo) => {
   await baseAutenticado(page);
-  await page.route(`${API}/proyectos/1`, (route) => route.fulfill(json(proyectoDetalle)));
-  await page.route(`${API}/proyectos/1/presupuestos*`, (route) => route.fulfill(json(versiones)));
-  await page.goto("/proyectos/1/documentos", { waitUntil: "networkidle", timeout: 30000 });
+  await page.route(`${API}/proyectos/${PROYECTO_1}`, (route) =>
+    route.fulfill(json(proyectoDetalle)),
+  );
+  await page.route(`${API}/proyectos/${PROYECTO_1}/presupuestos*`, (route) =>
+    route.fulfill(json(versiones)),
+  );
+  await page.goto(`/proyectos/${PROYECTO_1}/documentos`, {
+    waitUntil: "networkidle",
+    timeout: 30000,
+  });
   await capturar(page, "11-documentos", testInfo);
 });

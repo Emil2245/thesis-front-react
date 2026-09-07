@@ -5,7 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import type { ReactNode } from "react";
 
 import { crearQueryClient } from "@/test/render";
-import { espiar, ultima, type Peticion } from "@/test/espia";
+import { espiar, ultima, type Peticion, cuerpoInvalido } from "@/test/espia";
 import {
   usePresupuesto,
   useResumen,
@@ -172,7 +172,9 @@ describe("contrato saliente de presupuesto", () => {
     // de más (o mal nombrado) se descartaba en silencio con un 200 de vuelta.
     it("un campo desconocido en el cuerpo lo rechaza el backend con 400", async () => {
       const { result } = renderHook(() => useCapituloMutaciones(PRESUPUESTO_V2), { wrapper });
-      result.current.crear.mutate({ descripcion: "Obra civil", nombre: "Obra civil" } as never);
+      result.current.crear.mutate(
+        cuerpoInvalido({ descripcion: "Obra civil", nombre: "Obra civil" }),
+      );
       await waitFor(() => expect(result.current.crear.isError).toBe(true));
     });
   });

@@ -1,6 +1,6 @@
 # Plan 060 — Limpieza: shadcn sin usar, warnings de lint y deuda menor
 
-**Status:** TODO
+**Status:** DONE (2026-09-06, rama `ola6-060`, sobre `8547daf`)
 **Escrito contra:** frontend `8cc08b5`
 **Esfuerzo:** S (2–3 h) · **Riesgo:** BAJO
 **Depende de:** todo lo demás. Es la última ola: verifica que los otros planes cerraron limpio
@@ -135,3 +135,198 @@ que se tragaba los 404, que era lo urgente; queda la duplicación.
 
 Unificarlos obliga a que `shell/` importe de `features/`, una dirección de dependencia nueva.
 Decidir aquí: o se acepta esa importación, o `useVersiones` baja a un módulo compartido.
+
+---
+
+# Ejecución — 2026-09-06
+
+Los números de arriba son del 2026-09-06 y nueve olas los habían movido. Lo primero
+fue volver a medirlos. **Cinco de las seis cuentas del plan habían cambiado**, así que
+esta sección registra lo medido, no lo que el plan suponía.
+
+## Lo que se volvió a contar
+
+| Afirmación del plan | Medido hoy | Veredicto |
+|---|---|---|
+| 8 componentes shadcn sin usar | **8** | correcta, pero *no* la misma lista |
+| 10 warnings de lint, 3 reales | **10**, 3 reales, exactamente los tres descritos | correcta |
+| ~26 ids numéricos en los E2E | **33** apariciones (26 `/proyectos/1`, 5 `/presupuestos/11`, 2 `/apus/1`) más ids numéricos en los payloads | se quedaba corta |
+| 9 `as never` en `src/` | **0 en código de producción**, 59 en `src/test/` | invertida (ver §4) |
+| Comentarios que mienten | grep vacío | ya cerrados por 050/053/054 |
+| `useVersiones` duplicado | sigue duplicado | correcta (ver §6) |
+
+## 1 — Componentes shadcn: 8 borrados, con una lista distinta
+
+**`sheet` no estaba muerto.** Sale como «sin importaciones» si buscas usos fuera de
+`src/components/ui/`, pero `ui/sidebar.tsx` lo importa y el sidebar lo usa toda la app.
+El primer barrido lo dio por muerto; lo salvó el `typecheck`.
+
+Borrados los ocho de verdad: `accordion`, `combobox`, `command`, `empty`, `popover`,
+`progress`, `radio-group`, `scroll-area`. El árbitro es el compilador, no el `grep`:
+`pnpm run typecheck` sigue limpio con los ocho fuera.
+
+**Se cayeron dos dependencias enteras con ellos**, que era la deuda de verdad:
+
+- `cmdk` — sólo la usaba `ui/command.tsx`.
+- `@base-ui/react` — sólo la usaba `ui/combobox.tsx`.
+
+### La pregunta de «¿la deuda es al revés?»: no
+
+El plan sospechaba que los componentes propios reimplementaban a mano la accesibilidad
+del primitivo, y que entonces sobraba el propio y no el primitivo. Se comprobó, y **no
+es el caso**:
+
+- `PopoverDesglose.tsx` no reimplementa nada: monta un `ui/dialog` (Radix). Posicionamiento,
+  cierre al hacer clic fuera y trampa de foco los pone Radix. El nombre miente —es un
+  diálogo, no un popover— pero el comportamiento es correcto.
+- `ComboboxUnidad.tsx` tampoco es un combobox: son unos chips más un `<Input>` nativo.
+  No hay lista flotante que posicionar ni foco que atrapar.
+- `SelectorInsumo.tsx` es `ui/dialog` + `ui/input` + `ui/select`.
+
+Ninguno reimplementa accesibilidad a mano, así que borrar el primitivo no consolida
+ningún error. `progress`: ninguna pantalla lo pide hoy; si S-33 acaba pidiendo barra,
+`shadcn add progress` lo devuelve en un comando. Un componente sin usar no es cobertura,
+es código muerto.
+
+> Nota para el siguiente: `.oxlintrc.json` tiene `src/components/ui` en `ignorePatterns`,
+> así que un componente `ui/` muerto **no genera ni un warning**. No cuentes con el lint
+> para encontrarlos.
+
+## 2 — Warnings de lint: de 10 a 7
+
+Los tres reales, cerrados. Quedan **7**, todos `react(incompatible-library)` de
+react-hook-form contra el React Compiler: ruido conocido de una librería de terceros, no
+se arregla desde aquí. **No se han silenciado**: un `oxlint-ignore` los volvería
+invisibles el día que react-hook-form se arregle, y son warnings, no errores, así que no
+rompen el gate.
+
+- `shell/contexto.ts` (`exhaustive-deps`, faltaba `cambiar`) — el plan lo mandaba al 053,
+  que no lo hizo. Arreglado aquí, y de raíz: `cambiar` capturaba `params`, así que además
+  de faltar en las dependencias estaba **cerrando sobre un valor viejo**. Ahora usa la
+  forma funcional de `setSearchParams` y no captura nada.
+- `DialogoNuevoApu.tsx` (`set-state-in-effect`) — el efecto que copiaba la plantilla al
+  formulario pasa a ajustarse en render (el patrón oficial de React para estado que
+  depende de datos), sin render en cascada.
+- `use-mobile.ts` (`set-state-in-effect`) — el plan lo mandaba al 056, que está en
+  espera indefinida, así que se arregla aquí. Reescrito con `useSyncExternalStore`.
+
+**`use-mobile` tenía un defecto real, no sólo un warning:** escuchaba la media query
+`(max-width: 767px)` pero leía `window.innerWidth`. Son dos fuentes que discrepan en el
+propio umbral —`innerWidth` cuenta la barra de scroll y la media query no— y además
+arrancaba en `false` durante el primer render. El test nuevo lo pilla: falla contra la
+versión vieja.
+
+## 3 — Ids numéricos de los E2E
+
+Ver la nota al final de esta sección. El punto que importa para el futuro es **por qué
+sobrevivieron**: `e2e/` no está en el `include` de ningún `tsconfig`, así que
+`pnpm run typecheck` nunca lo ha mirado. La app entera migró a UUID y la suite E2E se
+quedó en ids numéricos sin que nada se pusiera rojo. Anotado en `AGENTS.md`.
+
+Cerrar ese punto ciego de verdad —meter `e2e/` en el typecheck y anotar sus stubs con
+los DTO de `contract.ts`— es un plan aparte, no deuda menor: los stubs son objetos
+parciales a propósito y anotarlos obliga a rellenarlos o a envolverlos en `Partial<>`.
+
+## 4 — Los `as never`: la cuenta estaba invertida
+
+**En código de producción quedan cero.** Los planes 050, 053 y 055 hicieron su trabajo:
+los 9 de `CronogramaPage`, `GanttChart` y `AdminParametrosPage` no existen. El detector
+del plan no se disparó.
+
+Pero había **59 en `src/test/`**, que el plan no contaba, y son dos poblaciones distintas:
+
+- **47 eran dinero**: `"18500.000000" as never` para colar un literal en el tipo marcado
+  `Decimal`. Sustituidos por `asDecimal("18500.000000")`, que es el helper que ya existía
+  en `src/lib/decimal.ts`. No es cosmético: `as never` traga cualquier cosa —un número, un
+  objeto—, y `asDecimal` sólo acepta `string`.
+- **12 eran cuerpos de petición inválidos a propósito.** Se quitaron uno a uno y se dejó
+  hablar al compilador: los doce eran tests negativos legítimos («el seam rechaza un campo
+  de más»), que por definición tienen que mandar algo que el DTO no admite. Ninguno
+  escondía drift real.
+
+Que los doce fueran intencionados **sólo se supo quitándolos**, y ése es justo el problema
+de `as never`: uno intencionado y uno olvidado son idénticos a la vista y al `grep`. Ahora
+se escriben con `cuerpoInvalido(...)` (en `src/test/espia.ts`, una línea), que dice en su
+nombre para qué está. Queda también cero `as unknown as`, cero `@ts-ignore` y cero
+`@ts-expect-error`.
+
+## 5 — Comentarios que mienten: ya estaban cerrados
+
+El `grep` del plan devuelve vacío. `src/lib/disponibilidad.ts` ya dice «30 recursos» y ya
+describe el gate por página; `useParametrosSistema.ts` y `usePresupuesto.ts` ya no niegan
+endpoints que existen; no quedan `TODO(047)`. Los planes 050, 053 y 054 los borraron.
+
+## 6 — `useVersiones` duplicado: unificado
+
+**La premisa de la nota era falsa a día de hoy.** Decía que unificarlos «obliga a que
+`shell/` importe de `features/`, que es una dirección de dependencia nueva». No es nueva:
+`shell/` ya importaba de `features/` en tres archivos antes de tocar nada —
+`Breadcrumbs.tsx`, `SelectorProyecto.tsx` y `Sidebar.tsx` (de `features/proyectos` y
+`features/auth`). La dirección está establecida.
+
+Así que se acepta la importación y se borra la copia: `shell/contexto.ts` importa
+`useVersiones` de `features/presupuesto/hooks/usePresupuesto`. Las dos copias compartían
+`queryKey` (`qk.versiones`) y URL, que es lo que lo hacía peligroso: dos hooks sobre la
+misma entrada de caché con `enabled` distinto, y nada que impidiera que divergieran.
+
+## Tests: el seam de las versiones estaba sin cubrir
+
+`useVersionActiva` decide qué versión ve el usuario y escribe el `?v=` de la URL — de ahí
+salen los `presupuestoId` de media aplicación — y **no tenía ni un test**. Al tocarlo hacía
+falta red: `src/test/shell/contexto.test.tsx`, 4 tests.
+
+Como caracterizan comportamiento existente, pasaban a la primera, así que se comprobaron
+por mutación antes de refactorizar: romper la preferencia por la versión vigente tumba 2
+tests, y borrar la corrección del `?v=` inválido tumba 1. Matan lo que dicen matar.
+
+`src/test/hooks/use-mobile.test.ts` (4 tests) sí arrancó en rojo de verdad.
+
+## Definición de hecho
+
+- [x] `pnpm run verify` en verde.
+- [x] `pnpm run e2e` en verde.
+- [x] Los 8 componentes muertos borrados — y dos dependencias con ellos. Los «4 a
+      investigar» investigados y la decisión escrita arriba: se borran, la deuda no era al revés.
+- [x] `lint` sin `set-state-in-effect` ni `exhaustive-deps`. Quedan 7 warnings de
+      `react(incompatible-library)`, de terceros, sin silenciar.
+- [x] Cero ids numéricos en `e2e/screenshots.spec.ts`, con las constantes compartidas
+      con las fixtures de vitest.
+- [x] Cero `as never` en `src/`: los de producción ya no estaban; los de la suite,
+      retirados. Razón escrita en §4.
+- [x] El `grep` de comentarios mentirosos, vacío.
+- [x] `AGENTS.md` actualizado: baseline de tests, doctrina del dinero y rutas de admin.
+
+## Hallazgo que no es de este plan: la captura 08 lleva meses fotografiando una pantalla rota
+
+`screenshots/08-presupuesto.png`, **commiteada en el repo**, muestra «Algo salió mal en esta
+sección». No lo provoca este plan: la imagen de `HEAD` (`8547daf`) ya sale así.
+
+- **Pantalla:** `/proyectos/:id/presupuesto`.
+- **Qué revienta:** `ResumenComponentes.tsx:23` hace `Object.entries(data.porComponente)`.
+  El stub de la captura no trae `porComponente`, así que es `undefined` y salta
+  `TypeError: Cannot convert undefined or null to object`. Lo atrapa `LimiteDeError`.
+- **De quién es la culpa: del stub, no de la aplicación.** `ResumenComponentesResponse`
+  declara `porComponente: Record<string, Decimal>` y `resumenComponentesFixture` (vitest)
+  tiene esa forma. El stub del E2E inventa otra —`{equipo:{total,porcentaje}, manoObra:…}`—
+  que no ha existido nunca en el contrato. Contra el backend real la pantalla funciona.
+- **Desde cuándo:** el stub se escribió con esa forma en `db5f1ed` (2026-07-24) y el
+  contrato pasó a `porComponente` en `e44c608` (2026-09-05, «align presupuesto/versiones
+  with real backend API»). Desde ese commit la captura fotografía el error boundary.
+
+**Lo que de verdad falla es el test, no la pantalla.** `test("08-presupuesto")` navega y
+dispara la captura, sin afirmar nada sobre el contenido: una pantalla que revienta entera
+la da por buena. Por eso pasó desapercibido cinco olas, y por eso `pnpm run e2e` sigue en
+verde 20/20 con la imagen rota dentro. Es el mismo agujero del §3 visto por otro lado: nada
+comprueba la forma de los stubs del E2E.
+
+Arreglarlo es cambiar tres claves del stub, pero **es alcance del plan 059** (formas de
+DTO), no de éste, y merece además una aserción mínima en la captura —que el boundary no
+esté— para que no pueda repetirse. No se toca aquí.
+
+## Lo que este plan deja abierto
+
+1. **`e2e/` fuera del typecheck** (§3). Es el agujero por el que se coló todo lo del §3.
+2. **Dos nombres que mienten**: `PopoverDesglose` es un diálogo y `ComboboxUnidad` son
+   chips con un input. Renombrarlos es un `sed` y no se hizo por no mezclarlo con esto.
+3. **7 warnings de react-hook-form**, a la espera de que la librería sea compatible con
+   el React Compiler.

@@ -25,7 +25,12 @@ Rutas anidadas (ej. `/proyectos/1/versiones/2/apus`). Se descartó porque:
 
 ## Arquitectura
 
-- `contexto.ts` — `useProyectoActivoId`, `useVersiones`, `useVersionActiva`.
+- `contexto.ts` — `useProyectoActivoId` y `useVersionActiva`. `useVersiones` ya no
+  vive aquí: era una copia del de `features/presupuesto/hooks/usePresupuesto.ts`
+  con la misma `queryKey` y la misma URL, o sea dos hooks sobre la misma entrada
+  de caché que nada obligaba a moverse juntos. `contexto.ts` importa aquél
+  (plan 060). La dirección `shell/ → features/` no es nueva: `Breadcrumbs`,
+  `SelectorProyecto` y `Sidebar` ya la usaban.
 - `useVersionActiva` es el hook único para toda la app. Ningún feature module debe leer `?v=` directamente.
   La corrección de un `?v=` inválido vive en un `useEffect`, no en el cuerpo del
   render: hacerlo durante el render dispara un `setState` de otro componente.

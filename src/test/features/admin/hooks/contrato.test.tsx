@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
 import { crearQueryClient } from "@/test/render";
-import { espiar, ultima } from "@/test/espia";
+import { espiar, ultima, cuerpoInvalido } from "@/test/espia";
 import { basesCentralesFixtureAdmin, parametrosSistemaFixture } from "@/test/fixtures/admin";
 import { ApiError } from "@/api/problem";
 import {
@@ -103,7 +103,7 @@ describe("contrato de useAdminBases", () => {
     const { result } = renderHook(() => useCrearBase(), { wrapper });
 
     const error = await result.current
-      .mutateAsync({ nombre: "Base", tipo: "CENTRAL" } as unknown as { nombre: string })
+      .mutateAsync(cuerpoInvalido({ nombre: "Base", tipo: "CENTRAL" }))
       .catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(ApiError);
@@ -181,7 +181,7 @@ describe("contrato de useParametrosSistema", () => {
     const { result } = renderHook(() => useActualizarParametros(), { wrapper });
 
     const error = await result.current
-      .mutateAsync({ porcentajeHm: "0.050000" } as never)
+      .mutateAsync(cuerpoInvalido({ porcentajeHm: "0.050000" }))
       .catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(ApiError);

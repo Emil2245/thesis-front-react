@@ -1,5 +1,14 @@
 # Plan 021: Reparar la suite de capturas E2E (rutas con query string, proyectos y navegadores)
 
+> **Alcance extendido — 2026-09-06 (plan 060).** Este plan cerró como DONE con
+> ids numéricos todavía dentro de `e2e/screenshots.spec.ts`. No fue un descuido
+> del ejecutor: `e2e/` no está en el `include` de ningún `tsconfig`, así que
+> `pnpm run typecheck` nunca lo ha mirado, y la migración de toda la app a
+> UUIDv7 no puso nada en rojo aquí. Los ids los sustituyó el
+> [`plan 060`](060-limpieza-deuda-menor.md) §3, que ahora comparte las
+> constantes con las fixtures de vitest. El punto ciego del gate sigue abierto y
+> está anotado en `AGENTS.md`.
+
 > **Executor instructions**: Follow this plan step by step. Run every
 > verification command and confirm the expected result before moving to the
 > next step. If anything in the "STOP conditions" section occurs, stop and

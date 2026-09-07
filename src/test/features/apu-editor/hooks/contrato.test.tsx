@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
 import { crearQueryClient } from "@/test/render";
-import { espiar, ultima } from "@/test/espia";
+import { espiar, ultima, cuerpoInvalido } from "@/test/espia";
 import { APU_REFERENCIADO } from "@/test/handlers";
 import { PRESUPUESTO_V2 } from "@/test/fixtures/presupuesto";
 import { apuResumenFixture } from "@/test/fixtures/apu";
@@ -77,12 +77,14 @@ describe("contrato de useApus", () => {
     const { result } = renderHook(() => useCrearApu(PRESUPUESTO_V2), { wrapper });
 
     await expect(
-      result.current.mutateAsync({
-        codigo: "APU-010",
-        descripcion: "Encofrado",
-        unidad: "m2",
-        plantilla: PLANTILLA_ID,
-      } as never),
+      result.current.mutateAsync(
+        cuerpoInvalido({
+          codigo: "APU-010",
+          descripcion: "Encofrado",
+          unidad: "m2",
+          plantilla: PLANTILLA_ID,
+        }),
+      ),
     ).rejects.toThrow();
   });
 

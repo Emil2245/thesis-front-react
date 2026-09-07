@@ -1,3 +1,4 @@
+import { asDecimal } from "@/lib/decimal";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -6,7 +7,7 @@ import type { ReactNode } from "react";
 
 import { crearQueryClient } from "@/test/render";
 import { server } from "@/test/server";
-import { espiar, ultima } from "@/test/espia";
+import { espiar, ultima, cuerpoInvalido } from "@/test/espia";
 import { ApiError } from "@/api/problem";
 import { qk } from "@/api/queryKeys";
 import {
@@ -137,10 +138,12 @@ describe("useCronograma — contrato de salida", () => {
     const { result } = renderHook(() => useCrearCronograma(PRESUPUESTO_V2), { wrapper });
 
     await expect(
-      result.current.mutateAsync({
-        unidadTiempo: "MES",
-        periodos: 4,
-      } as never),
+      result.current.mutateAsync(
+        cuerpoInvalido({
+          unidadTiempo: "MES",
+          periodos: 4,
+        }),
+      ),
     ).rejects.toThrow();
   });
 });
@@ -170,7 +173,7 @@ describe("useProgramarActividad — las cuatro operaciones", () => {
       actividadId: ACTIVIDAD_1,
       body: {
         operacion: "REEMPLAZAR_AVANCES",
-        avancePorPeriodo: { "1": "3.6036" as never, "2": "7.2072" as never },
+        avancePorPeriodo: { "1": asDecimal("3.6036"), "2": asDecimal("7.2072") },
       },
     });
 
@@ -242,7 +245,7 @@ describe("useProgramarActividad — las cuatro operaciones", () => {
     await expect(
       result.current.mutateAsync({
         actividadId: ACTIVIDAD_1,
-        body: { operacion: "DISTRIBUIR_UNIFORME", periodos: [1], delta: 2 } as never,
+        body: cuerpoInvalido({ operacion: "DISTRIBUIR_UNIFORME", periodos: [1], delta: 2 }),
       }),
     ).rejects.toThrow();
   });
@@ -255,7 +258,10 @@ describe("useProgramarActividad — las cuatro operaciones", () => {
     await expect(
       result.current.mutateAsync({
         actividadId: ACTIVIDAD_1,
-        body: { operacion: "REEMPLAZAR_AVANCES", avancePorPeriodo: { "1": 3.6036 } } as never,
+        body: cuerpoInvalido({
+          operacion: "REEMPLAZAR_AVANCES",
+          avancePorPeriodo: { "1": 3.6036 },
+        }),
       }),
     ).rejects.toThrow();
   });
