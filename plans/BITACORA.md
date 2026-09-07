@@ -1,14 +1,67 @@
 # Bitácora
 
-**Ola actual:** — · **RUTA CERRADA** · **Actualizada:** 2026-09-06
+**Ronda de paridad 1** · ola 1 · **Actualizada:** 2026-09-07
+**Backend alineado hasta:** `c337950` → **objetivo de esta ronda: `5673615`**
 
-> La lleva el orquestador ([`ORQUESTADOR.md`](ORQUESTADOR.md)). Se escribe **en el momento** en que
+> La lleva el orquestador ([`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md)). Se escribe **en el momento** en que
 > algo cambia de estado, no al final de la sesión: si la sesión se corta, lo que no está escrito
 > aquí no ocurrió.
 >
 > Estados: `⏳ pendiente` · `🔄 en curso` · `🟡 vuelto, sin revisar` · `❌ rechazado` · `✅ verde`
 
-## Estado por plan
+## Ronda de paridad 1 — backend `c337950` → `5673615` (2026-09-07)
+
+Delta del backend: **un commit**, `5673615` «admin panel plans», 63 archivos. Partido en dos
+montones según la §1 del orquestador:
+
+- **Código, hay contraparte que implementar:** exportación documental del cronograma (plan 031
+  del backend). 21 archivos Java, `CronogramaDocumentoResource` con dos rutas, 6 DTO, perfil XSD
+  de MSPDI y 7 casos Bruno ejecutables. → **plan 066**.
+- **Solo planes, sin código:** el panel admin (`plans/panel-admin/032`–`040` del backend:
+  contrato, log de actividad, usuarios e invitaciones, bases centrales, plantillas de sistema,
+  parámetros, instrumentación D13, piloto SUS). **No hay ni un recurso JAX-RS**, así que las
+  cuatro claves `admin-usuarios`, `admin-plantillas`, `admin-valores` y `admin-logs` de
+  `src/lib/disponibilidad.ts` **siguen degradadas**. No se escribe plan de frontend contra esto.
+
+| Ola | Plan | Estado | Worktree | Commit | Nota |
+| --- | ---- | ------ | -------- | ------ | ---- |
+| 1 | **066 exportar cronograma (xlsx/pdf/mspdi)** | ⏳ pendiente | — | — | incluye el arreglo del cuerpo de error en `Blob` |
+
+### Notas de la ronda
+
+- 2026-09-07 — **Delta reconfirmado antes de leer nada** (§0.1): `origin/main` del backend sigue
+  en `5673615`; `git log c337950..origin/main` = 1 commit. La §5 del orquestador coincidía.
+- 2026-09-07 — **El baseline de `AGENTS.md` mentía**: decía 456 tests en 72 archivos, y
+  `verify` sobre `main` @ `1344113` da **461 en 74**, exit 0. No es una regresión: el propio
+  commit del plan 065 (`f67356e`) dice «verify: 461 tests, exit 0» en su mensaje, y nadie
+  actualizó la línea al fusionar. Corregido a 461/74. Es la segunda vez que un baseline caducado
+  aparece en este repo (la primera, 197/43 cinco olas atrás).
+- 2026-09-07 — **Bug vivo en `main`, entra como rebanada 1 del 066** (§8.2): con
+  `responseType: "blob"` axios entrega el cuerpo de **error** como `Blob`, así que
+  `errorPayloadSchema.safeParse` de `src/api/client.ts` falla siempre y **cualquier** fallo de
+  descarga se degrada a `sin-respuesta`. Hoy solo afea el mensaje del DOCX del plan 051; con el
+  cronograma se tragaría el cuerpo del `409 export-bloqueado`, que es el que lleva los
+  `bloqueos[]`. Arreglo en el interceptor, que es por donde pasan todos los llamantes.
+- 2026-09-07 — ⚠️ **`export-bloqueado` vuelve al catálogo.** `src/api/problem.ts` afirma —con
+  razón, contra `c337950`— que el código tenía «cero apariciones en todo el backend» y lo dejó
+  fuera de `PROBLEM_TYPES` (plan 063). En `5673615` lo emite
+  `CronogramaDocumentoResource.descargar` con el cuerpo tipado `BloqueoExportDetalle`. El plan
+  066 lo devuelve y corrige el comentario.
+- 2026-09-07 — **§8.1, documentación del backend que miente** (avisado, gana el código): el
+  javadoc de `BloqueoExportResponse` documenta como canónico un octavo código,
+  `cronograma-avance-final`, que **ningún camino del backend emite** — cero apariciones fuera de
+  ese javadoc en todo `origin/main`. El caso real (avance final ≠ 100) sale como
+  `cronograma-borrador`. El plan 066 no lo transcribe, y la UI muestra el campo `detalle` en vez
+  de una tabla de códigos, así que un código nuevo del backend no la rompe.
+- 2026-09-07 — **MSPDI no está en la especificación.** `thesis-docs` no menciona MSPDI ni MS
+  Project en ningún archivo; `07-api-contract.md:222` sí acuerda
+  `GET /documentos/cronograma/{presupuestoId}?formato=` con 200/404/409 y el código
+  `export-bloqueado`, pero no lista el `preflight` ni los formatos. La pantalla de documentos
+  **sí** está especificada (P-37, `06-casos-de-uso.md` §G, con «Generar Cronograma» entre los
+  cuatro entregables), así que no aplica el §8.3 —no es una pantalla nueva— y el front ofrece los
+  tres formatos que el backend sirve. Queda avisado para que los docs se corrijan.
+
+## Estado por plan — ruta cerrada 053–065
 
 | Ola | Plan | Estado | Worktree | Commit | Nota |
 | --- | ---- | ------ | -------- | ------ | ---- |

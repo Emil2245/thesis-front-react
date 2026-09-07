@@ -11,7 +11,9 @@ Each plan is written for an executor with **zero context from the session that p
 
 > ## Empieza aquí (2026-09-06)
 >
-> **¿Vas a llevar el proyecto de punta a punta? Lee [`ORQUESTADOR.md`](ORQUESTADOR.md) y arranca.**
+> **¿Vas a llevar el proyecto de punta a punta? Lee [`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md) y arranca.**
+> Es el encargo activo: detectar qué mergeó el backend y poner el frontend a la altura.
+> [`ORQUESTADOR.md`](ORQUESTADOR.md) es su predecesor, con la ruta 053–065 ya cerrada.
 > Estado vivo en [`BITACORA.md`](BITACORA.md).
 >
 > **El índice vivo de trabajo pendiente es [`HANDOFF-ESTADO-Y-GAPS.md`](HANDOFF-ESTADO-Y-GAPS.md).**
@@ -100,6 +102,20 @@ Each plan is written for an executor with **zero context from the session that p
 | 016 | [Alinear crear/editar proyecto con el backend real](016-align-project-create-edit-with-backend.md) | P-05, P-06 | S-07 | — | DONE (`54d8830`) |
 | 017 | [Alinear módulo de insumos con el backend real](017-align-insumos-module-with-backend.md) | P-13…P-16 | S-14…S-18 | 016+018 merged (`cd90a7b`); r2 amplía alcance admin | DONE (`b3b3e2a`) |
 | 018 | [Parámetros de proyecto numéricos](018-numeric-project-parameters.md) | P-09 | S-10 | — | DONE (`38faaa3`) |
+
+### Rondas de paridad con el backend — desde 2026-09-07
+
+Encargo recurrente de [`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md): cada vez que el backend
+mueve `origin/main`, se detecta el delta y se pone el frontend a la altura. **El estado vivo de
+cada ronda está en [`BITACORA.md`](BITACORA.md)**, no aquí; esta tabla solo lista los planes.
+
+| Plan | Título | Prioridad | Esfuerzo | Depende de | Estado |
+|---|---|---|---|---|---|
+| 066 | [Exportar el cronograma en XLSX, PDF y MSPDI](066-exportar-cronograma.md) | P1 | L | — | TODO |
+
+Ronda 1 (backend `c337950` → `5673615`): el delta traía la exportación documental del cronograma
+(código, plan 031 del backend) y el panel admin (**solo planes, sin ni un recurso JAX-RS** — las
+cuatro claves `admin-*` de `src/lib/disponibilidad.ts` siguen degradadas a propósito).
 
 ### Segunda tanda — auditoría posterior al rediseño de UI (2026-08-24)
 

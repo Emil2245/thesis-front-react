@@ -20,7 +20,7 @@ pnpm run e2e:screenshots   # solo las 11 capturas de escritorio (chromium)
 pnpm run dev      # http://localhost:5173
 ```
 
-Baseline actual: **456 tests unitarios en 72 archivos**, `pnpm run e2e` en verde.
+Baseline actual: **461 tests unitarios en 74 archivos**, `pnpm run e2e` en verde.
 Si cambias el baseline, actualiza este número: el plan 060 se encontró con el de
 197/43, cinco olas caducado, y un baseline que miente no detecta nada.
 

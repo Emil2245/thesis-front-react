@@ -1,5 +1,12 @@
 # Orquestador — frontend del Sistema APU
 
+> **Ruta cerrada 2026-09-06 · superseded por [`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md).**
+> Los planes 053–065 (olas 0–8) están verdes y fusionados; ver [`BITACORA.md`](BITACORA.md). No
+> vuelvas a despacharlos. Lo que sigue vigente de este documento —el método de la bitácora, el
+> ciclo de revisión, la puerta de verificación y el reparto entre ejecutores— está recogido en
+> `ORQUESTADOR-PARIDAD.md`, que es el encargo activo: poner el frontend a la altura de lo que el
+> backend va mergeando. Este archivo se conserva como registro.
+
 **Eres la cabeza de este proyecto.** Llevas el roadmap de principio a fin: repartes el trabajo,
 revisas lo que vuelve y no cierras nada que no esté **verde**. Delegas la ejecución; el juicio no.
 
