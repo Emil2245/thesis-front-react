@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { APU_1, APU_2, APU_4 } from "../src/test/fixtures/apu";
 import {
   ACTIVIDAD_1,
@@ -18,6 +18,7 @@ import {
   RUBRO_1_1_2,
   RUBRO_1_2_1,
   RUBRO_2_1,
+  resumenComponentesFixture,
 } from "../src/test/fixtures/presupuesto";
 import {
   FIRMANTE_1,
@@ -94,9 +95,9 @@ const firmantes = [
   { id: FIRMANTE_2, nombre: "Arq. María López", cargo: "Supervisora", rol: "APROBADO", orden: 1 },
 ];
 const parametros = {
-  porcentajeHerramientaMenor: "0.050000",
-  porcentajeIndirecto: "0.150000",
-  iva: "0.120000",
+  porcentajeHerramientaMenor: 0.05,
+  porcentajeIndirecto: 0.15,
+  iva: 0.12,
   moneda: "USD",
   mostrarSeccionesVacias: false,
   sufijosSeccionActivos: true,
@@ -117,7 +118,6 @@ const insumos = [
     precioUnitario: 12.5,
     fechaActualizacion: "2026-03-15T00:00:00",
     desactualizado: false,
-    fuente: "LOCAL",
   },
   {
     id: "11",
@@ -128,7 +128,6 @@ const insumos = [
     precioUnitario: 18.0,
     fechaActualizacion: "2025-11-20T00:00:00",
     desactualizado: true,
-    fuente: "LOCAL",
   },
   {
     id: "13",
@@ -137,10 +136,8 @@ const insumos = [
     tipo: "MANO_OBRA",
     unidad: "h",
     precioUnitario: 8.5,
-    jornal: "8.500000",
     fechaActualizacion: "2026-02-01T00:00:00",
     desactualizado: false,
-    fuente: "LOCAL",
   },
   {
     id: "15",
@@ -149,10 +146,8 @@ const insumos = [
     tipo: "EQUIPO",
     unidad: "h",
     precioUnitario: 45.0,
-    tarifa: "45.000000",
     fechaActualizacion: "2026-03-01T00:00:00",
     desactualizado: false,
-    fuente: "LOCAL",
   },
 ];
 const apusResumen = [
@@ -189,75 +184,72 @@ const apuDetalle = {
   codigo: "APU-001",
   descripcion: "Excavación a máquina",
   unidad: "m3",
-  esAuxiliar: false,
-  costoDirecto: "800.000000",
-  costoTotal: "920.000000",
-  vinculado: false,
-  porcentajeIndirecto: null,
-  porcentajeIndirectoEfectivo: "0.150000",
-  costoIndirecto: "120.000000",
+  costoDirecto: 800,
+  costoTotal: 920,
+  porcentajeIndirectoEfectivo: 0.15,
+  costoIndirecto: 120,
   secciones: [
     {
       tipo: "EQUIPO",
       orden: 1,
-      subtotal: "400.000000",
+      subtotal: 400,
       detalles: [
         {
-          id: 100,
+          id: "100",
           orden: 1,
           descripcion: "Retroexcavadora",
           esHerramientaMenor: false,
-          insumoId: 15,
+          insumoId: "15",
           apuAuxiliarId: null,
-          cantidad: "1.000000",
-          rendimiento: "0.050000",
+          cantidad: 1,
+          rendimiento: 0.05,
           unidad: "h",
-          precioEfectivo: "45.000000",
+          precioEfectivo: 45,
           precioHeredado: true,
-          costoHora: "900.000000",
-          costo: "400.000000",
+          costoHora: 900,
+          costo: 400,
         },
       ],
     },
     {
       tipo: "MANO_OBRA",
       orden: 2,
-      subtotal: "400.000000",
+      subtotal: 400,
       detalles: [
         {
-          id: 101,
+          id: "101",
           orden: 1,
           descripcion: "Albañil",
           esHerramientaMenor: false,
-          insumoId: 13,
+          insumoId: "13",
           apuAuxiliarId: null,
-          cantidad: "1.000000",
-          rendimiento: "0.100000",
+          cantidad: 1,
+          rendimiento: 0.1,
           unidad: "h",
-          precioEfectivo: "8.500000",
+          precioEfectivo: 8.5,
           precioHeredado: true,
-          costoHora: "85.000000",
-          costo: "200.000000",
+          costoHora: 85,
+          costo: 200,
         },
         {
-          id: 102,
+          id: "102",
           orden: 2,
           descripcion: "Peón",
           esHerramientaMenor: false,
-          insumoId: 14,
+          insumoId: "14",
           apuAuxiliarId: null,
-          cantidad: "2.000000",
-          rendimiento: "0.100000",
+          cantidad: 2,
+          rendimiento: 0.1,
           unidad: "h",
-          precioEfectivo: "4.250000",
+          precioEfectivo: 4.25,
           precioHeredado: true,
-          costoHora: "42.500000",
-          costo: "200.000000",
+          costoHora: 42.5,
+          costo: 200,
         },
       ],
     },
-    { tipo: "MATERIAL", orden: 3, subtotal: "0.000000", detalles: [] },
-    { tipo: "TRANSPORTE", orden: 4, subtotal: "0.000000", detalles: [] },
+    { tipo: "MATERIAL", orden: 3, subtotal: 0, detalles: [] },
+    { tipo: "TRANSPORTE", orden: 4, subtotal: 0, detalles: [] },
   ],
 };
 // `PresupuestoVersionResponse` es {presupuestoId, version, esVigente}: con
@@ -283,20 +275,23 @@ const versiones = [
   },
 ];
 const presupuesto = {
-  id: PRESUPUESTO_V2,
+  presupuestoId: PRESUPUESTO_V2,
   version: 2,
+  esVigente: true,
   totalGeneral: "18500.000000",
   capitulos: [
     {
       id: CAPITULO_1,
       item: "1",
       descripcion: "Preliminares",
+      orden: 1,
       total: "4500.000000",
       subcapitulos: [
         {
           id: CAPITULO_1_1,
           item: "1.1",
           descripcion: "Instalación de campamento",
+          orden: 1,
           total: "2500.000000",
           subcapitulos: [],
           rubros: [
@@ -310,7 +305,6 @@ const presupuesto = {
               precioUnitario: "40.000000",
               precioTotal: "2000.000000",
               apuId: APU_1,
-              alertas: [],
             },
             {
               id: RUBRO_1_1_2,
@@ -322,7 +316,6 @@ const presupuesto = {
               precioUnitario: "25.000000",
               precioTotal: "500.000000",
               apuId: APU_2,
-              alertas: ["PU_CERO"],
             },
           ],
         },
@@ -333,6 +326,7 @@ const presupuesto = {
       id: CAPITULO_2,
       item: "2",
       descripcion: "Obra civil",
+      orden: 2,
       total: "14000.000000",
       subcapitulos: [],
       rubros: [
@@ -346,7 +340,6 @@ const presupuesto = {
           precioUnitario: "1400.000000",
           precioTotal: "14000.000000",
           apuId: APU_4,
-          alertas: [],
         },
       ],
     },
@@ -450,6 +443,10 @@ async function capturar(
   testInfo: import("@playwright/test").TestInfo,
 ) {
   await page.waitForTimeout(2000);
+  // Una captura de una pantalla reventada es peor que ninguna: se commitea y el
+  // gate la da por buena. 08-presupuesto lo estuvo desde 2026-09-05 (plan 064).
+  // El texto está anclado por src/test/components/comunes/LimiteDeError.test.tsx.
+  await expect(page.getByText("Algo salió mal en esta sección.")).toHaveCount(0);
   const buf = await page.screenshot({ fullPage: true });
   if (testInfo.project.name !== "chromium") return;
   mkdirSync(OUT, { recursive: true });
@@ -486,7 +483,6 @@ async function baseAutenticado(page: import("@playwright/test").Page) {
   });
   await page.route(`${API}/**`, (route) => route.fulfill(json({})));
   await page.route(`${API}/auth/refresh`, (route) => route.fulfill(json(token)));
-  await page.route(`${API}/perfil`, (route) => route.fulfill(json(usuario)));
   await page.route(`${API}/proyectos*`, (route) => route.fulfill(json(proyectosResponse)));
   await page.route(`${API}/proyectos/${PROYECTO_1}/presupuestos*`, (route) =>
     route.fulfill(json(versiones)),
@@ -600,15 +596,11 @@ test("08-presupuesto", async ({ page }, testInfo) => {
     route.fulfill(json(presupuesto)),
   );
   await page.route(`${API}/presupuestos/${PRESUPUESTO_V2}/resumen`, (route) =>
-    route.fulfill(
-      json({
-        equipo: { total: "4000.000000", porcentaje: "0.2830" },
-        manoObra: { total: "6000.000000", porcentaje: "0.4250" },
-        material: { total: "3000.000000", porcentaje: "0.2120" },
-        transporte: { total: "1000.000000", porcentaje: "0.0800" },
-        totalGeneral: "14000.000000",
-      }),
-    ),
+    // La forma plana de antes (equipo/manoObra/... sin `porComponente`) nunca
+    // existió en el contrato y tumbaba la pantalla entera. Reusamos la fixture
+    // tipada como `ResumenComponentesResponse` para que no pueda volver a
+    // divergir sin que `typecheck` lo vea (plan 064).
+    route.fulfill(json(resumenComponentesFixture)),
   );
   await page.route(`${API}/presupuestos/${PRESUPUESTO_V2}/validacion`, (route) =>
     route.fulfill(
@@ -616,7 +608,7 @@ test("08-presupuesto", async ({ page }, testInfo) => {
         exportable: false,
         itemsPuCero: [
           {
-            rubroId: RUBRO_1_1_2,
+            id: RUBRO_1_1_2,
             item: "1.1.2",
             codigo: "APU-002",
             descripcion: "Relleno compactado",
@@ -624,7 +616,7 @@ test("08-presupuesto", async ({ page }, testInfo) => {
         ],
         itemsCantidadCero: [
           {
-            rubroId: RUBRO_1_2_1,
+            id: RUBRO_1_2_1,
             item: "1.2.1",
             codigo: "APU-003",
             descripcion: "Transporte material",
@@ -632,7 +624,7 @@ test("08-presupuesto", async ({ page }, testInfo) => {
         ],
         itemsSinActividad: [
           {
-            rubroId: RUBRO_1_1_1,
+            id: RUBRO_1_1_1,
             item: "1.1.1",
             codigo: "APU-001",
             descripcion: "Excavación a máquina",
