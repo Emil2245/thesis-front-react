@@ -98,13 +98,13 @@ export function PieTotales({ apu, onEditarPorcentajeCi, onAbrirDesglose }: PieTo
                   <span className="num font-medium">
                     {formatearPorcentaje(apu.porcentajeIndirectoEfectivo)}
                   </span>
-                  {apu.porcentajeIndirecto !== null && (
+                  {apu.porcentajeIndirecto != null && (
                     <Badge variant="secondary">Valor propio</Badge>
                   )}
                 </span>
               )}
             </div>
-            {!editandoCi && apu.porcentajeIndirecto !== null && (
+            {!editandoCi && apu.porcentajeIndirecto != null && (
               <Button
                 variant="ghost"
                 size="xs"

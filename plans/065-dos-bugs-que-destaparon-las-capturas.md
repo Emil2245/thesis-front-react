@@ -1,6 +1,6 @@
 # Plan 065 — Dos bugs de UI que las capturas tapaban
 
-**Status:** TODO
+**Status:** DONE (2026-09-06, rama `ola8-065`, sobre `a52f766`)
 **Escrito contra:** frontend `main` tras la ola 7 · backend `origin/main` @ `c337950`
 **Esfuerzo:** S (30–45 min) · **Riesgo:** BAJO — dos arreglos de una línea cada uno
 **Ola:** 8 — cierra la ruta

@@ -49,6 +49,42 @@ describe("PieTotales", () => {
     expect(screen.getByText("Valor propio")).toBeInTheDocument();
   });
 
+  // `ApuResponse` lleva @JsonInclude(NON_NULL) en el backend: cuando el APU
+  // hereda el %CI del proyecto la clave `porcentajeIndirecto` NO viene en el
+  // JSON, así que en TS es `undefined`, no `null`. Con `!== null` la insignia
+  // salía en TODOS los APU. La fixture debe OMITIR la clave, no ponerla a
+  // `null`: ponerla a `null` hace pasar el test en falso y es justo lo que
+  // enmascaraba el bug.
+  it("no muestra Valor propio ni el enlace al valor del proyecto cuando el APU hereda", () => {
+    expect(apuDetalleFixture).not.toHaveProperty("porcentajeIndirecto");
+
+    renderConProviders(
+      <PieTotales
+        apu={apuDetalleFixture}
+        onEditarPorcentajeCi={() => Promise.resolve()}
+        onAbrirDesglose={() => {}}
+      />,
+    );
+
+    expect(screen.queryByText("Valor propio")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /usar valor del proyecto/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("ofrece volver al valor del proyecto cuando el APU tiene override propio", () => {
+    renderConProviders(
+      <PieTotales
+        apu={{ ...apuDetalleFixture, porcentajeIndirecto: 0.22 }}
+        onEditarPorcentajeCi={() => Promise.resolve()}
+        onAbrirDesglose={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("Valor propio")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /usar valor del proyecto/i })).toBeInTheDocument();
+  });
+
   // El descuento de rubro no está pendiente: fue retirado (plan backend 015 y
   // rollout docs 2026-08-31, P-24/S-24 WITHDRAWN). Dejar el botón deshabilitado
   // prometía algo que el backend decidió no tener.
