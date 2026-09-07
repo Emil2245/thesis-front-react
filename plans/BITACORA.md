@@ -1,6 +1,6 @@
 # Bitácora
 
-**Ola actual:** 8 · **Actualizada:** 2026-09-06
+**Ola actual:** — · **RUTA CERRADA** · **Actualizada:** 2026-09-06
 
 > La lleva el orquestador ([`ORQUESTADOR.md`](ORQUESTADOR.md)). Se escribe **en el momento** en que
 > algo cambia de estado, no al final de la sesión: si la sesión se corta, lo que no está escrito
@@ -29,7 +29,7 @@
 | 6 | **063 ErrorPayload ≠ RFC 7807** | ✅ verde | — | 6ab61c8 | fusionado |
 | 6 | 060 limpieza | ✅ verde | — | a981dae | fusionado · **ola 6 cerrada** |
 | 7 | **064 capturas que no miran** | ✅ verde | — | 6962329 | fusionado |
-| 8 | **065 dos bugs de UI** | 🔄 en curso | .claude/worktrees/ola8-065 | — | plan nuevo, cierra la ruta |
+| 8 | **065 dos bugs de UI** | ✅ verde | — | 3db4036 | fusionado · **ruta cerrada** |
 
 ### Fuera de las olas
 
@@ -45,6 +45,16 @@ Baseline original del handoff: **45 archivos, 207 tests, verde** · backend `ori
 docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
+
+- 2026-09-06 — ✅ **RUTA CERRADA.** 16 planes verdes y fusionados a `main`. Estado final:
+  **74 archivos / 461 tests**, `e2e` 20/20, `guard:adr9` OK, build limpio. Todo empujado a
+  `origin/main`.
+- 2026-09-06 — **065 aceptado, PNG comprobado por mí.** Los cuatro componentes del desglose tienen
+  punto de color y sus cuatro segmentos de barra se pintan. El barrido de raíz que pedí encontró
+  un solo `=== null` más sobre un campo de DTO (`FilaDetalle.tsx`, `detalle.insumoId`); el ejecutor
+  lo reportó con precisión —`ApuDetalleResponse` **no** es `NON_NULL`, así que ese null sí viaja y
+  el check no estaba roto— y lo pasó a `== null` igualmente, que es correcto bajo las dos lecturas.
+  Los `--chart-2..5` se **borraron** en vez de mapearse: nadie los usaba.
 
 - 2026-09-06 — **064 aceptado, y miré el PNG yo mismo**: `08-presupuesto.png` ya muestra el
   desglose por componente con cifras, no el boundary. `capturar()` ahora falla ante cualquier error
