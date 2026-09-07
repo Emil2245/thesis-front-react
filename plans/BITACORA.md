@@ -1,6 +1,6 @@
 # Bitácora
 
-**Ola actual:** 7 · **Actualizada:** 2026-09-06
+**Ola actual:** 8 · **Actualizada:** 2026-09-06
 
 > La lleva el orquestador ([`ORQUESTADOR.md`](ORQUESTADOR.md)). Se escribe **en el momento** en que
 > algo cambia de estado, no al final de la sesión: si la sesión se corta, lo que no está escrito
@@ -28,7 +28,8 @@
 | 5 | 058 **reescrito**: procedencia del insumo | ✅ verde | — | cccb1b0 | fusionado · tanda 1 cerrada |
 | 6 | **063 ErrorPayload ≠ RFC 7807** | ✅ verde | — | 6ab61c8 | fusionado |
 | 6 | 060 limpieza | ✅ verde | — | a981dae | fusionado · **ola 6 cerrada** |
-| 7 | **064 capturas que no miran** | 🔄 en curso | .claude/worktrees/ola7-064 | — | plan nuevo, cierra la ruta |
+| 7 | **064 capturas que no miran** | ✅ verde | — | 6962329 | fusionado |
+| 8 | **065 dos bugs de UI** | 🔄 en curso | .claude/worktrees/ola8-065 | — | plan nuevo, cierra la ruta |
 
 ### Fuera de las olas
 
@@ -44,6 +45,23 @@ Baseline original del handoff: **45 archivos, 207 tests, verde** · backend `ori
 docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
+
+- 2026-09-06 — **064 aceptado, y miré el PNG yo mismo**: `08-presupuesto.png` ya muestra el
+  desglose por componente con cifras, no el boundary. `capturar()` ahora falla ante cualquier error
+  boundary, así que las once capturas están protegidas por una sola aserción. Ninguna otra captura
+  se cayó al poner la guarda: la 08 era la única pantalla tumbada.
+- 2026-09-06 — El 064 además reconcilió **todos** los stubs de `e2e/screenshots.spec.ts` con el
+  contrato. Varios estaban mal sin reventar, porque esos endpoints usan `get<T>`, que es un cast
+  puro sin Zod. Rechazó bien una supuesta incidencia: `items`/`total` en los stubs de paginación
+  **no** es un bug, `client.ts` los normaliza y es la forma real del cable.
+- 2026-09-06 — ⚠️ **Plan 065 escrito** (§7 caso 2) con dos bugs de UI que el 064 destapó y no
+  arregló, los dos verificados por mí:
+  **(1)** `ApuResponse` lleva `@JsonInclude(NON_NULL)`, así que `porcentajeIndirecto` llega
+  **ausente** —no `null`— cuando el APU hereda; `PieTotales.tsx:101,107` comparan con `!== null`, y
+  `undefined !== null` es `true`, o sea que **todos** los APU muestran «Valor propio». La línea 35
+  del mismo archivo usa `!= null`, que es lo correcto.
+  **(2)** `--color-chart-1` no está mapeado en el `@theme inline` de `index.css`, así que
+  `bg-chart-1` no da color: en la captura, «Equipo» es el único sin punto y su barra es invisible.
 
 - 2026-09-06 — 🔴 **Plan 064 escrito** (§7 caso 2): **`screenshots/08-presupuesto.png` es una foto
   de una pantalla reventada, commiteada en el repo.** Lo miré yo: dice «Algo salió mal en esta
