@@ -4,6 +4,12 @@
 
 React SPA for Ecuadorian public-works bidding. Implements full APU/presupuesto/cronograma workflow.
 
+> **Lee [`docs/bugs.md`](docs/bugs.md) antes de dar por bueno un `verify` en verde.** Documenta 40
+> defectos reales de este código y los **cuatro patrones** que los produjeron. Ninguno lo detectó
+> la suite: estuvo verde mientras seis funcionalidades no funcionaban en producción. El más
+> repetido — **el mock era la especificación**: un handler que acepta cualquier cuerpo es un test
+> que no prueba nada.
+
 ## Build & Test
 
 ```bash
@@ -36,8 +42,10 @@ Si cambias el baseline, actualiza este número: el plan 060 se encontró con el 
 - **Package manager:** pnpm only — never npm
 - **State:** TanStack Query for server state, Zustand for cross-cutting client state, local React state for UI
 - **API layer:** `src/api/` is the only place that knows HTTP exists. No feature module imports axios directly
-- **Dinero — se parte en dos ejes** (corregido 2026-09-06 por el plan 061; la
-  versión larga, en `plans/README.md` §2). **Transporte**, lo fija el backend y
+- **Dinero — «se visualiza en string, se maneja en número»** (decisión del autor,
+  2026-09-06). Son **dos ejes**, y confundirlos en uno solo produjo los `as never`
+  que el plan 060 retiró. Versión larga en [`docs/bugs.md`](docs/bugs.md) §0 y
+  `plans/README.md` §2. **Transporte**, lo fija el backend y
   no se negocia: presupuesto y cronograma (`totalGeneral`, `precioTotal`,
   `cantidad`, avances) serializan **string** —el tipo marcado `Decimal` de
   `src/lib/decimal.ts`—; APU, insumo y parámetros (`costoDirecto`,
