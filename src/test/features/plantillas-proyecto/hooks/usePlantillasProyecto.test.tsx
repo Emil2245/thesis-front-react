@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
 import { crearQueryClient } from "@/test/render";
-import { espiar, ultima } from "@/test/espia";
+import { espiar, ultima, cuerpoInvalido } from "@/test/espia";
 import {
   usePlantillasProyecto,
   useGuardarPlantillaProyecto,
@@ -48,10 +48,12 @@ describe("usePlantillasProyecto", () => {
     const { result } = renderHook(() => useGuardarPlantillaProyecto(PROYECTO_1), { wrapper });
 
     await expect(
-      result.current.mutateAsync({
-        nombre: "Base vial",
-        proyectoId: PROYECTO_1,
-      } as never),
+      result.current.mutateAsync(
+        cuerpoInvalido({
+          nombre: "Base vial",
+          proyectoId: PROYECTO_1,
+        }),
+      ),
     ).rejects.toThrow();
   });
 

@@ -1,3 +1,4 @@
+import { cuerpoInvalido } from "@/test/espia";
 import { describe, expect, it } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -33,7 +34,7 @@ describe("useRenombrarPlantilla", () => {
     await expect(
       result.current.mutateAsync({
         id: PLANTILLA_ID,
-        body: { nombre: "Renombrada", descripcion: "Nueva descripción" } as never,
+        body: cuerpoInvalido({ nombre: "Renombrada", descripcion: "Nueva descripción" }),
       }),
     ).rejects.toThrow();
   });

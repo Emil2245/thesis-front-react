@@ -1,3 +1,4 @@
+import { cuerpoInvalido } from "@/test/espia";
 import { describe, expect, it } from "vitest";
 import { http, HttpResponse } from "msw";
 import { ApiError, PROBLEM_TYPES, problemDesconocido } from "@/api/problem";
@@ -23,7 +24,7 @@ describe("ApiError contra el cuerpo real del backend", () => {
   });
 
   it("no revienta cuando el cuerpo del error viene vacío", () => {
-    const e = new ApiError({} as never, 500);
+    const e = new ApiError(cuerpoInvalido({}), 500);
     expect(e.slug).toBe("");
     expect(e.is("validacion")).toBe(false);
   });

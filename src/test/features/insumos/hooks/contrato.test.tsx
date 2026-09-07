@@ -5,7 +5,7 @@ import { http, HttpResponse } from "msw";
 import type { ReactNode } from "react";
 
 import { crearQueryClient } from "@/test/render";
-import { espiar, ultima } from "@/test/espia";
+import { espiar, ultima, cuerpoInvalido } from "@/test/espia";
 import { server } from "@/test/server";
 import { INSUMO_EN_USO } from "@/test/handlers";
 import {
@@ -99,13 +99,15 @@ describe("contrato de las mutaciones de insumo", () => {
     const { result } = renderHook(() => useCrearInsumo(destinoProyecto(PROYECTO_ID)), { wrapper });
 
     await expect(
-      result.current.mutateAsync({
-        codigo: "M-010",
-        tipo: "MATERIAL",
-        descripcion: "Cal hidratada",
-        unidad: "kg",
-        precio: 3.75,
-      } as never),
+      result.current.mutateAsync(
+        cuerpoInvalido({
+          codigo: "M-010",
+          tipo: "MATERIAL",
+          descripcion: "Cal hidratada",
+          unidad: "kg",
+          precio: 3.75,
+        }),
+      ),
     ).rejects.toThrow();
   });
 

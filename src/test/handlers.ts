@@ -1,3 +1,4 @@
+import { asDecimal } from "@/lib/decimal";
 import { http, HttpResponse } from "msw";
 import type { DefaultBodyType, PathParams } from "msw";
 import type {
@@ -245,7 +246,7 @@ const versionesStub: PresupuestoVersionResponse[] = [
     version: 1,
     esVigente: false,
     notas: "Primera versión",
-    totalGeneral: "1000.000000" as never,
+    totalGeneral: asDecimal("1000.000000"),
     fechaCreacion: "2026-02-01T00:00:00",
   },
   {
@@ -254,7 +255,7 @@ const versionesStub: PresupuestoVersionResponse[] = [
     esVigente: true,
     origenId: PRESUPUESTO_V1,
     notas: "Segunda versión",
-    totalGeneral: "1200.000000" as never,
+    totalGeneral: asDecimal("1200.000000"),
     fechaCreacion: "2026-03-01T00:00:00",
   },
 ];
@@ -407,19 +408,19 @@ export const handlers = [
   // ———— Descuento global ————
   http.get(`${API}/presupuestos/:id/descuento-global/preview`, () =>
     HttpResponse.json({
-      porcentaje: "0.0500" as never,
+      porcentaje: asDecimal("0.0500"),
       porApu: [
         {
           apuId: "018f8a40-0000-7000-8000-000000000001",
           codigo: "APU-001",
-          cdAntes: "100.000000" as never,
-          cd: "95.000000" as never,
-          ci: "15.000000" as never,
-          ct: "110.000000" as never,
+          cdAntes: asDecimal("100.000000"),
+          cd: asDecimal("95.000000"),
+          ci: asDecimal("15.000000"),
+          ct: asDecimal("110.000000"),
         },
       ],
-      totalGeneralActual: "1000.000000" as never,
-      totalGeneralProyectado: "950.000000" as never,
+      totalGeneralActual: asDecimal("1000.000000"),
+      totalGeneralProyectado: asDecimal("950.000000"),
     }),
   ),
   http.post(
@@ -687,7 +688,7 @@ export const handlers = [
           esVigente: false,
           origenId: PRESUPUESTO_V2,
           notas: "Nueva versión",
-          totalGeneral: "18500.000000" as never,
+          totalGeneral: asDecimal("18500.000000"),
           fechaCreacion: "2026-07-23T00:00:00",
         },
         { status: 201 },
@@ -700,7 +701,7 @@ export const handlers = [
       esVigente: true,
       origenId: PRESUPUESTO_V1,
       notas: "Corrección APU hormigón",
-      totalGeneral: "18500.000000" as never,
+      totalGeneral: asDecimal("18500.000000"),
       fechaCreacion: "2026-07-01T00:00:00",
     }),
   ),

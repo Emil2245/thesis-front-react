@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useCrearApu } from "../hooks/useApus";
 import { usePlantillaDetalle, usePlantillas } from "../hooks/usePlantillas";
 import { useParametros } from "@/features/proyectos/hooks/useParametros";
@@ -44,11 +44,15 @@ export function DialogoNuevoApu({
   const { data: plantillas } = usePlantillas();
   const { data: detalle } = usePlantillaDetalle(plantillaId);
 
-  useEffect(() => {
-    if (!detalle) return;
+  // Al cargar el detalle de una plantilla, sus valores sustituyen a los del
+  // formulario. Se ajusta en render (patrón oficial de React para "estado que
+  // depende de props") y no en un efecto, que provocaba un render en cascada.
+  const [detallePrevio, setDetallePrevio] = useState(detalle);
+  if (detalle && detalle !== detallePrevio) {
+    setDetallePrevio(detalle);
     setDescripcion(detalle.descripcionRubro ?? "");
     setUnidad(detalle.unidad ?? "");
-  }, [detalle]);
+  }
 
   const modoAuto = parametros?.modoCodigoRubro === "AUTOGENERADO";
 

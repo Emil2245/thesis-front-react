@@ -52,3 +52,15 @@ export function ultima(peticiones: Peticion[], metodo: string, ruta: string | Re
     p.metodo === metodo && (typeof ruta === "string" ? p.ruta.endsWith(ruta) : ruta.test(p.ruta));
   return peticiones.filter(casa).at(-1);
 }
+
+/**
+ * Cuerpo deliberadamente inválido, para los tests que comprueban que el seam
+ * rechaza un campo de más o mal nombrado: por definición tienen que mandar algo
+ * que el DTO no admite.
+ *
+ * Antes esto se escribía `as never`, que silencia al compilador sin decir por
+ * qué: un `as never` intencionado y uno olvidado eran indistinguibles a la
+ * vista y al `grep`. Los doce que había en la suite resultaron ser todos
+ * intencionados, pero sólo se supo quitándolos uno a uno (plan 060).
+ */
+export const cuerpoInvalido = <T>(cuerpo: unknown): T => cuerpo as T;

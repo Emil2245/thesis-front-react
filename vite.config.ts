@@ -17,8 +17,7 @@ export default defineConfig({
           if (id.includes("/react-router") || id.includes("/react-dom") || /\/react\//.test(id))
             return "react";
           if (id.includes("@tanstack")) return "query";
-          if (id.includes("radix-ui") || id.includes("@base-ui") || id.includes("cmdk"))
-            return "radix";
+          if (id.includes("radix-ui")) return "radix";
           if (id.includes("react-hook-form") || id.includes("@hookform") || id.includes("/zod/"))
             return "forms";
         },

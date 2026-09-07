@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 
 import { crearQueryClient } from "@/test/render";
 import { server } from "@/test/server";
-import { espiar, ultima } from "@/test/espia";
+import { espiar, ultima, cuerpoInvalido } from "@/test/espia";
 import {
   useProyectos,
   useProyecto,
@@ -90,14 +90,16 @@ describe("contrato de proyectos", () => {
     const { result } = renderHook(() => useCrearProyecto(), { wrapper });
 
     await expect(
-      result.current.mutateAsync({
-        nombreProyecto: "Puente Nuevo",
-        anio: 2026,
-        plazoEjecucion: 8,
-        plazoUnidad: "MES",
-        direccionInstitucional: "MTOP",
-        nombre: "Puente Nuevo",
-      } as never),
+      result.current.mutateAsync(
+        cuerpoInvalido({
+          nombreProyecto: "Puente Nuevo",
+          anio: 2026,
+          plazoEjecucion: 8,
+          plazoUnidad: "MES",
+          direccionInstitucional: "MTOP",
+          nombre: "Puente Nuevo",
+        }),
+      ),
     ).rejects.toThrow();
   });
 

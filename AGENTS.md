@@ -8,13 +8,22 @@ React SPA for Ecuadorian public-works bidding. Implements full APU/presupuesto/c
 
 ```bash
 pnpm install
-pnpm run verify   # typecheck + lint + format:check + test + build
-pnpm run e2e      # Playwright E2E (20 tests)
+pnpm run verify   # typecheck + lint + guard:adr9 + format:check + test + build
+pnpm run e2e      # Playwright E2E (20 tests: 11 capturas + 3 smoke × 3 navegadores)
 pnpm run e2e:screenshots   # solo las 11 capturas de escritorio (chromium)
 pnpm run dev      # http://localhost:5173
 ```
 
-Baseline actual: **197 tests unitarios en 43 archivos**, `pnpm run e2e` en verde.
+Baseline actual: **456 tests unitarios en 72 archivos**, `pnpm run e2e` en verde.
+Si cambias el baseline, actualiza este número: el plan 060 se encontró con el de
+197/43, cinco olas caducado, y un baseline que miente no detecta nada.
+
+> **Punto ciego del gate:** `verify` **no comprueba tipos en `e2e/`**.
+> `tsconfig.app.json` incluye sólo `src`, así que un error de tipos en un
+> `.spec.ts` de Playwright no aparece hasta que corre `pnpm run e2e` — y como
+> sus datos de prueba son literales sin anotar, un id con la forma equivocada no
+> lo ve nadie. `oxlint` sí recorre `e2e/`. Por eso los ids numéricos de
+> `screenshots.spec.ts` sobrevivieron a la migración a UUID de toda la app.
 
 > Si tocas un componente y el navegador o Playwright siguen mostrando el
 > comportamiento viejo, reinicia el dev server: `playwright.config.ts` usa
@@ -27,14 +36,33 @@ Baseline actual: **197 tests unitarios en 43 archivos**, `pnpm run e2e` en verde
 - **Package manager:** pnpm only — never npm
 - **State:** TanStack Query for server state, Zustand for cross-cutting client state, local React state for UI
 - **API layer:** `src/api/` is the only place that knows HTTP exists. No feature module imports axios directly
-- **Money:** `Decimal` branded strings (defined in `src/lib/decimal.ts`). Never parse to number and send back
-- **No client-side calc:** All cost/pricing math comes from the server (ADR 9)
+- **Dinero — se parte en dos ejes** (corregido 2026-09-06 por el plan 061; la
+  versión larga, en `plans/README.md` §2). **Transporte**, lo fija el backend y
+  no se negocia: presupuesto y cronograma (`totalGeneral`, `precioTotal`,
+  `cantidad`, avances) serializan **string** —el tipo marcado `Decimal` de
+  `src/lib/decimal.ts`—; APU, insumo y parámetros (`costoDirecto`,
+  `precioUnitario`, `iva`) serializan **number**. Los requests aceptan las dos
+  formas. **Edición**: campo editable → `number` cuantizado; campo de solo
+  lectura → `string`. La regla que estaba escrita aquí antes —«never parse to
+  number and send it back»— **era falsa** desde que existe el backend real, y
+  fue la que produjo los `as never` que el plan 060 retiró: si un DTO te obliga
+  a castear para que compile, el que está mal es el DTO, no el dato.
+- **No aritmética de dinero en el cliente:** todo cálculo viene del servidor
+  (ADR 9). `toFixed`/`parseFloat` sólo dentro de `src/lib/decimal.ts`, con la
+  guarda `pnpm run guard:adr9` encadenada dentro de `verify`. Los porcentajes
+  viajan como fracción (`0.1800` = 18 %); dinero a escala 6, porcentajes y
+  avances a escala 4
 - **Módulos sin backend:** el inventario está en `src/lib/disponibilidad.ts`. Las
   pantallas cuyo servidor no existe se degradan con `ModuloNoDisponible` y
   conservan su implementación real exportada como `<Nombre>PageActiva`: para
   reactivarlas, quita el módulo del set, borra el wrapper y renombra. **Nunca
   las borres.** Los controles sueltos sin endpoint van `disabled` + tooltip con
-  `MOTIVO_SIN_BACKEND`
+  `MOTIVO_SIN_BACKEND`. **El gate es por página, no por módulo** (plan 050):
+  dentro de «admin» convivían una pantalla con backend completo y cuatro sin
+  ninguno, así que la clave gruesa apagaba justo la que funcionaba. Hoy las
+  claves son `admin-usuarios`, `admin-plantillas`, `admin-valores`,
+  `admin-logs` y `descuento-global`; Bases y Parámetros no aparecen porque su
+  backend existe
 - **Colores:** tema neutro (blanco y negro). `--primary`, `--ring` y `--chart-1`
   no tienen croma. Solo conservan color los tokens de estado (`--exito`,
   `--advertencia`, `--peligro`, `--destructive`). Nunca uses colores crudos de
@@ -42,16 +70,16 @@ Baseline actual: **197 tests unitarios en 43 archivos**, `pnpm run e2e` en verde
 
 ## Feature Modules
 
-| Module      | Routes                                                                                                       | Key files                                                         |
-| ----------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| auth        | `/login`, `/registro`, `/recuperar`, `/restablecer/:token`, `/verificar-email`, `/perfil`                    | `sesion.ts`, `useAuthMutaciones.ts`                               |
-| proyectos   | `/proyectos`, `/proyectos/:id`, `/proyectos/:id/parametros`                                                  | `AsistenteCrearProyecto.tsx`, `TabFirmantes.tsx`                  |
-| insumos     | `/proyectos/:id/insumos`                                                                                     | `TablaInsumos.tsx`, `DialogoInsumo.tsx`, `AsistenteImportCsv.tsx` |
-| apu-editor  | `/proyectos/:id/apus`, `/proyectos/:id/apus/:apuId`                                                          | `useApuEditor.ts`, `GridSeccion.tsx`, `PieTotales.tsx`            |
-| presupuesto | `/proyectos/:id/presupuesto`, `/proyectos/:id/versiones`                                                     | `ArbolPresupuesto.tsx`, `ComparadorVersiones.tsx`                 |
-| cronograma  | `/proyectos/:id/cronograma`                                                                                  | `TablaActividades.tsx`, `GanttChart.tsx`                          |
-| exportar    | `/proyectos/:id/documentos`                                                                                  | `ExportPage.tsx`                                                  |
-| admin       | `/admin/usuarios`, `/admin/bases`, `/admin/plantillas`, `/admin/parametros`, `/admin/valores`, `/admin/logs` | One page per route                                                |
+| Module      | Routes                                                                                                                           | Key files                                                                           |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| auth        | `/login`, `/registro`, `/recuperar`, `/restablecer/:token`, `/verificar-email`, `/perfil`                                        | `sesion.ts`, `useAuthMutaciones.ts`                                                 |
+| proyectos   | `/proyectos`, `/proyectos/:id`, `/proyectos/:id/parametros`                                                                      | `AsistenteCrearProyecto.tsx`, `TabFirmantes.tsx`                                    |
+| insumos     | `/proyectos/:id/insumos`                                                                                                         | `TablaInsumos.tsx`, `DialogoInsumo.tsx`, `AsistenteImportCsv.tsx`                   |
+| apu-editor  | `/proyectos/:id/apus`, `/proyectos/:id/apus/:apuId`                                                                              | `useApuEditor.ts`, `GridSeccion.tsx`, `PieTotales.tsx`                              |
+| presupuesto | `/proyectos/:id/presupuesto`, `/proyectos/:id/versiones`                                                                         | `ArbolPresupuesto.tsx`, `ComparadorVersiones.tsx`                                   |
+| cronograma  | `/proyectos/:id/cronograma`                                                                                                      | `TablaActividades.tsx`, `GanttChart.tsx`                                            |
+| exportar    | `/proyectos/:id/documentos`                                                                                                      | `ExportPage.tsx`                                                                    |
+| admin       | `/admin/usuarios`, `/admin/bases`, `/admin/bases/:id`, `/admin/plantillas`, `/admin/parametros`, `/admin/valores`, `/admin/logs` | One page per route. `/admin/bases/:id` es el detalle de una base central (plan 050) |
 
 ## Testing
 

@@ -1,3 +1,4 @@
+import { asDecimal } from "@/lib/decimal";
 import type {
   PresupuestoResponse,
   PresupuestoVersionResponse,
@@ -32,14 +33,14 @@ export const presupuestoFixture: PresupuestoResponse = {
   presupuestoId: PRESUPUESTO_V2,
   version: 2,
   esVigente: true,
-  totalGeneral: "18500.000000" as never,
+  totalGeneral: asDecimal("18500.000000"),
   capitulos: [
     {
       id: CAPITULO_1,
       item: "1",
       descripcion: "Preliminares",
       orden: 1,
-      total: "4500.000000" as never,
+      total: asDecimal("4500.000000"),
       rubros: [],
       subcapitulos: [
         {
@@ -47,7 +48,7 @@ export const presupuestoFixture: PresupuestoResponse = {
           item: "1.1",
           descripcion: "Instalación de campamento",
           orden: 1,
-          total: "2500.000000" as never,
+          total: asDecimal("2500.000000"),
           subcapitulos: [],
           rubros: [
             {
@@ -56,9 +57,9 @@ export const presupuestoFixture: PresupuestoResponse = {
               codigo: "APU-001",
               descripcion: "Excavación a máquina",
               unidad: "m3",
-              cantidad: "50.000000" as never,
-              precioUnitario: "40.000000" as never,
-              precioTotal: "2000.000000" as never,
+              cantidad: asDecimal("50.000000"),
+              precioUnitario: asDecimal("40.000000"),
+              precioTotal: asDecimal("2000.000000"),
               apuId: APU_001,
             },
             {
@@ -67,9 +68,9 @@ export const presupuestoFixture: PresupuestoResponse = {
               codigo: "APU-002",
               descripcion: "Relleno compactado",
               unidad: "m3",
-              cantidad: "20.000000" as never,
-              precioUnitario: "25.000000" as never,
-              precioTotal: "500.000000" as never,
+              cantidad: asDecimal("20.000000"),
+              precioUnitario: asDecimal("25.000000"),
+              precioTotal: asDecimal("500.000000"),
               apuId: APU_002,
             },
           ],
@@ -79,7 +80,7 @@ export const presupuestoFixture: PresupuestoResponse = {
           item: "1.2",
           descripcion: "Cerramiento provisional",
           orden: 2,
-          total: "2000.000000" as never,
+          total: asDecimal("2000.000000"),
           subcapitulos: [],
           rubros: [
             {
@@ -88,9 +89,9 @@ export const presupuestoFixture: PresupuestoResponse = {
               codigo: "APU-003",
               descripcion: "Transporte material",
               unidad: "m3-km",
-              cantidad: "100.000000" as never,
-              precioUnitario: "20.000000" as never,
-              precioTotal: "2000.000000" as never,
+              cantidad: asDecimal("100.000000"),
+              precioUnitario: asDecimal("20.000000"),
+              precioTotal: asDecimal("2000.000000"),
               apuId: APU_003,
             },
           ],
@@ -102,7 +103,7 @@ export const presupuestoFixture: PresupuestoResponse = {
       item: "2",
       descripcion: "Obra civil",
       orden: 2,
-      total: "14000.000000" as never,
+      total: asDecimal("14000.000000"),
       subcapitulos: [],
       rubros: [
         {
@@ -111,9 +112,9 @@ export const presupuestoFixture: PresupuestoResponse = {
           codigo: "APU-004",
           descripcion: "Hormigón simple",
           unidad: "m3",
-          cantidad: "10.000000" as never,
-          precioUnitario: "1400.000000" as never,
-          precioTotal: "14000.000000" as never,
+          cantidad: asDecimal("10.000000"),
+          precioUnitario: asDecimal("1400.000000"),
+          precioTotal: asDecimal("14000.000000"),
           apuId: APU_004,
         },
       ],
@@ -127,7 +128,7 @@ export const versionesFixture: PresupuestoVersionResponse[] = [
     version: 1,
     esVigente: false,
     notas: "Versión inicial",
-    totalGeneral: "18000.000000" as never,
+    totalGeneral: asDecimal("18000.000000"),
     fechaCreacion: "2026-06-01T00:00:00",
   },
   {
@@ -136,7 +137,7 @@ export const versionesFixture: PresupuestoVersionResponse[] = [
     esVigente: true,
     origenId: PRESUPUESTO_V1,
     notas: "Corrección APU hormigón",
-    totalGeneral: "18500.000000" as never,
+    totalGeneral: asDecimal("18500.000000"),
     fechaCreacion: "2026-07-01T00:00:00",
   },
 ];
@@ -156,14 +157,14 @@ export const validacionFixture: ValidacionPresupuestoResponse = {
 
 export const resumenComponentesFixture: ResumenComponentesResponse = {
   porComponente: {
-    EQUIPO: "4000.000000" as never,
-    MANO_OBRA: "6000.000000" as never,
-    MATERIAL: "3000.000000" as never,
-    TRANSPORTE: "1000.000000" as never,
+    EQUIPO: asDecimal("4000.000000"),
+    MANO_OBRA: asDecimal("6000.000000"),
+    MATERIAL: asDecimal("3000.000000"),
+    TRANSPORTE: asDecimal("1000.000000"),
   },
-  totalGeneral: "14000.000000" as never,
-  ivaReferencial: "1680.000000" as never,
-  totalConIva: "15680.000000" as never,
+  totalGeneral: asDecimal("14000.000000"),
+  ivaReferencial: asDecimal("1680.000000"),
+  totalConIva: asDecimal("15680.000000"),
 };
 
 export const comparacionFixture: ComparacionVersionesResponse = {
@@ -171,19 +172,19 @@ export const comparacionFixture: ComparacionVersionesResponse = {
     {
       presupuestoId: PRESUPUESTO_V1,
       version: 1,
-      totalGeneral: "18000.000000" as never,
+      totalGeneral: asDecimal("18000.000000"),
       porCapituloRaiz: [
-        { item: "1", descripcion: "Preliminares", total: "4500.000000" as never },
-        { item: "2", descripcion: "Obra civil", total: "13500.000000" as never },
+        { item: "1", descripcion: "Preliminares", total: asDecimal("4500.000000") },
+        { item: "2", descripcion: "Obra civil", total: asDecimal("13500.000000") },
       ],
     },
     {
       presupuestoId: PRESUPUESTO_V2,
       version: 2,
-      totalGeneral: "18500.000000" as never,
+      totalGeneral: asDecimal("18500.000000"),
       porCapituloRaiz: [
-        { item: "1", descripcion: "Preliminares", total: "4500.000000" as never },
-        { item: "2", descripcion: "Obra civil", total: "14000.000000" as never },
+        { item: "1", descripcion: "Preliminares", total: asDecimal("4500.000000") },
+        { item: "2", descripcion: "Obra civil", total: asDecimal("14000.000000") },
       ],
     },
   ],
