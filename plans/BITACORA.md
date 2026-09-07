@@ -1,6 +1,6 @@
 # Bitácora
 
-**Ola actual:** 6 · **Actualizada:** 2026-09-06
+**Ola actual:** 7 · **Actualizada:** 2026-09-06
 
 > La lleva el orquestador ([`ORQUESTADOR.md`](ORQUESTADOR.md)). Se escribe **en el momento** en que
 > algo cambia de estado, no al final de la sesión: si la sesión se corta, lo que no está escrito
@@ -27,7 +27,8 @@
 | 5 | 052 acciones deshabilitadas | ✅ verde | — | 21275ad | fusionado · **ola 5 cerrada** |
 | 5 | 058 **reescrito**: procedencia del insumo | ✅ verde | — | cccb1b0 | fusionado · tanda 1 cerrada |
 | 6 | **063 ErrorPayload ≠ RFC 7807** | ✅ verde | — | 6ab61c8 | fusionado |
-| 6 | 060 limpieza | 🔄 en curso | .claude/worktrees/ola6-060 | — | último |
+| 6 | 060 limpieza | ✅ verde | — | a981dae | fusionado · **ola 6 cerrada** |
+| 7 | **064 capturas que no miran** | 🔄 en curso | .claude/worktrees/ola7-064 | — | plan nuevo, cierra la ruta |
 
 ### Fuera de las olas
 
@@ -43,6 +44,21 @@ Baseline original del handoff: **45 archivos, 207 tests, verde** · backend `ori
 docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Decisiones tomadas en ruta
+
+- 2026-09-06 — 🔴 **Plan 064 escrito** (§7 caso 2): **`screenshots/08-presupuesto.png` es una foto
+  de una pantalla reventada, commiteada en el repo.** Lo miré yo: dice «Algo salió mal en esta
+  sección». Causa: el stub de `e2e/screenshots.spec.ts` devuelve una forma plana sin la clave
+  `porComponente`, así que `ResumenComponentes` hace `Object.entries(undefined)` y el boundary lo
+  atrapa. Roto desde `e44c608` (2026-09-05). **Pero el defecto de verdad es que `capturar()` no
+  asserta nada**: navega, fotografía y da verde sobre una pantalla caída. Una sola aserción en
+  `capturar()` protege las once capturas. Contra el backend real la pantalla funciona.
+- 2026-09-06 — **060 aceptado.** Los 3 `as never` que quedan son **comentarios** que explican su
+  retirada, cero casts reales. Dependencias `cmdk` y `@base-ui/react` quitadas con cero referencias
+  fuera del lockfile —y el ejecutor encontró que `vite.config.ts` aún las nombraba en
+  `manualChunks`, cosa que ningún test habría cazado—. `AGENTS.md` actualizado. Lint 10→7.
+- 2026-09-06 — El ejecutor del 060 se corrigió solo: borró `use-mobile.ts` por muerto, el typecheck
+  lo cazó (`ui/sidebar.tsx` lo importa), y al restaurarlo encontró un bug real — escuchaba la media
+  query `max-width: 767px` pero leía `window.innerWidth`, dos fuentes que discrepan en el umbral.
 
 - 2026-09-06 — **063 aceptado, y el ejecutor cazó un error mío.** El comando `git grep` que escribí
   en la rebanada 1 del plan era **incompleto**: devuelve 4 códigos, y mi instrucción de «borrar lo
