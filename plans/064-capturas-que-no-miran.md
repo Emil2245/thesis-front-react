@@ -1,6 +1,6 @@
 # Plan 064 — Las capturas E2E no miran lo que fotografían
 
-**Status:** TODO
+**Status:** DONE (2026-09-06, rama `ola7-064`, sobre `d77f1b2`)
 **Escrito contra:** frontend `main` tras la ola 6 · backend `origin/main` @ `c337950`
 **Esfuerzo:** S (1 h) · **Riesgo:** BAJO
 **Ola:** 7 — es lo último que queda de la ruta
