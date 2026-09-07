@@ -18,9 +18,9 @@
 >
 > **Drift check (ejecútalo primero)**:
 > ```bash
-> git diff --stat 1344113..HEAD -- src/api src/features/exportar src/test e2e AGENTS.md
+> git diff --stat eb004d1..HEAD -- src/api src/features/exportar src/test e2e AGENTS.md
 > ```
-> Si algún archivo en alcance cambió desde `1344113`, compara los extractos de
+> Si algún archivo en alcance cambió desde `eb004d1`, compara los extractos de
 > «Estado actual» contra el código vivo antes de seguir. Si no coinciden, es una
 > condición de parada.
 
@@ -31,7 +31,9 @@
 - **Riesgo**: MED
 - **Depende de**: ninguno
 - **Categoría**: feature + bug
-- **Escrito contra**: frontend `main` @ `1344113`, backend `origin/main` @
+- **Escrito contra**: frontend `main` @ `eb004d1` (los extractos son de `1344113`,
+  cuyo único cambio posterior es el número del baseline en `AGENTS.md`), backend
+  `origin/main` @
   **`5673615`** (`../thesis-back-quarkus`), 2026-09-07
 
 ## Por qué importa
@@ -798,10 +800,10 @@ Comprobable por máquina. **Todo** tiene que cumplirse:
 Para y reporta, sin improvisar, si:
 
 - El baseline al arrancar no es `verify` exit 0 con **461 tests en 74
-  archivos**, o `HEAD` no es `1344113`. Un baseline que no coincide invalida
+  archivos**, o tu rama no sale de `eb004d1`. Un baseline que no coincide invalida
   todo lo que midas después.
 - El código en «Estado actual» no coincide con lo que hay en el repo (deriva
-  desde `1344113`).
+  desde `eb004d1`).
 - La verificación de una rebanada falla dos veces después de un intento
   razonable de arreglo.
 - El arreglo parece exigir tocar un archivo **fuera de alcance** — en especial
