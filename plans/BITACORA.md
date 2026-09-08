@@ -25,9 +25,25 @@ montones según la §1 del orquestador:
 
 | Ola | Plan | Estado | Worktree | Commit | Nota |
 | --- | ---- | ------ | -------- | ------ | ---- |
-| 1 | **066 exportar cronograma (xlsx/pdf/mspdi)** | ⏳ pendiente | — | — | incluye el arreglo del cuerpo de error en `Blob` |
+| 1 | **066 exportar cronograma (xlsx/pdf/mspdi)** | 🔄 en curso | `.claude/worktrees/ola1-066` | — | incluye el arreglo del cuerpo de error en `Blob` |
 
 ### Notas de la ronda
+
+- 2026-09-07 — **066 despachado** a un subagente Claude en `.claude/worktrees/ola1-066` (rama del
+  mismo nombre, creada a mano desde `main` @ `7e3db8a`, con `pnpm install` hecho y `typecheck`
+  exit 0 comprobado antes de despachar). Se sigue el protocolo de la ronda anterior: **nada de
+  `isolation: "worktree"`** en el `Agent` tool, que ramifica desde `origin/main` @ `f823fc6` —
+  once commits atrás y sin empujar— y produce un `verify` verde contra el contrato viejo.
+- 2026-09-07 — El plan 066 salió estampado contra `1344113`, pero el commit que lo introduce movió
+  `HEAD`: su propio drift check y su condición de parada apuntaban a un SHA anterior al suyo y
+  habrían parado al ejecutor en el primer comando. Restampado a `eb004d1` en `7e3db8a` antes de
+  despachar. Vale para la ronda siguiente: **estampa el plan con el SHA que tendrá `main` después
+  de commitearlo**, no con el de antes.
+- 2026-09-07 — **Un solo plan y un solo ejecutor para toda la ronda.** El trabajo toca
+  `src/api/contract.ts`, `src/api/client.ts`, `src/test/handlers.ts`, `useExportar.ts` y
+  `ExportPage.tsx`, y las rebanadas dependen unas de otras (el 409 no conserva su cuerpo hasta que
+  entra la rebanada 1). Partirlo en dos habría puesto a los dos ejecutores en los mismos cinco
+  archivos: la matriz de solapes de la §4 dice serie, no paralelo.
 
 - 2026-09-07 — **Delta reconfirmado antes de leer nada** (§0.1): `origin/main` del backend sigue
   en `5673615`; `git log c337950..origin/main` = 1 commit. La §5 del orquestador coincidía.
