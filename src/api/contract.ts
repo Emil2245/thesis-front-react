@@ -700,6 +700,54 @@ export interface ConflictoCronograma {
   perdidas?: PerdidaAvanceResponse[];
 }
 
+// ————— Documentos: exportación del cronograma (§11) —————
+/**
+ * Transcritos de `ec.uce.propuestas.cronograma.dto` en `origin/main @ 5673615`
+ * (plan 031 del backend), que los sirve por
+ * `GET /documentos/cronograma/{presupuestoId}[/preflight]?formato=xlsx|pdf|mspdi`.
+ *
+ * Los cuatro `record` llevan `@JsonInclude(JsonInclude.Include.ALWAYS)` —lo
+ * contrario del patrón C de `docs/bugs.md`—, así que ninguna clave se omite:
+ * `actividadId` **llega como `null`** cuando el bloqueo no viene de una
+ * actividad concreta. Por eso es `actividadId: string | null`, clave
+ * obligatoria, y no `actividadId?: string`.
+ *
+ * `codigo` es `string` a propósito y no una unión cerrada de los siete
+ * bloqueos que el backend emite hoy: la UI muestra `detalle` —que el servidor
+ * ya redacta en español— y no ramifica por código, así que un bloqueo nuevo del
+ * backend no debe romper el tipado. Si algún día hace falta ramificar, ese será
+ * el momento de cerrar la unión, no antes.
+ */
+export type FormatoExportCronograma = "xlsx" | "pdf" | "mspdi";
+
+export interface BloqueoExportResponse {
+  codigo: string;
+  actividadId: string | null;
+  detalle: string;
+}
+
+export interface WarningExportResponse {
+  codigo: string;
+  detalle: string;
+}
+
+export interface CronogramaExportPreflightResponse {
+  exportable: boolean;
+  formato: FormatoExportCronograma;
+  bloqueos: BloqueoExportResponse[];
+  warnings: WarningExportResponse[];
+}
+
+/** Cuerpo del 409 `export-bloqueado`: un superconjunto de `ErrorPayload`. */
+export interface BloqueoExportDetalle {
+  presupuestoId: string;
+  formato: FormatoExportCronograma;
+  codigo: "export-bloqueado";
+  mensaje: string;
+  bloqueos: BloqueoExportResponse[];
+  warnings: WarningExportResponse[];
+}
+
 // ————— Super-Admin (§11) —————
 // Los DTO de usuarios, valores de referencia y logs de actividad se borraron
 // con sus hooks (plan 050): ninguno de esos recursos existe en origin/main, y

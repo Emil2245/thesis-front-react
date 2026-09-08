@@ -90,6 +90,25 @@ export const plantillaApuResumenSchema = z.object({
 });
 
 /**
+ * `GET /documentos/cronograma/{id}/preflight` — el único DTO de la exportación
+ * del cronograma que se valida en runtime, porque la pantalla desreferencia
+ * `data.bloqueos.map(...)` y `data.warnings.map(...)` sin guarda, que es
+ * exactamente la clase de fallo que documenta este archivo.
+ *
+ * Los cinco campos son obligatorios porque `CronogramaExportPreflightResponse`
+ * los declara obligatorios y `@JsonInclude(ALWAYS)` garantiza que viajan;
+ * `actividadId` viaja como `null`, no ausente. No los relajes con `.optional()`.
+ */
+export const cronogramaExportPreflightSchema = z.object({
+  exportable: z.boolean(),
+  formato: z.enum(["xlsx", "pdf", "mspdi"]),
+  bloqueos: z.array(
+    z.object({ codigo: z.string(), actividadId: z.string().nullable(), detalle: z.string() }),
+  ),
+  warnings: z.array(z.object({ codigo: z.string(), detalle: z.string() })),
+});
+
+/**
  * El cuerpo de error del backend (`record ErrorPayload(String codigo, String
  * mensaje)`). El plan 028 validó las respuestas *correctas* y dejó fuera esta
  * mitad del seam —que es justo donde se escondió el defecto del plan 063

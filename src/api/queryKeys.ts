@@ -27,6 +27,12 @@ export const qk = {
 
   cronograma: (presupuestoId: string) => ["presupuesto", presupuestoId, "cronograma"] as const,
 
+  // El `formato` va DENTRO de la clave: el preflight de `mspdi` puede traer un
+  // bloqueo (`mspdi-fecha-inicio-requerida`) que el de `xlsx` no tiene, así que
+  // compartir clave entre formatos mostraría bloqueos ajenos.
+  cronogramaExportPreflight: (presupuestoId: string, formato: string) =>
+    ["presupuesto", presupuestoId, "export-cronograma", formato] as const,
+
   // Solo quedan las dos con backend real (plan 050): usuarios, plantillas de
   // sistema, valores de referencia y logs no existen en origin/main.
   adminBases: (f?: Record<string, unknown>) => ["admin", "bases-centrales", f ?? {}] as const,
