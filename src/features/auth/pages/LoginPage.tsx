@@ -53,7 +53,10 @@ export function LoginPage() {
             {emailNoVerificado ? (
               <p className="text-sm text-advertencia">
                 Tu correo no ha sido verificado.{" "}
-                <Link to="/verificar-email" className="underline">
+                <Link
+                  to={`/verificar-email?email=${encodeURIComponent(form.getValues("email"))}`}
+                  className="underline"
+                >
                   Reenviar verificación
                 </Link>
               </p>

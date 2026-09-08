@@ -75,6 +75,27 @@ describe("PlantillasProyectoPage", () => {
     expect(screen.getByText("Crear proyecto desde plantilla")).toBeInTheDocument();
   });
 
+  // Antes el botón siempre estaba habilitado: al pulsarlo con el nombre vacío
+  // no pasaba nada, sin aviso ni foco (plan 071, defecto 4).
+  it("Crear proyecto está deshabilitado con el nombre vacío y se habilita al escribirlo", async () => {
+    const { user } = renderConProviders(<PlantillasProyectoPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Plantilla proyecto")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByTitle("Crear proyecto desde esta plantilla"));
+    const boton = screen.getByRole("button", { name: "Crear proyecto" });
+    expect(boton).toBeDisabled();
+
+    await user.type(screen.getByLabelText(/Nombre/), "Proyecto nuevo");
+    expect(boton).toBeEnabled();
+
+    await user.clear(screen.getByLabelText(/Nombre/));
+    await user.type(screen.getByLabelText(/Nombre/), "   ");
+    expect(boton).toBeDisabled();
+  });
+
   it("elimina una plantilla tras confirmación", async () => {
     const { user } = renderConProviders(<PlantillasProyectoPage />);
 

@@ -60,4 +60,23 @@ describe("LoginPage", () => {
       expect(screen.getByText(/no ha sido verificado/i)).toBeInTheDocument();
     });
   });
+
+  // Sin el correo en la URL, VerificarEmailPage no tiene con qué reenviar
+  // (plan 071, defecto 3).
+  it("el enlace de reenvío incluye el correo que el usuario escribió", async () => {
+    server.use(
+      http.post(`${API}/auth/login`, () =>
+        problema(403, "email-no-verificado", "El correo no ha sido verificado"),
+      ),
+    );
+
+    const { user } = renderConProviders(<LoginPage />, { ruta: "/login" });
+
+    await user.type(screen.getByLabelText("Correo electrónico"), "ana@ejemplo.ec");
+    await user.type(screen.getByLabelText("Contraseña"), "abc12345");
+    await user.click(screen.getByRole("button", { name: /ingresar/i }));
+
+    const enlace = await screen.findByRole("link", { name: /reenviar verificación/i });
+    expect(enlace).toHaveAttribute("href", "/verificar-email?email=ana%40ejemplo.ec");
+  });
 });

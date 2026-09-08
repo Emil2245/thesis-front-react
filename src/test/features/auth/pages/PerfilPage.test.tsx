@@ -76,6 +76,15 @@ describe("PerfilPage", () => {
     await waitFor(() => expect(useSesionStore.getState().usuario).toBeNull());
   });
 
+  // El aviso decía "las demás sesiones", insinuando que la propia seguía
+  // abierta; cerrar() cierra también la propia (plan 071, defecto 2).
+  it("el aviso dice que se cierran todas las sesiones, incluida la actual", () => {
+    renderConProviders(<PerfilPage />);
+
+    expect(screen.queryByText(/demás sesiones/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/todas las sesiones/i)).toBeInTheDocument();
+  });
+
   it("no envía nada si la confirmación no coincide", async () => {
     const peticiones = espiar();
     const { user } = renderConProviders(<PerfilPage />);
