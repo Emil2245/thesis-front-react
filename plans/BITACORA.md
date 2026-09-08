@@ -91,8 +91,55 @@ en paralelo levantaban Vite en el mismo 5173 y, con `reuseExistingServer`, cada 
 fotografiaba el árbol de otro y el gate salía verde igual. Cada ejecutor de la ola usa el suyo
 (5211, 5212, 5213). Sirve para las olas 2 y 3, que también son paralelas.
 
-**Siguiente:** revisar los tres capítulos que vuelvan, mergear de uno en uno, y arrancar la Ola 2
-(04 APU · 05 Presupuesto).
+**Ola 1 · ✅ verde · los tres fusionados en `main`.** Capítulos **01 Cuenta y acceso** (P-01…P-04,
+8 capturas), **03 Insumos** (P-13…P-17, 8 capturas) y **08 Moverse por la aplicación** (P-43, P-44,
+P-46, 9 capturas). `pnpm run e2e` sube de 29 a **54 tests**; `AGENTS.md` actualizado.
+
+Revisión del orquestador, capítulo a capítulo: alcance del commit (ninguno tocó `src/` ni los
+archivos compartidos), `verify` y `e2e` re-corridos en cada worktree, todos los enlaces de imagen
+resueltos contra el disco, capturas abiertas al azar, y las afirmaciones delicadas contrastadas
+contra el código — la política de contraseña contra `passwordSchema`, las entradas de
+Administración contra `Sidebar.tsx` y `disponibilidad.ts`, los textos de 404/403 literales, y las
+tres únicas rutas citadas contra `src/routes/index.tsx`.
+
+**Desviación aprobada por mérito (069):** el plan pedía 9 capturas y trajo 8. La novena era el
+diálogo **Ver uso** (P-18), y el ejecutor no lo fotografió porque **no se puede llegar a él**.
+Documentar un flujo inalcanzable era justo lo prohibido.
+
+**Cuatro bugs nuevos, verificados uno a uno en el código:**
+
+1. **`TablaInsumos.tsx:165` — P-18 está apagado por error.** «Ver uso» es `disabled` fijo con el
+   tooltip *"Disponible cuando el backend implemente esta operación."*, pero **no está en
+   `MODULOS_SIN_BACKEND`** y el endpoint existe: `InsumoResource.java:156` sirve
+   `/{insumoId}/usos` en `origin/main`. El hook y `DialogoUsoInsumo.tsx` están completos. Es una
+   funcionalidad terminada y apagada; **desbloquearla añade P-18 al manual**.
+2. **`PerfilPage.tsx:86` y `:90-91` — la pantalla miente.** Dice *"las demás sesiones se
+   cerrarán"* pero `cerrar()` cierra también la del usuario. Mismo patrón que el texto del CSV
+   del plan 067. El capítulo 01 documenta el comportamiento real, no el prometido.
+3. **`LoginPage.tsx:55` + `VerificarEmailPage.tsx:40`** — «Reenviar verificación» navega sin el
+   correo y allí `if (!email …) return;` deja el botón muerto. Por el camino del registro sí va.
+4. **`PlantillasProyectoPage.tsx:43`** — crear desde plantilla con el nombre vacío hace `return`
+   sin aviso ni botón deshabilitado.
+
+Y tres etiquetas sin control asociado (`DialogoCopiarBase.tsx:76`, `DialogoInsumo.tsx:174` /
+`ComboboxUnidad.tsx:44`, `sidebar.tsx:251`), que además de accesibilidad obligan a los specs a
+localizar por rol sin nombre.
+
+**Cuatro divergencias especificación/pantalla**, documentadas como son: el **Código** del insumo es
+obligatorio y no se autogenera (`schemas.ts:10`); **Copiar base** solo admite bases centrales, no
+proyectos propios (`DialogoCopiarBase.tsx:45`); no existe el resumen de insumos más usados de
+P-13; y `PlantillasProyectoPage` no distingue plantillas de sistema.
+
+**Dos incidentes de proceso, ambos míos.** `EMFILE: too many open files` con tres Playwright en
+paralelo — la Ola 2 va con dos ejecutores. Y un `cd` a un worktree cuyo directorio **persistió
+entre comandos**, así que un `git merge` se ejecutó dentro del propio worktree y dijo "Already up
+to date": sin daño, `main` intacto, pero desde ahora `git -C <ruta>` o `cd` explícito en cada
+comando.
+
+**Pasada de coherencia, adelantada:** el capítulo piloto 02 remitía a §3.4 para «Copiar base al
+proyecto», que en el capítulo 03 real es **§3.5**. Corregido.
+
+**Siguiente:** Ola 2 — 04 APU · 05 Presupuesto, con dos ejecutores, no tres.
 
 ## Ronda de paridad 1 — backend `c337950` → `5673615` (2026-09-07)
 

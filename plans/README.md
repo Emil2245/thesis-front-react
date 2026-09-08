@@ -142,9 +142,9 @@ casi no se pisan. Los archivos compartidos —`docs/manual/README.md`, `package.
 |---|---|---|---|---|---|
 | 067 | [Arreglar los tres defectos que harían mentir al manual](067-arreglar-defectos-que-bloquean-el-manual.md) | P1 | S | — | DONE (`e23fd73`) |
 | — | **Ola 0** — esqueleto, script `e2e:manual` y capítulo piloto 02 | P1 | M | 067 | DONE (`c4df388`) |
-| 068 | [Capítulo 01 — Cuenta y acceso](068-manual-cap-01-cuenta.md) | P1 | M | Ola 0 | TODO |
-| 069 | [Capítulo 03 — Insumos](069-manual-cap-03-insumos.md) | P1 | M | Ola 0 | TODO |
-| 070 | [Capítulo 08 — Navegación](070-manual-cap-08-navegacion.md) | P1 | M | Ola 0 | TODO |
+| 068 | [Capítulo 01 — Cuenta y acceso](068-manual-cap-01-cuenta.md) | P1 | M | Ola 0 | DONE (`4274561`) |
+| 069 | [Capítulo 03 — Insumos](069-manual-cap-03-insumos.md) | P1 | M | Ola 0 | DONE (`08dcad8`) |
+| 070 | [Capítulo 08 — Navegación](070-manual-cap-08-navegacion.md) | P1 | M | Ola 0 | DONE (`8a8d182`) |
 
 ### Segunda tanda — auditoría posterior al rediseño de UI (2026-08-24)
 

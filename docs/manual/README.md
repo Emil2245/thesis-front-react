@@ -33,8 +33,8 @@ falla en vez de guardar una captura de una pantalla vacía o equivocada.
 
 ## Cobertura
 
-**38 procesos documentables**, medidos contra el código el 2026-09-07. La especificación
-(`thesis-docs`, `plan/design/03-procesos-detalle.md`) describe 46; los ocho que faltan no se
+**37 procesos documentables**, medidos contra el código el 2026-09-07. La especificación
+(`thesis-docs`, `plan/design/03-procesos-detalle.md`) describe 46; los nueve que faltan no se
 documentan porque no existen en la interfaz — ver _Lo que no se documenta_, abajo.
 
 | Capítulo                                                         | Procesos                     | Estado       |
@@ -42,7 +42,7 @@ documentan porque no existen en la interfaz — ver _Lo que no se documenta_, ab
 | [00 · Introducción](usuario/00-introduccion.md)                  | —                            | ⏳ pendiente |
 | [01 · Cuenta y acceso](usuario/01-cuenta-y-acceso.md)            | P-01…P-04                    | ✅ escrito   |
 | [02 · Proyectos](usuario/02-proyectos.md)                        | P-05, P-06, P-08, P-10, P-11 | ✅ escrito   |
-| [03 · Insumos](usuario/03-insumos.md)                            | P-13…P-18                    | ⏳ pendiente |
+| [03 · Insumos](usuario/03-insumos.md)                            | P-13…P-17                    | ✅ escrito   |
 | [04 · APU](usuario/04-apu.md)                                    | P-19…P-23, P-26, P-27, P-45  | ⏳ pendiente |
 | [05 · Presupuesto](usuario/05-presupuesto.md)                    | P-28…P-32                    | ⏳ pendiente |
 | [06 · Cronograma](usuario/06-cronograma.md)                      | P-33…P-36                    | ⏳ pendiente |
@@ -53,18 +53,20 @@ documentan porque no existen en la interfaz — ver _Lo que no se documenta_, ab
 
 ## Lo que no se documenta, y por qué
 
-Ocho procesos de la especificación quedan fuera. Ninguno es un olvido:
+Nueve procesos de la especificación quedan fuera. Ocho por decisión; el noveno, P-18,
+porque la interfaz lo tiene apagado pese a funcionar:
 
-| Proceso                            | Motivo                                                                                                                                   |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| **P-07** Editar proyecto           | Documentado como no disponible en §2                                                                                                     |
-| **P-09** Duplicar proyecto         | Sin backend. La acción existe en el menú pero está desactivada, con el aviso _"Disponible cuando el backend implemente esta operación."_ |
-| **P-12** Descuento global al CD    | Sin backend. Especificado y cerrado el 2026-08-31, pero no hay endpoint. No es un pendiente de entrega                                   |
-| **P-24** Descuento al CD por rubro | Retirado de la especificación (`WITHDRAWN / SUPERSEDED`)                                                                                 |
-| **P-25** Rubro auxiliar            | Retirado. La regla vigente es que no hay enlaces entre APUs                                                                              |
-| **P-38** Gestión de usuarios       | Sin backend; la pantalla muestra el aviso de no disponible                                                                               |
-| **P-40** Plantillas de sistema     | Ídem                                                                                                                                     |
-| **P-42** Logs de actividad         | Ídem                                                                                                                                     |
+| Proceso                            | Motivo                                                                                                                                                    |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **P-07** Editar proyecto           | Documentado como no disponible en §2                                                                                                                      |
+| **P-09** Duplicar proyecto         | Sin backend. La acción existe en el menú pero está desactivada, con el aviso _"Disponible cuando el backend implemente esta operación."_                  |
+| **P-12** Descuento global al CD    | Sin backend. Especificado y cerrado el 2026-08-31, pero no hay endpoint. No es un pendiente de entrega                                                    |
+| **P-18** Ver uso de un insumo      | La opción **Ver uso** aparece desactivada en la interfaz, aunque el endpoint, el hook y el diálogo existen y funcionan. Parece un olvido, no una decisión |
+| **P-24** Descuento al CD por rubro | Retirado de la especificación (`WITHDRAWN / SUPERSEDED`)                                                                                                  |
+| **P-25** Rubro auxiliar            | Retirado. La regla vigente es que no hay enlaces entre APUs                                                                                               |
+| **P-38** Gestión de usuarios       | Sin backend; la pantalla muestra el aviso de no disponible                                                                                                |
+| **P-40** Plantillas de sistema     | Ídem                                                                                                                                                      |
+| **P-42** Logs de actividad         | Ídem                                                                                                                                                      |
 
 Dos matices que el manual dice en su propio texto, en vez de callarlos:
 

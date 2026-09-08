@@ -15,13 +15,13 @@ React SPA for Ecuadorian public-works bidding. Implements full APU/presupuesto/c
 ```bash
 pnpm install
 pnpm run verify   # typecheck + lint + guard:adr9 + format:check + test + build
-pnpm run e2e      # Playwright E2E (29 tests: 11 capturas + 3 smoke × 3 navegadores + 9 del manual)
+pnpm run e2e      # Playwright E2E (54 tests: 11 capturas + 3 smoke × 3 navegadores + 34 del manual)
 pnpm run e2e:screenshots   # solo las 11 capturas de escritorio (chromium)
 pnpm run e2e:manual        # capturas de docs/manual/ (chromium)
 pnpm run dev      # http://localhost:5173
 ```
 
-Baseline actual: **480 tests unitarios en 74 archivos**, `pnpm run e2e` en verde (29 tests).
+Baseline actual: **480 tests unitarios en 74 archivos**, `pnpm run e2e` en verde (54 tests).
 Si cambias el baseline, actualiza este número: el plan 060 se encontró con el de
 197/43, cinco olas caducado, y un baseline que miente no detecta nada.
 

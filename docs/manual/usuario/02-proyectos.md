@@ -105,7 +105,7 @@ vigente y los parámetros de cálculo copiados de los valores por defecto del si
 pantalla de resumen. Todavía no tiene insumos, ni APUs, ni capítulos, ni cronograma.
 
 > **El proyecto nace con la base de insumos vacía.** Para llenarla, entra en **Insumos** y usa
-> **Copiar base al proyecto** o la importación por archivo CSV (ver §3.4 y §3.3).
+> **Copiar base al proyecto** o la importación por archivo CSV (ver §3.5 y §3.3).
 
 ---
 
