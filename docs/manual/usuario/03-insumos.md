@@ -103,7 +103,7 @@ crear, editar o importar más.
 - _"Código duplicado en esta base"_ → ya existe un insumo con ese código en el proyecto; usa
   otro.
 - _"No se puede eliminar el insumo: está referenciado en N parte(s) de APU"_ → el insumo está en
-  uso y el sistema bloquea el borrado (ver _Lo que todavía no está disponible_, más abajo).
+  uso y el sistema bloquea el borrado. Para ver **en cuáles** está, usa **Ver uso** (§3.6).
 
 **Al terminar:** el insumo queda creado, editado o eliminado en el catálogo del proyecto. Si
 cambiaste un precio, los APUs que lo usan recalculan de inmediato.
@@ -221,8 +221,17 @@ central: si el administrador cambia después un precio allí, tu proyecto no se 
    ![Diálogo Insumo en uso](../img/03-insumos/09-uso-insumo.png)
 
    El diálogo **Insumo en uso** lista cada APU que usa el insumo: su código, su descripción, el
-   bloque al que pertenece (materiales, mano de obra, equipo o transporte) y si el precio en ese
-   APU es **Manual** (fijado a mano ahí mismo) o **Heredado** (toma el precio del catálogo).
+   bloque en el que aparece y si el precio en ese APU es **Manual** (fijado a mano ahí mismo)
+   o **Heredado** (toma el precio del catálogo).
+
+   El bloque se muestra con una letra:
+
+   | Letra | Bloque del APU |
+   | ----- | -------------- |
+   | **M** | Equipo         |
+   | **N** | Mano de obra   |
+   | **O** | Materiales     |
+   | **P** | Transporte     |
 
 **Si algo sale mal**
 
