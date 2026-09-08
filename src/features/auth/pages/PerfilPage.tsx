@@ -88,7 +88,8 @@ export function PerfilPage() {
             className="space-y-4"
           >
             <p className="text-sm text-muted-foreground">
-              Al cambiar tu contraseña, las demás sesiones se cerrarán.
+              Al cambiar tu contraseña se cierran todas las sesiones, incluida esta. Vuelves a
+              iniciar sesión con la contraseña nueva.
             </p>
 
             <Field>
