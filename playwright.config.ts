@@ -12,16 +12,19 @@ export default defineConfig({
     video: "retain-on-failure",
     locale: "es-EC",
   },
+  // Las capturas —las de `screenshots/` y las del manual— son de escritorio:
+  // se generan y se comparan en chromium. Correrlas en firefox y móvil no
+  // documenta nada y el asistente de proyecto ni siquiera es clicable en Pixel 7.
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     {
       name: "firefox",
-      testIgnore: /screenshots\.spec\.ts/,
+      testIgnore: [/screenshots\.spec\.ts/, /manual\//],
       use: { ...devices["Desktop Firefox"] },
     },
     {
       name: "mobile-chrome",
-      testIgnore: /screenshots\.spec\.ts/,
+      testIgnore: [/screenshots\.spec\.ts/, /manual\//],
       use: { ...devices["Pixel 7"] },
     },
   ],
