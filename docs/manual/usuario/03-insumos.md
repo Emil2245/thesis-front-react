@@ -5,7 +5,7 @@ se arma un análisis de precio unitario (APU). Este capítulo cubre cómo ver y 
 de insumos de tu proyecto, cómo crearlos y editarlos uno a uno o en bloque por CSV, y cómo
 partir de una base de insumos ya existente en vez de escribirla desde cero.
 
-Procesos cubiertos: **P-13**, **P-14**, **P-15**, **P-16**, **P-17**.
+Procesos cubiertos: **P-13**, **P-14**, **P-15**, **P-16**, **P-17**, **P-18**.
 
 ---
 
@@ -206,13 +206,36 @@ central: si el administrador cambia después un precio allí, tu proyecto no se 
 
 ---
 
+## 3.6 Ver dónde se usa un insumo <!-- P-18 · S-19 -->
+
+**Quién puede hacerlo:** cualquier usuario con sesión iniciada.
+
+**Antes de empezar**
+
+- Tener la pantalla **Insumos** abierta (§3.1).
+
+**Pasos**
+
+1. En el menú **⋯** de la fila del insumo, pulsa **Ver uso**.
+
+   ![Diálogo Insumo en uso](../img/03-insumos/09-uso-insumo.png)
+
+   El diálogo **Insumo en uso** lista cada APU que usa el insumo: su código, su descripción, el
+   bloque al que pertenece (materiales, mano de obra, equipo o transporte) y si el precio en ese
+   APU es **Manual** (fijado a mano ahí mismo) o **Heredado** (toma el precio del catálogo).
+
+**Si algo sale mal**
+
+- El diálogo no muestra ninguna fila → el insumo no está siendo usado en ningún APU; puedes
+  eliminarlo sin problema (§3.2).
+
+**Al terminar:** sabes en qué APUs concretos está el insumo, la misma información que explica por
+qué el sistema bloquea su borrado cuando está en uso (§3.2).
+
+---
+
 ## Lo que todavía no está disponible
 
-- **Ver dónde se usa un insumo.** El menú **⋯** de cada fila tiene la opción **Ver uso**, pero
-  hoy aparece siempre desactivada, con el mismo aviso que otras funciones sin backend
-  (_"Disponible cuando el backend implemente esta operación."_). Mientras tanto, si intentas
-  eliminar un insumo en uso, el aviso de error te dice **en cuántas** partes de APU está —pero
-  no en cuáles.
 - **Copiar desde un proyecto propio anterior.** El diálogo **Copiar base de insumos** solo
   ofrece bases centrales; no hay forma de elegir otro proyecto tuyo como fuente.
 - **Un resumen de los insumos más usados con su costo**, en la propia pantalla de Insumos, no

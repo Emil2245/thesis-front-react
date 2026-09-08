@@ -17,6 +17,7 @@ import {
   importResultadoFixture,
   importResultadoConErroresFixture,
   copiaBaseResultadoFixture,
+  insumoUsoFixture,
 } from "../../src/test/fixtures/insumos";
 import { mkdirSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
@@ -27,11 +28,6 @@ import { fileURLToPath } from "url";
  * Mismo patrón que `e2e/manual/02-proyectos.spec.ts`: `page.route()` sobre la
  * API y los fixtures compartidos de `src/test/fixtures/`, con el mismo mundo
  * (Puente Ambato / Ana Torres) que el resto del manual.
- *
- * P-18 (ver uso de un insumo) no tiene captura: el ítem "Ver uso" del menú de
- * la fila está deshabilitado en `TablaInsumos.tsx` (`disabled` fijo, no
- * condicionado por `MODULOS_SIN_BACKEND`), así que no hay manera de llegar al
- * diálogo desde la interfaz. Ver el informe del ejecutor.
  */
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -103,6 +99,9 @@ async function baseAutenticado(page: import("@playwright/test").Page) {
     route.fulfill(json(copiaBaseResultadoFixture)),
   );
   await page.route(`${API}/bases-centrales`, (route) => route.fulfill(json(basesCentralesFixture)));
+  await page.route(`${API}/proyectos/${PROYECTO_1}/insumos/*/usos`, (route) =>
+    route.fulfill(json(insumoUsoFixture)),
+  );
 }
 
 /** Guarda la captura. `objetivo` puede ser la página entera o un elemento. */
@@ -216,4 +215,16 @@ test("08-copiar-base", async ({ page }, testInfo) => {
   await page.getByRole("option", { name: /Base IESS 2026/ }).click();
   await expect(dialogo.getByRole("button", { name: "Copiar" })).toBeEnabled();
   await capturar(dialogo, "08-copiar-base", testInfo);
+});
+
+test("09-uso-insumo", async ({ page }, testInfo) => {
+  await baseAutenticado(page);
+  await page.goto(`/proyectos/${PROYECTO_1}/insumos`, { waitUntil: "networkidle", timeout: 30000 });
+  const fila = page.getByRole("row", { name: /Cemento Portland Tipo I/ });
+  await fila.getByRole("button").click();
+  await page.getByRole("menuitem", { name: "Ver uso" }).click();
+  const dialogo = page.getByRole("dialog");
+  await expect(dialogo.getByRole("heading", { name: "Insumo en uso" })).toBeVisible();
+  await expect(dialogo.getByText("APU-001")).toBeVisible();
+  await capturar(dialogo, "09-uso-insumo", testInfo);
 });
