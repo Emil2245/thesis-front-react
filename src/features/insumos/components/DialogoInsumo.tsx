@@ -171,13 +171,12 @@ export function DialogoInsumo({
           </Field>
 
           <Field>
-            <Label htmlFor="di-unidad">
-              {tipo === "MANO_OBRA" || tipo === "EQUIPO" ? "Unidad" : "Unidad"}
-            </Label>
+            <Label htmlFor="di-unidad">Unidad</Label>
             {tipo === "MANO_OBRA" || tipo === "EQUIPO" ? (
               <Input id="di-unidad" value="h" disabled />
             ) : (
               <ComboboxUnidad
+                id="di-unidad"
                 value={form.watch("unidad")}
                 onChange={(v) => form.setValue("unidad", v)}
               />

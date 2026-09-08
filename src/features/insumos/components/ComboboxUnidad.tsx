@@ -21,9 +21,11 @@ const UNIDADES_CONOCIDAS = [
 export function ComboboxUnidad({
   value,
   onChange,
+  id,
 }: {
   value: string;
   onChange: (v: string) => void;
+  id?: string;
 }) {
   const esConocida = UNIDADES_CONOCIDAS.includes(value);
   return (
@@ -42,6 +44,7 @@ export function ComboboxUnidad({
         ))}
       </div>
       <Input
+        id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="O escribe una unidad personalizada…"

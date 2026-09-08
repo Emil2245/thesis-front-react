@@ -75,7 +75,7 @@ export function DialogoCopiarBase({
             <Field>
               <Label htmlFor="cb-base">Base central</Label>
               <Select value={baseId} onValueChange={setBaseId}>
-                <SelectTrigger>
+                <SelectTrigger id="cb-base">
                   <SelectValue placeholder="Selecciona una base" />
                 </SelectTrigger>
                 <SelectContent>
