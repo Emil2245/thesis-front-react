@@ -53,8 +53,28 @@ ninguna pantalla · la importación CSV crea siempre materiales porque
 `ImportacionInsumoService.java:32,44` fija `TipoInsumo.MATERIAL` — **eso es un plan del
 repositorio del backend**, no de este.
 
-**Siguiente:** Ola 0 — esqueleto de `docs/manual/`, script `e2e:manual` en `package.json` y el
-capítulo piloto 02 (Proyectos), que fija la plantilla para los ocho restantes.
+**Ola 0 · ✅ verde · fusionada en `main`.** Esqueleto (`docs/manual/README.md`), script
+`e2e:manual` y **capítulo piloto 02 (Proyectos)** — P-05, P-06, P-08, P-10, P-11 — con sus 9
+capturas en `docs/manual/img/02-proyectos/`. Las tablas de campos salen del **Zod real**
+(`src/features/proyectos/schemas.ts`), no de la especificación. `pnpm run e2e` sube de 20 a **29
+tests** y sigue verde; `AGENTS.md` actualizado a 480 unitarios / 29 e2e.
+
+**Tres divergencias entre la especificación y la pantalla**, documentadas como son y no como
+deberían ser:
+
+1. El asistente de creación tiene **dos pasos, no tres** (`PASOS = ["Datos generales",
+   "Confirmar"]`): **no hay paso de elección de base de insumos**. La base se copia después,
+   desde Insumos (P-17). El schema tiene `duplicarDesde` pero el asistente no lo expone.
+2. El borrado de proyecto **no pide escribir el nombre**, como proponía P-10: es una
+   confirmación normal.
+3. **Parámetros edita once valores, no doce**: `mensajeFooter` se envía en el submit pero no
+   tiene ningún control en pantalla (`ParametrosPage.tsx:83`).
+
+`playwright.config.ts`: las capturas del manual se ignoran en firefox y mobile-chrome, igual que
+`screenshots.spec.ts` — el asistente no es clicable en Pixel 7 y una captura de manual es de
+escritorio por definición.
+
+**Siguiente:** Ola 1 en paralelo — 01 Cuenta · 03 Insumos · 08 Navegación.
 
 ## Ronda de paridad 1 — backend `c337950` → `5673615` (2026-09-07)
 
