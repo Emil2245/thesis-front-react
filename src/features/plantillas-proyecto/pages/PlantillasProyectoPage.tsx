@@ -133,7 +133,10 @@ export function PlantillasProyectoPage() {
             />
           </div>
           <DialogFooter>
-            <Button onClick={handleCrear} disabled={crearDesdePlantilla.isPending}>
+            <Button
+              onClick={handleCrear}
+              disabled={!nombreNuevo.trim() || crearDesdePlantilla.isPending}
+            >
               {crearDesdePlantilla.isPending ? "Creando…" : "Crear proyecto"}
             </Button>
           </DialogFooter>
