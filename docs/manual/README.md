@@ -44,7 +44,7 @@ documentan porque no existen en la interfaz — ver _Lo que no se documenta_, ab
 | [02 · Proyectos](usuario/02-proyectos.md)                        | P-05, P-06, P-08, P-10, P-11 | ✅ escrito   |
 | [03 · Insumos](usuario/03-insumos.md)                            | P-13…P-18                    | ✅ escrito   |
 | [04 · APU](usuario/04-apu.md)                                    | P-19…P-23, P-26, P-27, P-45  | ⏳ pendiente |
-| [05 · Presupuesto](usuario/05-presupuesto.md)                    | P-28…P-32                    | ⏳ pendiente |
+| [05 · Presupuesto](usuario/05-presupuesto.md)                    | P-28…P-32                    | ✅ escrito   |
 | [06 · Cronograma](usuario/06-cronograma.md)                      | P-33…P-36                    | ⏳ pendiente |
 | [07 · Documentos](usuario/07-documentos.md)                      | P-37                         | ⏳ pendiente |
 | [08 · Navegación](usuario/08-navegacion.md)                      | P-43, P-44, P-46             | ✅ escrito   |
