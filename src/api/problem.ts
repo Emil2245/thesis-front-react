@@ -30,14 +30,12 @@ export interface Problem {
  * `switch` de `GlobalExceptionMapper.codePorEstatus(status)`, y en el helper
  * privado `AuthService.error(status, codigo, mensaje)`.
  *
- * Se cayeron del catálogo `insumo-en-uso`, `export-bloqueado` y `csv-invalido`:
- * cero apariciones en todo el backend. Ver el plan 063 para qué manda en su
- * lugar cada uno.
+ * `insumo-en-uso` y `csv-invalido` NO están: cero apariciones en todo el
+ * backend. Ver el plan 063 para qué manda en su lugar cada uno.
  *
- * `export-bloqueado` volvió al catálogo en `5673615` (plan 031 del backend):
- * lo emite `CronogramaDocumentoResource.descargar` con el cuerpo tipado
- * `BloqueoExportDetalle`, un superconjunto de `ErrorPayload`. `insumo-en-uso` y
- * `csv-invalido` siguen sin existir.
+ * `export-bloqueado` cayó con ellos contra `c337950` y **volvió** en `5673615`
+ * (plan 031 del backend): lo emite `CronogramaDocumentoResource.descargar` con
+ * el cuerpo tipado `BloqueoExportDetalle`, un superconjunto de `ErrorPayload`.
  */
 export const PROBLEM_TYPES = [
   // GlobalExceptionMapper.codePorEstatus + ValidacionExceptionMapper

@@ -135,7 +135,9 @@ const FORMATO_NO_SOPORTADO = "Formato no soportado (permitidos: xlsx | pdf | msp
 /** `null` cuando falta, está vacío o no es uno de los tres: el backend da 400. */
 const leerFormatoCronograma = (request: Request): FormatoExportCronograma | null => {
   const formato = new URL(request.url).searchParams.get("formato");
-  return formato !== null && formato in ARCHIVO_CRONOGRAMA
+  // `hasOwn` y no `in`: `in` casa además las heredadas (`?formato=constructor`
+  // pasaría la guarda y luego reventaría al desestructurar).
+  return formato !== null && Object.hasOwn(ARCHIVO_CRONOGRAMA, formato)
     ? (formato as FormatoExportCronograma)
     : null;
 };
