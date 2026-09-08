@@ -1,7 +1,7 @@
 # Bitácora
 
-**Ronda de paridad 1** · ola 1 · **Actualizada:** 2026-09-07
-**Backend alineado hasta:** `c337950` → **objetivo de esta ronda: `5673615`**
+**Ronda de paridad 1** · **CERRADA** · **Actualizada:** 2026-09-07
+**Backend alineado hasta:** **`5673615`** — punto de partida de la ronda siguiente
 
 > La lleva el orquestador ([`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md)). Se escribe **en el momento** en que
 > algo cambia de estado, no al final de la sesión: si la sesión se corta, lo que no está escrito
@@ -25,9 +25,39 @@ montones según la §1 del orquestador:
 
 | Ola | Plan | Estado | Worktree | Commit | Nota |
 | --- | ---- | ------ | -------- | ------ | ---- |
-| 1 | **066 exportar cronograma (xlsx/pdf/mspdi)** | 🔄 en curso | `.claude/worktrees/ola1-066` | — | incluye el arreglo del cuerpo de error en `Blob` |
+| 1 | **066 exportar cronograma (xlsx/pdf/mspdi)** | ✅ verde | — | 1fed42d | fusionado a main · **ola 1 cerrada** · 477 tests |
 
 ### Notas de la ronda
+
+- 2026-09-07 — **066 aceptado y fusionado** (`1fed42d`). Comprobado por mí en su worktree, no por
+  el informe: `verify` exit 0 con **477 tests en 74 archivos** (461 antes), `e2e` 20 passed, los
+  nueve greps de la definición de hecho uno a uno, y la captura `11-documentos` **mirada** — la
+  tarjeta sale entera, con su etiqueta «Formato», el selector en «Excel (.xlsx)» y el botón
+  habilitado. `verify` sobre `main` después de fusionar, también verde.
+- 2026-09-07 — **Sensibilidad de la rebanada 1, comprobada revirtiéndola.** Devolví
+  `safeParse(error.response?.data)` en `src/api/client.ts` y el test se puso rojo con «expected
+  'sin-respuesta' to be 'export-bloqueado'». El arreglo sostiene peso; el test no pasa por
+  casualidad. Es la misma comprobación que en el plan 053 destapó que seis hooks nunca disparaban.
+- 2026-09-07 — Los tests nuevos afirman cosas, no que «cargó»: el 409 asierta el **mensaje exacto**
+  del backend, el fallback de MSPDI asierta `.xml` y no `.mspdi`, el preflight con forma mala
+  asierta `respuesta-invalida` (o sea que Zod está enganchado de verdad), y el warning asierta que
+  **avisa sin deshabilitar**. Los handlers MSW rechazan `formato` desconocido con 400 y presupuesto
+  ajeno con 404, como el backend: no son permisivos.
+- 2026-09-07 — **Desviación aceptada:** el ejecutor tuvo que tocar `src/test/api/problem.test.ts`,
+  fuera del alcance escrito. Dos de sus aserciones estaban clavadas a `c337950` y se ponen rojas
+  por construcción en cuanto entra la rebanada 2, así que la definición de hecho y el alcance eran
+  incompatibles. Es la misma categoría que las dos aserciones caducadas que el plan sí manda
+  actualizar. **El fallo era del plan**: corregido su alcance para que una re-ejecución no vuelva a
+  chocar.
+- 2026-09-07 — **Dos nits que el gate no caza**, arreglados por mí al fusionar (`be0e357`): el
+  comentario de `PROBLEM_TYPES` se contradecía consigo mismo (arriba seguía diciendo que
+  `export-bloqueado` tiene «cero apariciones en todo el backend», abajo que volvió), y
+  `handlers.ts` validaba el formato con `in`, que casa también las heredadas —
+  `?formato=constructor` pasaba la guarda. `Object.hasOwn`, mismo tamaño, correcto en el borde.
+- 2026-09-07 — El ejecutor encontró algo que el plan no vio: la captura `11-documentos` entraba en
+  `/documentos` **sin `?v=`**, así que las dos queries de la página quedaban desactivadas por su
+  guarda de id y la petición de validación que el plan mandaba mockear no salía nunca. Añadido el
+  `?v=`, que es lo que hace alcanzables los dos mocks.
 
 - 2026-09-07 — **066 despachado** a un subagente Claude en `.claude/worktrees/ola1-066` (rama del
   mismo nombre, creada a mano desde `main` @ `7e3db8a`, con `pnpm install` hecho y `typecheck`

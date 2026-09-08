@@ -344,6 +344,10 @@ exit 0, `e2e` 20 passed. Si no coincide al arrancar, es condición de parada.
 - `src/test/handlers.ts` (modificar)
 - `src/test/fixtures/cronograma.ts` (modificar)
 - `src/test/api/client.test.ts` (modificar)
+- `src/test/api/problem.test.ts` (modificar) — **la rebanada 2 lo obliga**: dos
+  de sus aserciones (el catálogo exacto y `not.toContain("export-bloqueado")`)
+  están clavadas a `c337950` y se ponen rojas por construcción. Actualiza solo
+  esas dos; `insumo-en-uso` y `csv-invalido` siguen fuera del catálogo.
 - `src/test/features/exportar/hooks/useExportar.contrato.test.tsx` (modificar)
 - `src/test/features/exportar/pages/ExportPage.test.tsx` (modificar)
 - `e2e/screenshots.spec.ts` (modificar)

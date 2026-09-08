@@ -111,7 +111,7 @@ cada ronda está en [`BITACORA.md`](BITACORA.md)**, no aquí; esta tabla solo li
 
 | Plan | Título | Prioridad | Esfuerzo | Depende de | Estado |
 |---|---|---|---|---|---|
-| 066 | [Exportar el cronograma en XLSX, PDF y MSPDI](066-exportar-cronograma.md) | P1 | L | — | TODO |
+| 066 | [Exportar el cronograma en XLSX, PDF y MSPDI](066-exportar-cronograma.md) | P1 | L | — | DONE (`1fed42d`) |
 
 Ronda 1 (backend `c337950` → `5673615`): el delta traía la exportación documental del cronograma
 (código, plan 031 del backend) y el panel admin (**solo planes, sin ni un recurso JAX-RS** — las
