@@ -86,9 +86,15 @@ export function AsistenteImportCsv({
 
         {paso === 0 && (
           <div className="space-y-4">
+            {/* Plan 067: las columnas son las del parser del backend
+                (CsvInsumoParser), no las que el texto anterior inventaba. */}
             <p className="text-sm text-muted-foreground">
-              Selecciona un archivo CSV con columnas: codigo, descripcion, tipo, unidad,
-              precioUnitario.
+              Selecciona un archivo CSV con estas cuatro columnas, en este orden: codigo,
+              descripcion, unidad, precio.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Todo lo que importes se crea como insumo de tipo Material. Los equipos y la mano de
+              obra se añaden a mano.
             </p>
             <Field>
               <Label htmlFor="csv-archivo">Archivo CSV</Label>

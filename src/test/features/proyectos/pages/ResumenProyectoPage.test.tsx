@@ -92,4 +92,31 @@ describe("ResumenProyectoPage", () => {
       ),
     ).toBeInTheDocument();
   });
+
+  // Plan 067: el botón Editar navegaba a `?editar=true` y nadie leía el
+  // parámetro — el diálogo existía sin estar montado en ninguna parte.
+  it("abre el diálogo de edición con ?editar=true", async () => {
+    renderConProviders(
+      <Routes>
+        <Route path="/proyectos/:id" element={<ResumenProyectoPage />} />
+      </Routes>,
+      { ruta: `/proyectos/${PROYECTO_1}?editar=true` },
+    );
+
+    expect(await screen.findByRole("heading", { name: "Editar proyecto" })).toBeInTheDocument();
+  });
+
+  it("no monta el diálogo de edición sin el parámetro", async () => {
+    renderConProviders(
+      <Routes>
+        <Route path="/proyectos/:id" element={<ResumenProyectoPage />} />
+      </Routes>,
+      { ruta: `/proyectos/${PROYECTO_1}` },
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Puente Ambato")).toBeInTheDocument();
+    });
+    expect(screen.queryByRole("heading", { name: "Editar proyecto" })).not.toBeInTheDocument();
+  });
 });

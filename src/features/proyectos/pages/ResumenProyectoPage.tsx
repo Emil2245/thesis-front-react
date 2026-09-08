@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useProyecto, useEliminarProyecto } from "../hooks/useProyectos";
 import { useParametros } from "../hooks/useParametros";
 import { TabFirmantes } from "../components/TabFirmantes";
@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { MoreHorizontalIcon } from "lucide-react";
 import { DialogoDescuentoGlobal } from "../components/DialogoDescuentoGlobal";
+import { DialogoEditarProyecto } from "../components/DialogoEditarProyecto";
 import { DialogoGuardarComoPlantilla } from "../components/DialogoGuardarComoPlantilla";
 import { useVersionActiva } from "@/shell/contexto";
 import { MOTIVO_SIN_BACKEND } from "@/lib/disponibilidad";
@@ -48,6 +49,7 @@ export function ResumenProyectoPage() {
   const { id } = useParams();
   const proyectoId = id ?? "";
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: proyecto, isPending } = useProyecto(proyectoId);
   const [descuentoAbierto, setDescuentoAbierto] = useState(false);
   const [guardarPlantillaAbierto, setGuardarPlantillaAbierto] = useState(false);
@@ -257,6 +259,13 @@ export function ResumenProyectoPage() {
         abierto={guardarPlantillaAbierto}
         onClose={() => setGuardarPlantillaAbierto(false)}
         proyectoId={proyectoId}
+      />
+
+      {/* Plan 067: el botón Editar ya navegaba a `?editar=true` y nadie leía el
+          parámetro. `replace: true` al cerrar, o el botón "atrás" lo reabre. */}
+      <DialogoEditarProyecto
+        abierto={searchParams.get("editar") === "true"}
+        onClose={() => setSearchParams({}, { replace: true })}
       />
     </>
   );

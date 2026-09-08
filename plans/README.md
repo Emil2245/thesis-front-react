@@ -14,6 +14,10 @@ Each plan is written for an executor with **zero context from the session that p
 > **¿Vas a llevar el proyecto de punta a punta? Lee [`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md) y arranca.**
 > Es el encargo activo: detectar qué mergeó el backend y poner el frontend a la altura.
 > [`ORQUESTADOR.md`](ORQUESTADOR.md) es su predecesor, con la ruta 053–065 ya cerrada.
+>
+> **¿Vas a escribir los manuales de usuario?** Arranca con
+> [`PROMPT-ORQUESTADOR-MANUALES.md`](PROMPT-ORQUESTADOR-MANUALES.md) — encargo aparte, sin tocar
+> `src/`: destino `docs/manual/`, capturas por Playwright, planes desde el 067.
 > Estado vivo en [`BITACORA.md`](BITACORA.md).
 >
 > **El índice vivo de trabajo pendiente es [`HANDOFF-ESTADO-Y-GAPS.md`](HANDOFF-ESTADO-Y-GAPS.md).**
@@ -116,6 +120,17 @@ cada ronda está en [`BITACORA.md`](BITACORA.md)**, no aquí; esta tabla solo li
 Ronda 1 (backend `c337950` → `5673615`): el delta traía la exportación documental del cronograma
 (código, plan 031 del backend) y el panel admin (**solo planes, sin ni un recurso JAX-RS** — las
 cuatro claves `admin-*` de `src/lib/disponibilidad.ts` siguen degradadas a propósito).
+
+### Manuales de usuario — desde 2026-09-07
+
+Encargo de [`PROMPT-ORQUESTADOR-MANUALES.md`](PROMPT-ORQUESTADOR-MANUALES.md): escribir el Manual
+del Usuario y el Manual del Administrador en `docs/manual/`, con capturas generadas por Playwright.
+El encargo no toca `src/` — salvo este plan, que es su requisito previo: el recon encontró tres
+sitios donde la interfaz de hoy haría mentir al manual.
+
+| Plan | Título | Prioridad | Esfuerzo | Depende de | Estado |
+|---|---|---|---|---|---|
+| 067 | [Arreglar los tres defectos que harían mentir al manual](067-arreglar-defectos-que-bloquean-el-manual.md) | P1 | S | — | DONE (`e23fd73`) |
 
 ### Segunda tanda — auditoría posterior al rediseño de UI (2026-08-24)
 

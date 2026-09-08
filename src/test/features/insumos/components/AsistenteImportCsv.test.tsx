@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { renderConProviders } from "@/test/render";
 import { screen, waitFor } from "@testing-library/react";
@@ -11,7 +12,7 @@ import { problema } from "@/test/handlers";
 
 const API = "*/api/v1";
 
-const csvContent = "codigo,descripcion,tipo,unidad,precioUnitario\nM-9,Pintura,MATERIAL,gl,10.5";
+const csvContent = "codigo,descripcion,unidad,precio\nM-9,Pintura,gl,10.5";
 
 const subirArchivo = async (input: HTMLElement) => {
   const archivo = new File([csvContent], "insumos.csv", { type: "text/csv" });
@@ -20,7 +21,9 @@ const subirArchivo = async (input: HTMLElement) => {
 };
 
 describe("AsistenteImportCsv", () => {
-  it("renders step 1 with precioUnitario column hint", async () => {
+  // Plan 067: el texto anterior nombraba `tipo` y `precioUnitario`, columnas
+  // que el parser del backend no acepta — quien lo siguiera no importaba nada.
+  it("nombra las cuatro columnas del parser, no precioUnitario", async () => {
     renderConProviders(
       <AsistenteImportCsv
         abierto={true}
@@ -32,8 +35,16 @@ describe("AsistenteImportCsv", () => {
     await waitFor(() => {
       expect(screen.getByText(/Seleccionar archivo/i)).toBeInTheDocument();
     });
-    expect(screen.getByText(/precioUnitario/i)).toBeInTheDocument();
+    expect(screen.getByText(/codigo, descripcion, unidad, precio\./i)).toBeInTheDocument();
+    expect(screen.queryByText(/precioUnitario/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Paso 1 de 2/)).toBeInTheDocument();
+  });
+
+  // El enlace "Descargar plantilla" apuntaba al vacío: `/plantillas` es además
+  // una ruta del SPA, así que el usuario se descargaba el HTML de la app.
+  it("la plantilla descargable existe con la cabecera del parser", () => {
+    const csv = readFileSync("public/plantillas/insumos-template.csv", "utf8");
+    expect(csv.split("\n")[0]).toBe("codigo,descripcion,unidad,precio");
   });
 
   it("happy path: imports via /importar and closes", async () => {
