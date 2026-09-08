@@ -4,9 +4,18 @@ import { Button } from "@/components/ui/button";
 import { FileDown, AlertTriangle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useValidacionExport, useExportar } from "../hooks/useExportar";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useValidacionExport, useExportar, usePreflightCronograma } from "../hooks/useExportar";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
-import type { RubroRefResponse } from "@/api/contract";
+import type { FormatoExportCronograma, RubroRefResponse } from "@/api/contract";
 
 function ListaRubros({ items, titulo }: { items: RubroRefResponse[]; titulo: string }) {
   if (!items.length) return null;
@@ -26,24 +35,49 @@ function ListaRubros({ items, titulo }: { items: RubroRefResponse[]; titulo: str
   );
 }
 
+/** Las tres etiquetas en español; `mspdi` viaja como XML, no como `.mspdi`. */
+const FORMATOS: { valor: FormatoExportCronograma; etiqueta: string }[] = [
+  { valor: "xlsx", etiqueta: "Excel (.xlsx)" },
+  { valor: "pdf", etiqueta: "PDF (.pdf)" },
+  { valor: "mspdi", etiqueta: "MS Project (.xml)" },
+];
+
 /**
- * Plan 051: el backend genera un único documento, la especificación técnica en
- * DOCX. Los otros cuatro entregables de P-37 (presupuesto PDF/Excel, APUs,
- * cronograma) no existen en ninguna ruta: se anuncian con un aviso honesto en
- * vez de botones deshabilitados, que prometerían que llegan pronto.
+ * El backend genera dos documentos: la especificación técnica en DOCX (plan
+ * 051) y el cronograma valorizado en tres formatos (plan 031 del backend, @
+ * `5673615`). El presupuesto y los APUs —los otros dos entregables de P-37— no
+ * existen en ninguna ruta: se anuncian con un aviso honesto en vez de botones
+ * deshabilitados, que prometerían que llegan pronto.
+ *
+ * De los bloqueos del preflight se muestra el `detalle`, que el servidor ya
+ * redacta en español: una tabla de traducción de códigos se quedaría corta en
+ * cuanto el backend añada un código.
  */
 export function ExportPage() {
   const [searchParams] = useSearchParams();
   const versionId = searchParams.get("v") ?? "";
 
   const { data: validacion, isLoading: valLoading } = useValidacionExport(versionId);
-  const { descargarEspecificacionesTecnicas } = useExportar();
+  const { descargarEspecificacionesTecnicas, descargarCronograma } = useExportar();
   const [descargando, setDescargando] = useState(false);
+
+  const [formato, setFormato] = useState<FormatoExportCronograma>("xlsx");
+  const { data: preflight, isLoading: preflightLoading } = usePreflightCronograma(
+    versionId,
+    formato,
+  );
+  const [descargandoCronograma, setDescargandoCronograma] = useState(false);
 
   const handleExport = async () => {
     setDescargando(true);
     await descargarEspecificacionesTecnicas(versionId);
     setDescargando(false);
+  };
+
+  const handleExportCronograma = async () => {
+    setDescargandoCronograma(true);
+    await descargarCronograma(versionId, formato);
+    setDescargandoCronograma(false);
   };
 
   return (
@@ -100,9 +134,85 @@ export function ExportPage() {
             </Button>
           </div>
           <p className="text-sm text-muted-foreground border-t pt-4">
-            Por ahora solo se genera este documento. La exportación del presupuesto, de los APUs y
-            del cronograma todavía no existe en el servidor.
+            La exportación del presupuesto y de los APUs todavía no existe en el servidor.
           </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Cronograma valorizado</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2 max-w-xs">
+            <Label htmlFor="formato-cronograma">Formato</Label>
+            <Select value={formato} onValueChange={(v: FormatoExportCronograma) => setFormato(v)}>
+              <SelectTrigger id="formato-cronograma" aria-label="Formato">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {FORMATOS.map((f) => (
+                    <SelectItem key={f.valor} value={f.valor}>
+                      {f.etiqueta}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {preflight && !preflight.exportable && (
+            <Alert variant="destructive">
+              <AlertTriangle className="size-4" />
+              <AlertTitle>El cronograma no puede exportarse en este formato</AlertTitle>
+              <AlertDescription className="mt-2">
+                <ul className="list-disc list-inside">
+                  {preflight.bloqueos.map((b) => (
+                    <li key={`${b.codigo}-${b.actividadId ?? ""}`}>{b.detalle}</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Un warning avisa pero no bloquea: el botón sigue habilitado. */}
+          {preflight && preflight.warnings.length > 0 && (
+            <Alert className="bg-advertencia/15 text-advertencia-texto border-advertencia/30">
+              <AlertTriangle className="size-4" />
+              <AlertTitle>Avisos</AlertTitle>
+              <AlertDescription className="mt-2 text-advertencia-texto">
+                <ul className="list-disc list-inside">
+                  {preflight.warnings.map((w) => (
+                    <li key={w.codigo}>{w.detalle}</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <FileDown className="size-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                Cronograma de avance valorizado del presupuesto
+              </p>
+            </div>
+            <Button
+              size="sm"
+              onClick={handleExportCronograma}
+              disabled={
+                descargandoCronograma || preflightLoading || preflight?.exportable === false
+              }
+            >
+              {descargandoCronograma ? (
+                <Loader2 className="size-3.5 animate-spin mr-1" />
+              ) : (
+                <FileDown className="size-3.5 mr-1" />
+              )}
+              Descargar cronograma
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </>
