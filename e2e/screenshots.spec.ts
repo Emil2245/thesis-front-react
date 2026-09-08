@@ -684,9 +684,30 @@ test("11-documentos", async ({ page }, testInfo) => {
   await page.route(`${API}/proyectos/${PROYECTO_1}/presupuestos*`, (route) =>
     route.fulfill(json(versiones)),
   );
-  await page.goto(`/proyectos/${PROYECTO_1}/documentos`, {
+  // La página saca el presupuesto de `?v=`; sin él las dos queries quedan
+  // desactivadas por su guarda y la tarjeta del cronograma sale vacía.
+  await page.route(`${API}/presupuestos/${PRESUPUESTO_V2}/validacion`, (route) =>
+    route.fulfill(
+      json({
+        exportable: true,
+        itemsPuCero: [],
+        itemsCantidadCero: [],
+        itemsSinActividad: [],
+      }),
+    ),
+  );
+  // `*` al final: la ruta lleva `?formato=xlsx`. Sin este mock la tarjeta sale
+  // en la captura en estado de carga y `capturar()` no lo detecta.
+  await page.route(`${API}/documentos/cronograma/${PRESUPUESTO_V2}/preflight*`, (route) =>
+    route.fulfill(json({ exportable: true, formato: "xlsx", bloqueos: [], warnings: [] })),
+  );
+  await page.goto(`/proyectos/${PROYECTO_1}/documentos?v=${PRESUPUESTO_V2}`, {
     waitUntil: "networkidle",
     timeout: 30000,
   });
+  // Patrón D de docs/bugs.md: una captura sin aserción fotografía una pantalla
+  // caída sin quejarse.
+  await expect(page.getByText("Cronograma valorizado")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Descargar cronograma" })).toBeEnabled();
   await capturar(page, "11-documentos", testInfo);
 });
