@@ -74,7 +74,25 @@ deberían ser:
 `screenshots.spec.ts` — el asistente no es clicable en Pixel 7 y una captura de manual es de
 escritorio por definición.
 
-**Siguiente:** Ola 1 en paralelo — 01 Cuenta · 03 Insumos · 08 Navegación.
+**Ola 1 · 🔄 en curso** — planes **068** (01 Cuenta), **069** (03 Insumos) y **070** (08
+Navegación), despachados en paralelo.
+
+**El protocolo de worktrees de §7 volvió a morder, y estaba escrito.** El primer despacho usó el
+aislamiento automático del `Agent`, que creó los tres worktrees desde `eb004d1` — 15 commits por
+detrás de `main`, sin el plan 067 ni la Ola 0. Los tres ejecutores pararon en seco al no encontrar
+su plan, sin tocar un archivo, que es exactamente lo que se les pidió. Re-despachados con el
+protocolo que esta misma bitácora ya prescribía: `git worktree add -b manual1-0NN
+.claude/worktrees/manual1-0NN main` a mano, y `Agent` **sin** `isolation`, con la ruta absoluta.
+Coste: cero daño, tres arranques perdidos. **Lección: leer la bitácora no es lo mismo que
+aplicarla.**
+
+**Aislamiento de puerto en `playwright.config.ts`** (`E2E_PORT`, por defecto 5173): tres capítulos
+en paralelo levantaban Vite en el mismo 5173 y, con `reuseExistingServer`, cada Playwright
+fotografiaba el árbol de otro y el gate salía verde igual. Cada ejecutor de la ola usa el suyo
+(5211, 5212, 5213). Sirve para las olas 2 y 3, que también son paralelas.
+
+**Siguiente:** revisar los tres capítulos que vuelvan, mergear de uno en uno, y arrancar la Ola 2
+(04 APU · 05 Presupuesto).
 
 ## Ronda de paridad 1 — backend `c337950` → `5673615` (2026-09-07)
 
