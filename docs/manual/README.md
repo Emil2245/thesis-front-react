@@ -40,14 +40,14 @@ documentan porque no existen en la interfaz — ver _Lo que no se documenta_, ab
 | Capítulo                                                         | Procesos                     | Estado       |
 | ---------------------------------------------------------------- | ---------------------------- | ------------ |
 | [00 · Introducción](usuario/00-introduccion.md)                  | —                            | ⏳ pendiente |
-| [01 · Cuenta y acceso](usuario/01-cuenta-y-acceso.md)            | P-01…P-04                    | ⏳ pendiente |
+| [01 · Cuenta y acceso](usuario/01-cuenta-y-acceso.md)            | P-01…P-04                    | ✅ escrito   |
 | [02 · Proyectos](usuario/02-proyectos.md)                        | P-05, P-06, P-08, P-10, P-11 | ✅ escrito   |
 | [03 · Insumos](usuario/03-insumos.md)                            | P-13…P-18                    | ⏳ pendiente |
 | [04 · APU](usuario/04-apu.md)                                    | P-19…P-23, P-26, P-27, P-45  | ⏳ pendiente |
 | [05 · Presupuesto](usuario/05-presupuesto.md)                    | P-28…P-32                    | ⏳ pendiente |
 | [06 · Cronograma](usuario/06-cronograma.md)                      | P-33…P-36                    | ⏳ pendiente |
 | [07 · Documentos](usuario/07-documentos.md)                      | P-37                         | ⏳ pendiente |
-| [08 · Navegación](usuario/08-navegacion.md)                      | P-43, P-44, P-46             | ⏳ pendiente |
+| [08 · Navegación](usuario/08-navegacion.md)                      | P-43, P-44, P-46             | ✅ escrito   |
 | [admin · Bases centrales](admin/01-bases-centrales.md)           | P-39                         | ⏳ pendiente |
 | [admin · Parámetros del sistema](admin/02-parametros-sistema.md) | P-41 (defaults)              | ⏳ pendiente |
 
