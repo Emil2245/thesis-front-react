@@ -367,5 +367,6 @@ docs `411242f`. Si no coincide, averígualo antes de despachar.
 
 ## Bloqueado esperando al humano
 
-- Entrevista **N05** (cronograma): 7 preguntas sin responder. Bloquea **solo** la rebanada 5 del
-  plan 055. Ninguna ola la espera.
+- Entrevista **N05** (cronograma): **6** preguntas sin responder — la 7ª («¿estructura del
+  documento exportado?») la respondió el backend implementándola en `5673615`. Bloquea **solo** la
+  rebanada 5 del plan 055, que va de vistas del cronograma, no de export. Ninguna ola la espera.
