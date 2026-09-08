@@ -33,6 +33,11 @@ export interface Problem {
  * Se cayeron del catálogo `insumo-en-uso`, `export-bloqueado` y `csv-invalido`:
  * cero apariciones en todo el backend. Ver el plan 063 para qué manda en su
  * lugar cada uno.
+ *
+ * `export-bloqueado` volvió al catálogo en `5673615` (plan 031 del backend):
+ * lo emite `CronogramaDocumentoResource.descargar` con el cuerpo tipado
+ * `BloqueoExportDetalle`, un superconjunto de `ErrorPayload`. `insumo-en-uso` y
+ * `csv-invalido` siguen sin existir.
  */
 export const PROBLEM_TYPES = [
   // GlobalExceptionMapper.codePorEstatus + ValidacionExceptionMapper
@@ -58,6 +63,8 @@ export const PROBLEM_TYPES = [
   // Excepciones propias del módulo cronograma, con su propio entity
   "segmento-solapado",
   "configuracion-cronograma-requiere-confirmacion",
+  // CronogramaDocumentoResource.descargar — 409 con cuerpo `BloqueoExportDetalle`
+  "export-bloqueado",
 ] as const;
 
 export type ProblemType = (typeof PROBLEM_TYPES)[number];
