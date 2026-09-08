@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { renderConProviders } from "@/test/render";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import { TablaInsumos } from "@/features/insumos/components/TablaInsumos";
 import { server } from "@/test/server";
 import { http, HttpResponse } from "msw";
@@ -36,6 +36,29 @@ describe("TablaInsumos", () => {
 
     const badges = screen.getAllByText("Desactualizado");
     expect(badges.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("Ver uso no está deshabilitado y abre el diálogo con los APUs que lo usan (plan 071)", async () => {
+    const { user } = renderConProviders(
+      <TablaInsumos proyectoId={"01927f4e-1a2b-7c3d-8e4f-000000000001"} />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Cemento Portland Tipo I")).toBeInTheDocument();
+    });
+
+    const filas = screen.getAllByRole("row");
+    const fila = filas.find((row) => row.textContent?.includes("Cemento Portland Tipo I"))!;
+    await user.click(within(fila).getByRole("button"));
+
+    const verUso = await screen.findByRole("menuitem", { name: /ver uso/i });
+    expect(verUso).not.toHaveAttribute("aria-disabled");
+    await user.click(verUso);
+
+    await waitFor(() => {
+      expect(screen.getByText("APU-001")).toBeInTheDocument();
+      expect(screen.getByText("APU-002")).toBeInTheDocument();
+    });
   });
 
   it("empty state CTA", async () => {
