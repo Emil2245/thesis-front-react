@@ -139,7 +139,40 @@ comando.
 **Pasada de coherencia, adelantada:** el capítulo piloto 02 remitía a §3.4 para «Copiar base al
 proyecto», que en el capítulo 03 real es **§3.5**. Corregido.
 
-**Siguiente:** Ola 2 — 04 APU · 05 Presupuesto, con dos ejecutores, no tres.
+**Plan 071 · ✅ verde · fusionado.** Los cuatro defectos que destaparon los capítulos de la Ola 1.
+
+- **P-18 vuelve al manual.** «Ver uso» estaba `disabled` con el tooltip de «falta backend», pero
+  `InsumoResource.java:156` sirve `/{insumoId}/usos` en `origin/main` y el hook y el diálogo
+  estaban completos. Quitar el `disabled` bastó. El capítulo 03 gana su sección 3.6 con captura,
+  y el índice sube de 37 a **38 procesos documentables**.
+- **El aviso del perfil dice la verdad.** El recon cambió la solución: `AuthService.java:277`
+  revoca *todos* los refresh tokens (D-03), así que `cerrar()` era correcto y **el texto era lo
+  que mentía**. Se arregló el texto, no la lógica.
+- «Reenviar verificación» ya lleva el correo; **Crear proyecto** se deshabilita con el nombre
+  vacío; y tres etiquetas quedaron conectadas a su control.
+
+Baseline a **484 tests** unitarios y **55** e2e.
+
+**Una premisa del plan era falsa, y el ejecutor hizo bien en no seguirla.** El plan pedía dar
+texto accesible a `SidebarTrigger`; el componente ya tenía su `<span className="sr-only">`. Lo
+tomé del informe del capítulo 08 sin verificarlo yo. Recordatorio de que un hallazgo reportado no
+es un hallazgo comprobado — la misma regla que aplico a los informes, me aplica al escribir planes.
+
+**Y un efecto colateral que el alcance no previó.** Cambiar el texto del perfil dejó dos capturas
+del capítulo 01 (`07-perfil.png`, `08-cambiar-password.png`) mostrando el texto viejo. El ejecutor
+las revirtió porque estaban fuera de su alcance —correcto— y lo reportó. Las regeneró el
+orquestador: **una captura que contradice la pantalla es justo el fallo que este manual persigue**.
+Lección para los planes siguientes: si un plan cambia un texto de pantalla, su alcance tiene que
+incluir las capturas que lo fotografían, estén en el capítulo que estén.
+
+Distinguir cambio real de ruido de renderizado es fácil por tamaño: las dos reales crecieron 1.5 y
+2.9 KB; las otras cuatro variaron entre −58 y +0 bytes.
+
+**Dos correcciones más del orquestador en el capítulo 03**: la referencia cruzada del borrado
+bloqueado apuntaba a un punto que el 071 eliminó, y la columna **Bloque** del diálogo muestra una
+letra (M/N/O/P) que el manual no traducía. Ahora lleva su tabla.
+
+**Siguiente:** Ola 2 — 04 APU · 05 Presupuesto (planes 072 y 073), con dos ejecutores, no tres.
 
 ## Ronda de paridad 1 — backend `c337950` → `5673615` (2026-09-07)
 
