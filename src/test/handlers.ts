@@ -2,6 +2,8 @@ import { asDecimal } from "@/lib/decimal";
 import { http, HttpResponse } from "msw";
 import type { DefaultBodyType, PathParams } from "msw";
 import type {
+  BloqueoExportDetalle,
+  FormatoExportCronograma,
   ProyectoResponse,
   PresupuestoVersionResponse,
   PlantillaProyectoResponse,
@@ -39,7 +41,12 @@ import {
   PRESUPUESTO_V2,
   PRESUPUESTO_V3,
 } from "./fixtures/presupuesto";
-import { cronogramaFixture, perdidasFixture } from "./fixtures/cronograma";
+import {
+  cronogramaFixture,
+  perdidasFixture,
+  preflightBloqueadoFixture,
+  preflightExportableFixture,
+} from "./fixtures/cronograma";
 import { parametrosSistemaFixture, basesCentralesFixtureAdmin } from "./fixtures/admin";
 
 const API = "*/api/v1";
@@ -51,6 +58,11 @@ export const DETALLE_HM = "018f8a50-0000-7000-8000-000000000200";
 // UUIDs eso es NaN y nunca entraban. Eran handlers de error inalcanzables.
 export const INSUMO_EN_USO = "018f8a20-0000-7000-8000-000000000099";
 export const APU_REFERENCIADO = "018f8a40-0000-7000-8000-000000000099";
+// Los dos presupuestos con los que la exportación del cronograma se sale del
+// camino feliz: uno ajeno (404) y uno con bloqueos (preflight `exportable:
+// false` y 409 en la descarga).
+export const PRESUPUESTO_AJENO = "018f8a60-0000-7000-8000-0000000000404";
+export const PRESUPUESTO_BLOQUEADO = "018f8a60-0000-7000-8000-0000000000409";
 export const PROYECTO_DESDE_PLANTILLA = "018f8a10-0000-7000-8000-000000000099";
 
 const CAMPOS_PROYECTO = [
@@ -103,6 +115,30 @@ const soloCampos = async (request: Request, ...permitidos: string[]) => {
 // el de configuración añade `perdidas[]`. Ahora que `problema()` dice la
 // verdad, las dos son la misma función.
 const errorCronograma = problema;
+
+/** `ArchivoGenerado` + el `switch` de `CronogramaDescargaService.generar`. */
+const ARCHIVO_CRONOGRAMA: Record<
+  FormatoExportCronograma,
+  { mediaType: string; extension: string }
+> = {
+  xlsx: {
+    mediaType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    extension: "xlsx",
+  },
+  pdf: { mediaType: "application/pdf", extension: "pdf" },
+  // MSPDI sale como XML, no como `.mspdi` ni `.mpp`.
+  mspdi: { mediaType: "application/xml", extension: "xml" },
+};
+
+const FORMATO_NO_SOPORTADO = "Formato no soportado (permitidos: xlsx | pdf | mspdi)";
+
+/** `null` cuando falta, está vacío o no es uno de los tres: el backend da 400. */
+const leerFormatoCronograma = (request: Request): FormatoExportCronograma | null => {
+  const formato = new URL(request.url).searchParams.get("formato");
+  return formato !== null && formato in ARCHIVO_CRONOGRAMA
+    ? (formato as FormatoExportCronograma)
+    : null;
+};
 
 const leerCuerpo = async (request: Request) =>
   (await request
@@ -841,6 +877,52 @@ export const handlers = [
         headers: {
           "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
           "Content-Disposition": 'attachment; filename="especificaciones-tecnicas.docx"',
+        },
+      });
+    },
+  ),
+
+  // ———— Exportación del cronograma (plan 031 del backend, @ 5673615) ————
+  // `formato` es OBLIGATORIO y solo admite `xlsx|pdf|mspdi`: el backend
+  // responde 400 `validacion` a cualquier otra cosa, así que estos handlers lo
+  // rechazan también. Un mock permisivo es un test que no prueba nada.
+  http.get(`${API}/documentos/cronograma/:id/preflight`, ({ request, params }) => {
+    const formato = leerFormatoCronograma(request);
+    if (formato === null) return problema(400, "validacion", FORMATO_NO_SOPORTADO);
+    if (params.id === PRESUPUESTO_AJENO)
+      return problema(404, "no-encontrado", "Presupuesto no encontrado");
+    const base =
+      params.id === PRESUPUESTO_BLOQUEADO ? preflightBloqueadoFixture : preflightExportableFixture;
+    // El backend devuelve el formato PEDIDO (`formato.token()`), no uno fijo.
+    return HttpResponse.json({ ...base, formato });
+  }),
+
+  http.get<PathParams, DefaultBodyType, Problem | BloqueoExportDetalle | ArrayBuffer>(
+    `${API}/documentos/cronograma/:id`,
+    ({ request, params }) => {
+      const formato = leerFormatoCronograma(request);
+      if (formato === null) return problema(400, "validacion", FORMATO_NO_SOPORTADO);
+      if (params.id === PRESUPUESTO_AJENO)
+        return problema(404, "no-encontrado", "Presupuesto no encontrado");
+      if (params.id === PRESUPUESTO_BLOQUEADO)
+        return HttpResponse.json<BloqueoExportDetalle>(
+          {
+            presupuestoId: String(params.id),
+            formato,
+            codigo: "export-bloqueado",
+            mensaje: `Exportación bloqueada: ${preflightBloqueadoFixture.bloqueos.length} bloqueo(s)`,
+            bloqueos: preflightBloqueadoFixture.bloqueos,
+            warnings: preflightBloqueadoFixture.warnings,
+          },
+          { status: 409, headers: { "X-Cronograma-Desactualizado": "false" } },
+        );
+      const { mediaType, extension } = ARCHIVO_CRONOGRAMA[formato];
+      return HttpResponse.arrayBuffer(new ArrayBuffer(8), {
+        status: 200,
+        headers: {
+          "Content-Type": mediaType,
+          "Content-Disposition": `attachment; filename="PROY-A-Edificio_Principal-v2.${extension}"`,
+          "X-Cronograma-Desactualizado": "false",
         },
       });
     },

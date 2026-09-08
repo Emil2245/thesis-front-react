@@ -8,6 +8,8 @@ import { Route, Routes } from "react-router-dom";
 import { useSesionStore } from "@/features/auth/sesion";
 import { usuarioFixture } from "@/test/fixtures/auth";
 import { validacionFixture } from "@/test/fixtures/presupuesto";
+import { preflightBloqueadoFixture, preflightConWarningFixture } from "@/test/fixtures/cronograma";
+import type { CronogramaExportPreflightResponse } from "@/api/contract";
 import { ExportPage } from "@/features/exportar/pages/ExportPage";
 
 const API = "*/api/v1";
@@ -17,7 +19,14 @@ beforeEach(() => {
   useSesionStore.setState({ usuario: usuarioFixture, cargando: false });
 });
 
-async function setup({ exportable = false } = {}) {
+async function setup({
+  exportable = false,
+  preflight,
+}: { exportable?: boolean; preflight?: CronogramaExportPreflightResponse } = {}) {
+  if (preflight)
+    server.use(
+      http.get(`${API}/documentos/cronograma/:id/preflight`, () => HttpResponse.json(preflight)),
+    );
   if (exportable)
     server.use(
       http.get(`${API}/presupuestos/:id/validacion`, () =>
@@ -52,28 +61,35 @@ describe("ExportPage", () => {
     expect(screen.getByText(/descargue documentos/i)).toBeInTheDocument();
   });
 
-  it("ofrece la especificación técnica en DOCX como único documento", async () => {
+  // Los dos documentos que el backend genera de verdad: la ET (plan 051) y el
+  // cronograma valorizado (plan 031 del backend, @ 5673615).
+  it("ofrece la especificación técnica en DOCX y el cronograma valorizado", async () => {
     await setup();
     expect(screen.getByText(/especificaciones técnicas/i)).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: /descargar/i })).toHaveLength(1);
+    expect(screen.getByText(/cronograma valorizado/i)).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /descargar/i })).toHaveLength(2);
   });
 
-  it("no ofrece las cuatro exportaciones que el backend no genera", async () => {
+  it("no ofrece las exportaciones que el backend no genera", async () => {
     await setup();
     expect(screen.queryByText(/presupuesto \(pdf\)/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/presupuesto \(excel\)/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^APUs$/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/^Cronograma$/)).not.toBeInTheDocument();
   });
 
-  it("avisa de que el resto de entregables todavía no existe", async () => {
+  it("avisa de que el presupuesto y los APUs todavía no existen", async () => {
     await setup();
-    expect(screen.getByText(/por ahora/i)).toBeInTheDocument();
+    expect(screen.getByText(/todavía no existe en el servidor/i)).toBeInTheDocument();
+    // El cronograma sí existe desde `5673615`: el aviso no puede seguir
+    // diciendo lo contrario de lo que la propia pantalla ofrece.
+    expect(screen.queryByText(/del cronograma todavía no existe/i)).not.toBeInTheDocument();
   });
 
   it("deshabilita la descarga cuando el presupuesto no es exportable", async () => {
     await setup();
-    await waitFor(() => expect(screen.getByRole("button", { name: /descargar/i })).toBeDisabled());
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /^descargar$/i })).toBeDisabled(),
+    );
   });
 
   it("muestra alerta de validación cuando hay problemas", async () => {
@@ -87,7 +103,7 @@ describe("ExportPage", () => {
     const peticiones = espiar();
     const { user } = await setup({ exportable: true });
 
-    const boton = await screen.findByRole("button", { name: /descargar/i });
+    const boton = await screen.findByRole("button", { name: /^descargar$/i });
     await waitFor(() => expect(boton).toBeEnabled());
     await user.click(boton);
 
@@ -95,6 +111,57 @@ describe("ExportPage", () => {
       expect(
         ultima(peticiones, "GET", `/documentos/especificaciones-tecnicas/${PRESUPUESTO}`),
       ).toBeDefined(),
+    );
+  });
+});
+
+// Plan 031 del backend: el preflight decide si la descarga va a salir, y con
+// qué bloqueos si no. La pantalla enseña el `detalle` que el servidor redacta.
+describe("ExportPage — cronograma valorizado", () => {
+  it("ofrece los tres formatos que el backend genera", async () => {
+    const { user } = await setup();
+
+    await user.click(screen.getByRole("combobox", { name: /formato/i }));
+
+    expect(screen.getByRole("option", { name: /xlsx/i })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /\.pdf/i })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /\.xml/i })).toBeInTheDocument();
+  });
+
+  it("muestra el detalle de cada bloqueo y deshabilita la descarga", async () => {
+    await setup({ preflight: preflightBloqueadoFixture });
+
+    for (const b of preflightBloqueadoFixture.bloqueos) {
+      expect(await screen.findByText(b.detalle)).toBeInTheDocument();
+    }
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /descargar cronograma/i })).toBeDisabled(),
+    );
+  });
+
+  // Un warning avisa pero NO bloquea: tratarlo como bloqueo es el bug que este
+  // test caza, y sin él no lo caza nadie.
+  it("un warning avisa sin deshabilitar la descarga", async () => {
+    await setup({ exportable: true, preflight: preflightConWarningFixture });
+
+    expect(
+      await screen.findByText(preflightConWarningFixture.warnings[0].detalle),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /descargar cronograma/i })).toBeEnabled(),
+    );
+  });
+
+  it("al pulsar el botón pide /documentos/cronograma/{id}", async () => {
+    const peticiones = espiar();
+    const { user } = await setup({ exportable: true });
+
+    const boton = await screen.findByRole("button", { name: /descargar cronograma/i });
+    await waitFor(() => expect(boton).toBeEnabled());
+    await user.click(boton);
+
+    await waitFor(() =>
+      expect(ultima(peticiones, "GET", `/documentos/cronograma/${PRESUPUESTO}`)).toBeDefined(),
     );
   });
 });

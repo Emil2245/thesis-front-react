@@ -1,4 +1,8 @@
-import type { ActividadCronogramaResponse, CronogramaResponse } from "@/api/contract";
+import type {
+  ActividadCronogramaResponse,
+  CronogramaExportPreflightResponse,
+  CronogramaResponse,
+} from "@/api/contract";
 import { asDecimal } from "@/lib/decimal";
 import { PRESUPUESTO_V2, RUBRO_1_1_1, RUBRO_1_1_2, RUBRO_1_2_1, RUBRO_2_1 } from "./presupuesto";
 
@@ -196,3 +200,50 @@ export const perdidasFixture = [
   { actividadId: ACTIVIDAD_4, periodo: 4, valor: asDecimal("25.2253") },
   { actividadId: ACTIVIDAD_3, periodo: 4, valor: asDecimal("5.4054") },
 ];
+
+// ———— Exportación documental del cronograma (plan 031 del backend) ————
+// Tipadas contra los DTO de `contract.ts`: el tipo es la guarda, una fixture sin
+// tipar es un mock inventado.
+
+export const preflightExportableFixture: CronogramaExportPreflightResponse = {
+  exportable: true,
+  formato: "xlsx",
+  bloqueos: [],
+  warnings: [],
+};
+
+/** `WarningExportResponse.stale(...)`: el único warning que el backend emite. */
+export const preflightConWarningFixture: CronogramaExportPreflightResponse = {
+  exportable: true,
+  formato: "xlsx",
+  bloqueos: [],
+  warnings: [
+    {
+      codigo: "cronograma-desactualizado",
+      detalle: "El total o fingerprint del presupuesto cambió desde la última revisión explícita",
+    },
+  ],
+};
+
+/**
+ * Los dos casos de `actividadId` importan: nulo cuando el bloqueo no viene de
+ * una actividad concreta, y con UUID cuando sí (`cronograma-desviacion` emite
+ * uno por actividad).
+ */
+export const preflightBloqueadoFixture: CronogramaExportPreflightResponse = {
+  exportable: false,
+  formato: "xlsx",
+  bloqueos: [
+    {
+      codigo: "presupuesto-pu-cero",
+      actividadId: null,
+      detalle: "Existen rubros con precio unitario cero (P-32)",
+    },
+    {
+      codigo: "cronograma-desviacion",
+      actividadId: ACTIVIDAD_1,
+      detalle: "La actividad tiene desviación distinta de 0.0000",
+    },
+  ],
+  warnings: [],
+};

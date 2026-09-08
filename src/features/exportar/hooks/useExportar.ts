@@ -1,8 +1,10 @@
 import { useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { get, descargar } from "@/api/request";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { get, descargar, getValidado } from "@/api/request";
 import { qk } from "@/api/queryKeys";
-import type { ValidacionPresupuestoResponse } from "@/api/contract";
+import type { FormatoExportCronograma, ValidacionPresupuestoResponse } from "@/api/contract";
+import { cronogramaExportPreflightSchema } from "@/api/schemas";
+import { ApiError } from "@/api/problem";
 import { toast } from "sonner";
 
 export function useValidacionExport(presupuestoId: string) {
@@ -14,33 +16,84 @@ export function useValidacionExport(presupuestoId: string) {
 }
 
 /**
- * El backend expone un único documento (plan 051): la especificación técnica en
- * DOCX. Las opciones de presupuesto PDF/Excel, APUs y cronograma que vivían aquí
- * apuntaban a rutas que no existen; se borraron en vez de redirigirlas, porque
- * un botón «PDF» que descarga un DOCX miente más que la ausencia del botón.
+ * `GET /documentos/cronograma/{id}/preflight?formato=` — decide si la descarga
+ * va a salir antes de pedirla, y con qué bloqueos si no.
  *
- * `formato` es opcional y su único valor válido es `docx`, así que no se manda.
- * `titulo1`/`titulo2` alimentan la portada y tampoco se mandan: la pantalla no
- * los pide, y una cadena vacía no equivale a omitir el parámetro.
+ * `getValidado`, no `get<T>`: la pantalla desreferencia `bloqueos` y `warnings`
+ * sin guarda, así que la forma se comprueba en la frontera.
+ */
+export function usePreflightCronograma(presupuestoId: string, formato: FormatoExportCronograma) {
+  return useQuery({
+    queryKey: qk.cronogramaExportPreflight(presupuestoId, formato),
+    queryFn: () =>
+      getValidado(
+        `/documentos/cronograma/${presupuestoId}/preflight`,
+        cronogramaExportPreflightSchema,
+        { formato },
+      ),
+    enabled: !!presupuestoId,
+  });
+}
+
+/** jsdom aparte, esto es la única forma de guardar un Blob desde el navegador. */
+const guardar = (blob: Blob, nombreArchivo: string) => {
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = nombreArchivo;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+  toast.success("Descarga iniciada");
+};
+
+/** MSPDI viaja como XML: `.mspdi` no lo produce ningún camino del backend. */
+const extensionDe = (formato: FormatoExportCronograma) => (formato === "mspdi" ? "xml" : formato);
+
+/**
+ * El backend expone dos documentos: la especificación técnica en DOCX (plan
+ * 051) y el cronograma valorizado en XLSX, PDF y MSPDI (plan 031 del backend).
+ * El presupuesto y los APUs siguen sin existir en ninguna ruta, así que no hay
+ * botón para ellos: uno apagado prometería que llega pronto.
+ *
+ * `formato` de la ET es opcional y su único valor válido es `docx`, así que no
+ * se manda. El del cronograma es obligatorio y uno de tres.
  */
 export function useExportar() {
+  const cliente = useQueryClient();
+
   const descargarEspecificacionesTecnicas = useCallback(async (presupuestoId: string) => {
     try {
       const { blob, nombreArchivo } = await descargar(
         `/documentos/especificaciones-tecnicas/${presupuestoId}`,
       );
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = nombreArchivo ?? "especificaciones-tecnicas.docx";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-      toast.success("Descarga iniciada");
+      guardar(blob, nombreArchivo ?? "especificaciones-tecnicas.docx");
     } catch {
       toast.error("Error al descargar");
     }
   }, []);
 
-  return { descargarEspecificacionesTecnicas };
+  const descargarCronograma = useCallback(
+    async (presupuestoId: string, formato: FormatoExportCronograma) => {
+      try {
+        const { blob, nombreArchivo } = await descargar(`/documentos/cronograma/${presupuestoId}`, {
+          formato,
+        });
+        guardar(blob, nombreArchivo ?? `cronograma.${extensionDe(formato)}`);
+      } catch (e) {
+        // El 409 `export-bloqueado` trae el recuento de bloqueos en `mensaje`:
+        // decírselo al usuario es más útil que un genérico, y significa además
+        // que el preflight que la pantalla enseña ya no vale.
+        toast.error(e instanceof ApiError ? e.problem.mensaje : "Error al descargar");
+        if (e instanceof ApiError && e.status === 409) {
+          await cliente.invalidateQueries({
+            queryKey: qk.cronogramaExportPreflight(presupuestoId, formato),
+          });
+        }
+      }
+    },
+    [cliente],
+  );
+
+  return { descargarEspecificacionesTecnicas, descargarCronograma };
 }

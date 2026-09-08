@@ -82,9 +82,11 @@ describe("ApiError contra el cuerpo real del backend", () => {
   });
 
   /**
-   * El catálogo son EXACTAMENTE los códigos que emite `origin/main` @ c337950.
-   * `insumo-en-uso`, `export-bloqueado` y `csv-invalido` no existen en el
-   * backend: cero apariciones en todo el repo.
+   * El catálogo son EXACTAMENTE los códigos que emite `origin/main` @ 5673615.
+   * `export-bloqueado` estaba fuera porque en `c337950` el backend no lo
+   * emitía; su plan 031 lo trajo de vuelta en
+   * `CronogramaDocumentoResource.descargar`. `insumo-en-uso` y `csv-invalido`
+   * siguen con cero apariciones en todo el repo.
    */
   it("el catálogo son los códigos que el backend emite de verdad", () => {
     expect([...PROBLEM_TYPES].sort()).toEqual(
@@ -99,6 +101,7 @@ describe("ApiError contra el cuerpo real del backend", () => {
         "cronograma-ya-existe",
         "cuenta-desactivada",
         "email-no-verificado",
+        "export-bloqueado",
         "fila-protegida",
         "no-encontrado",
         "segmento-solapado",
@@ -112,7 +115,7 @@ describe("ApiError contra el cuerpo real del backend", () => {
   });
 
   it("no inventa códigos que el backend no emite", () => {
-    for (const inventado of ["insumo-en-uso", "export-bloqueado", "csv-invalido"]) {
+    for (const inventado of ["insumo-en-uso", "csv-invalido"]) {
       expect(PROBLEM_TYPES).not.toContain(inventado);
     }
   });
