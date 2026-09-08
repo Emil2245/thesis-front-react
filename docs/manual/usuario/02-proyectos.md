@@ -178,17 +178,13 @@ pantalla que más conviene revisar antes de empezar a armar precios.
    > Los máximos no son fijos: los define el administrador del sistema y la etiqueta de cada
    > campo te muestra el rango vigente, por ejemplo **% Herramienta menor (0–20 %)**.
 
-3. Ajusta el grupo **Presentación**. Son interruptores que cambian cómo se ve el APU en pantalla
-   y en los documentos exportados:
+3. El grupo **Presentación** son seis interruptores pensados para cambiar cómo se ve el APU:
+   **Mostrar secciones vacías**, **Sufijos de sección activos**, **Subtotales por sección**,
+   **Subtotales al pie**, **Nombre del proyecto en header** y **Enumerar APUs**.
 
-   | Interruptor                   | Qué hace al activarlo                                 |
-   | ----------------------------- | ----------------------------------------------------- |
-   | Mostrar secciones vacías      | Muestra los bloques sin filas en vez de ocultarlos    |
-   | Sufijos de sección activos    | Añade las letras M, N, O y P a los títulos de bloque  |
-   | Subtotales por sección        | Añade una línea de subtotal debajo de cada bloque     |
-   | Subtotales al pie             | Repite los subtotales en el pie del APU               |
-   | Nombre del proyecto en header | Imprime el nombre del proyecto en la cabecera del APU |
-   | Enumerar APUs                 | Numera los APUs correlativamente                      |
+   > **Todavía no cambian nada.** Su valor se guarda con el resto de parámetros, pero hoy ni la
+   > pantalla del APU ni los documentos que exportas los tienen en cuenta. Puedes dejarlos como
+   > vengan.
 
 4. En **Codificación**, elige cómo se asignan los códigos de los rubros:
 
@@ -247,3 +243,6 @@ puede deshacer.**
   disponible todavía, y muestra el mismo aviso. Mientras tanto, los costos se ajustan editando
   los precios de los insumos (§3.2).
 - El **logo del proyecto** no se puede subir desde ninguna pantalla.
+- Los seis interruptores del grupo **Presentación**, en los parámetros del proyecto (§2.4), se
+  guardan pero **no tienen efecto todavía**: ni en la pantalla del APU, ni en los documentos
+  exportados.
