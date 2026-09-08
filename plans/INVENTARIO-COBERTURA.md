@@ -9,6 +9,15 @@ Complemento de [`HANDOFF-ESTADO-Y-GAPS.md`](HANDOFF-ESTADO-Y-GAPS.md). El handof
 roto y en qué orden arreglarlo*; este documento dice *qué hay*, medido, sin interpretación.
 Todo lo de aquí sale de contar archivos y comparar listas, no de leer documentación.
 
+> **Aviso de caducidad (2026-09-07, ronda de paridad 1).** Medido contra `origin/main` @
+> `c337950`; el backend está en **`5673615`**. Lo que caducó: **92 → 94 endpoints** (se suman el
+> preflight y la descarga de `/documentos/cronograma/{presupuestoId}`), la fila **Documentos** de
+> §«endpoints» ya no es «el único export real», e **I-10 pasa de «solo ET DOCX» a un entregable de
+> los cuatro entregado** (cronograma, en xlsx + pdf + mspdi; presupuesto y APUs siguen sin
+> backend). El baseline de la suite tampoco es el de aquí: **461 tests en 74 archivos**, no
+> 207/45. Contraparte en el frontend: plan [`066`](066-exportar-cronograma.md); estado vivo en
+> [`BITACORA.md`](BITACORA.md).
+
 ---
 
 ## 1. El roadmap de `thesis-docs`, completo

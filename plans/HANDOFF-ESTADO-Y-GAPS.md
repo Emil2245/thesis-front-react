@@ -25,6 +25,25 @@ Este handoff dice *qué está roto y en qué orden*; el inventario dice *qué ha
 > Todo lo que dice «cronograma no existe» en versiones anteriores de este handoff, del roadmap V2
 > o de los planes 040/054 **está caducado**. Ver §4-bis.
 
+> ## Aviso de caducidad (2026-09-07, ronda de paridad 1)
+>
+> Este documento está escrito contra `origin/main` @ **`c337950`**. El backend avanzó a
+> **`5673615`** («admin panel plans», su plan 031) y **cuatro afirmaciones de aquí dejaron de ser
+> ciertas**. No se reescribe el documento entero: se listan, y el estado vivo está en
+> [`BITACORA.md`](BITACORA.md).
+>
+> | Dónde | Decía | Es |
+> |---|---|---|
+> | §3, fila **documentos** | «un solo endpoint» | **tres**: se suman `GET /documentos/cronograma/{presupuestoId}/preflight?formato=` y `GET /documentos/cronograma/{presupuestoId}?formato=xlsx\|pdf\|mspdi` |
+> | §4, fila **Exports XLSX** | «No hay exportador» | hay tres writers reales del cronograma (XLSX, PDF y MSPDI con perfil XSD), más preflight transaccional |
+> | §4, cierre | «exportadores XLSX 0» | 0 para APU y presupuesto; **el de cronograma existe** |
+> | §8, pregunta 7 de N05 | «Sin responder ni implementar — no hay export de cronograma» | **la respondió el backend implementándola.** Quedan **6** preguntas de N05 sin responder, no 7 |
+>
+> Lo que **no** cambió: el panel admin sigue sin ni un recurso JAX-RS (sus planes 032–040 son solo
+> planes), así que §4 sigue valiendo para admin de usuarios, logs y valores; y la exportación de
+> **presupuesto** y de **APUs** sigue sin existir. La contraparte del frontend es el plan
+> [`066`](066-exportar-cronograma.md).
+
 ---
 
 ## 0. Lee esto antes que nada: tres trampas que ya costaron trabajo
