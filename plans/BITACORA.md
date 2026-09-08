@@ -1,13 +1,60 @@
 # Bitácora
 
-**Ronda de paridad 1** · **CERRADA** · **Actualizada:** 2026-09-07
-**Backend alineado hasta:** **`5673615`** — punto de partida de la ronda siguiente
+**Encargo activo: manuales de usuario** · **Actualizada:** 2026-09-07
+**Ronda de paridad 1** · **CERRADA** · **Backend alineado hasta:** **`5673615`**
 
 > La lleva el orquestador ([`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md)). Se escribe **en el momento** en que
 > algo cambia de estado, no al final de la sesión: si la sesión se corta, lo que no está escrito
 > aquí no ocurrió.
 >
 > Estados: `⏳ pendiente` · `🔄 en curso` · `🟡 vuelto, sin revisar` · `❌ rechazado` · `✅ verde`
+
+## Manuales de usuario — recon y arreglos previos (2026-09-07)
+
+Encargo: [`PROMPT-ORQUESTADOR-MANUALES.md`](PROMPT-ORQUESTADOR-MANUALES.md). El recon obligatorio
+contradijo la §3 del encargo en cuatro puntos, así que no se repartió ningún capítulo hasta
+resolverlos.
+
+**Lo que el recon encontró** (todo contra `origin/main @ 5673615`, no contra el working tree —
+la copia local del backend estaba 16 commits por detrás):
+
+- **Documentos (P-37) ya no es «solo ET en DOCX».** Hoy exporta ET en DOCX **y** el cronograma
+  valorizado en XLSX/PDF/MSPDI con preflight (plan 066). Presupuesto y APUs siguen sin generador.
+  El capítulo 07 documenta dos entregables y dice qué falta.
+- **Del Manual del Administrador sobreviven dos procesos, no uno.** Además de P-39,
+  `AdminParametrosPage` está viva contra `GET/PUT /proyectos/parametros-sistema`, que existe
+  (`ProyectoResource.java:125,136`). Es P-41 **tab 1**; el tab 2 (valores de referencia) sigue
+  apagado.
+- **Tres defectos de interfaz** que habrían hecho mentir al manual → plan 067, cerrado abajo.
+- **P-09 (duplicar proyecto) no se documenta**, pero no por un bug: los dos ítems «Duplicar» ya
+  están `disabled` con tooltip `MOTIVO_SIN_BACKEND`, porque `POST /proyectos/{id}/duplicar` no
+  existe en `origin/main`. Lo que queda es código muerto inalcanzable, anotado como deuda.
+
+**Inventario corregido: 38 procesos** (el encargo estimaba ≈39, con otra composición):
+A 4 · B **5** (fuera P-07, P-09, P-12) · C 6 · D 7 · E 5 · F 4 · G 1 · H **2** · I 4.
+
+**Decisiones del humano (2026-09-07):** arreglar los defectos antes de documentar · las cuatro
+pantallas de admin sin backend **quedan fuera** del manual, sin anexo · el manual **no** se
+integra en el documento Typst de la tesis por ahora.
+
+**Plan 067 · ✅ verde · fusionado en `main`.** Tres arreglos: el botón **Editar** del proyecto
+monta `DialogoEditarProyecto`, que existía completo y huérfano (`PUT /proyectos/{id}` sí existe,
+así que guarda de verdad); `public/plantillas/insumos-template.csv` existe con la cabecera del
+parser real; y la pantalla de importación nombra las cuatro columnas que el backend acepta
+—`codigo, descripcion, unidad, precio`— en vez de las cinco inventadas que llevaban a
+«Archivo ilegible o columnas incorrectas». Revisión del orquestador: `verify` verde con **480
+tests en 74 archivos**, `e2e:screenshots` verde, alcance limpio, y la descarga del CSV
+comprobada con `curl` contra `vite dev` (200, `text/csv`) — que el archivo exista en disco no
+garantizaba que Vite lo sirviera antes que el fallback del SPA, que era la causa original.
+
+**Deuda anotada, fuera del 067:** el código muerto de duplicar (`DialogoDuplicar`,
+`useDuplicarProyecto`) · `useSubirLogo` y el campo **Logo** de P-06, que no tiene control en
+ninguna pantalla · la importación CSV crea siempre materiales porque
+`ImportacionInsumoService.java:32,44` fija `TipoInsumo.MATERIAL` — **eso es un plan del
+repositorio del backend**, no de este.
+
+**Siguiente:** Ola 0 — esqueleto de `docs/manual/`, script `e2e:manual` en `package.json` y el
+capítulo piloto 02 (Proyectos), que fija la plantilla para los ocho restantes.
 
 ## Ronda de paridad 1 — backend `c337950` → `5673615` (2026-09-07)
 
