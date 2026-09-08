@@ -145,6 +145,7 @@ casi no se pisan. Los archivos compartidos —`docs/manual/README.md`, `package.
 | 068 | [Capítulo 01 — Cuenta y acceso](068-manual-cap-01-cuenta.md) | P1 | M | Ola 0 | DONE (`4274561`) |
 | 069 | [Capítulo 03 — Insumos](069-manual-cap-03-insumos.md) | P1 | M | Ola 0 | DONE (`08dcad8`) |
 | 070 | [Capítulo 08 — Navegación](070-manual-cap-08-navegacion.md) | P1 | M | Ola 0 | DONE (`8a8d182`) |
+| 071 | [Encender «Ver uso» y tres avisos que mienten](071-encender-ver-uso-y-tres-textos-que-mienten.md) | P1 | S | Ola 1 | TODO |
 
 ### Segunda tanda — auditoría posterior al rediseño de UI (2026-08-24)
 
