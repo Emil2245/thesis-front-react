@@ -128,9 +128,23 @@ del Usuario y el Manual del Administrador en `docs/manual/`, con capturas genera
 El encargo no toca `src/` — salvo este plan, que es su requisito previo: el recon encontró tres
 sitios donde la interfaz de hoy haría mentir al manual.
 
+**Olas.** Cada capítulo escribe su `.md`, su spec de capturas y su carpeta de imágenes, así que
+casi no se pisan. Los archivos compartidos —`docs/manual/README.md`, `package.json` y
+`playwright.config.ts`— **los mantiene el orquestador**, y cada plan se lo dice a su ejecutor.
+
+- **Ola 0** ✅ — esqueleto y capítulo piloto 02 (Proyectos).
+- **Ola 1** — 01 Cuenta · 03 Insumos · 08 Navegación (planes 068, 069, 070).
+- **Ola 2** — 04 APU · 05 Presupuesto.
+- **Ola 3** — 06 Cronograma · 07 Documentos · admin (bases centrales y parámetros del sistema).
+- **Ola 4** — 00 Introducción y glosario, y la pasada de coherencia.
+
 | Plan | Título | Prioridad | Esfuerzo | Depende de | Estado |
 |---|---|---|---|---|---|
 | 067 | [Arreglar los tres defectos que harían mentir al manual](067-arreglar-defectos-que-bloquean-el-manual.md) | P1 | S | — | DONE (`e23fd73`) |
+| — | **Ola 0** — esqueleto, script `e2e:manual` y capítulo piloto 02 | P1 | M | 067 | DONE (`c4df388`) |
+| 068 | [Capítulo 01 — Cuenta y acceso](068-manual-cap-01-cuenta.md) | P1 | M | Ola 0 | TODO |
+| 069 | [Capítulo 03 — Insumos](069-manual-cap-03-insumos.md) | P1 | M | Ola 0 | TODO |
+| 070 | [Capítulo 08 — Navegación](070-manual-cap-08-navegacion.md) | P1 | M | Ola 0 | TODO |
 
 ### Segunda tanda — auditoría posterior al rediseño de UI (2026-08-24)
 

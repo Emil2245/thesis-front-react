@@ -1,5 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// El puerto es parametrizable porque los capítulos del manual se escriben en
+// worktrees paralelos, y tres Playwright compartiendo 5173 con
+// `reuseExistingServer` se roban las capturas entre sí: cada uno fotografía el
+// árbol de otro y el gate sale verde igual.
+const PORT = Number(process.env.E2E_PORT ?? 5173);
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
@@ -7,7 +13,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["html"], ["github"]] : [["list"]],
   use: {
-    baseURL: process.env.E2E_BASE_URL ?? "http://localhost:5173",
+    baseURL: process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`,
     trace: "on-first-retry",
     video: "retain-on-failure",
     locale: "es-EC",
@@ -29,8 +35,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: process.env.CI ? "pnpm run build && pnpm run preview -- --port 5173" : "pnpm run dev",
-    url: "http://localhost:5173",
+    // `pnpm exec`, no `pnpm run … -- --port`: pnpm reenvía ese `--` a vite, que
+    // lo trata como argumento y arranca en el puerto por defecto igualmente.
+    command: process.env.CI
+      ? `pnpm run build && pnpm exec vite preview --port ${PORT}`
+      : `pnpm exec vite --port ${PORT}`,
+    url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },
