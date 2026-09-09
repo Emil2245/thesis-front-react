@@ -34,9 +34,12 @@ test-results
 # Environment
 .env.local
 .env.*.local
+.env
 
 # Claude Code worktrees / local agent state
 .claude/
 .agents/
 
 **/.temp/
+
+.atl
