@@ -6,6 +6,7 @@ No dupliques su contenido aquí: dos copias se desincronizan y la segunda miente
 
 Complementos:
 
+- **Política de implementación:** aplica la estrategia mínima de `AGENTS.md`: sin SDD salvo petición explícita y TDD únicamente para contratos o flujos verdaderamente críticos; no para todos los endpoints ni para cambios presentacionales.
 - **[`docs/bugs.md`](docs/bugs.md)** — catálogo de defectos reales encontrados en este código y,
   más importante, **los cuatro patrones que los produjeron**. Léelo antes de dar por bueno un
   `verify` en verde.

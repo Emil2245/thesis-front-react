@@ -19,6 +19,15 @@ El **código y las pruebas actuales de `../thesis-back-quarkus` son la fuente de
 > repetido — **el mock era la especificación**: un handler que acepta cualquier cuerpo es un test
 > que no prueba nada.
 
+## Política de implementación y pruebas de los planes
+
+- **No uses SDD/OpenSpec salvo que el usuario lo solicite explícitamente.** Los planes Markdown existentes son suficiente guía para la implementación ordinaria.
+- Mantén una estrategia de pruebas **mínima y focalizada**. No pruebes todos los contratos HTTP. Añade pruebas nuevas únicamente cuando una incompatibilidad pueda bloquear un flujo principal, corromper datos o dinero, vulnerar autenticación/autorización, afectar una mutación destructiva o repetir un defecto real.
+- Usa TDD solo para esos casos críticos: primero una única prueba que reproduzca el riesgo y después la implementación mínima. Para el resto, implementa directamente y valida de forma focalizada; no conviertas cada endpoint, cambio visual o composición en una batería TDD.
+- No exijas tests unitarios nuevos para copy, layout, estilos, wrappers simples, componentes presentacionales o cableado trivial. Compruébalos mediante typecheck, lint y una verificación manual focalizada en navegador cuando corresponda.
+- Consumir un endpoint real debe comprobar al menos método, ruta y forma principal del request/response cuando un error pudiera romper producción. No basta un handler MSW permisivo, pero tampoco se necesita duplicar todos los casos del backend en el frontend.
+- No borres, desactives ni relajes pruebas existentes para avanzar. Ejecuta pruebas focalizadas durante cada plan; reserva `pnpm run verify` y los E2E críticos para límites de integración o cierre.
+
 ## Build & Test
 
 ```bash
