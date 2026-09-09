@@ -4,6 +4,15 @@
 
 React SPA for Ecuadorian public-works bidding. Implements full APU/presupuesto/cronograma workflow.
 
+### Fuente de verdad para la integración
+
+El **código y las pruebas actuales de `../thesis-back-quarkus` son la fuente de verdad operativa del contrato HTTP**: rutas, métodos, DTO request/response, autorización, códigos de estado y error, paginación y representación decimal. El objetivo de este repositorio es **hacer que el frontend actual funcione contra ese backend real**, no adaptar el backend a mocks, DTOs transcritos o planes antiguos del frontend.
+
+- Contrasta cada petición con el recurso JAX-RS, sus DTOs y sus pruebas actuales antes de modificar el frontend.
+- Deriva MSW y las pruebas de contrato del backend real; un handler permisivo nunca demuestra compatibilidad.
+- Si el frontend y el backend difieren, corrige primero el frontend. No inventes endpoints ni mantengas llamadas que el backend no expone.
+- `../thesis-docs` conserva la autoridad funcional y de dominio. Si el backend contradice una decisión canónica vigente, detente y documenta el conflicto; no cambies el backend silenciosamente ni por comodidad del frontend.
+
 > **Lee [`docs/bugs.md`](docs/bugs.md) antes de dar por bueno un `verify` en verde.** Documenta 40
 > defectos reales de este código y los **cuatro patrones** que los produjeron. Ninguno lo detectó
 > la suite: estuvo verde mientras seis funcionalidades no funcionaban en producción. El más

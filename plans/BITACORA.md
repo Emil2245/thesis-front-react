@@ -1,5 +1,7 @@
 # Bitácora
 
+> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). La siguiente tarea autorizada es el plan 075.
+
 **Encargo activo: manuales de usuario** · **Actualizada:** 2026-09-07
 **Ronda de paridad 1** · **CERRADA** · **Backend alineado hasta:** **`5673615`**
 

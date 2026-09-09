@@ -1,5 +1,7 @@
 # Frontend implementation plans — `thesis-front-react`
 
+> **Entrada principal vigente:** [`00.INDEX.md`](00.INDEX.md). Auditoría 2026-09-09: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). La secuencia ejecutable pendiente es 075–089; no mover los planes históricos para preservar enlaces.
+
 Self-contained implementation plans for the **Sistema APU** frontend: the React SPA of the cloud-native platform that automates SERCOP *propuestas técnico-económicas* (APU · presupuesto · cronograma) for Ecuadorian public-works bidding.
 
 - **Spec repository (read-only reference):** `/home/etverkade/workspace/thesis-docs` at commit **`d7508eb`**
