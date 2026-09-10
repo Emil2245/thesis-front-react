@@ -130,7 +130,14 @@ código a propósito** para comprobar que los tests lo cazaban. Así se encontr�
 de la rama (el test del 409 en 077). Dos ejecutores empezaron a hacer esas mutaciones por su cuenta
 antes de entregar.
 
-## Defectos ajenos encontrados al ejecutar 077–081 — anotados y NO arreglados (2026-09-10)
+## Defectos ajenos encontrados al ejecutar 077–081 — anotados y, después, arreglados (2026-09-10)
+
+> **Actualización del mismo día:** los tres se **arreglaron** después, por petición explícita del
+> usuario, en el commit `fix(seam): poner verde la suite y desbloquear el build`, separado de los
+> cinco merges de los planes. `pnpm run verify` pasa entero: **551/551 tests**, typecheck, lint,
+> guard:adr9, format:check y build. El diagnóstico completo quedó en
+> [`../docs/bugs.md`](../docs/bugs.md) §6, con la regla que faltaba: *una fixture es una afirmación
+> sobre el backend y se verifica como tal*. Lo de abajo es el estado en que se encontraron.
 
 El encargo prohíbe arreglar lo que pertenece a otro plan. Los tres son **anteriores** a esta rama:
 medidos en el árbol limpio antes de despachar 077, y ninguno lo introdujo 077–081. Juntos hacen que

@@ -1,5 +1,11 @@
 # PROMPT — Orquestador autónomo de la rama administrativa 077–081
 
+> **ENCARGO CUMPLIDO el 2026-09-10.** Los cinco planes están DONE y mergeados en `plans/077-081`;
+> los archivos de plan salieron de `plans/pendientes/` al raíz de `plans/`, y las rutas de abajo
+> están actualizadas. El relato está en [`BITACORA.md`](BITACORA.md) y el cierre punto por punto en
+> [`ESTADO-EJECUCION-077-081.md`](ESTADO-EJECUCION-077-081.md). Se conserva como registro del
+> encargo, no como tarea pendiente.
+>
 > Pegar íntegro como primer mensaje de una sesión nueva de Claude Code, en
 > `/home/etverkade/workspace/thesis-front-react`, con la rama `plans/077-081` activa.
 
@@ -19,11 +25,11 @@ Completar **los planes 077, 078, 079, 080 y 081 — ni uno más, ni uno menos** 
 
 Los cinco planes están en:
 
-- `plans/pendientes/077-usuarios-e-invitaciones.md`
-- `plans/pendientes/078-plantillas-APU-de-sistema.md`
-- `plans/pendientes/079-valores-de-referencia.md`
-- `plans/pendientes/080-logs-de-actividad.md`
-- `plans/pendientes/081-retirar-gates-admin.md`
+- `plans/077-usuarios-e-invitaciones.md`
+- `plans/078-plantillas-APU-de-sistema.md`
+- `plans/079-valores-de-referencia.md`
+- `plans/080-logs-de-actividad.md`
+- `plans/081-retirar-gates-admin.md`
 
 Cada uno trae 17 secciones obligatorias: alcance, archivos exactos, contratos, criterios de
 aceptación, verificación, STOP conditions e invariantes. **Esas secciones son el contrato de
@@ -72,7 +78,7 @@ ejecutores. Tú especificas, revisas, apruebas y mergeas.
 Usa la skill `improve` en modo `execute`, un plan a la vez:
 
 ```
-Skill(skill: "improve", args: "execute plans/pendientes/077-usuarios-e-invitaciones.md")
+Skill(skill: "improve", args: "execute plans/077-usuarios-e-invitaciones.md")
 ```
 
 Lee `~/.claude/skills/improve/references/closing-the-loop.md` antes del primer dispatch y
@@ -173,14 +179,14 @@ no montes baterías TDD para cableado trivial.
 Los ejecutores trabajan en worktrees aislados precisamente para que un límite de uso no borre
 su progreso. Refuérzalo:
 
-- Mantén `plans/pendientes/ESTADO-EJECUCION-077-081.md` **comiteado y actualizado en cada
+- Mantén `plans/ESTADO-EJECUCION-077-081.md` **comiteado y actualizado en cada
   transición de estado**: plan actual, ruta del worktree, rama, commit del backend usado,
   veredicto, rondas de revisión gastadas, qué falta. Es tu memoria: si la sesión muere, se
   reanuda leyendo ese archivo y nada más.
 - Exige a cada ejecutor que **commitee en su worktree al terminar cada paso del plan**, no solo
   al final.
 - Si te quedas sin tokens: **el trabajo no se abandona ni se declara terminado**. Al reactivarse
-  el uso, tu primer acto es leer `plans/pendientes/ESTADO-EJECUCION-077-081.md`, verificar el
+  el uso, tu primer acto es leer `plans/ESTADO-EJECUCION-077-081.md`, verificar el
   estado real con `git log`/`git worktree list`/`git status`, y continuar exactamente desde ahí.
   No reinicies desde cero, no re-dispatches un plan ya aprobado, no dupliques worktrees.
 - No borres un worktree hasta que su rama esté mergeada en `plans/077-081`.

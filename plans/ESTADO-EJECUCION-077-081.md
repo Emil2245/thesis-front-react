@@ -7,7 +7,7 @@
 **RAMA CERRADA el 2026-09-10.** Los cinco planes en DONE y mergeados. Este archivo queda como
 registro; ya no hay nada en curso.
 
-**Encargo:** [`../PROMPT-ORQUESTADOR-077-081.md`](../PROMPT-ORQUESTADOR-077-081.md)
+**Encargo:** [`PROMPT-ORQUESTADOR-077-081.md`](PROMPT-ORQUESTADOR-077-081.md)
 **Rama destino:** `plans/077-081` · **Actualizado:** 2026-09-10
 
 ## Referencias fijas de esta rama
@@ -252,26 +252,25 @@ Relato completo en `plans/BITACORA.md`.
 | 1 | Los cinco planes DONE con evidencia concreta | ✅ |
 | 2 | Las cuatro páginas admin renderizan su página real con datos, sin `ModuloNoDisponible` ni «pronto» | ✅ ninguna página admin importa ya `ModuloNoDisponible`; 0 entradas con `modulo` en el `Sidebar` |
 | 3 | `MODULOS_SIN_BACKEND` vacío, `RUTAS_ADMIN` sin `modulo`, `RutaAdmin` sin relajar | ✅ `Guards.tsx` con 0 líneas de diff contra `main` |
-| 4 | `pnpm run verify` verde | ❌ **NO** — tres defectos ajenos y preexistentes lo impiden |
+| 4 | `pnpm run verify` verde | ✅ **sí**, tras arreglar los tres bloqueos ajenos por petición explícita del usuario (2026-09-10) |
 | 5 | Banner DIFERIDO fuera de los cinco planes | ✅ |
 | 6 | `plans/BITACORA.md` con el relato en orden | ✅ |
 | 7 | `AGENTS.md` actualizado | ✅ baseline, inventario de gates y la regla del `*` |
 | 8 | Ningún worktree sin mergear, ningún `git push` | ✅ |
 
-**El punto 4 es el único que no se cumple, y no es alcanzable dentro de este encargo.** `verify`
-cae en su **primera** puerta, `typecheck`, por el error de
-`src/test/features/proyectos/hooks/contrato.test.tsx:197`, que es preexistente y ajeno. `build`
-cae por lo mismo (`tsc -b` antes de `vite build`), así que **la rama no produce build de
-producción**. Arreglarlo exige tocar un archivo fuera de 077–081, que el encargo prohíbe
-expresamente. Está diagnosticado en la bitácora con el arreglo propuesto: **una línea**.
+**El punto 4 se cumple, con una nota de trazabilidad.** Al cerrar la rama **no** se cumplía: los
+tres bloqueos eran ajenos y preexistentes, y el encargo prohibía arreglar lo de otros planes, así
+que se anotaron sin tocarlos. **El usuario pidió después arreglarlos** («si puedes arreglarlo ahora
+mejor»), y se hizo en el commit `fix(seam): poner verde la suite y desbloquear el build`, aparte de
+los cinco merges de los planes. El detalle está en [`../docs/bugs.md`](../docs/bugs.md) §6.
 
-Puertas de `verify` medidas por separado en la rama mergeada:
+Puertas de `verify` tras ese arreglo:
 
 | Puerta | Resultado |
 | --- | --- |
-| `typecheck` | ❌ 1 error, ajeno (`contrato.test.tsx:197`) |
+| `typecheck` | ✅ verde |
 | `lint` | ✅ verde |
 | `guard:adr9` | ✅ verde |
-| `format:check` | ❌ 1 archivo, ajeno (`useApuEditor.ts`) |
-| `test` | 531 ✅ / 20 ❌ — los 20 ajenos y preexistentes, idénticos por nombre a los de partida |
-| `build` | ❌ bloqueado por el mismo `typecheck` |
+| `format:check` | ✅ verde |
+| `test` | ✅ **551 / 551** en 79 archivos |
+| `build` | ✅ `vite build` produce el bundle |

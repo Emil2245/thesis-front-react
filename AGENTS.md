@@ -13,7 +13,7 @@ El **código y las pruebas actuales de `../thesis-back-quarkus` son la fuente de
 - Si el frontend y el backend difieren, corrige primero el frontend. No inventes endpoints ni mantengas llamadas que el backend no expone.
 - `../thesis-docs` conserva la autoridad funcional y de dominio. Si el backend contradice una decisión canónica vigente, detente y documenta el conflicto; no cambies el backend silenciosamente ni por comodidad del frontend.
 
-> **Lee [`docs/bugs.md`](docs/bugs.md) antes de dar por bueno un `verify` en verde.** Documenta 40
+> **Lee [`docs/bugs.md`](docs/bugs.md) antes de dar por bueno un `verify` en verde.** Documenta 48
 > defectos reales de este código y los **cuatro patrones** que los produjeron. Ninguno lo detectó
 > la suite: estuvo verde mientras seis funcionalidades no funcionaban en producción. El más
 > repetido — **el mock era la especificación**: un handler que acepta cualquier cuerpo es un test
@@ -39,11 +39,13 @@ pnpm run e2e:manual        # capturas de docs/manual/ (chromium)
 pnpm run dev      # http://localhost:5173
 ```
 
-Baseline actual: **551 tests unitarios en 79 archivos**, de los cuales **531 pasan y 20 fallan**.
-Los 20 rojos son **preexistentes y ajenos** a la rama administrativa: fixtures y handlers que no
-casan con los esquemas Zod endurecidos (auth, exportar, parámetros de proyecto y de sistema).
-Medido el 2026-09-10 al cerrar 077–081, que aportó +72 tests y **cero regresiones** — la rama
-partía de 459 ✅ / 20 ❌ en 75 archivos. Los 65 lanzamientos E2E
+Baseline actual: **551 tests unitarios en 79 archivos, todos en verde**, y `pnpm run verify` pasa
+entero —typecheck, lint, guard:adr9, format:check, test y build—. Medido el 2026-09-10 al cerrar la
+rama 077–081. Antes de esa rama eran 459 ✅ / **20 ❌** en 75 archivos, con `typecheck` y
+`format:check` rojos y `vite build` bloqueado; los 20 fallos eran fixtures y `server.use(...)` que
+no se actualizaron cuando el plan 076 metió validación runtime en el seam. Están en
+[`docs/bugs.md`](docs/bugs.md) §6, con la regla que faltaba: **una fixture es una afirmación sobre
+el backend y se verifica como tal**. Los 65 lanzamientos E2E
 siguen sin medición funcional porque faltan los ejecutables de Playwright en el
 entorno. Si cambias el baseline, actualiza este número: el plan 060 se encontró
 con el de 197/43, cinco olas caducado, y un baseline que miente no detecta nada.
