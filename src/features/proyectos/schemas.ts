@@ -21,26 +21,18 @@ export const proyectoSchema = z.object({
   plazoUnidad: z.enum(["SEMANA", "MES"], { message: "La unidad de plazo es obligatoria" }),
   direccionInstitucional: z.string().min(1, "La dirección es obligatoria").max(200),
   subdireccionInstitucional: z.string().max(200).optional(),
-  duplicarDesde: z
-    .discriminatedUnion("tipo", [
-      z.object({ tipo: z.literal("SISTEMA"), baseId: z.number() }),
-      z.object({ tipo: z.literal("PROYECTO"), proyectoId: z.number() }),
-    ])
-    .optional(),
 });
 
 export interface RangosValidacion {
   hmMax: number;
   ciMax: number;
   ivaMax: number;
-  descuentoMax: number;
 }
 
 const RANGOS_DEFAULT: RangosValidacion = {
   hmMax: 20,
   ciMax: 100,
   ivaMax: 30,
-  descuentoMax: 50,
 };
 
 export function crearParametrosSchema(r: RangosValidacion = RANGOS_DEFAULT) {
@@ -75,12 +67,6 @@ export function crearParametrosSchema(r: RangosValidacion = RANGOS_DEFAULT) {
     }));
 }
 
-export function crearDescuentoSchema(maxPorcentaje = 50) {
-  return z.object({
-    porcentaje: z.number().min(0, "Mínimo 0 %").max(maxPorcentaje, `Máximo ${maxPorcentaje} %`),
-  });
-}
-
 // Backwards-compatible defaults
 export const parametrosSchema = crearParametrosSchema();
 
@@ -91,9 +77,6 @@ export const firmanteSchema = z.object({
   orden: z.number().int().min(1),
 });
 
-export const descuentoSchema = crearDescuentoSchema();
-
 export type ProyectoFormData = z.input<typeof proyectoSchema>;
 export type ParametrosFormData = z.input<typeof parametrosSchema>;
 export type FirmanteFormData = z.input<typeof firmanteSchema>;
-export type DescuentoFormData = z.input<typeof descuentoSchema>;

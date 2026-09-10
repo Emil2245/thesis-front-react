@@ -1,11 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   parametrosSchema,
-  descuentoSchema,
   firmanteSchema,
   proyectoSchema,
   crearParametrosSchema,
-  crearDescuentoSchema,
 } from "@/features/proyectos/schemas";
 
 // Plan 059 §10: en main, ProyectoCrearRequest tiene @NotNull en anio,
@@ -147,25 +145,8 @@ describe("parametrosSchema", () => {
   });
 });
 
-describe("descuentoSchema", () => {
-  it("rechaza 51 %", () => {
-    const r = descuentoSchema.safeParse({ porcentaje: 51 });
-    expect(r.success).toBe(false);
-  });
-
-  it("acepta 50 %", () => {
-    const r = descuentoSchema.safeParse({ porcentaje: 50 });
-    expect(r.success).toBe(true);
-  });
-
-  it("acepta 0 % (reversión)", () => {
-    const r = descuentoSchema.safeParse({ porcentaje: 0 });
-    expect(r.success).toBe(true);
-  });
-});
-
 describe("crearParametrosSchema con rangos custom", () => {
-  const schema = crearParametrosSchema({ hmMax: 10, ciMax: 50, ivaMax: 15, descuentoMax: 25 });
+  const schema = crearParametrosSchema({ hmMax: 10, ciMax: 50, ivaMax: 15 });
   const base = {
     porcentajeIndirecto: 5,
     iva: 10,
@@ -185,18 +166,6 @@ describe("crearParametrosSchema con rangos custom", () => {
 
   it("acepta %HM = hmMax custom", () => {
     expect(schema.safeParse({ ...base, porcentajeHerramientaMenor: 10 }).success).toBe(true);
-  });
-});
-
-describe("crearDescuentoSchema con max custom", () => {
-  const schema = crearDescuentoSchema(25);
-
-  it("rechaza > max custom", () => {
-    expect(schema.safeParse({ porcentaje: 26 }).success).toBe(false);
-  });
-
-  it("acepta = max custom", () => {
-    expect(schema.safeParse({ porcentaje: 25 }).success).toBe(true);
   });
 });
 

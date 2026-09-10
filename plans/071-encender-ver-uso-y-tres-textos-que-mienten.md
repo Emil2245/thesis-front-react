@@ -1,5 +1,7 @@
 # Plan 071: Encender «Ver uso» y arreglar tres avisos que no dicen la verdad
 
+> **Nota de sustitución del Plan 075:** Este plan es histórico y no autoriza restaurar operaciones retiradas. No se deben reintroducir la duplicación de proyectos, la subida de logos ni la UI, hooks, DTOs o mocks del descuento global; solo se conservan contratos soportados por el backend.
+
 > **Instrucciones para el ejecutor**: Invoca la skill `ponytail:ponytail` antes de escribir nada
 > y mantenla activa toda la tarea. Sigue este plan paso a paso. Ejecuta cada comando de
 > verificación y confirma el resultado esperado antes de pasar al siguiente. Si ocurre algo de la

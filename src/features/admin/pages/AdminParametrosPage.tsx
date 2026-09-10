@@ -18,8 +18,9 @@ import { useParametrosSistema, useActualizarParametros } from "../hooks/useParam
  * encender el botón sin completar el formulario habría cambiado un tooltip por
  * un error.
  *
- * Los rangos no son decorativos: `rangoDescuentoMin/Max` acotan el descuento
- * global y `rangoHm*`/`rangoCi*` los parámetros de cada proyecto.
+ * Los rangos HM, CI e IVA acotan los parámetros de cada proyecto. El DTO aún
+ * transporta los rangos de descuento exigidos por el backend, pero no los expone
+ * como funcionalidad editable porque descuento global fue retirado.
  */
 
 // Todos los campos son fracciones en [0, 1] a escala 4 (`precision 5, scale 4`
@@ -36,7 +37,6 @@ const fraccion = z
 const RANGOS = [
   ["rangoHmMin", "rangoHmMax", "HM"],
   ["rangoCiMin", "rangoCiMax", "CI"],
-  ["rangoDescuentoMin", "rangoDescuentoMax", "descuento"],
   ["rangoIvaMin", "rangoIvaMax", "IVA"],
 ] as const;
 
@@ -160,8 +160,7 @@ export function AdminParametrosPage() {
             <div className="pt-2">
               <h3 className="text-sm font-medium">Rangos configurables</h3>
               <p className="text-sm text-muted-foreground">
-                Acotan lo que se puede introducir en los parámetros de cada proyecto y en el
-                descuento global.
+                Acotan lo que se puede introducir en los parámetros de cada proyecto.
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">

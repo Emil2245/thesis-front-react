@@ -239,6 +239,5 @@ plantilla"_. Tiene la misma estructura de capítulos, rubros y APUs que la plant
 - En **Administración**, las entradas **Usuarios**, **Plantillas**, **Valores ref.** y **Logs**
   aparecen en el menú pero desactivadas, con el aviso _"Disponible cuando el backend implemente
   esta operación."_ **Bases** y **Parámetros** del sistema sí están operativas.
-- **Duplicar un proyecto** está desactivado en el menú **⋯** del resumen (ver §2, "Lo que todavía
-  no está disponible"); para reutilizar la estructura de un proyecto usa las plantillas de este
-  capítulo en su lugar.
+- **Duplicar un proyecto** no aparece en el menú porque el backend no expone esa operación; para
+  reutilizar la estructura usa las plantillas de este capítulo.

@@ -371,9 +371,8 @@ Lo comprobé en el código: no queda ni rastro de ninguna de estas cosas en
 - **No existe el descuento por rubro.** P-24 está retirado (`WITHDRAWN`). No hay campo de
   porcentaje de descuento en el APU, y la cadena de cálculo es **CD → CI → CT**, sin ningún paso
   intermedio de descuento.
-- **El descuento global tampoco está disponible**: existe la acción en el menú del proyecto pero
-  aparece desactivada, con el aviso *"Disponible cuando el backend implemente esta operación."*
-  Para bajar costos, hoy se editan los precios de los insumos.
+- **El descuento global no forma parte de la interfaz** porque el backend consolidado no expone
+  ese contrato. Para bajar costos se editan los precios de los insumos.
 
 ### El dinero, y por qué importa aquí
 

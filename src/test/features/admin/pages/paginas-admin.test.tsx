@@ -67,7 +67,7 @@ describe("AdminParametrosPage", () => {
     expect(await screen.findByRole("button", { name: "Guardar" })).toBeEnabled();
   });
 
-  it("edita los 8 rangos, no solo los 3 valores por defecto", async () => {
+  it("edita los rangos aplicables sin exponer descuento global", async () => {
     renderConProviders(<AdminParametrosPage />);
 
     for (const etiqueta of [
@@ -75,13 +75,12 @@ describe("AdminParametrosPage", () => {
       "Rango HM máximo",
       "Rango CI mínimo",
       "Rango CI máximo",
-      "Rango descuento mínimo",
-      "Rango descuento máximo",
       "Rango IVA mínimo",
       "Rango IVA máximo",
     ]) {
       expect(await screen.findByLabelText(etiqueta)).toBeInTheDocument();
     }
+    expect(screen.queryByLabelText(/Rango descuento/i)).not.toBeInTheDocument();
   });
 
   it("guarda mandando los 11 campos numéricos, no 4", async () => {

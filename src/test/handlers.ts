@@ -356,14 +356,7 @@ export const handlers = [
     async ({ request }) =>
       (await soloCampos(request, ...CAMPOS_PROYECTO)) ?? HttpResponse.json(proyectoDetalleFixture),
   ),
-  http.post(
-    `${API}/proyectos/:id/duplicar`,
-    async ({ request }) =>
-      (await soloCampos(request, "nombre", "codigo")) ??
-      HttpResponse.json(proyectoDetalleFixture, { status: 201 }),
-  ),
   http.delete(`${API}/proyectos/:id`, () => HttpResponse.json(null, { status: 204 })),
-  http.put(`${API}/proyectos/:id/logo`, () => HttpResponse.json(null, { status: 204 })),
 
   // ———— Plantillas de proyecto (plan 049) ————
   // `snapshotEstructura` es un JsonNode opaco y va en la respuesta de main; es
@@ -441,30 +434,6 @@ export const handlers = [
         "iva",
         "moneda",
       )) ?? HttpResponse.json(parametrosFixture),
-  ),
-
-  // ———— Descuento global ————
-  http.get(`${API}/presupuestos/:id/descuento-global/preview`, () =>
-    HttpResponse.json({
-      porcentaje: asDecimal("0.0500"),
-      porApu: [
-        {
-          apuId: "018f8a40-0000-7000-8000-000000000001",
-          codigo: "APU-001",
-          cdAntes: asDecimal("100.000000"),
-          cd: asDecimal("95.000000"),
-          ci: asDecimal("15.000000"),
-          ct: asDecimal("110.000000"),
-        },
-      ],
-      totalGeneralActual: asDecimal("1000.000000"),
-      totalGeneralProyectado: asDecimal("950.000000"),
-    }),
-  ),
-  http.post(
-    `${API}/presupuestos/:id/descuento-global`,
-    async ({ request }) =>
-      (await soloCampos(request, "porcentaje")) ?? HttpResponse.json(null, { status: 200 }),
   ),
 
   http.get(`${API}/proyectos/:id/presupuestos`, () => HttpResponse.json(versionesStub)),
@@ -931,17 +900,26 @@ export const handlers = [
   ),
 
   // ———— Admin (Plan 014) ————
-  // `AdminBaseCentralResource` sirve una `List<T>` pelada, no una `Page<T>`:
-  // envolverla en `pagina()` es justo el mock inventado que dejaba pasar en
-  // verde una página que revienta contra el backend real.
+  // El mock reproduce la Page del backend. El interceptor es el único lugar que
+  // traduce `items/total` a `contenido/totalElementos`.
   http.get(`${API}/admin/bases-centrales`, ({ request }) => {
-    const incluirArchivadas = new URL(request.url).searchParams.get("incluirArchivadas") === "true";
-    return HttpResponse.json(
-      incluirArchivadas
-        ? basesCentralesFixtureAdmin
-        : basesCentralesFixtureAdmin.filter((b) => !b.archivada),
-    );
+    const params = new URL(request.url).searchParams;
+    const incluirArchivadas = params.get("incluirArchivadas") === "true";
+    const page = Number(params.get("page") ?? 0);
+    const size = Number(params.get("size") ?? 25);
+    const todos = incluirArchivadas
+      ? basesCentralesFixtureAdmin
+      : basesCentralesFixtureAdmin.filter((b) => !b.archivada);
+    const items = todos.slice(page * size, (page + 1) * size);
+    return HttpResponse.json({
+      items,
+      total: todos.length,
+      page,
+      size,
+      totalPaginas: todos.length === 0 ? 0 : Math.ceil(todos.length / size),
+    });
   }),
+
   http.post(
     `${API}/admin/bases-centrales`,
     async ({ request }) =>

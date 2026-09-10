@@ -107,20 +107,22 @@ documentan**):
 - **P-25** — rubro auxiliar: `SUPERSEDED` por N04 §2. La regla activa es **ningún enlace entre
   APUs** (v1.3 §2.5.6).
 
-**Procesos sin backend, apagados en la interfaz** — la fuente de verdad es
-`src/lib/disponibilidad.ts`, y hoy dice:
+**Procesos sin backend** — la fuente de verdad para páginas degradadas es
+`src/lib/disponibilidad.ts`, que contiene las cuatro páginas administrativas pendientes:
 
 ```ts
 export const MODULOS_SIN_BACKEND = new Set([
-  "admin-usuarios", "admin-plantillas", "admin-valores", "admin-logs", "descuento-global",
+  "admin-usuarios", "admin-plantillas", "admin-valores", "admin-logs",
 ]);
 ```
 
-Esas pantallas muestran `ModuloNoDisponible` con el texto *"Disponible cuando el backend
-implemente esta operación."*. Consecuencias directas para el manual:
+Esas páginas muestran `ModuloNoDisponible` con el texto *"Disponible cuando el backend
+implemente esta operación."*. Las operaciones sin contrato backend consolidado —duplicar
+proyecto, cargar logo y descuento global— se retiraron por completo del frontend. Consecuencias
+directas para el manual:
 
-- **P-12 (descuento global al CD) no se documenta.** Está especificado y cerrado el 2026-08-31,
-  pero no hay endpoint. No es un pendiente de entrega.
+- **P-12 (descuento global al CD) no se documenta ni se muestra como control desactivado.** No
+  hay endpoint y no es un pendiente de entrega.
 - Del Manual del Administrador **solo sobrevive P-39 (bases centrales de insumos)**, que sí tiene
   backend (`AdminBaseCentralResource`). P-38, P-40, P-41 y P-42 quedan fuera, o entran en un anexo
   de una página que dice honestamente que no están disponibles todavía. **Decide tú y díselo al

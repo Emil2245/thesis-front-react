@@ -1,11 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { http, HttpResponse } from "msw";
 import type { ReactNode } from "react";
 
 import { crearQueryClient } from "@/test/render";
-import { server } from "@/test/server";
 import { espiar, ultima, cuerpoInvalido } from "@/test/espia";
 import {
   useProyectos,
@@ -13,9 +11,7 @@ import {
   useCrearProyecto,
   useEditarProyecto,
   useEliminarProyecto,
-  useDuplicarProyecto,
 } from "@/features/proyectos/hooks/useProyectos";
-import { useSubirLogo } from "@/features/proyectos/hooks/useProyecto";
 import {
   useFirmantes,
   useCrearFirmante,
@@ -23,15 +19,7 @@ import {
   useEliminarFirmante,
 } from "@/features/proyectos/hooks/useFirmantes";
 import { useParametros, useActualizarParametros } from "@/features/proyectos/hooks/useParametros";
-import {
-  usePreviewDescuento,
-  useAplicarDescuento,
-} from "@/features/proyectos/hooks/useDescuentoGlobal";
 import { PROYECTO_1, FIRMANTE_2 } from "@/test/fixtures/proyectos";
-import { PRESUPUESTO_V2 } from "@/test/fixtures/presupuesto";
-import { asDecimal } from "@/lib/decimal";
-
-const API = "*/api/v1";
 
 function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={crearQueryClient()}>{children}</QueryClientProvider>;
@@ -122,46 +110,6 @@ describe("contrato de proyectos", () => {
 
     expect(ultima(peticiones, "DELETE", `/proyectos/${PROYECTO_1}`)).toBeDefined();
   });
-
-  it("useDuplicarProyecto manda solo nombre y codigo, y el id va en la ruta", async () => {
-    const peticiones = espiar();
-    const { result } = renderHook(() => useDuplicarProyecto(), { wrapper });
-
-    await result.current.mutateAsync({
-      id: PROYECTO_1,
-      body: { nombre: "Copia", codigo: "AMB-002" },
-    });
-
-    const p = ultima(peticiones, "POST", `/proyectos/${PROYECTO_1}/duplicar`);
-    await waitFor(() => expect(p?.cuerpo).toEqual({ nombre: "Copia", codigo: "AMB-002" }));
-  });
-
-  // Plan 062 §1: el logo tiene que salir como multipart de verdad. Con un
-  // `Content-Type: application/json` fijado en la instancia axios, axios 1.x
-  // serializa el FormData a `{"logo":{}}` y el fichero se pierde entero.
-  // Sobre por qué se mira el cuerpo crudo y no `request.formData()`, ver la
-  // nota de `src/test/features/insumos/hooks/contrato.test.tsx`: jsdom y
-  // undici no comparten `File`, así que el FormData no sobrevive al viaje.
-  it("useSubirLogo manda el fichero como multipart en PUT /proyectos/{id}/logo", async () => {
-    let contentType = "";
-    let crudo = "";
-    server.use(
-      http.put(`${API}/proyectos/:id/logo`, async ({ request }) => {
-        contentType = request.headers.get("content-type") ?? "";
-        crudo = await request.text();
-        return HttpResponse.json(null, { status: 204 });
-      }),
-    );
-    const peticiones = espiar();
-    const { result } = renderHook(() => useSubirLogo(PROYECTO_1), { wrapper });
-
-    await result.current.mutateAsync(new File(["x"], "logo.png", { type: "image/png" }));
-
-    expect(ultima(peticiones, "PUT", `/proyectos/${PROYECTO_1}/logo`)).toBeDefined();
-    expect(contentType).toMatch(/^multipart\/form-data; boundary=.+/);
-    expect(crudo).toContain('name="logo"');
-    expect(crudo).not.toContain('{"logo"');
-  });
 });
 
 // Plan 057 marca `useFirmantes` como el caso con backend completo y cero tests.
@@ -248,46 +196,5 @@ describe("contrato de parámetros de proyecto", () => {
     await expect(
       result.current.mutateAsync({ iva: 0.15, mostrarSeccionesVacias: true }),
     ).rejects.toThrow();
-  });
-});
-
-describe("contrato de descuento global", () => {
-  it("usePreviewDescuento hace GET con el porcentaje en la query", async () => {
-    const peticiones = espiar();
-    const { result } = renderHook(() => usePreviewDescuento(PRESUPUESTO_V2), { wrapper });
-
-    await result.current.mutateAsync(0.05);
-
-    const p = ultima(peticiones, "GET", "/descuento-global/preview");
-    expect(p?.ruta).toContain(`/presupuestos/${PRESUPUESTO_V2}/`);
-    expect(p?.url.searchParams.get("porcentaje")).toBe("0.05");
-  });
-
-  // ponytail: defecto de producción. `usePreviewDescuento` es un `useMutation`,
-  // así que no tiene el `enabled:` que apaga las queries con id null: con
-  // `presupuestoId === null` pide literalmente `/presupuestos/null/...`. Se fija
-  // el comportamiento de hoy; el arreglo (guard o id no nulo) no toca a este plan.
-  it("usePreviewDescuento con id null mete la cadena `null` en la ruta", async () => {
-    const peticiones = espiar();
-    const { result } = renderHook(() => usePreviewDescuento(null), { wrapper });
-
-    await result.current.mutateAsync(0.05);
-
-    expect(ultima(peticiones, "GET", "/descuento-global/preview")?.ruta).toContain(
-      "/presupuestos/null/",
-    );
-  });
-
-  it("useAplicarDescuento no filtra presupuestoId al cuerpo", async () => {
-    const peticiones = espiar();
-    const { result } = renderHook(() => useAplicarDescuento(), { wrapper });
-
-    await result.current.mutateAsync({
-      presupuestoId: PRESUPUESTO_V2,
-      porcentaje: asDecimal("0.05"),
-    });
-
-    const p = ultima(peticiones, "POST", `/presupuestos/${PRESUPUESTO_V2}/descuento-global`);
-    await waitFor(() => expect(p?.cuerpo).toEqual({ porcentaje: "0.05" }));
   });
 });

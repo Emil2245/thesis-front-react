@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { renderConProviders } from "@/test/render";
-import { screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import { Route, Routes } from "react-router-dom";
 import { ListaProyectosPage } from "@/features/proyectos/pages/ListaProyectosPage";
 import { useSesionStore } from "@/features/auth/sesion";
@@ -144,22 +144,5 @@ describe("ListaProyectosPage", () => {
         elemento?.tagName === "SPAN" && elemento.textContent === "Mostrando 3 de 42 proyectos",
     );
     expect(pie).toBeInTheDocument();
-  });
-
-  it("Duplicar está deshabilitado: el backend no tiene /proyectos/{id}/duplicar", async () => {
-    const { user } = renderConProviders(
-      <Routes>
-        <Route path="/proyectos" element={<ListaProyectosPage />} />
-      </Routes>,
-      { ruta: "/proyectos" },
-    );
-    await screen.findByText("Puente Ambato");
-
-    const filas = screen.getAllByRole("row");
-    const fila = filas.find((row) => row.textContent?.includes("Puente Ambato"))!;
-    await user.click(within(fila).getByRole("button"));
-
-    const duplicar = await screen.findByRole("menuitem", { name: /duplicar/i });
-    expect(duplicar).toHaveAttribute("aria-disabled", "true");
   });
 });

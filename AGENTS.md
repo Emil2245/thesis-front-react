@@ -39,9 +39,10 @@ pnpm run e2e:manual        # capturas de docs/manual/ (chromium)
 pnpm run dev      # http://localhost:5173
 ```
 
-Baseline actual: **480 tests unitarios en 74 archivos**, `pnpm run e2e` en verde (54 tests).
-Si cambias el baseline, actualiza este número: el plan 060 se encontró con el de
-197/43, cinco olas caducado, y un baseline que miente no detecta nada.
+Baseline actual: **475 tests unitarios en 73 archivos**. Los 65 lanzamientos E2E
+siguen sin medición funcional porque faltan los ejecutables de Playwright en el
+entorno. Si cambias el baseline, actualiza este número: el plan 060 se encontró
+con el de 197/43, cinco olas caducado, y un baseline que miente no detecta nada.
 
 > **Punto ciego del gate:** `verify` **no comprueba tipos en `e2e/`**.
 > `tsconfig.app.json` incluye sólo `src`, así que un error de tipos en un
@@ -80,16 +81,14 @@ Si cambias el baseline, actualiza este número: el plan 060 se encontró con el 
   viajan como fracción (`0.1800` = 18 %); dinero a escala 6, porcentajes y
   avances a escala 4
 - **Módulos sin backend:** el inventario está en `src/lib/disponibilidad.ts`. Las
-  pantallas cuyo servidor no existe se degradan con `ModuloNoDisponible` y
-  conservan su implementación real exportada como `<Nombre>PageActiva`: para
-  reactivarlas, quita el módulo del set, borra el wrapper y renombra. **Nunca
-  las borres.** Los controles sueltos sin endpoint van `disabled` + tooltip con
-  `MOTIVO_SIN_BACKEND`. **El gate es por página, no por módulo** (plan 050):
-  dentro de «admin» convivían una pantalla con backend completo y cuatro sin
-  ninguno, así que la clave gruesa apagaba justo la que funcionaba. Hoy las
-  claves son `admin-usuarios`, `admin-plantillas`, `admin-valores`,
-  `admin-logs` y `descuento-global`; Bases y Parámetros no aparecen porque su
-  backend existe
+  páginas pendientes que tienen contrato backend aprobado se degradan con
+  `ModuloNoDisponible` y conservan su implementación real exportada como
+  `<Nombre>PageActiva`; no se borran mientras su plan siga vigente. En cambio,
+  una operación que no existe en el backend consolidado y exigiría ampliarlo se
+  retira por completo del frontend: sin control, hook, DTO ni mock ficticio. **El
+  gate es por página, no por módulo** (plan 050): hoy las claves son
+  `admin-usuarios`, `admin-plantillas`, `admin-valores` y `admin-logs`; Bases y
+  Parámetros no aparecen porque su backend existe.
 - **Colores:** tema neutro (blanco y negro). `--primary`, `--ring` y `--chart-1`
   no tienen croma. Solo conservan color los tokens de estado (`--exito`,
   `--advertencia`, `--peligro`, `--destructive`). Nunca uses colores crudos de

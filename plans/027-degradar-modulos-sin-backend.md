@@ -1,5 +1,7 @@
 # Plan 027: Degradar honestamente los módulos que el backend todavía no implementa
 
+> **Nota de sustitución del Plan 075:** Este plan es histórico y no autoriza restaurar operaciones retiradas. No se deben reintroducir la duplicación de proyectos, la subida de logos ni la UI, hooks, DTOs o mocks del descuento global; solo se conservan contratos soportados por el backend.
+
 > **Executor instructions**: Follow this plan step by step. Run every
 > verification command and confirm the expected result before moving to the
 > next step. If anything in the "STOP conditions" section occurs, stop and

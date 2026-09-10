@@ -2,13 +2,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
+import { http, HttpResponse } from "msw";
 
 import { crearQueryClient } from "@/test/render";
 import { espiar, ultima, cuerpoInvalido } from "@/test/espia";
 import { basesCentralesFixtureAdmin, parametrosSistemaFixture } from "@/test/fixtures/admin";
 import { ApiError } from "@/api/problem";
+import { server } from "@/test/server";
 import {
   useAdminBases,
+  useAdminBase,
   useCrearBase,
   useEliminarBase,
   useArchivarBase,
@@ -35,10 +38,9 @@ function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={cliente}>{children}</QueryClientProvider>;
 }
 
-// Plan 057 §5: se afirma la *petición que sale* (verbo, ruta exacta, params,
-// cuerpo exacto), no `isSuccess`. Estas pantallas están apagadas tras
-// `<ModuloNoDisponible>` (MODULOS_SIN_BACKEND), así que el hook solo se puede
-// probar directamente; es justamente donde la deriva de contrato no se ve.
+// Plan 057 §5: se afirma la *petición que sale* (verbo, ruta exacta, params y
+// cuerpo exacto), no solo `isSuccess`. Bases está activa y su contrato se prueba
+// también en el hook para detectar deriva antes del render.
 describe("contrato de useAdminBases", () => {
   // La ruta real del backend es `/admin/bases-centrales` (AdminBaseCentralResource).
   // `/admin/bases` nunca existió: era la deriva que arrastraba el plan 027.
@@ -53,25 +55,58 @@ describe("contrato de useAdminBases", () => {
     expect(p?.url.searchParams.get("incluirArchivadas")).toBe("true");
   });
 
-  // El endpoint devuelve `List<AdminBaseCentralResponse>` pelada, no `Page<T>`.
-  // Tipándolo como `Page` la página hacía `data.contenido.map` sobre
-  // `undefined` y reventaba al montar.
-  it("devuelve una lista pelada, no una página", async () => {
+  // El backend devuelve Page y el interceptor traduce `items/total` al contrato
+  // interno `contenido/totalElementos` antes de que el schema valide la respuesta.
+  it("devuelve la página normalizada y excluye archivadas por defecto", async () => {
     const { result } = renderHook(() => useAdminBases(), { wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(Array.isArray(result.current.data)).toBe(true);
-    expect(result.current.data?.[0].nombre).toBe(basesCentralesFixtureAdmin[0].nombre);
+    const activas = basesCentralesFixtureAdmin.filter((base) => !base.archivada);
+    expect(result.current.data?.contenido).toHaveLength(activas.length);
+    expect(result.current.data?.totalElementos).toBe(activas.length);
+    expect(result.current.data?.contenido[0].nombre).toBe(activas[0].nombre);
   });
 
-  it("sin filtros no manda ningún query param", async () => {
+  it("manda siempre page y size explícitos", async () => {
     const peticiones = espiar();
 
     const { result } = renderHook(() => useAdminBases(), { wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     const p = ultima(peticiones, "GET", "/admin/bases-centrales");
-    expect([...(p?.url.searchParams.keys() ?? [])]).toEqual([]);
+    expect(p?.url.searchParams.get("page")).toBe("0");
+    expect(p?.url.searchParams.get("size")).toBe("25");
+  });
+
+  it("busca secuencialmente por páginas con tamaño 200 sin GET por id", async () => {
+    const peticiones = espiar();
+    const target = basesCentralesFixtureAdmin[1];
+    server.use(
+      http.get("*/api/v1/admin/bases-centrales", ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        const page = Number(params.get("page"));
+        return HttpResponse.json({
+          items: page === 0 ? [basesCentralesFixtureAdmin[0]] : [target],
+          total: 201,
+          page,
+          size: 200,
+          totalPaginas: 2,
+        });
+      }),
+    );
+
+    const { result } = renderHook(() => useAdminBase(target.id), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.id).toBe(target.id);
+    expect(
+      peticiones
+        .filter((p) => p.metodo === "GET" && p.ruta === `${RUTA}/admin/bases-centrales`)
+        .map((p) => [p.url.searchParams.get("page"), p.url.searchParams.get("size")]),
+    ).toEqual([
+      ["0", "200"],
+      ["1", "200"],
+    ]);
   });
 
   it("crea con POST /admin/bases-centrales y un cuerpo de solo `nombre`", async () => {
@@ -83,6 +118,16 @@ describe("contrato de useAdminBases", () => {
     const p = ultima(peticiones, "POST", "/admin/bases-centrales");
     expect(p?.ruta).toBe(`${RUTA}/admin/bases-centrales`);
     await waitFor(() => expect(p?.cuerpo).toEqual({ nombre: "Base Cámara 2027" }));
+  });
+
+  it("invalida también la caché de búsquedas secuenciales al crear una base", async () => {
+    const lookupKey = ["admin", "bases-centrales", BASE_ID, "lookup"] as const;
+    cliente.setQueryData(lookupKey, basesCentralesFixtureAdmin[0]);
+
+    const { result } = renderHook(() => useCrearBase(), { wrapper });
+    await result.current.mutateAsync({ nombre: "Base Cámara 2027" });
+
+    expect(cliente.getQueryState(lookupKey)?.isInvalidated).toBe(true);
   });
 
   // PUT /admin/bases-centrales/{id} existe en el backend y no tenía hook.

@@ -1,5 +1,10 @@
 # Plan 054 — Degradar descuento global y cerrar los bugs silenciosos
 
+> **Decisión posterior (Plan 075, 2026-09-09):** la degradación de descuento global
+> quedó superseded. Al no existir contrato en el backend consolidado, se retiraron
+> del frontend su UI, hooks, DTOs, schemas, handlers y pruebas. El resto de este
+> archivo se conserva como evidencia histórica.
+
 **Status:** TODO
 **Escrito contra:** frontend `8cc08b5` · backend `origin/main` @ `c337950` · docs `411242f`
 **Esfuerzo:** S (2 h) · **Riesgo:** BAJO — rebanadas independientes y revertibles

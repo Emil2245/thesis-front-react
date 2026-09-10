@@ -235,14 +235,10 @@ puede deshacer.**
 
 - **Editar un proyecto** desde el botón **Editar** del resumen abre el formulario con los mismos
   campos del paso 1, más el **Estado** (Borrador · En proceso · Finalizado).
-- **Duplicar un proyecto** aparece en el menú **⋯**, pero está desactivado. Al pasar el ratón por
-  encima verás _"Disponible cuando el backend implemente esta operación."_ Para reutilizar la
-  estructura de un proyecto, usa **Guardar como plantilla** en el menú **⋯** y luego crea el
-  nuevo proyecto desde esa plantilla (§8.3).
-- **Reducir costos del proyecto** (**Descuento global** en el menú **⋯**) tampoco está
-  disponible todavía, y muestra el mismo aviso. Mientras tanto, los costos se ajustan editando
-  los precios de los insumos (§3.2).
-- El **logo del proyecto** no se puede subir desde ninguna pantalla.
+- **Duplicar un proyecto**, **Descuento global** y **subir un logo** no aparecen en la interfaz:
+  el backend consolidado no expone esos contratos. Para reutilizar la estructura de un proyecto,
+  usa **Guardar como plantilla** en el menú **⋯** y luego crea el nuevo proyecto desde esa
+  plantilla (§8.3). Para ajustar costos, edita los precios de los insumos (§3.2).
 - Los seis interruptores del grupo **Presentación**, en los parámetros del proyecto (§2.4), se
   guardan pero **no tienen efecto todavía**: ni en la pantalla del APU, ni en los documentos
   exportados.

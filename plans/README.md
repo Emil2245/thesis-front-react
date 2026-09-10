@@ -450,7 +450,7 @@ These were unresolved in `thesis-docs` when the plans were written. Each plan st
 | Version selector: `?v=` vs nested routes | `design/02 §5.3` (marked *"confirmar al construir el shell"*) | **Closed: `?v=` search param.** TC-P43-02 already assumes it | 006 |
 | Herramienta Menor row position (first vs last of block M) | `design/02 §5.4`, `plan/README.md` | Render by the server's `orden` — **no client change needed** when it lands | 009 |
 | APU editing model: inline grid vs row-opens-form | `design/01 §10.4` | **Inline**, per `design/03` P-21 and "spreadsheet-familiar"; SUS pilot may revisit | 009 |
-| Discount semantics (% vs monto; project + rubro interaction) | `design/02 §5.4` #11 | **Percentage-only**; help text notes both levels exist | 007, 010 |
+| Discount semantics (% vs monto; project + rubro interaction) | `design/02 §5.4` #11 | **La operación de descuento global del frontend fue retirada por el Plan 075 porque el backend consolidado no tiene contrato para ella.** Los planes históricos no son autoridad de ejecución. | 007, 010, 075 |
 | Nested auxiliaries | `design/02 §5.4` #12 | Not enforced client-side; surface the server's error | 010 |
 | Central-base propagation (live vs snapshot, A9) | agenda entrevista 02 | Assume **snapshot**; UI shows the price's source | 008, 014 |
 | Archiving vs deleting a central base (D-12) | `design/03 §J` | Assume **archivar**; UI never says *eliminar* | 014 |

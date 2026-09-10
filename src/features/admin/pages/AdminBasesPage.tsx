@@ -32,7 +32,16 @@ import {
 } from "../hooks/useAdminBases";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
-import { ArchiveIcon, ArchiveRestoreIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import {
+  ArchiveIcon,
+  ArchiveRestoreIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
+} from "lucide-react";
+import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
 
 /** Alta y renombrado piden lo mismo —un `nombre`— así que comparten diálogo. */
 function DialogoNombreBase({
@@ -86,10 +95,11 @@ export function AdminBasesPage() {
   // El backend ya filtra por defecto (`incluirArchivadas=false`); el conmutador
   // viaja como query param, no filtra en cliente.
   const [incluirArchivadas, setIncluirArchivadas] = useState(false);
+  const [page, setPage] = useState(0);
   const [creando, setCreando] = useState(false);
   const [renombrando, setRenombrando] = useState<BaseInsumosResponse | null>(null);
 
-  const { data: bases, isPending } = useAdminBases({ incluirArchivadas });
+  const { data: bases, isPending } = useAdminBases({ incluirArchivadas, page, size: 25 });
   const crear = useCrearBase();
   const renombrar = useRenombrarBase();
   const eliminar = useEliminarBase();
@@ -117,11 +127,45 @@ export function AdminBasesPage() {
         <Switch
           id="incluir-archivadas"
           checked={incluirArchivadas}
-          onCheckedChange={setIncluirArchivadas}
+          onCheckedChange={(checked) => {
+            setIncluirArchivadas(checked);
+            setPage(0);
+          }}
         />
         <Label htmlFor="incluir-archivadas">Incluir archivadas</Label>
       </div>
-      <TarjetaTabla>
+      <TarjetaTabla
+        pie={
+          bases && (bases.totalPaginas > 1 || page > 0) ? (
+            <Pagination className="mx-0 w-auto">
+              <PaginationContent>
+                <PaginationItem>
+                  <Button
+                    aria-label="Página anterior"
+                    variant="outline"
+                    size="icon-sm"
+                    disabled={page === 0}
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  >
+                    <ChevronLeftIcon />
+                  </Button>
+                </PaginationItem>
+                <PaginationItem>
+                  <Button
+                    aria-label="Página siguiente"
+                    variant="outline"
+                    size="icon-sm"
+                    disabled={page >= bases.totalPaginas - 1}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    <ChevronRightIcon />
+                  </Button>
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          ) : undefined
+        }
+      >
         <Table>
           <TableHeader>
             <TableRow>
@@ -132,7 +176,7 @@ export function AdminBasesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {bases?.map((b) => (
+            {bases?.contenido.map((b) => (
               <TableRow key={b.id} className={cn(b.archivada && "opacity-50")}>
                 <TableCell className="font-medium">
                   <Link to={`/admin/bases/${b.id}`} className="hover:underline">
@@ -159,7 +203,9 @@ export function AdminBasesPage() {
                     variant="ghost"
                     size="icon"
                     title={b.archivada ? "Restaurar" : "Archivar"}
-                    onClick={() => archivar.mutate(b.id)}
+                    onClick={() =>
+                      archivar.mutate(b.id, { onSuccess: () => !b.archivada && setPage(0) })
+                    }
                   >
                     {b.archivada ? <ArchiveRestoreIcon /> : <ArchiveIcon />}
                   </Button>
@@ -168,7 +214,7 @@ export function AdminBasesPage() {
                     size="icon"
                     title="Eliminar"
                     className="text-destructive"
-                    onClick={() => eliminar.mutate(b.id)}
+                    onClick={() => eliminar.mutate(b.id, { onSuccess: () => setPage(0) })}
                   >
                     <Trash2Icon />
                   </Button>

@@ -1,5 +1,10 @@
 # 007 — Proyectos: lista, asistente de creación, resumen, firmantes, parámetros, descuento global (P-05…P-12, S-07…S-13)
 
+> **Superseded por el backend consolidado y el Plan 075 (2026-09-09):** no existen
+> endpoints para duplicar proyecto, cargar logo ni aplicar descuento global. Su
+> UI, hooks, DTOs, schemas y mocks fueron retirados. El resto de este archivo se
+> conserva como diseño histórico y no autoriza reintroducir esas operaciones.
+
 - **Status:** TODO
 - **Written against:** repo state after plans 001–006. Spec repo `/home/etverkade/workspace/thesis-docs` at commit `d7508eb`.
 - **Depends on:** 002, 003, 004, 005, 006.

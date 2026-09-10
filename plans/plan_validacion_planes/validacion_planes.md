@@ -132,7 +132,7 @@ Antes de modificar planes:
 7. Verifica especialmente estas sospechas ya detectadas:
 
    - `src/lib/disponibilidad.ts` todavía desactiva `admin-usuarios`, `admin-plantillas`, `admin-valores` y `admin-logs`, aunque el backend actual ya implementa esas cuatro áreas. Determina qué DTO, hooks, páginas, esquemas Zod y tests deben restaurarse o crearse.
-   - `descuento-global` continúa sin backend y debe seguir desactivado.
+   - `descuento-global` continúa sin backend y debe retirarse del frontend, incluidos UI, hooks, DTOs y mocks.
    - El editor APU tiene `SelectorInsumo` y `agregarFila`, pero aparentemente no están conectados a `EditorApuPage`. Reevalúa el Plan 074 antes de duplicarlo.
    - El backend ofrece `GET /cronogramas/{id}/vistas`, pero el frontend no parece consumir las vistas de Gantt jerárquico, cronograma valorizado y curva S.
    - El estado del Plan 028 parece incorrecto: parte de la validación Zod ya existe. Determina si está `DONE`, `PARTIAL` o necesita corrección.
@@ -395,8 +395,8 @@ No hardcodees conteos futuros. Registra el baseline medido y exige reportar el d
 - Algunas rutas devuelven listas directas; no convertirlas artificialmente en `Page`.
 - Los errores reales usan `codigo` y `mensaje`; revisar las excepciones especiales.
 - Solo existen los roles `USUARIO` y `SUPER_ADMIN`.
-- Mantener `descuento-global` desactivado.
-- No fabricar endpoints de duplicación de proyecto, logos o exportaciones inexistentes.
+- Retirar `descuento-global` del frontend porque no existe en el backend consolidado.
+- Retirar UI, hooks, DTOs y mocks de duplicación de proyecto o logos; no fabricar endpoints inexistentes.
 - Usar `pnpm` exclusivamente.
 
 ## Política para posibles cambios en el backend

@@ -1,5 +1,7 @@
 # Plan 036 — Parametrizable validation ranges (N04 §A6)
 
+> **Nota de sustitución del Plan 075:** Este plan es histórico y no autoriza restaurar operaciones retiradas. No se deben reintroducir la duplicación de proyectos, la subida de logos ni la UI, hooks, DTOs o mocks del descuento global; solo se conservan contratos soportados por el backend. Los campos de rangos que el backend requiera pueden permanecer únicamente como transporte, pero no se debe reintroducir el esquema ni el comportamiento del diálogo de descuento.
+
 **Status:** TODO
 **Written against:** `7d6223c`
 **Spec source:** `07-api-contract.md` line 104, 232; N04 §A6; backend commit `531f948`

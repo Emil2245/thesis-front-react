@@ -114,9 +114,11 @@ DTOs are hand-transcribed from Apéndice B; el backend Quarkus todavía no publi
 pantallas para los 44 procesos del contrato. Cuando el código y los docs discrepan, **gana el
 código** y los docs se corrigen.
 
-Las pantallas sin servidor se degradan a un aviso explícito en vez de romperse. El inventario vive
-en `src/lib/disponibilidad.ts` y **el gate es por página, no por módulo**: hoy quedan fuera
-`admin-usuarios`, `admin-plantillas`, `admin-valores`, `admin-logs` y `descuento-global`.
+Las páginas pendientes con contrato backend aprobado se degradan a un aviso explícito en vez de
+romperse. El inventario vive en `src/lib/disponibilidad.ts` y **el gate es por página, no por
+módulo**: hoy quedan fuera `admin-usuarios`, `admin-plantillas`, `admin-valores` y `admin-logs`.
+Las operaciones sin contrato consolidado —duplicar proyecto, subir logo y descuento global— se
+retiraron por completo del frontend.
 
 > **Antes de tipar un DTO, lee el record de Java** (`git show origin/main:<path>` en
 > `../thesis-back-quarkus`; no hagas checkout, el working tree está en otra rama). Ocho planes de

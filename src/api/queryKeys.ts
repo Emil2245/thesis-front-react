@@ -12,6 +12,7 @@ export const qk = {
   insumoUso: (proyectoId: string, insumoId: string) =>
     ["proyecto", proyectoId, "insumos", insumoId, "uso"] as const,
   basesCentrales: () => ["bases-centrales"] as const,
+  adminBasesFamilia: () => ["admin", "bases-centrales"] as const,
 
   apus: (presupuestoId: string, filtros?: Record<string, unknown>) =>
     ["presupuesto", presupuestoId, "apus", filtros ?? {}] as const,
@@ -35,8 +36,8 @@ export const qk = {
 
   // Solo quedan las dos con backend real (plan 050): usuarios, plantillas de
   // sistema, valores de referencia y logs no existen en origin/main.
-  adminBases: (f?: Record<string, unknown>) => ["admin", "bases-centrales", f ?? {}] as const,
-  adminBase: (id: string) => ["admin", "bases-centrales", id] as const,
+  adminBases: (f?: Record<string, unknown>) => [...qk.adminBasesFamilia(), f ?? {}] as const,
+  adminBase: (id: string) => [...qk.adminBasesFamilia(), id] as const,
   adminParametros: () => ["admin", "parametros-sistema"] as const,
 
   displayConfig: () => ["display-config"] as const,

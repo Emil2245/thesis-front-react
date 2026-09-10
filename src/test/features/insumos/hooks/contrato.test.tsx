@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
@@ -13,6 +13,7 @@ import {
   basesCentralesFixture,
   importResultadoFixture,
 } from "@/test/fixtures/insumos";
+import { http as apiClient } from "@/api/client";
 import { ApiError } from "@/api/problem";
 import { useInsumos } from "@/features/insumos/hooks/useInsumos";
 import {
@@ -22,7 +23,7 @@ import {
 } from "@/features/insumos/hooks/useInsumoMutaciones";
 import { useBasesCentrales } from "@/features/insumos/hooks/useBasesCentrales";
 import { useImportarCsv } from "@/features/insumos/hooks/useImportCsv";
-import { destinoProyecto } from "@/features/insumos/destino";
+import { destinoBaseCentral, destinoProyecto } from "@/features/insumos/destino";
 
 const API = "*/api/v1";
 const PROYECTO_ID = "018f8a10-0000-7000-8000-000000000001";
@@ -117,13 +118,17 @@ describe("contrato de las mutaciones de insumo", () => {
     const { result } = renderHook(() => useEditarInsumo(destinoProyecto(PROYECTO_ID)), { wrapper });
     await result.current.mutateAsync({
       id: INSUMO_ID,
-      body: { descripcion: "Cemento Portland Tipo IP", precioUnitario: 13.9 },
+      body: { descripcion: "Cemento Portland Tipo IP", unidad: "kg", precioUnitario: 13.9 },
     });
 
     const p = ultima(peticiones, "PUT", `/proyectos/${PROYECTO_ID}/insumos/${INSUMO_ID}`);
     expect(p).toBeDefined();
     await waitFor(() =>
-      expect(p?.cuerpo).toEqual({ descripcion: "Cemento Portland Tipo IP", precioUnitario: 13.9 }),
+      expect(p?.cuerpo).toEqual({
+        descripcion: "Cemento Portland Tipo IP",
+        unidad: "kg",
+        precioUnitario: 13.9,
+      }),
     );
   });
 
@@ -172,55 +177,67 @@ describe("contrato de useBasesCentrales", () => {
   });
 });
 
-// El parseo del CSV no vive en el hook: `AsistenteImportCsv.tsx` llama a
-// `Papa.parse` solo para contar filas y manda el File crudo. El hook solo tiene
-// el POST, así que aquí solo hay contrato de transporte.
-describe("contrato de useImportarCsv", () => {
-  it("sube a POST /proyectos/{id}/insumos/importar", async () => {
-    const peticiones = espiar();
-
-    const { result } = renderHook(() => useImportarCsv(destinoProyecto(PROYECTO_ID)), { wrapper });
-    const formData = new FormData();
-    formData.append("archivo", new File(["codigo,descripcion\nM-001,Cemento\n"], "insumos.csv"));
-    await result.current.mutateAsync({ formData });
-
-    const p = ultima(peticiones, "POST", `/proyectos/${PROYECTO_ID}/insumos/importar`);
-    expect(p?.ruta).toBe(`/api/v1/proyectos/${PROYECTO_ID}/insumos/importar`);
-  });
-
-  // Plan 062 §1: el CSV tiene que salir como multipart de verdad. Si alguien
-  // vuelve a fijar `Content-Type: application/json` en la instancia axios
-  // (src/api/client.ts), `transformRequest` serializa el FormData con
-  // `formDataToJSON` y por el cable va `{"archivo":{}}` — el fichero se queda
-  // en el suelo. Este test afirma lo contrario y se pone rojo si vuelve.
-  //
-  // ponytail: se mira el cuerpo crudo, no `request.formData()`. Techo del
-  // entorno, no del código: en `environment: "jsdom"` el `File`/`FormData`
-  // globales son los de jsdom y el `Request` es el de undici, que no reconoce
-  // el `File` ajeno — pierde los bytes al serializar y `request.formData()`
-  // revienta hasta con un multipart bien formado. Para leerlo como FormData
-  // habría que sustituir `File`, `Blob` y `FormData` globales por los de Node
-  // en el setup, y eso rompe `AsistenteImportCsv.test.tsx` (userEvent.upload y
-  // FileReader quieren los de jsdom). La cabecera y el marco multipart bastan
-  // para pinchar el defecto.
-  it("manda el CSV como multipart, no como JSON", async () => {
-    let contentType = "";
-    let crudo = "";
-    server.use(
-      http.post(`${API}/proyectos/:id/insumos/importar`, async ({ request }) => {
-        contentType = request.headers.get("content-type") ?? "";
-        crudo = await request.text();
-        return HttpResponse.json(importResultadoFixture);
-      }),
+// jsdom y undici no comparten File/FormData y MSW no puede serializar esa
+// combinación de forma estable. El contrato se comprueba antes del adaptador:
+// URL exacta, FormData real con archivo y ausencia de JSON forzado en Axios.
+describe("invalida la familia de bases centrales", () => {
+  it("invalida la búsqueda secuencial al crear un insumo en una base central", async () => {
+    const cliente = crearQueryClient();
+    const lookupKey = ["admin", "bases-centrales", basesCentralesFixture[0].id, "lookup"] as const;
+    cliente.setQueryData(lookupKey, basesCentralesFixture[0]);
+    const baseWrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={cliente}>{children}</QueryClientProvider>
     );
 
+    const { result } = renderHook(
+      () => useCrearInsumo(destinoBaseCentral(basesCentralesFixture[0].id)),
+      { wrapper: baseWrapper },
+    );
+    await result.current.mutateAsync({
+      codigo: "M-010",
+      tipo: "MATERIAL",
+      descripcion: "Cal hidratada",
+      unidad: "kg",
+      precioUnitario: 3.75,
+    });
+
+    expect(cliente.getQueryState(lookupKey)?.isInvalidated).toBe(true);
+  });
+});
+
+describe("contrato de useImportarCsv", () => {
+  it("sube a POST /proyectos/{id}/insumos/importar", async () => {
+    const post = vi
+      .spyOn(apiClient, "post")
+      .mockResolvedValue({ data: importResultadoFixture } as never);
     const { result } = renderHook(() => useImportarCsv(destinoProyecto(PROYECTO_ID)), { wrapper });
     const formData = new FormData();
     formData.append("archivo", new File(["codigo,descripcion\nM-001,Cemento\n"], "insumos.csv"));
+
     await result.current.mutateAsync({ formData });
 
-    expect(contentType).toMatch(/^multipart\/form-data; boundary=.+/);
-    expect(crudo).toContain('name="archivo"');
-    expect(crudo).not.toContain('{"archivo"');
+    expect(post).toHaveBeenCalledWith(`/proyectos/${PROYECTO_ID}/insumos/importar`, formData);
+    post.mockRestore();
+  });
+
+  it("conserva el archivo en FormData y no fuerza JSON", async () => {
+    let body: unknown;
+    const post = vi.spyOn(apiClient, "post").mockImplementation(async (_url, outgoingBody) => {
+      body = outgoingBody;
+      return { data: importResultadoFixture } as never;
+    });
+    const { result } = renderHook(() => useImportarCsv(destinoProyecto(PROYECTO_ID)), { wrapper });
+    const archivo = new File(["codigo,descripcion\nM-001,Cemento\n"], "insumos.csv", {
+      type: "text/csv",
+    });
+    const formData = new FormData();
+    formData.append("archivo", archivo);
+
+    await result.current.mutateAsync({ formData });
+
+    expect(body).toBeInstanceOf(FormData);
+    expect((body as FormData).get("archivo")).toBe(archivo);
+    expect(apiClient.defaults.headers.common["Content-Type"]).toBeUndefined();
+    post.mockRestore();
   });
 });

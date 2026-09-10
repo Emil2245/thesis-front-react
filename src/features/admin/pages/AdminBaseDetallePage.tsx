@@ -9,7 +9,7 @@ import { EstadoVacio } from "@/components/comunes/EstadoVacio";
 import { DialogoInsumo } from "@/features/insumos/components/DialogoInsumo";
 import { AsistenteImportCsv } from "@/features/insumos/components/AsistenteImportCsv";
 import { destinoBaseCentral } from "@/features/insumos/destino";
-import { useAdminBases } from "../hooks/useAdminBases";
+import { useAdminBase } from "../hooks/useAdminBases";
 import { ChevronLeftIcon, PlusIcon, UploadIcon } from "lucide-react";
 
 /**
@@ -34,8 +34,7 @@ export function AdminBaseDetallePage() {
 
   // No hay `GET /admin/bases-centrales/{id}`: la ficha sale del listado, que ya
   // está en caché al llegar desde S-38.
-  const { data: bases, isPending } = useAdminBases({ incluirArchivadas: true });
-  const base = bases?.find((b) => b.id === id);
+  const { data: base, isPending } = useAdminBase(id);
   const destino = destinoBaseCentral(id);
 
   if (isPending)

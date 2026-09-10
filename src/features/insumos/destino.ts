@@ -32,5 +32,5 @@ export const destinoBaseCentral = (baseId: string): DestinoInsumos => ({
   rutaImport: `/admin/bases-centrales/${baseId}/insumos/import`,
   // No hay listado de insumos de una base central que invalidar; lo que sí
   // cambia es el `totalInsumos` del listado de bases.
-  clave: qk.adminBases(),
+  clave: qk.adminBasesFamilia(),
 });

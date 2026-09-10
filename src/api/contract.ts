@@ -130,11 +130,6 @@ export interface ProyectoEditarRequest {
   subdireccionInstitucional?: string;
 }
 
-export interface ProyectoDuplicarRequest {
-  nombre: string;
-  codigo: string;
-}
-
 export interface PlantillaProyectoResponse {
   id: string;
   nombre: string;
@@ -201,27 +196,6 @@ export interface ParametrosProyectoActualizarRequest {
   moneda: string;
 }
 
-export interface DescuentoGlobalPreviewResponse {
-  porcentaje: Decimal;
-  porApu: Array<{
-    apuId: string;
-    codigo: string;
-    // El descuento reduce columnas de la base PROYECTO (tarifa en EQUIPO y
-    // TRANSPORTE, precio_unitario en MATERIAL); cdAntes es el CD previo. No
-    // existe un "cdAjustado": la cadena activa del motor es CD → CI → CT.
-    cdAntes: Decimal;
-    cd: Decimal;
-    ci: Decimal;
-    ct: Decimal;
-  }>;
-  totalGeneralActual: Decimal;
-  totalGeneralProyectado: Decimal;
-}
-
-export interface DescuentoGlobalRequest {
-  porcentaje: Decimal;
-}
-
 // ————— Insumos y bases (§11) —————
 export type TipoInsumo = "EQUIPO" | "MANO_OBRA" | "MATERIAL" | "TRANSPORTE";
 
@@ -248,9 +222,9 @@ export interface InsumoCrearRequest {
 }
 
 export interface InsumoEditarRequest {
-  descripcion?: string;
-  unidad?: string;
-  precioUnitario?: number;
+  descripcion: string;
+  unidad: string;
+  precioUnitario: number;
 }
 
 // GET /proyectos/{id}/insumos/{insumoId}/usos — `usos` en plural.

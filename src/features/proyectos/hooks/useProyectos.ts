@@ -2,12 +2,7 @@ import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tansta
 import { get, getValidado, post, put, del } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import { paginaDe, proyectoSchema } from "@/api/schemas";
-import type {
-  ProyectoResponse,
-  ProyectoCrearRequest,
-  ProyectoEditarRequest,
-  ProyectoDuplicarRequest,
-} from "@/api/contract";
+import type { ProyectoResponse, ProyectoCrearRequest, ProyectoEditarRequest } from "@/api/contract";
 
 export function useProyectos(filtros?: Record<string, unknown>) {
   return useQuery({
@@ -29,9 +24,7 @@ export function useCrearProyecto() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: ProyectoCrearRequest) => post<ProyectoResponse>("/proyectos", body),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: qk.proyectos() });
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.proyectos() }),
   });
 }
 
@@ -50,19 +43,6 @@ export function useEliminarProyecto() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => del(`/proyectos/${id}`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: qk.proyectos() });
-    },
-  });
-}
-
-export function useDuplicarProyecto() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: ProyectoDuplicarRequest }) =>
-      post<ProyectoResponse>(`/proyectos/${id}/duplicar`, body),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: qk.proyectos() });
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.proyectos() }),
   });
 }

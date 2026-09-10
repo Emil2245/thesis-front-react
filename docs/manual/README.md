@@ -55,16 +55,16 @@ documentan porque no existen en la interfaz — ver _Lo que no se documenta_, ab
 
 Ocho procesos de la especificación quedan fuera, todos por decisión:
 
-| Proceso                            | Motivo                                                                                                                                   |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| **P-07** Editar proyecto           | Documentado como no disponible en §2                                                                                                     |
-| **P-09** Duplicar proyecto         | Sin backend. La acción existe en el menú pero está desactivada, con el aviso _"Disponible cuando el backend implemente esta operación."_ |
-| **P-12** Descuento global al CD    | Sin backend. Especificado y cerrado el 2026-08-31, pero no hay endpoint. No es un pendiente de entrega                                   |
-| **P-24** Descuento al CD por rubro | Retirado de la especificación (`WITHDRAWN / SUPERSEDED`)                                                                                 |
-| **P-25** Rubro auxiliar            | Retirado. La regla vigente es que no hay enlaces entre APUs                                                                              |
-| **P-38** Gestión de usuarios       | Sin backend; la pantalla muestra el aviso de no disponible                                                                               |
-| **P-40** Plantillas de sistema     | Ídem                                                                                                                                     |
-| **P-42** Logs de actividad         | Ídem                                                                                                                                     |
+| Proceso                            | Motivo                                                                                  |
+| ---------------------------------- | --------------------------------------------------------------------------------------- |
+| **P-07** Editar proyecto           | Documentado como no disponible en §2                                                    |
+| **P-09** Duplicar proyecto         | Sin backend. La acción fue retirada de la interfaz                                      |
+| **P-12** Descuento global al CD    | Sin backend. Su UI, hooks, DTOs y mocks fueron retirados; no es un pendiente de entrega |
+| **P-24** Descuento al CD por rubro | Retirado de la especificación (`WITHDRAWN / SUPERSEDED`)                                |
+| **P-25** Rubro auxiliar            | Retirado. La regla vigente es que no hay enlaces entre APUs                             |
+| **P-38** Gestión de usuarios       | Sin backend; la pantalla muestra el aviso de no disponible                              |
+| **P-40** Plantillas de sistema     | Ídem                                                                                    |
+| **P-42** Logs de actividad         | Ídem                                                                                    |
 
 Dos matices que el manual dice en su propio texto, en vez de callarlos:
 

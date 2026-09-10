@@ -1,16 +1,14 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderConProviders } from "@/test/render";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AsistenteImportCsv } from "@/features/insumos/components/AsistenteImportCsv";
+import { useImportarCsv } from "@/features/insumos/hooks/useImportCsv";
 import { destinoProyecto } from "@/features/insumos/destino";
-import { server } from "@/test/server";
-import { http, HttpResponse } from "msw";
 import { importResultadoFixture, importResultadoConErroresFixture } from "@/test/fixtures/insumos";
-import { problema } from "@/test/handlers";
 
-const API = "*/api/v1";
+vi.mock("@/features/insumos/hooks/useImportCsv", () => ({ useImportarCsv: vi.fn() }));
 
 const csvContent = "codigo,descripcion,unidad,precio\nM-9,Pintura,gl,10.5";
 
@@ -21,6 +19,13 @@ const subirArchivo = async (input: HTMLElement) => {
 };
 
 describe("AsistenteImportCsv", () => {
+  beforeEach(() => {
+    vi.mocked(useImportarCsv).mockReturnValue({
+      mutateAsync: vi.fn().mockResolvedValue(importResultadoFixture),
+      isPending: false,
+    } as never);
+  });
+
   // Plan 067: el texto anterior nombraba `tipo` y `precioUnitario`, columnas
   // que el parser del backend no acepta — quien lo siguiera no importaba nada.
   it("nombra las cuatro columnas del parser, no precioUnitario", async () => {
@@ -47,15 +52,10 @@ describe("AsistenteImportCsv", () => {
     expect(csv.split("\n")[0]).toBe("codigo,descripcion,unidad,precio");
   });
 
-  it("happy path: imports via /importar and closes", async () => {
+  it("happy path: imports and closes", async () => {
     const onClose = vi.fn();
-    let llamado = false;
-    server.use(
-      http.post(`${API}/proyectos/:id/insumos/importar`, () => {
-        llamado = true;
-        return HttpResponse.json(importResultadoFixture);
-      }),
-    );
+    const mutateAsync = vi.fn().mockResolvedValue(importResultadoFixture);
+    vi.mocked(useImportarCsv).mockReturnValue({ mutateAsync, isPending: false } as never);
 
     renderConProviders(
       <AsistenteImportCsv
@@ -75,16 +75,17 @@ describe("AsistenteImportCsv", () => {
     await waitFor(() => {
       expect(onClose).toHaveBeenCalled();
     });
-    expect(llamado).toBe(true);
+    expect(mutateAsync).toHaveBeenCalledOnce();
+    const [{ formData }] = mutateAsync.mock.calls[0] as [{ formData: FormData }];
+    expect(formData.get("archivo")).toBeInstanceOf(File);
   });
 
   it("shows per-row errors in final step and stays open", async () => {
     const onClose = vi.fn();
-    server.use(
-      http.post(`${API}/proyectos/:id/insumos/importar`, () =>
-        HttpResponse.json(importResultadoConErroresFixture),
-      ),
-    );
+    vi.mocked(useImportarCsv).mockReturnValue({
+      mutateAsync: vi.fn().mockResolvedValue(importResultadoConErroresFixture),
+      isPending: false,
+    } as never);
 
     renderConProviders(
       <AsistenteImportCsv
@@ -107,13 +108,10 @@ describe("AsistenteImportCsv", () => {
 
   it("csv-invalido keeps the wizard open", async () => {
     const onClose = vi.fn();
-    server.use(
-      http.post(`${API}/proyectos/:id/insumos/importar`, () =>
-        problema(400, "csv-invalido", "El archivo CSV no es válido", {
-          detail: "Formato de archivo incorrecto",
-        }),
-      ),
-    );
+    vi.mocked(useImportarCsv).mockReturnValue({
+      mutateAsync: vi.fn().mockRejectedValue(new Error("El archivo CSV no es válido")),
+      isPending: false,
+    } as never);
 
     renderConProviders(
       <AsistenteImportCsv
