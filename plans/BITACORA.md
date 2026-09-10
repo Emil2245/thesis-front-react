@@ -1,8 +1,8 @@
 # Bitácora
 
-> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). El Plan 084 está cerrado; el Plan 085 es la siguiente tarea pendiente y aún no se inicia.
+> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). Los Planes 085 y 086 están cerrados e integrados; el Plan 087 es la siguiente tarea pendiente y aún no se inicia.
 
-**Encargo activo: siguiente tarea pendiente, Plan 085** · **Actualizada:** 2026-09-09
+**Encargo activo: siguiente tarea pendiente, Plan 087** · **Actualizada:** 2026-09-09
 **Ronda de paridad 1** · **CERRADA** · **Backend alineado hasta:** **`5673615`**
 
 > La lleva el orquestador ([`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md)). Se escribe **en el momento** en que
@@ -10,6 +10,17 @@
 > aquí no ocurrió.
 >
 > Estados: `⏳ pendiente` · `🔄 en curso` · `🟡 vuelto, sin revisar` · `❌ rechazado` · `✅ verde`
+
+## Cierre del Plan 086 (2026-09-09)
+
+- Plan 086 queda **✅ verde / IMPLEMENTADO E INTEGRADO**: `PestanaEspecificacionTecnica` y `useEspecificacionTecnica` usan exactamente GET/PUT `/apus/{apuId}/especificacion-tecnica`, `qk.apuEspecificacion` y el cuerpo PUT `{ texto }`; distinguen `null` de texto vacío, conservan el límite existente de 64 KiB y ofrecen reintento, guardado y errores accesibles sin duplicar query ni mutation.
+- Los Planes 085 y 086 se ejecutaron en worktrees separados e integraron sin cambios en backend, contratos, handlers ni fixtures. No se añadieron ni ejecutaron pruebas por instrucción explícita. Prettier, lint y `git diff --check` pasaron; `pnpm run typecheck` sigue bloqueado únicamente por el error conocido del Plan 076 en `src/test/features/proyectos/hooks/contrato.test.tsx:197` (`mostrarSeccionesVacias` ausente de `ParametrosProyectoEditarRequest`). No se ejecutó E2E.
+- Plan 087 queda como siguiente plan pendiente, sin iniciarlo.
+
+## Cierre del Plan 085 (2026-09-09)
+
+- Plan 085 queda **✅ verde / IMPLEMENTADO E INTEGRADO**: `PestanaInsumos` deriva filas read-only del APU seleccionado mediante `ApuResponse.secciones[].detalles[]`; `WorkspacePage` integra las pestañas APU, Insumos y Especificación técnica. No se inventó endpoint APU-insumos, mutación, copia ni aritmética monetaria.
+- Los Planes 085 y 086 se ejecutaron en worktrees separados e integraron sin cambios en backend, contratos, handlers ni fixtures. No se añadieron ni ejecutaron pruebas por instrucción explícita. Prettier, lint y `git diff --check` pasaron; `pnpm run typecheck` sigue bloqueado únicamente por el error conocido del Plan 076 en `src/test/features/proyectos/hooks/contrato.test.tsx:197` (`mostrarSeccionesVacias` ausente de `ParametrosProyectoEditarRequest`). No se ejecutó E2E.
 
 ## Cierre del Plan 084 (2026-09-09)
 

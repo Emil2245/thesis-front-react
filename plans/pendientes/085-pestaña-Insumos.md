@@ -1,5 +1,7 @@
 # Plan 085: pestaña Insumos
 
+> **Estado:** DONE · integrado en el worktree actual (2026-09-09). `PestanaInsumos` deriva filas read-only de `ApuResponse.secciones[].detalles[]`; `WorkspacePage` integra las pestañas APU, Insumos y Especificación técnica. No se añadió endpoint APU-insumos, mutación, copia ni aritmética monetaria. Se ejecutó en worktree separado y se integró sin cambios en backend, contratos, handlers ni fixtures. No se añadieron ni ejecutaron pruebas por instrucción explícita; Prettier, lint y `git diff --check` pasaron, y `pnpm run typecheck` permanece bloqueado únicamente por el error conocido del Plan 076 en `src/test/features/proyectos/hooks/contrato.test.tsx:197`.
+
 ## 01. Estado actual y dependencia
 Depende de 084. El editor APU ya recibe `ApuResponse.secciones[].detalles[]` en `src/api/contract.ts:333-350`, los ordena en `src/features/apu-editor/hooks/useApuEditor.ts` y muestra cada sección mediante `GridSeccion`. `SelectorInsumo` (`src/features/apu-editor/components/SelectorInsumo.tsx`) y `useBusquedaParaApu` son búsqueda/selección para edición; no existe un endpoint canónico de “insumos del APU”.
 

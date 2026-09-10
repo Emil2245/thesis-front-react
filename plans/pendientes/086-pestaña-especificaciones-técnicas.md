@@ -1,5 +1,7 @@
 # Plan 086: pestaña Especificaciones técnicas
 
+> **Estado:** DONE · integrado en el worktree actual (2026-09-09). `PestanaEspecificacionTecnica` y `useEspecificacionTecnica` usan exactamente GET/PUT `/apus/{apuId}/especificacion-tecnica`, `qk.apuEspecificacion` y el body `{ texto }`; distinguen `null` de texto vacío, conservan el límite existente de 64 KiB y ofrecen reintento, guardado y error accesibles sin duplicar query ni mutation. Se ejecutó en worktree separado y se integró sin cambios en backend, contratos, handlers ni fixtures. No se añadieron ni ejecutaron pruebas por instrucción explícita; Prettier, lint y `git diff --check` pasaron, y `pnpm run typecheck` permanece bloqueado únicamente por el error conocido del Plan 076 en `src/test/features/proyectos/hooks/contrato.test.tsx:197`.
+
 ## 01. Estado actual y dependencia
 Depende de 085. Ya existe `PanelEspecificacionTecnica.tsx` y `useApuEditor.ts:92,320`: GET `/apus/{apuId}/especificacion-tecnica`, PUT con `{ texto }`, key `qk.apuEspecificacion`. El panel recibe `string | null | undefined` y limita 64 KiB.
 

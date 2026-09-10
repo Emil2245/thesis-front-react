@@ -2,10 +2,13 @@ import { useSearchParams } from "react-router-dom";
 import { EncabezadoPagina, PuntoMeta } from "@/components/comunes/EncabezadoPagina";
 import { EstadoVacio } from "@/components/comunes/EstadoVacio";
 import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePresupuesto } from "@/features/presupuesto/hooks/usePresupuesto";
 import { useProyecto } from "@/features/proyectos/hooks/useProyectos";
 import { useProyectoActivoId, useVersionActiva } from "@/shell/contexto";
 import { PestanaApu } from "../components/PestanaApu";
+import { PestanaEspecificacionTecnica } from "../components/PestanaEspecificacionTecnica";
+import { PestanaInsumos } from "../components/PestanaInsumos";
 import { PresupuestoCompacto } from "../components/PresupuestoCompacto";
 import { WorkspaceSplit } from "../components/WorkspaceSplit";
 
@@ -85,7 +88,22 @@ export function WorkspacePage() {
         }
         right={
           <TarjetaTabla titulo="APU">
-            <PestanaApu apuId={selectedApuId} proyectoId={proyecto.id} />
+            <Tabs defaultValue="apu">
+              <TabsList className="mx-4 mt-3" aria-label="Contenido del APU">
+                <TabsTrigger value="apu">APU</TabsTrigger>
+                <TabsTrigger value="insumos">Insumos</TabsTrigger>
+                <TabsTrigger value="especificacion">Especificación técnica</TabsTrigger>
+              </TabsList>
+              <TabsContent value="apu">
+                <PestanaApu apuId={selectedApuId} proyectoId={proyecto.id} />
+              </TabsContent>
+              <TabsContent value="insumos">
+                <PestanaInsumos apuId={selectedApuId} />
+              </TabsContent>
+              <TabsContent value="especificacion">
+                <PestanaEspecificacionTecnica apuId={selectedApuId} />
+              </TabsContent>
+            </Tabs>
           </TarjetaTabla>
         }
       />
