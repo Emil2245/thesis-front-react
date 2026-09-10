@@ -1,20 +1,9 @@
-import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
-import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
+import { AdminValoresPageActiva } from "./AdminValoresPageActiva";
 
-// S-41 (valores de referencia) sigue degradada: no hay recurso
-// `/admin/valores-referencia` en origin/main. El hook se borró (plan 050).
-// Ojo: los *parámetros* de sistema son otra pantalla y esos sí existen, en el
-// recurso de proyectos — ver AdminParametrosPage.
-//
-// Para reactivar cuando exista: quita "admin-valores" de MODULOS_SIN_BACKEND.
+// El gate `admin-valores` se retiró en el plan 081: `ValorReferenciaAdminResource`
+// (`/admin/valores-referencia`) existe en el backend (plan 079) y esta página
+// delega directo en `AdminValoresPageActiva`. Los *parámetros* de sistema son
+// otra pantalla — ver AdminParametrosPage.
 export function AdminValoresPage() {
-  return (
-    <>
-      <EncabezadoPagina titulo="Valores de referencia" />
-      <ModuloNoDisponible
-        modulo="La tabla de valores de referencia"
-        descripcion="El servidor no expone todavía los valores de referencia del sistema."
-      />
-    </>
-  );
+  return <AdminValoresPageActiva />;
 }

@@ -1,18 +1,8 @@
-import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
-import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
+import { AdminLogsPageActiva } from "./AdminLogsPageActiva";
 
-// S-42 sigue degradada: no hay recurso de logs de actividad en origin/main. El
-// hook que llamaba a `/admin/logs` se borró (plan 050).
-//
-// Para reactivar cuando exista: quita "admin-logs" de MODULOS_SIN_BACKEND.
+// El gate `admin-logs` se retiró en el plan 081: `LogActividadResource`
+// (`/admin/logs`) existe en el backend (plan 080) y esta página delega
+// directo en `AdminLogsPageActiva`.
 export function AdminLogsPage() {
-  return (
-    <>
-      <EncabezadoPagina titulo="Registro de actividades" />
-      <ModuloNoDisponible
-        modulo="El registro de actividades"
-        descripcion="El servidor no expone todavía el registro de actividades del sistema."
-      />
-    </>
-  );
+  return <AdminLogsPageActiva />;
 }

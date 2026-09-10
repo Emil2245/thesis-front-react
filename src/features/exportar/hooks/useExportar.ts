@@ -60,19 +60,32 @@ const extensionDe = (formato: FormatoExportCronograma) => (formato === "mspdi" ?
  * `formato` de la ET es opcional y su único valor válido es `docx`, así que no
  * se manda. El del cronograma es obligatorio y uno de tres.
  */
+/**
+ * ¿Es un error que **el backend** describió, o uno que se inventó el cliente?
+ * Cuando el cuerpo no era `{codigo, mensaje}`, `client.ts` sintetiza un
+ * `Problem` con `codigo: "sin-respuesta"` y un `mensaje` que viene de axios
+ * **en inglés**. Enseñarlo llevaría «Request failed with status code 500» a una
+ * UI que es es-EC, así que ahí se usa texto propio. Los dos `catch` de abajo lo
+ * comparten y cada uno formatea a su manera.
+ */
+const esErrorDeContrato = (e: unknown): e is ApiError =>
+  e instanceof ApiError && e.problem.codigo !== "sin-respuesta";
+
 export function useExportar() {
   const cliente = useQueryClient();
 
   const descargarEspecificacionesTecnicas = useCallback(async (presupuestoId: string) => {
     try {
+      // Sin `formato`: es opcional en `DocumentoResource` (sólo valida si
+      // llega) y su único valor admitido es `docx`. Mandarlo era contradecir el
+      // comentario de arriba y el propio contrato.
       const { blob, nombreArchivo } = await descargar(
         `/documentos/especificaciones-tecnicas/${presupuestoId}`,
-        { formato: "docx" },
       );
       guardar(blob, nombreArchivo ?? "especificaciones-tecnicas.docx");
     } catch (e) {
       toast.error(
-        e instanceof ApiError ? `${e.problem.codigo}: ${e.problem.mensaje}` : "Error al descargar",
+        esErrorDeContrato(e) ? `${e.problem.codigo}: ${e.problem.mensaje}` : "Error al descargar",
       );
     }
   }, []);
@@ -88,7 +101,7 @@ export function useExportar() {
         // El 409 `export-bloqueado` trae el recuento de bloqueos en `mensaje`:
         // decírselo al usuario es más útil que un genérico, y significa además
         // que el preflight que la pantalla enseña ya no vale.
-        toast.error(e instanceof ApiError ? e.problem.mensaje : "Error al descargar");
+        toast.error(esErrorDeContrato(e) ? e.problem.mensaje : "Error al descargar");
         if (e instanceof ApiError && e.status === 409) {
           await cliente.invalidateQueries({
             queryKey: qk.cronogramaExportPreflight(presupuestoId, formato),

@@ -1,18 +1,8 @@
-import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
-import { ModuloNoDisponible } from "@/components/comunes/ModuloNoDisponible";
+import { AdminPlantillasPageActiva } from "./AdminPlantillasPageActiva";
 
-// S-40 sigue degradada: no hay recurso de plantillas de sistema bajo /admin en
-// origin/main. El hook que llamaba a `/admin/plantillas` se borró (plan 050).
-//
-// Para reactivar cuando exista: quita "admin-plantillas" de MODULOS_SIN_BACKEND.
+// El gate `admin-plantillas` se retiró en el plan 081: `PlantillaApuAdminResource`
+// (`/admin/plantillas-apu`) existe en el backend (plan 078) y esta página
+// delega directo en `AdminPlantillasPageActiva`.
 export function AdminPlantillasPage() {
-  return (
-    <>
-      <EncabezadoPagina titulo="Plantillas del sistema" />
-      <ModuloNoDisponible
-        modulo="La gestión de plantillas del sistema"
-        descripcion="El servidor no expone todavía las plantillas de sistema."
-      />
-    </>
-  );
+  return <AdminPlantillasPageActiva />;
 }

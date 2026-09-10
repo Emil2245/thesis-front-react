@@ -69,6 +69,24 @@ export const usuarioSchema = z
     emailVerificado: z.boolean(),
   })
   .strict();
+
+/**
+ * `GET/POST/PUT /admin/usuarios` (`UsuarioAdminResponse`, plan 077). Id UUID,
+ * a diferencia de `usuarioSchema` (el perfil de sesión, `id: number`) — no es
+ * el mismo DTO aunque comparta forma parcial.
+ */
+export const usuarioAdminSchema = z
+  .object({
+    id: z.string(),
+    nombre: z.string(),
+    email: z.string(),
+    rol: z.enum(["USUARIO", "SUPER_ADMIN"]),
+    activo: z.boolean(),
+    emailVerificado: z.boolean(),
+    fechaCreacion: z.string(),
+  })
+  .strict();
+
 export const tokenSchema = z
   .object({
     accessToken: z.string(),
@@ -149,6 +167,59 @@ export const plantillaApuResumenSchema = z
     unidad: z.string().optional(),
     createdAt: z.string(),
     updatedAt: z.string(),
+  })
+  .strict();
+
+/**
+ * `PlantillaApuAdminResponse` (plan 078). `usuarioId` llega siempre `null`
+ * explícito (`PlantillaApuAdminResponse.from()` lo pasa a pelo), no ausente:
+ * `.nullable()`, no `.optional()`. Igual para `descripcionRubro`, que el
+ * backend no exige en el alta.
+ */
+export const plantillaApuAdminSchema = z
+  .object({
+    id: z.string(),
+    nombre: z.string(),
+    tipo: z.literal("SISTEMA"),
+    usuarioId: z.number().nullable(),
+    descripcionRubro: z.string().nullable(),
+    fechaCreacion: z.string(),
+  })
+  .strict();
+
+/**
+ * `ValorReferenciaAdminResponse` (plan 079). `valor` es `z.string()`, no
+ * `z.number()`: a diferencia de APU/insumo/parámetros, este campo es un
+ * decimal de sólo lectura que viaja y se muestra como string (ADR 9).
+ * `actualizado` es una fecha (`Instant`), no un importe.
+ */
+export const valorReferenciaSchema = z
+  .object({
+    clave: z.string(),
+    valor: z.string(),
+    descripcion: z.string(),
+    fuente: z.string(),
+    actualizado: z.string(),
+  })
+  .strict();
+
+/**
+ * `LogActividadResponse` (plan 080). `usuarioId`, `usuarioNombre` y
+ * `entidadId` llegan `null` explícito, no ausentes (Patrón C invertido): van
+ * `.nullable()`, no `.optional()`. `detalle` es JSON libre que el backend
+ * garantiza sin PII (`LogActividadDetalleValidator`): se valida como
+ * `Record<string, unknown>` y no se interpreta.
+ */
+export const logActividadSchema = z
+  .object({
+    id: z.string(),
+    usuarioId: z.string().nullable(),
+    usuarioNombre: z.string().nullable(),
+    evento: z.string(),
+    entidad: z.string(),
+    entidadId: z.string().nullable(),
+    detalle: z.record(z.unknown()),
+    fecha: z.string(),
   })
   .strict();
 
@@ -259,7 +330,7 @@ export const apuDetalleSchema = z
     cantidad: z.number().nullable().optional(),
     rendimiento: z.number().nullable().optional(),
     unidad: z.string().nullable().optional(),
-    precioEfectivo: z.number(),
+    precioEfectivo: z.number().nullable(),
     precioHeredado: z.boolean(),
     costoHora: z.number().nullable().optional(),
     costo: z.number(),
@@ -274,8 +345,8 @@ export const apuSchema = z
     costoDirecto: z.number(),
     costoTotal: z.number(),
     porcentajeIndirecto: z.number().optional(),
-    porcentajeIndirectoEfectivo: z.number(),
-    costoIndirecto: z.number().optional(),
+    porcentajeIndirectoEfectivo: z.number().optional(),
+    costoIndirecto: z.number(),
     secciones: z.array(
       z
         .object({

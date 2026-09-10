@@ -4,6 +4,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import { SelectorInsumo } from "@/features/apu-editor/components/SelectorInsumo";
 import { server } from "@/test/server";
 import { pagina } from "@/test/handlers";
+import { insumosBusquedaFixture } from "@/test/fixtures/insumos";
 import { http, HttpResponse } from "msw";
 
 const API = "*/api/v1";
@@ -46,14 +47,14 @@ describe("SelectorInsumo", () => {
     server.use(
       http.get(`${API}/proyectos/:id/insumos/selector`, () =>
         HttpResponse.json(
+          // Se parte de la fixture canónica y sólo se cambia lo que este caso
+          // prueba. Escrito a mano le faltaban `fechaActualizacion` y
+          // `desactualizado`, que `insumoBusquedaSchema` exige por ser
+          // `.strict()`: la respuesta se rechazaba y la lista salía vacía.
           pagina([
             {
-              id: "018f8a20-0000-7000-8000-000000000100",
-              codigo: "C-001",
+              ...insumosBusquedaFixture[0],
               descripcion: "Cemento IESS",
-              tipo: "MATERIAL",
-              unidad: "kg",
-              precioUnitario: 11.2,
               fuente: "CENTRAL",
               baseNombre: "Base IESS 2026",
             },

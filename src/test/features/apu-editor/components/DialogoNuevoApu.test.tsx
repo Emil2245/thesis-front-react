@@ -4,6 +4,7 @@ import { screen, waitFor } from "@testing-library/react";
 import { DialogoNuevoApu } from "@/features/apu-editor/components/DialogoNuevoApu";
 import { server } from "@/test/server";
 import { http, HttpResponse } from "msw";
+import { parametrosFixture } from "@/test/fixtures/proyectos";
 
 const API = "*/api/v1";
 
@@ -196,18 +197,14 @@ describe("DialogoNuevoApu", () => {
   it("AUTOGENERADO mode shows disabled codigo field", async () => {
     server.use(
       http.get(`${API}/proyectos/:id/parametros`, () =>
-        HttpResponse.json({
-          modoCodigoRubro: "AUTOGENERADO",
-          porcentajeHerramientaMenor: "0.050000",
-          iva: "0.120000",
-          moneda: "USD",
-          mostrarSeccionesVacias: true,
-          sufijosSeccionActivos: false,
-          mostrarSubtotalesSeccion: true,
-          mostrarSubtotalesPie: true,
-          mostrarNombreProyectoHeader: false,
-          enumerarApus: false,
-        }),
+        // Sólo se cambia lo que este caso prueba. Escrito a mano mandaba
+        // `porcentajeHerramientaMenor` e `iva` como **string** y sin
+        // `proyectoId` ni `mensajeFooter`, y `parametrosProyectoSchema`
+        // (`.strict()`, números) lo rechazaba: `useParametros` no devolvía
+        // datos, `modoAuto` quedaba en `false` y el campo nunca se
+        // deshabilitaba. El test decía «AUTOGENERADO» y probaba el camino de
+        // error.
+        HttpResponse.json({ ...parametrosFixture, modoCodigoRubro: "AUTOGENERADO" }),
       ),
     );
 

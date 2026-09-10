@@ -40,12 +40,74 @@ Each plan is written for an executor with **zero context from the session that p
 > - **Antes de cualquier cosa:** `git fetch --all` en `../thesis-back-quarkus` y comparar
 >   `origin/main` con el commit que cita el handoff. El backend se mueve rápido; tres análisis
 >   ya se hicieron contra ramas o commits equivocados.
-> - **Gate de verificación:** `npm run typecheck`, nunca `npx tsc --noEmit` (no comprueba nada).
+> - **Gate de verificación:** `pnpm run typecheck`, nunca `npx tsc --noEmit` (no comprueba nada).
+>   `pnpm` siempre, `npm` nunca.
 > - **Inventario medido** (roadmap, 44 pantallas, 92 endpoints, tests, shadcn, responsive):
 >   [`INVENTARIO-COBERTURA.md`](INVENTARIO-COBERTURA.md).
 > - **Bloqueado por decisión de producto:** [`056`](056-decidir-y-cerrar-responsive.md) (responsive).
 
 ---
+
+## Rama administrativa 077–081 — CERRADA (2026-09-10)
+
+Los cinco planes están **DONE y mergeados** en `plans/077-081`, y sus archivos **salieron de
+`plans/pendientes/`** al raíz de `plans/`, que es donde viven los planes ya ejecutados. Encargo:
+[`PROMPT-ORQUESTADOR-077-081.md`](PROMPT-ORQUESTADOR-077-081.md). Relato en
+[`BITACORA.md`](BITACORA.md); cierre punto por punto en
+[`ESTADO-EJECUCION-077-081.md`](ESTADO-EJECUCION-077-081.md).
+
+| Plan | Qué dejó |
+| --- | --- |
+| [`077`](077-usuarios-e-invitaciones.md) | `/admin/usuarios`: listar, invitar, editar, desactivar, reactivar, eliminar |
+| [`078`](078-plantillas-APU-de-sistema.md) | `/admin/plantillas`: alta desde un APU por cascada proyecto→versión→APU |
+| [`079`](079-valores-de-referencia.md) | `/admin/valores`: upsert por clave que distingue 201 de 200 |
+| [`080`](080-logs-de-actividad.md) | `/admin/logs`: tabla de sólo lectura con filtros AND |
+| [`081`](081-retirar-gates-admin.md) | `MODULOS_SIN_BACKEND` vacío; las cuatro páginas encendidas |
+
+### Las cuatro mentiras que traían estos planes
+
+**Ninguna se detectó leyendo los planes: se detectaron comparándolos con el código y con el backend
+real.** Están aquí porque **083–089 se escribieron igual, el mismo día y con el mismo formato**, así
+que lo más probable es que arrastren las mismas. Quien los ejecute: compruébalas antes de despachar
+nada.
+
+1. **«La página ya es un wrapper de disponibilidad.»** Los cinco planes lo daban por hecho. **No
+   existía ninguno.** Las cuatro páginas admin renderizaban `ModuloNoDisponible` de forma
+   incondicional, con el texto a mano, y `MODULOS_SIN_BACKEND` tenía **un solo consumidor real**:
+   la insignia «pronto» del `Sidebar`. Es decir, vaciar el `Set` en 081 —que era literalmente el
+   objetivo del plan— **no habría encendido nada**. Ningún `*PageActiva` existía, pese a que
+   `AGENTS.md` lo documentaba como convención.
+2. **«Normaliza la `Page` del backend.»** Ya estaba normalizada: `src/api/client.ts` traduce
+   `{items,total}` → `{contenido,totalElementos}` en un interceptor, y `src/api/request.ts:15` lo
+   avisa por escrito. Un ejecutor obediente la habría normalizado **dos veces** y roto
+   `paginaDe()`, que es `.strict()`.
+3. **«Toda ruta de listado mockeada lleva `*` al final, en MSW y en Playwright.»** Lo decía
+   `AGENTS.md` y los planes lo repetían. **En MSW es falso**: `http.get()` casa por *pathname* e
+   ignora el query string, **ninguno de los 51 handlers** del repo lo lleva, y añadirlo sería peor,
+   porque `${API}/admin/usuarios*` capturaría también `/admin/usuarios/:id`. En Playwright sí es
+   real. `AGENTS.md` ya está corregido.
+4. **STOP conditions sobre premisas falsas.** Dos planes se habrían detenido en seco por
+   condiciones que no se cumplían: 078 («crear exige un selector no disponible» — cierto que no hay
+   listado global de APUs, pero se resuelve con tres hooks que ya existían) y 079 («el upsert no
+   permite determinar la creación» — sí lo permite, 201 frente a 200, comprobado por `curl`). Una
+   STOP condition mal calibrada no protege: bloquea trabajo entregable.
+
+**Bonus, y el peor de todos:** la §08 del plan 080 mandaba **editar
+`src/test/features/admin/pages/paginas-admin.test.tsx`**, que es justo el test que garantizaba que
+las páginas con gate no lanzaran peticiones, y su §06 pedía «reemplazar el wrapper por export
+activo», lo que **habría abierto el gate antes de 081**. Entregado tal cual, habría producido
+exactamente el defecto que toda esta rama intenta evitar: relajar una prueba para que pase el
+código.
+
+### Cómo se revisó, que es la parte reutilizable
+
+**Ningún plan se aprobó por el informe de su ejecutor.** En cada uno se re-corrieron los criterios,
+se comparó `git diff --stat` contra la lista de archivos en alcance, se leyó el diff completo y
+—esto es lo que encontró el único fallo grave— **se rompió el código a propósito para ver si los
+tests lo cazaban**. En 077, el test del 409 al eliminar seguía **verde** con el botón «Eliminar»
+neutralizado a `() => {}`: no afirmaba nada. Es el Patrón D de [`../docs/bugs.md`](../docs/bugs.md)
+y ninguna suite verde lo habría delatado.
+
 
 ## Execution order and dependencies
 

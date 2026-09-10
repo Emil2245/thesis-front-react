@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const editarSchema = z.object({
   nombreProyecto: z.string().min(1, "El nombre es obligatorio"),
@@ -112,7 +113,11 @@ export function DialogoEditarProyecto({
           </Field>
           <Field>
             <Label htmlFor="edit-fechaInicio">Fecha de inicio</Label>
-            <Input id="edit-fechaInicio" type="date" {...form.register("fechaInicio")} />
+            <DatePicker
+              id="edit-fechaInicio"
+              value={form.watch("fechaInicio")}
+              onChange={(v) => form.setValue("fechaInicio", v)}
+            />
           </Field>
           <div className="grid grid-cols-2 gap-4">
             <Field>

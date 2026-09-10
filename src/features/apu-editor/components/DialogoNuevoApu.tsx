@@ -74,6 +74,11 @@ export function DialogoNuevoApu({
     } catch (e) {
       if (e instanceof ApiError && e.is("codigo-duplicado")) {
         setCodigoError("El código ya existe");
+      } else {
+        console.error("[DialogoNuevoApu] Error al crear APU:", e);
+        toast.error("Error al crear APU", {
+          description: e instanceof ApiError ? e.problem.mensaje : String(e),
+        });
       }
     }
   };

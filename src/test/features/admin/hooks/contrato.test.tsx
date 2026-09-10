@@ -3,10 +3,18 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { http, HttpResponse } from "msw";
+import { toast } from "sonner";
 
 import { crearQueryClient } from "@/test/render";
 import { espiar, ultima, cuerpoInvalido } from "@/test/espia";
-import { basesCentralesFixtureAdmin, parametrosSistemaFixture } from "@/test/fixtures/admin";
+import {
+  basesCentralesFixtureAdmin,
+  parametrosSistemaFixture,
+  usuariosAdminFixture,
+  plantillasAdminFixture,
+  valoresReferenciaFixture,
+  logsActividadFixture,
+} from "@/test/fixtures/admin";
 import { ApiError } from "@/api/problem";
 import { server } from "@/test/server";
 import {
@@ -21,6 +29,25 @@ import {
   useParametrosSistema,
   useActualizarParametros,
 } from "@/features/admin/hooks/useParametrosSistema";
+import {
+  useUsuariosAdmin,
+  useInvitarUsuario,
+  useEditarUsuario,
+  useEliminarUsuario,
+} from "@/features/admin/hooks/useUsuariosAdmin";
+import {
+  usePlantillasAdmin,
+  useCrearPlantillaAdmin,
+  useEditarPlantillaAdmin,
+  useEliminarPlantillaAdmin,
+} from "@/features/admin/hooks/usePlantillasAdmin";
+import {
+  useValoresReferencia,
+  useGuardarValorReferencia,
+  useEliminarValorReferencia,
+} from "@/features/admin/hooks/useValoresReferencia";
+import { useLogsActividad } from "@/features/admin/hooks/useLogsActividad";
+import { USUARIO_CON_PROYECTOS, VALOR_INEXISTENTE } from "@/test/handlers";
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
@@ -200,7 +227,26 @@ describe("contrato de useParametrosSistema", () => {
     const peticiones = espiar();
 
     const { result } = renderHook(() => useActualizarParametros(), { wrapper });
-    await result.current.mutateAsync({ ...parametrosSistemaFixture });
+    // Sólo los doce campos de `ParametrosSistemaEditarRequest`, que es lo que
+    // manda `AdminParametrosPage`. Antes esto hacía `{ ...parametrosSistemaFixture }`
+    // y pasaba de milagro: la fixture tenía justo doce campos porque le faltaban
+    // los diez que el backend sí devuelve (`id`, `updatedAt`, los booleanos de
+    // display…). Con la fixture completa, el spread colaba esos diez en el PUT y
+    // el handler estricto los rechazaba, con razón.
+    await result.current.mutateAsync({
+      porcentajeHerramientaMenor: parametrosSistemaFixture.porcentajeHerramientaMenor,
+      porcentajeIndirecto: parametrosSistemaFixture.porcentajeIndirecto,
+      iva: parametrosSistemaFixture.iva,
+      rangoHmMin: parametrosSistemaFixture.rangoHmMin,
+      rangoHmMax: parametrosSistemaFixture.rangoHmMax,
+      rangoCiMin: parametrosSistemaFixture.rangoCiMin,
+      rangoCiMax: parametrosSistemaFixture.rangoCiMax,
+      rangoDescuentoMin: parametrosSistemaFixture.rangoDescuentoMin,
+      rangoDescuentoMax: parametrosSistemaFixture.rangoDescuentoMax,
+      rangoIvaMin: parametrosSistemaFixture.rangoIvaMin,
+      rangoIvaMax: parametrosSistemaFixture.rangoIvaMax,
+      moneda: parametrosSistemaFixture.moneda,
+    });
 
     const p = ultima(peticiones, "PUT", "/parametros-sistema");
     expect(p?.ruta).toBe(`${RUTA}/proyectos/parametros-sistema`);
@@ -231,5 +277,492 @@ describe("contrato de useParametrosSistema", () => {
 
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).status).toBe(400);
+  });
+});
+
+// `UsuarioAdminResource` (plan 077): el gate `admin-usuarios` sigue cerrado
+// (`MODULOS_SIN_BACKEND`), pero el contrato ya se prueba a nivel de hook,
+// igual que Bases lo hizo mientras esperaba activarse.
+describe("contrato de useUsuariosAdmin", () => {
+  it("lista con GET /admin/usuarios y manda page y size explícitos", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useUsuariosAdmin(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const p = ultima(peticiones, "GET", "/admin/usuarios");
+    expect(p?.ruta).toBe(`${RUTA}/admin/usuarios`);
+    expect(p?.url.searchParams.get("page")).toBe("0");
+    expect(p?.url.searchParams.get("size")).toBe("25");
+  });
+
+  it("devuelve la página normalizada con los usuarios del fixture", async () => {
+    const { result } = renderHook(() => useUsuariosAdmin(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.contenido).toHaveLength(usuariosAdminFixture.length);
+    expect(result.current.data?.totalElementos).toBe(usuariosAdminFixture.length);
+  });
+
+  it("manda el filtro q como query param", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useUsuariosAdmin({ q: "ana" }), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(ultima(peticiones, "GET", "/admin/usuarios")?.url.searchParams.get("q")).toBe("ana");
+  });
+
+  it("invita con POST /admin/usuarios y un cuerpo de nombre, email y rol", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useInvitarUsuario(), { wrapper });
+    await result.current.mutateAsync({
+      nombre: "Nuevo Usuario",
+      email: "nuevo@example.com",
+      rol: "USUARIO",
+    });
+
+    const p = ultima(peticiones, "POST", "/admin/usuarios");
+    expect(p?.ruta).toBe(`${RUTA}/admin/usuarios`);
+    await waitFor(() =>
+      expect(p?.cuerpo).toEqual({
+        nombre: "Nuevo Usuario",
+        email: "nuevo@example.com",
+        rol: "USUARIO",
+      }),
+    );
+  });
+
+  // Un campo de más (aquí, un email en el alta con una clave distinta) es un
+  // 400 del handler estricto, no un éxito silencioso.
+  it("un campo desconocido al invitar es un 400, no un éxito silencioso", async () => {
+    const { result } = renderHook(() => useInvitarUsuario(), { wrapper });
+
+    const error = await result.current
+      .mutateAsync(cuerpoInvalido({ nombre: "X", email: "x@x.com", rol: "USUARIO", activo: true }))
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).status).toBe(400);
+  });
+
+  // El PUT nunca manda `email`: no es editable por este endpoint aunque el
+  // backend real lo ignore en silencio si se lo mandan.
+  it("edita con PUT /admin/usuarios/{id} sin mandar email nunca", async () => {
+    const peticiones = espiar();
+    const objetivo = usuariosAdminFixture[1];
+
+    const { result } = renderHook(() => useEditarUsuario(), { wrapper });
+    await result.current.mutateAsync({
+      id: objetivo.id,
+      nombre: "Editado",
+      rol: "USUARIO",
+      activo: true,
+    });
+
+    const p = ultima(peticiones, "PUT", `/admin/usuarios/${objetivo.id}`);
+    expect(p?.ruta).toBe(`${RUTA}/admin/usuarios/${objetivo.id}`);
+    await waitFor(() =>
+      expect(p?.cuerpo).toEqual({ nombre: "Editado", rol: "USUARIO", activo: true }),
+    );
+  });
+
+  it("elimina con DELETE /admin/usuarios/{id}", async () => {
+    const peticiones = espiar();
+    const objetivo = usuariosAdminFixture[1];
+
+    const { result } = renderHook(() => useEliminarUsuario(), { wrapper });
+    await result.current.mutateAsync(objetivo.id);
+
+    expect(ultima(peticiones, "DELETE", `/admin/usuarios/${objetivo.id}`)?.ruta).toBe(
+      `${RUTA}/admin/usuarios/${objetivo.id}`,
+    );
+  });
+
+  // TC-12-P38-03: borrar un usuario con proyectos propios es un 409, no un
+  // 204 silencioso.
+  it("eliminar un usuario con proyectos propios es un 409 usuario-con-proyectos-impedido", async () => {
+    const { result } = renderHook(() => useEliminarUsuario(), { wrapper });
+
+    const error = await result.current.mutateAsync(USUARIO_CON_PROYECTOS).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).status).toBe(409);
+    expect((error as ApiError).slug).toBe("usuario-con-proyectos-impedido");
+  });
+});
+
+// `PlantillaApuAdminResource` (plan 078): mismo molde que usuarios (077),
+// mismo gate cerrado (`admin-plantillas`, plan 081).
+describe("contrato de usePlantillasAdmin", () => {
+  it("lista con GET /admin/plantillas-apu y manda siempre tipo=SISTEMA", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => usePlantillasAdmin(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const p = ultima(peticiones, "GET", "/admin/plantillas-apu");
+    expect(p?.ruta).toBe(`${RUTA}/admin/plantillas-apu`);
+    expect(p?.url.searchParams.get("tipo")).toBe("SISTEMA");
+    expect(p?.url.searchParams.get("page")).toBe("0");
+    expect(p?.url.searchParams.get("size")).toBe("25");
+  });
+
+  // `usuarioId` llega siempre `null` explícito, no ausente (Patrón C): el
+  // fixture y el schema lo declaran `.nullable()`, no `.optional()`.
+  it("devuelve la página normalizada con usuarioId null explícito", async () => {
+    const { result } = renderHook(() => usePlantillasAdmin(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.contenido).toHaveLength(plantillasAdminFixture.length);
+    expect(result.current.data?.totalElementos).toBe(plantillasAdminFixture.length);
+    expect(result.current.data?.contenido[0].usuarioId).toBeNull();
+  });
+
+  it("manda el filtro q como query param", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => usePlantillasAdmin({ q: "porcelanato" }), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(ultima(peticiones, "GET", "/admin/plantillas-apu")?.url.searchParams.get("q")).toBe(
+      "porcelanato",
+    );
+  });
+
+  it("crea con POST /admin/plantillas-apu y un cuerpo de solo desdeApuId, nombre y descripcionRubro", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useCrearPlantillaAdmin(), { wrapper });
+    await result.current.mutateAsync({
+      desdeApuId: "018f8a20-0000-7000-8000-000000000001",
+      nombre: "Plantilla nueva",
+      descripcionRubro: "Descripción reutilizable",
+    });
+
+    const p = ultima(peticiones, "POST", "/admin/plantillas-apu");
+    expect(p?.ruta).toBe(`${RUTA}/admin/plantillas-apu`);
+    await waitFor(() =>
+      expect(p?.cuerpo).toEqual({
+        desdeApuId: "018f8a20-0000-7000-8000-000000000001",
+        nombre: "Plantilla nueva",
+        descripcionRubro: "Descripción reutilizable",
+      }),
+    );
+  });
+
+  it("un campo desconocido al crear es un 400, no un éxito silencioso", async () => {
+    const { result } = renderHook(() => useCrearPlantillaAdmin(), { wrapper });
+
+    const error = await result.current
+      .mutateAsync(
+        cuerpoInvalido({
+          desdeApuId: "018f8a20-0000-7000-8000-000000000001",
+          nombre: "X",
+          tipo: "PERSONAL",
+        }),
+      )
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).status).toBe(400);
+  });
+
+  // El PUT es semántica de presencia (§9 del plan 078): editar sólo la
+  // descripción NO debe mandar la clave `nombre`, y viceversa. Un `!== null`
+  // o un objeto completo aquí sería el Patrón C en el lado del request.
+  it("edita sólo la descripción con PUT /admin/plantillas-apu/{id} sin mandar nombre", async () => {
+    const peticiones = espiar();
+    const objetivo = plantillasAdminFixture[0];
+
+    const { result } = renderHook(() => useEditarPlantillaAdmin(), { wrapper });
+    await result.current.mutateAsync({ id: objetivo.id, descripcionRubro: "Nueva descripción" });
+
+    const p = ultima(peticiones, "PUT", `/admin/plantillas-apu/${objetivo.id}`);
+    expect(p?.ruta).toBe(`${RUTA}/admin/plantillas-apu/${objetivo.id}`);
+    await waitFor(() => expect(p?.cuerpo).toEqual({ descripcionRubro: "Nueva descripción" }));
+    expect(p?.cuerpo).not.toHaveProperty("nombre");
+  });
+
+  it("edita sólo el nombre con PUT /admin/plantillas-apu/{id} sin mandar descripcionRubro", async () => {
+    const peticiones = espiar();
+    const objetivo = plantillasAdminFixture[0];
+
+    const { result } = renderHook(() => useEditarPlantillaAdmin(), { wrapper });
+    await result.current.mutateAsync({ id: objetivo.id, nombre: "Nombre editado" });
+
+    const p = ultima(peticiones, "PUT", `/admin/plantillas-apu/${objetivo.id}`);
+    await waitFor(() => expect(p?.cuerpo).toEqual({ nombre: "Nombre editado" }));
+    expect(p?.cuerpo).not.toHaveProperty("descripcionRubro");
+  });
+
+  it("elimina con DELETE /admin/plantillas-apu/{id}", async () => {
+    const peticiones = espiar();
+    const objetivo = plantillasAdminFixture[0];
+
+    const { result } = renderHook(() => useEliminarPlantillaAdmin(), { wrapper });
+    await result.current.mutateAsync(objetivo.id);
+
+    expect(ultima(peticiones, "DELETE", `/admin/plantillas-apu/${objetivo.id}`)?.ruta).toBe(
+      `${RUTA}/admin/plantillas-apu/${objetivo.id}`,
+    );
+  });
+});
+
+// `ValorReferenciaAdminResource` (plan 079): mismo molde que plantillas
+// (078), mismo gate cerrado (`admin-valores`, plan 081).
+describe("contrato de useValoresReferencia", () => {
+  it("lista con GET /admin/valores-referencia y NO manda q", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useValoresReferencia(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const p = ultima(peticiones, "GET", "/admin/valores-referencia");
+    expect(p?.ruta).toBe(`${RUTA}/admin/valores-referencia`);
+    expect(p?.url.searchParams.get("page")).toBe("0");
+    expect(p?.url.searchParams.get("size")).toBe("25");
+    expect(p?.url.searchParams.has("q")).toBe(false);
+  });
+
+  it("devuelve la página normalizada con valor como string", async () => {
+    const { result } = renderHook(() => useValoresReferencia(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.contenido).toHaveLength(valoresReferenciaFixture.length);
+    expect(result.current.data?.totalElementos).toBe(valoresReferenciaFixture.length);
+    expect(result.current.data?.contenido[0].valor).toBe(valoresReferenciaFixture[0].valor);
+    expect(typeof result.current.data?.contenido[0].valor).toBe("string");
+  });
+
+  // §9bis: el upsert distingue creación de actualización sólo por el status.
+  // Una clave ya sembrada → 200; una clave nueva → 201. La UI no debe
+  // adivinarlo mirando la lista.
+  it("actualiza (200, creado=false) con PUT /admin/valores-referencia/{clave} sobre una clave existente", async () => {
+    const peticiones = espiar();
+    const objetivo = valoresReferenciaFixture[0];
+
+    const { result } = renderHook(() => useGuardarValorReferencia(), { wrapper });
+    const respuesta = await result.current.mutateAsync({
+      clave: objetivo.clave,
+      valor: "500.00",
+      descripcion: "Descripción actualizada",
+      fuente: "Fuente actualizada",
+    });
+
+    expect(respuesta.creado).toBe(false);
+    expect(toast.success).toHaveBeenCalledWith("Valor actualizado");
+    const p = ultima(peticiones, "PUT", `/admin/valores-referencia/${objetivo.clave}`);
+    expect(p?.ruta).toBe(`${RUTA}/admin/valores-referencia/${objetivo.clave}`);
+    await waitFor(() =>
+      expect(p?.cuerpo).toEqual({
+        valor: "500.00",
+        descripcion: "Descripción actualizada",
+        fuente: "Fuente actualizada",
+      }),
+    );
+    expect(p?.cuerpo).not.toHaveProperty("clave");
+  });
+
+  it("crea (201, creado=true) con PUT /admin/valores-referencia/{clave} sobre una clave nueva", async () => {
+    const { result } = renderHook(() => useGuardarValorReferencia(), { wrapper });
+    const respuesta = await result.current.mutateAsync({
+      clave: "NUEVA_CLAVE",
+      valor: "1.6",
+      descripcion: "Descripción nueva",
+      fuente: "Fuente nueva",
+    });
+
+    expect(respuesta.creado).toBe(true);
+    expect(toast.success).toHaveBeenCalledWith("Valor creado");
+  });
+
+  // Una clave con "/" es la prueba real de la codificación: sin
+  // `encodeURIComponent` parte la ruta en un segmento de más y la petición no
+  // casa con `:clave` en absoluto (MSW la rechaza por no tener handler). Un
+  // espacio no sirve para esto: `URL` lo normaliza a `%20` igual sin ayuda.
+  it("codifica la clave en la ruta", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useGuardarValorReferencia(), { wrapper });
+    await result.current.mutateAsync({
+      clave: "A/B",
+      valor: "1",
+      descripcion: "d",
+      fuente: "f",
+    });
+
+    expect(
+      ultima(peticiones, "PUT", `/admin/valores-referencia/${encodeURIComponent("A/B")}`)?.ruta,
+    ).toBe(`${RUTA}/admin/valores-referencia/${encodeURIComponent("A/B")}`);
+  });
+
+  it("un campo desconocido al guardar es un 400, no un éxito silencioso", async () => {
+    const { result } = renderHook(() => useGuardarValorReferencia(), { wrapper });
+
+    const error = await result.current
+      .mutateAsync(
+        cuerpoInvalido({
+          clave: "SBU",
+          valor: "1",
+          descripcion: "d",
+          fuente: "f",
+          extra: "no-deberia-ir",
+        }),
+      )
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).status).toBe(400);
+  });
+
+  it("elimina con DELETE /admin/valores-referencia/{clave}", async () => {
+    const peticiones = espiar();
+    const objetivo = valoresReferenciaFixture[0];
+
+    const { result } = renderHook(() => useEliminarValorReferencia(), { wrapper });
+    await result.current.mutateAsync(objetivo.clave);
+
+    expect(ultima(peticiones, "DELETE", `/admin/valores-referencia/${objetivo.clave}`)?.ruta).toBe(
+      `${RUTA}/admin/valores-referencia/${objetivo.clave}`,
+    );
+  });
+
+  it("borrar una clave inexistente es un 404, no un 204 silencioso", async () => {
+    const { result } = renderHook(() => useEliminarValorReferencia(), { wrapper });
+
+    const error = await result.current.mutateAsync(VALOR_INEXISTENTE).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).status).toBe(404);
+    expect((error as ApiError).slug).toBe("no-encontrado");
+  });
+});
+
+// `LogActividadResource` (plan 080): mismo molde de sólo lectura que
+// valores de referencia, sin mutaciones. Mismo gate cerrado (`admin-logs`).
+describe("contrato de useLogsActividad", () => {
+  it("lista con GET /admin/logs y manda page y size explícitos", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useLogsActividad(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const p = ultima(peticiones, "GET", "/admin/logs");
+    expect(p?.ruta).toBe(`${RUTA}/admin/logs`);
+    expect(p?.url.searchParams.get("page")).toBe("0");
+    expect(p?.url.searchParams.get("size")).toBe("25");
+  });
+
+  // Patrón C invertido (§05 del plan 080): `usuarioId`/`usuarioNombre` y
+  // `entidadId` llegan `null` explícito, no ausentes.
+  it("devuelve la página normalizada con los ocho campos, nulls explícitos incluidos", async () => {
+    const { result } = renderHook(() => useLogsActividad(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.contenido).toHaveLength(logsActividadFixture.length);
+    expect(result.current.data?.totalElementos).toBe(logsActividadFixture.length);
+    expect(result.current.data?.contenido[0].entidadId).toBeNull();
+    expect(result.current.data?.contenido[1].usuarioId).toBeNull();
+    expect(result.current.data?.contenido[1].usuarioNombre).toBeNull();
+    expect(result.current.data?.contenido[1].entidadId).toBe(logsActividadFixture[1].entidadId);
+  });
+
+  it("no manda ningún filtro cuando no se pide ninguno", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useLogsActividad(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const p = ultima(peticiones, "GET", "/admin/logs");
+    expect(p?.url.searchParams.has("usuarioId")).toBe(false);
+    expect(p?.url.searchParams.has("evento")).toBe(false);
+    expect(p?.url.searchParams.has("desde")).toBe(false);
+    expect(p?.url.searchParams.has("hasta")).toBe(false);
+  });
+
+  // Un filtro vacío se omite, no viaja como cadena vacía: `evento=""` no
+  // casa `^[a-z0-9._-]+$` en el backend y sería un 400 gratis.
+  it("omite evento y usuarioId cuando llegan como cadena vacía", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useLogsActividad({ evento: "", usuarioId: "" }), {
+      wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const p = ultima(peticiones, "GET", "/admin/logs");
+    expect(p?.url.searchParams.has("evento")).toBe(false);
+    expect(p?.url.searchParams.has("usuarioId")).toBe(false);
+  });
+
+  it("manda usuarioId, evento, desde y hasta como query params cuando se piden", async () => {
+    const peticiones = espiar();
+    const objetivo = logsActividadFixture[0];
+
+    const { result } = renderHook(
+      () =>
+        useLogsActividad({
+          usuarioId: objetivo.usuarioId ?? undefined,
+          evento: objetivo.evento,
+          desde: "2026-09-01T00:00:00.000Z",
+          hasta: "2026-09-30T23:59:59.999Z",
+        }),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const p = ultima(peticiones, "GET", "/admin/logs");
+    expect(p?.url.searchParams.get("usuarioId")).toBe(objetivo.usuarioId);
+    expect(p?.url.searchParams.get("evento")).toBe(objetivo.evento);
+    expect(p?.url.searchParams.get("desde")).toBe("2026-09-01T00:00:00.000Z");
+    expect(p?.url.searchParams.get("hasta")).toBe("2026-09-30T23:59:59.999Z");
+  });
+
+  // El backend real (curl, 2026-09-10) manda `codigo:"validacion"` fijo y el
+  // motivo específico en `mensaje` — no al revés. `.slug` lee `codigo`.
+  it("un evento con formato inválido es un 400 validacion con mensaje evento-formato-invalido", async () => {
+    const { result } = renderHook(() => useLogsActividad({ evento: "Auth Login" }), { wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    const error = result.current.error as ApiError;
+    expect(error.status).toBe(400);
+    expect(error.slug).toBe("validacion");
+    expect(error.problem.mensaje).toBe("evento-formato-invalido");
+  });
+
+  it("un rango de fechas invertido es un 400 validacion con mensaje rango-fechas-invalido", async () => {
+    const { result } = renderHook(
+      () =>
+        useLogsActividad({
+          desde: "2026-09-30T00:00:00.000Z",
+          hasta: "2026-09-01T00:00:00.000Z",
+        }),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    const error = result.current.error as ApiError;
+    expect(error.status).toBe(400);
+    expect(error.slug).toBe("validacion");
+    expect(error.problem.mensaje).toBe("rango-fechas-invalido");
+  });
+
+  it("un 403 por rol insuficiente se propaga como ApiError", async () => {
+    server.use(
+      http.get("*/api/v1/admin/logs", () =>
+        HttpResponse.json(
+          { codigo: "acceso-denegado", mensaje: "No posee los permisos necesarios" },
+          { status: 403 },
+        ),
+      ),
+    );
+
+    const { result } = renderHook(() => useLogsActividad(), { wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect((result.current.error as ApiError).status).toBe(403);
+    expect((result.current.error as ApiError).slug).toBe("acceso-denegado");
   });
 });

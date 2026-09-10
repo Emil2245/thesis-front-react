@@ -5,29 +5,17 @@
  * centrales presentes. Quitar uno de este conjunto es lo único que hace falta
  * para encenderlo.
  *
- * Dos motivos distintos conviven aquí, y no conviene confundirlos:
- *
- * - Backend presente y front ya alineado: ya no queda ninguno aquí.
- *   "plantillas" salió con el plan 048 (`PlantillaApuResource` sirve los cuatro
- *   endpoints en origin/main y el front los llama con ids UUID) y
- *   "plantillas-proyecto" con el plan 049.
- * - Backend parcial, y aun así encendido: "documentos" salió del conjunto con el
- *   plan 051. El backend solo genera la especificación técnica en DOCX, pero la
- *   genera de verdad, y la pantalla dice en su propio texto qué falta. Un módulo
- *   que funciona a medias no es lo mismo que uno que no existe.
- * «admin» ya no es una sola clave (plan 050). Dentro del grupo convivían una
- * pantalla con backend completo —bases centrales, `AdminBaseCentralResource`—
- * y cuatro sin ningún endpoint, así que la clave gruesa apagaba la única que
- * funcionaba. El gate es por página: `admin-usuarios`, `admin-plantillas`,
- * `admin-valores` y `admin-logs`. Bases y Parámetros no aparecen porque su
- * backend existe.
+ * Vacío desde el plan 081: las últimas cuatro claves («admin-usuarios»,
+ * «admin-plantillas», «admin-valores», «admin-logs») cerraban el gate de las
+ * pantallas de administración construidas por los planes 077–080. Sus cuatro
+ * backends (`UsuarioAdminResource`, `PlantillaApuAdminResource`,
+ * `ValorReferenciaAdminResource`, `LogActividadResource`) ya existen y las
+ * cuatro `AdminXPageActiva` ya los consumían; sólo faltaba retirar la clave.
+ * El tipo y el `Set` se conservan vacíos —no se borran— porque el patrón de
+ * degradación por página (plan 050) sigue documentado en `AGENTS.md` y volverá
+ * a hacer falta la próxima vez que un módulo se adelante a su backend.
  */
-export const MODULOS_SIN_BACKEND = new Set([
-  "admin-usuarios",
-  "admin-plantillas",
-  "admin-valores",
-  "admin-logs",
-] as const);
+export const MODULOS_SIN_BACKEND = new Set([] as const);
 
 export type ModuloSinBackend = typeof MODULOS_SIN_BACKEND extends Set<infer T> ? T : never;
 

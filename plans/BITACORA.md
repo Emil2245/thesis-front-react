@@ -1,15 +1,184 @@
 # Bitácora
 
-> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). Los Planes 085 y 086 están cerrados e integrados; el Plan 087 es la siguiente tarea pendiente y aún no se inicia.
+> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). Los Planes 077–087 están cerrados e integrados; el Plan 088 es la siguiente tarea pendiente.
 
-**Encargo activo: siguiente tarea pendiente, Plan 087** · **Actualizada:** 2026-09-09
-**Ronda de paridad 1** · **CERRADA** · **Backend alineado hasta:** **`5673615`**
+**Encargo activo: siguiente tarea pendiente, Plan 088** · **Actualizada:** 2026-09-10
+**Ronda de paridad 1** · **CERRADA**
 
 > La lleva el orquestador ([`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md)). Se escribe **en el momento** en que
 > algo cambia de estado, no al final de la sesión: si la sesión se corta, lo que no está escrito
 > aquí no ocurrió.
 >
 > Estados: `⏳ pendiente` · `🔄 en curso` · `🟡 vuelto, sin revisar` · `❌ rechazado` · `✅ verde`
+
+## Integración de Planes 077–081 en main (2026-09-10)
+
+- La rama `origin/plans/077-081` se integró sobre el `main` que ya contenía 082–087.
+- Los conflictos de contratos APU se resolvieron contra el DTO backend vigente: `costoIndirecto` es requerido y `porcentajeIndirectoEfectivo` se omite cuando el valor efectivo es nulo.
+- Se conservaron tanto las implementaciones administrativas como las vistas y flujos posteriores de workspace y cronograma.
+
+## Cierre del Plan 087 (2026-09-10)
+
+- Plan 087 queda **✅ verde / IMPLEMENTADO E INTEGRADO**: consume una sola proyección `GET /cronogramas/{id}/vistas` y presenta Gantt jerárquico, valorizado y curva S sin recalcular dinero ni avances en el cliente.
+- La verificación focalizada pasó con 58 tests en 7 archivos; lint, guard ADR9 y `git diff --check` pasaron.
+
+## Rama administrativa 077–081: reactivada (2026-09-10)
+
+Encargo: [`PROMPT-ORQUESTADOR-077-081.md`](PROMPT-ORQUESTADOR-077-081.md). **El usuario revoca
+explícitamente el diferimiento** decidido el 2026-09-09 y ordena completar 077, 078, 079, 080 y
+081 —ni uno más, ni uno menos— en serie, sobre la rama `plans/077-081`. 074 y 082–089 no se
+tocan. Se quita el banner `DIFERIDO` de los cinco planes, DEFERRED → TODO en el índice (filas
+077–081, notas 118/123 y el DAG de 127).
+
+**Verificación del estado inicial (2026-09-10):**
+
+- Frontend: rama `plans/077-081`, HEAD `98fd848`, árbol limpio salvo el propio prompt.
+- Backend: `../thesis-back-quarkus` @ **`2803575`** (`main`, tras `fetch --all`), levantado en
+  `http://localhost:8080` con datos. **Todo el contrato de esta rama se razona contra ese commit.**
+- Los cuatro recursos JAX-RS existen y responden 200 con datos reales, comprobado por `curl`
+  contra `http://localhost:8080/api/v1`: `/admin/usuarios`, `/admin/plantillas-apu`,
+  `/admin/valores-referencia` y `/admin/logs`. Un `USUARIO` recibe **403** `{"codigo":
+  "acceso-denegado"}`; sin token, **401**; una ruta admin inexistente, **404**.
+
+**Decisiones tomadas en ausencia del usuario:**
+
+1. **No había ningún `SUPER_ADMIN` sembrado** (`V004__seed_escenarios.sql` sólo crea dos
+   `USUARIO`), así que las rutas admin no se podían ejercitar. Se promueve **temporalmente** a
+   `ana.armas@gmail.com` a `SUPER_ADMIN` **en la base de datos de desarrollo** —no en el repo del
+   backend, que no se toca— para capturar formas de respuesta reales. Se revierte al cerrar la
+   rama. Es la única forma de cumplir «una respuesta HTTP real sí es evidencia».
+2. **Colisión de numeración de planes.** Existen worktrees `w-077` y `w-078` de otra estirpe: son
+   los capítulos del manual (`plans/077-manual-cap-07-documentos.md`,
+   `plans/078-manual-admin.md`), sin mergear. **No son esta rama y no se tocan.** Los worktrees de
+   este encargo se llaman `wa-077`…`wa-081` para no pisarlos.
+3. **Deriva real en los cinco planes: el «wrapper de disponibilidad» que dan por existente no
+   existe.** `MODULOS_SIN_BACKEND` sólo lo consume `src/shell/Sidebar.tsx` para pintar la insignia
+   «pronto»; las cuatro páginas admin renderizan `ModuloNoDisponible` **incondicionalmente**, con
+   el texto escrito a mano. No hay ni un solo `*PageActiva` en el repo pese a que `AGENTS.md` lo
+   documenta como convención. Vaciar el `Set` en 081 no encendería nada. Corrección aplicada a los
+   planes antes de despachar: 077–080 convierten su página en el wrapper que consulta el `Set` y
+   delega en `<Nombre>PageActiva`; el gate sigue **activo** durante 077–080 y 081 se reduce a
+   vaciar el `Set` y quitar `modulo` de `RUTAS_ADMIN`. `RutaAdmin` no se relaja.
+4. **La normalización de `Page` ya es central.** `src/api/client.ts` traduce
+   `{items,total}` → `{contenido,totalElementos}` en un interceptor, y `src/api/request.ts` avisa
+   de no repetirla. La §9 de los planes pedía «adaptar»; el ejecutor **no** debe volver a
+   normalizar.
+
+## Rama administrativa 077–081: CERRADA (2026-09-10)
+
+Cinco planes, cinco ejecutores en worktrees aislados, uno por plan y en serie porque 077–080 tocan
+los mismos cuatro archivos compartidos. **Ningún plan bloqueado.** Baseline de la suite:
+459 ✅ / 20 ❌ al empezar → **531 ✅ / 20 ❌** al cerrar: **+72 tests, cero regresiones**, y los 20
+rojos son exactamente los mismos de partida, comprobado por nombre.
+
+**Un asiento por plan:**
+
+- **077 — usuarios e invitaciones** (merge `d23c7e8`, 1 ronda de revisión). Siete operaciones
+  contra `/admin/usuarios`. La revisión encontró que el test del 409 al eliminar **no probaba
+  nada**: se demostró neutralizando el `onClick` del botón, y el test seguía verde. Patrón D de
+  `docs/bugs.md`. Corregido y re-verificado rompiendo el camino a propósito. De los tres puntos que
+  se le pidieron, **el tercero era del revisor y estaba equivocado** — el `disabled` del formulario
+  ya estaba desde el primer commit; el ejecutor lo demostró con el historial en vez de tragárselo.
+- **078 — plantillas APU de sistema** (merge `4489287`, sin rondas). Su §14 marcaba STOP «si crear
+  exige selector no disponible». Se investigó: **no existe listado global de APUs** —sólo cuelgan
+  de `/presupuestos/{id}/apus`— y el único proyecto visible para la cuenta admin no tiene
+  presupuestos, luego **no hay ni un APU alcanzable**. Decisión: no bloquear el plan entero por una
+  de cuatro operaciones; el alta se construye encadenando `useProyectos` → `useVersiones` →
+  `useApus`, hooks que ya existían, con estado vacío honesto. **El alta no se verificó contra datos
+  reales** y así consta. De paso corrigió `PlantillaSistemaCrearRequest`, que tenía `descripcion`
+  en vez de `descripcionRubro` y no casaba con el DTO del backend.
+- **079 — valores de referencia** (merge `f22b7c9`, 1 ronda). Su §14 marcaba STOP «si el upsert no
+  permite determinar la creación». Se comprobó por `curl` que sí: 201 al crear, 200 al actualizar,
+  mismo cuerpo. Pero **ningún helper de `src/api/request.ts` exponía el status**, y el hook no
+  puede importar `http` sin romper la invariante de que sólo `src/api/` sabe que existe HTTP. Se
+  metió `request.ts` en alcance **sólo** para añadir `putValidadoConEstado` (precedente:
+  `descargar()` ya devuelve más que `.data`). Se prohibió expresamente la salida fácil —inferir la
+  creación mirando si la clave estaba en la lista—, que es adivinar cuando el contrato lo dice.
+  `valor` viaja como string y se trata como decimal de sólo lectura: cero aritmética.
+  **La ronda de revisión fue por un fallo del revisor**: la §13 que se le entregó no incluía
+  `format:check`, que sí está en `verify`, y dejó pasar dos archivos mal formateados.
+- **080 — logs de actividad** (merge `3d87b5e`, sin rondas). Tabla de sólo lectura con filtros AND
+  que se omiten cuando vienen vacíos. Este plan traía **los dos peores errores de la rama**: su §08
+  mandaba *editar* `paginas-admin.test.tsx` —el test intocable— y su §06 pedía «reemplazar el
+  wrapper por export activo», que **habría abierto el gate antes de 081**. Ambos corregidos antes
+  de despachar. Aquí el Patrón C aparece invertido: `entidadId` llega `null` **explícito**, no
+  ausente, así que va `.nullable()` y en la fixture se pone `null` en vez de omitir la clave.
+- **081 — retirar gates** (merge `9e3d55c`, sin rondas). En vez de suponer qué rompía vaciar el
+  `Set`, **se ejecutó el cambio y se midió**: exactamente 8 errores de compilación, cuatro en los
+  wrappers y cuatro en `RUTAS_ADMIN`. Vaciar el `Set` convierte `ModuloSinBackend` en `never`, así
+  que **el compilador impide dejar el gate a medias**. Los cuatro casos «(degradada)» no se
+  borraron, se **invirtieron**: donde afirmaban que la página no pedía nada, ahora afirman que pide
+  su endpoint real. `RutaAdmin` sin tocar.
+
+**Decisiones tomadas en ausencia del usuario, además de las de cada plan:**
+
+1. **La deriva compartida de los cinco planes:** daban por existente un «wrapper de
+   disponibilidad» que **no existía**. Las cuatro páginas renderizaban `ModuloNoDisponible`
+   incondicionalmente y `MODULOS_SIN_BACKEND` sólo alimentaba la insignia del `Sidebar`; vaciar el
+   `Set` en 081 no habría encendido nada. Se corrigieron los cinco planes: 077–080 crean el wrapper
+   y 081 lo retira. Beneficio lateral: `paginas-admin.test.tsx` siguió verde y sin editarse durante
+   077–080, y se convirtió en la red de seguridad que avisaba si alguien abría el gate antes de
+   tiempo — comprobado forzándolo.
+2. **`SUPER_ADMIN` de pruebas.** El seed no crea ninguno, así que las rutas admin no se podían
+   ejercitar. Se promovió temporalmente a `ana.armas@gmail.com` **en la BD de desarrollo** (nunca en
+   el repo del backend) y **se revirtió al cerrar**: hoy los tres usuarios son `USUARIO` y
+   `/admin/usuarios` con su token devuelve 403, comprobado.
+3. **Método de despacho.** Los worktrees se crearon a mano (`git worktree add -b wa-0XX … plans/077-081`)
+   y los ejecutores se lanzaron **sin** `isolation`, contra lo que pedía el encargo, porque esta
+   bitácora ya registraba que `isolation: "worktree"` ramificó desde `main` y perdió el trabajo de
+   un ejecutor en este mismo repo.
+4. **Colisión de numeración.** Los worktrees `w-077` y `w-078` que ya existían son de los capítulos
+   del manual (`plans/077-manual-*`), otra estirpe y sin mergear. No se tocaron; los de esta rama
+   se llamaron `wa-0XX`.
+5. **`AGENTS.md` mentía en tres puntos** y se corrigió: el baseline («475 en 73» → 551 en 79), el
+   inventario de gates (el `Set` ya está vacío) y **la regla del `*`**, que decía «en MSW y en
+   Playwright» cuando en MSW no se usa nunca —0 de 51 handlers— porque casa por pathname ignorando
+   el query string; añadirlo capturaría también las rutas hijas.
+
+**Método de revisión.** Ningún plan se aprobó por su informe. En cada uno se re-corrieron los
+criterios, se comparó `git diff --stat` contra la §8, se leyó el diff completo y **se rompió el
+código a propósito** para comprobar que los tests lo cazaban. Así se encontró el único fallo grave
+de la rama (el test del 409 en 077). Dos ejecutores empezaron a hacer esas mutaciones por su cuenta
+antes de entregar.
+
+## Defectos ajenos encontrados al ejecutar 077–081 — anotados y, después, arreglados (2026-09-10)
+
+> **Actualización del mismo día:** los tres se **arreglaron** después, por petición explícita del
+> usuario, en el commit `fix(seam): poner verde la suite y desbloquear el build`, separado de los
+> cinco merges de los planes. `pnpm run verify` pasa entero: **551/551 tests**, typecheck, lint,
+> guard:adr9, format:check y build. El diagnóstico completo quedó en
+> [`../docs/bugs.md`](../docs/bugs.md) §6, con la regla que faltaba: *una fixture es una afirmación
+> sobre el backend y se verifica como tal*. Lo de abajo es el estado en que se encontraron.
+
+El encargo prohíbe arreglar lo que pertenece a otro plan. Los tres son **anteriores** a esta rama:
+medidos en el árbol limpio antes de despachar 077, y ninguno lo introdujo 077–081. Juntos hacen que
+**`pnpm run verify` no pueda ir verde**, que es el punto 4 de la definición de terminado del
+encargo. Se dice aquí y en el informe final en vez de disimularlo.
+
+1. **`typecheck` rojo — una línea, y por una buena razón.**
+   `src/test/features/proyectos/hooks/contrato.test.tsx:197`, `TS2353`:
+   `'mostrarSeccionesVacias' does not exist in type 'ParametrosProyectoEditarRequest'`.
+   El test es del **plan 057** y es deliberado: afirma que el seam rechaza un parámetro que el
+   backend no conoce. Su propio comentario explica que el hook estaba tipado con el
+   `ParametrosProyectoActualizarRequest` deprecado —un `Partial & {…}` que dejaba pasar cualquier
+   campo— y que por eso el fallo sólo aparecía en runtime. Alguien **endureció** ese tipo en el WIP
+   `98fd848` («fixes de contrato»), que es lo correcto, y al hacerlo el error pasó a compilación: el
+   test ya no compila porque le pasa a propósito un campo inválido. Arreglo: una línea en el test,
+   para construir el cuerpo inválido sin que TypeScript lo rechace. **Es de quien sea dueño de
+   `98fd848`, no de 077–081.**
+
+2. **20 tests rojos en 11 archivos** (auth, exportar, proyectos/parámetros, ResumenProyecto y
+   AdminParámetros). Comparten causa: las **fixtures y handlers no casan con los esquemas Zod**
+   endurecidos. Muestra literal:
+   `ApiError: /perfil — fechaCreacion: Required; (raíz): Unrecognized key(s) in object: 'emailVerificado'`.
+   Es justo la clase de defecto que el plan 076 quiso cazar al meter validación runtime en el seam:
+   la validación entró, las fixtures no se actualizaron.
+
+3. **`format:check` rojo** en `src/features/apu-editor/hooks/useApuEditor.ts`, del mismo WIP.
+
+**Medición de la línea base, para que nadie la confunda con daño de esta rama:** antes de tocar
+nada, la suite iba **459 pasan / 20 fallan en 75 archivos**. `AGENTS.md` decía «475 tests en 73
+archivos», o sea que su baseline ya estaba caducado.
 
 ## Cierre del Plan 086 (2026-09-09)
 

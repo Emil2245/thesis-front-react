@@ -157,7 +157,7 @@ export const apuConHmFixture: ApuResponse = {
           cantidad: null,
           rendimiento: null,
           unidad: null,
-          precioEfectivo: 0,
+          precioEfectivo: null,
           precioHeredado: false,
           costoHora: null,
           costo: 20,

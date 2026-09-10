@@ -13,7 +13,7 @@ El **código y las pruebas actuales de `../thesis-back-quarkus` son la fuente de
 - Si el frontend y el backend difieren, corrige primero el frontend. No inventes endpoints ni mantengas llamadas que el backend no expone.
 - `../thesis-docs` conserva la autoridad funcional y de dominio. Si el backend contradice una decisión canónica vigente, detente y documenta el conflicto; no cambies el backend silenciosamente ni por comodidad del frontend.
 
-> **Lee [`docs/bugs.md`](docs/bugs.md) antes de dar por bueno un `verify` en verde.** Documenta 40
+> **Lee [`docs/bugs.md`](docs/bugs.md) antes de dar por bueno un `verify` en verde.** Documenta 48
 > defectos reales de este código y los **cuatro patrones** que los produjeron. Ninguno lo detectó
 > la suite: estuvo verde mientras seis funcionalidades no funcionaban en producción. El más
 > repetido — **el mock era la especificación**: un handler que acepta cualquier cuerpo es un test
@@ -39,7 +39,13 @@ pnpm run e2e:manual        # capturas de docs/manual/ (chromium)
 pnpm run dev      # http://localhost:5173
 ```
 
-Baseline actual: **475 tests unitarios en 73 archivos**. Los 65 lanzamientos E2E
+Baseline actual: **551 tests unitarios en 79 archivos, todos en verde**, y `pnpm run verify` pasa
+entero —typecheck, lint, guard:adr9, format:check, test y build—. Medido el 2026-09-10 al cerrar la
+rama 077–081. Antes de esa rama eran 459 ✅ / **20 ❌** en 75 archivos, con `typecheck` y
+`format:check` rojos y `vite build` bloqueado; los 20 fallos eran fixtures y `server.use(...)` que
+no se actualizaron cuando el plan 076 metió validación runtime en el seam. Están en
+[`docs/bugs.md`](docs/bugs.md) §6, con la regla que faltaba: **una fixture es una afirmación sobre
+el backend y se verifica como tal**. Los 65 lanzamientos E2E
 siguen sin medición funcional porque faltan los ejecutables de Playwright en el
 entorno. Si cambias el baseline, actualiza este número: el plan 060 se encontró
 con el de 197/43, cinco olas caducado, y un baseline que miente no detecta nada.
@@ -86,9 +92,14 @@ con el de 197/43, cinco olas caducado, y un baseline que miente no detecta nada.
   `<Nombre>PageActiva`; no se borran mientras su plan siga vigente. En cambio,
   una operación que no existe en el backend consolidado y exigiría ampliarlo se
   retira por completo del frontend: sin control, hook, DTO ni mock ficticio. **El
-  gate es por página, no por módulo** (plan 050): hoy las claves son
-  `admin-usuarios`, `admin-plantillas`, `admin-valores` y `admin-logs`; Bases y
-  Parámetros no aparecen porque su backend existe.
+  gate es por página, no por módulo** (plan 050). **Desde el plan 081 el `Set`
+  está vacío**: las cuatro claves que quedaban —`admin-usuarios`,
+  `admin-plantillas`, `admin-valores` y `admin-logs`— se retiraron cuando
+  077–080 cablearon sus pantallas contra el backend real. El archivo, el tipo
+  `ModuloSinBackend` y `MOTIVO_SIN_BACKEND` se conservan porque el patrón
+  volverá a hacer falta; hoy no los consume nadie. Ojo al vaciarlo: con el `Set`
+  vacío `ModuloSinBackend` es `never`, así que cualquier `.has("…")` o
+  `modulo: "…"` deja de compilar — es a propósito, obliga a terminar el trabajo.
 - **Colores:** tema neutro (blanco y negro). `--primary`, `--ring` y `--chart-1`
   no tienen croma. Solo conservan color los tokens de estado (`--exito`,
   `--advertencia`, `--peligro`, `--destructive`). Nunca uses colores crudos de
@@ -110,9 +121,14 @@ con el de 197/43, cinco olas caducado, y un baseline que miente no detecta nada.
 ## Testing
 
 - **Vitest + RTL + MSW** for unit tests. MSW intercepts all HTTP with `onUnhandledRequest: "error"`
-- Toda ruta mockeada de un **endpoint de listado** lleva `*` al final, en MSW y
-  en Playwright: la paginación añade `?page=0` y un patrón literal deja de
-  casar, cae en el catch-all y la página revienta
+- Toda ruta de un **endpoint de listado** interceptada en **Playwright** lleva
+  `*` al final (`page.route(\`${API}/proyectos*\`)`): la paginación añade
+  `?page=0`, un patrón literal deja de casar, cae en el catch-all y la página
+  revienta. **En MSW no**, y esta línea decía lo contrario hasta el plan 077:
+  `http.get()` casa por *pathname* e ignora el query string, así que ninguno de
+  los handlers de `src/test/handlers.ts` lo lleva —se comprobó: **0 de 51**— y
+  añadirlo sería contraproducente, porque `\`${API}/admin/usuarios*\``capturaría
+también`/admin/usuarios/:id` y las rutas de acción
 - Query by accessible role/label in Spanish
 - Shared test render wrapper in `src/test/render.tsx` (providers: QueryClient, Router, TooltipProvider)
 - Fixtures in `src/test/fixtures/`, handlers in `src/test/handlers.ts` (40+ endpoints)

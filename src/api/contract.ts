@@ -306,7 +306,7 @@ export interface ApuDetalleResponse {
   cantidad?: number | null;
   rendimiento?: number | null;
   unidad?: string | null;
-  precioEfectivo: number;
+  precioEfectivo: number | null;
   precioHeredado: boolean;
   costoHora?: number | null;
   costo: number;
@@ -324,10 +324,9 @@ export interface ApuResponse {
   costoTotal: number;
   /** Override del APU; ausente cuando hereda del proyecto. */
   porcentajeIndirecto?: number;
-  /** El %CI realmente aplicado tras la herencia: distingue heredado de override (P-23). */
-  porcentajeIndirectoEfectivo: number;
-  /** Omitido cuando no existe un costo indirecto configurado. */
-  costoIndirecto?: number;
+  /** Ausente cuando ni el APU ni el proyecto tienen un %CI configurado. */
+  porcentajeIndirectoEfectivo?: number;
+  costoIndirecto: number;
   secciones: Array<{
     tipo: SeccionTipo;
     orden: number;
@@ -465,10 +464,43 @@ export interface PlantillaApuDetalleResponse extends PlantillaApuResumenResponse
   advertencias?: AdvertenciaPlantillaResponse[];
 }
 
+/**
+ * `POST /admin/plantillas-apu` (plan 078). `descripcionRubro`, no
+ * `descripcion`: la forma anterior de esta interfaz no coincidía con
+ * `PlantillaSistemaCrearRequest` del backend (`@ 2803575`) y no la usaba nadie
+ * todavía, así que se corrige aquí en vez de arrastrar el nombre equivocado.
+ */
 export interface PlantillaSistemaCrearRequest {
-  nombre: string;
-  descripcion?: string;
   desdeApuId: string;
+  nombre: string;
+  descripcionRubro?: string;
+}
+
+/**
+ * `GET/POST/PUT /admin/plantillas-apu` (`PlantillaApuAdminResponse`, plan
+ * 078). Distinto de `PlantillaApuResumenResponse`/`PlantillaApuDetalleResponse`
+ * (recurso `/plantillas-apu` sin rol, personal + sistema): éste sólo lista
+ * SISTEMA, trae `usuarioId` (siempre `null` aquí, explícito — no ausente) y
+ * `fechaCreacion` en vez de `createdAt`/`updatedAt`.
+ */
+export interface PlantillaApuAdminResponse {
+  id: string;
+  nombre: string;
+  tipo: "SISTEMA";
+  usuarioId: number | null;
+  descripcionRubro: string | null;
+  fechaCreacion: string;
+}
+
+/**
+ * `PUT /admin/plantillas-apu/{id}` — `JsonNullable<String>` en los dos campos:
+ * el backend distingue «clave ausente» (no toca el campo) de «clave con
+ * `null`» (lo borra). El frontend sólo manda las claves que cambian; nunca
+ * manda el objeto entero.
+ */
+export interface PlantillaApuAdminEditarRequest {
+  nombre?: string;
+  descripcionRubro?: string;
 }
 
 // ————— Presupuesto y versiones (§11) —————
@@ -797,14 +829,53 @@ export interface BloqueoExportDetalle {
 }
 
 // ————— Super-Admin (§11) —————
-// Los DTO de usuarios, valores de referencia y logs de actividad se borraron
-// con sus hooks (plan 050): ninguno de esos recursos existe en origin/main, y
-// un tipo sin endpoint es una promesa que el próximo agente cree cumplida.
+// Valores de referencia sí tiene backend real (plan 079):
+// `ValorReferenciaAdminResource` (`@Path("/admin/valores-referencia")`,
+// `@RolesAllowed("SUPER_ADMIN")`). Ver más abajo, junto a `UsuarioAdminResponse`.
+//
+// Usuarios sí tiene backend real (plan 077): `UsuarioAdminResource`
+// (`@Path("/admin/usuarios")`, `@RolesAllowed("SUPER_ADMIN")`). El gate
+// `admin-usuarios` sigue cerrado en `MODULOS_SIN_BACKEND` — este DTO ya
+// funciona, pero la pantalla real aún no está enchufada al Set (plan 081).
+export interface UsuarioAdminResponse {
+  id: string;
+  nombre: string;
+  email: string;
+  rol: Rol;
+  activo: boolean;
+  emailVerificado: boolean;
+  fechaCreacion: string;
+}
+
+/** `POST /admin/usuarios` — los tres campos son `@NotNull`. */
+export interface UsuarioInvitarRequest {
+  nombre: string;
+  email: string;
+  rol: Rol;
+}
+
+/**
+ * `PUT /admin/usuarios/{id}` — los tres campos son `@NotNull`. Sin `email`: el
+ * correo no se edita por aquí (el backend lo ignora en silencio si se manda,
+ * pero el frontend no lo manda nunca).
+ */
+export interface UsuarioAdminEditarRequest {
+  nombre: string;
+  rol: Rol;
+  activo: boolean;
+}
+
 /**
  * `GET /proyectos/parametros-sistema` devuelve la **entidad cruda**
- * `ParametrosSistema`, no un DTO: trae además seis booleanos de display,
- * `mensajeFooter`, `modoCodigoRubro` y `updatedAt`, que la UI no usa y por eso
- * no están aquí.
+ * `ParametrosSistema`, no un DTO: además de los once números trae `id`, seis
+ * booleanos de display, `mensajeFooter`, `modoCodigoRubro` y `updatedAt`.
+ *
+ * Antes esos diez campos **no estaban aquí** «porque la UI no los usa». Eso
+ * dejó la interfaz mintiendo respecto a `parametrosSistemaSchema`, que sí los
+ * exige y es `.strict()`: la fixture cumplía el tipo, fallaba el esquema, y
+ * cinco tests se caían en cuanto el plan 076 metió validación en el seam. Un
+ * DTO que describe menos de lo que llega no es más simple, es falso. Forma
+ * comprobada por `curl` contra el backend real (`@ 2803575`).
  *
  * Son `BigDecimal` serializados como número JSON, y son editables: `number`
  * por los dos ejes de la política de dinero (plan 061). Todas las columnas son
@@ -812,8 +883,9 @@ export interface BloqueoExportDetalle {
  * que los ocho rangos llegan siempre y no hay que inventarles un valor.
  */
 export interface ParametrosSistemaResponse {
+  id: number;
   porcentajeHerramientaMenor: number;
-  porcentajeIndirecto?: number | null;
+  porcentajeIndirecto: number | null;
   iva: number;
   moneda: string;
   rangoHmMin: number;
@@ -824,6 +896,15 @@ export interface ParametrosSistemaResponse {
   rangoDescuentoMax: number;
   rangoIvaMin: number;
   rangoIvaMax: number;
+  mostrarSeccionesVacias: boolean;
+  sufijosSeccionActivos: boolean;
+  mostrarSubtotalesSeccion: boolean;
+  mostrarSubtotalesPie: boolean;
+  mostrarNombreProyectoHeader: boolean;
+  enumerarApus: boolean;
+  mensajeFooter: string | null;
+  modoCodigoRubro: "AUTOGENERADO" | "MANUAL";
+  updatedAt: string;
 }
 
 /**
@@ -844,6 +925,59 @@ export interface ParametrosSistemaEditarRequest {
   rangoIvaMin: number;
   rangoIvaMax: number;
   moneda?: string;
+}
+
+/**
+ * `ValorReferenciaAdminResponse` (plan 079). `valor` viaja como `string`: es un
+ * decimal de sólo lectura (ADR 9, cero aritmética), se muestra tal cual y se
+ * edita como texto — no `number`. `actualizado` es un `Instant` ISO-8601, una
+ * fecha, no dinero: no pasa por ningún formateador de importes. La `clave` va
+ * siempre en el path de la petición, nunca en el cuerpo.
+ */
+export interface ValorReferenciaResponse {
+  clave: string;
+  valor: string;
+  descripcion: string;
+  fuente: string;
+  actualizado: string;
+}
+
+/**
+ * `PUT /admin/valores-referencia/{clave}` — los tres campos son `@NotBlank`
+ * (`valor` con `@Size(max=100)`, `fuente` con `@Size(max=200)`). Sin `clave`:
+ * va codificada en el path, no en el cuerpo.
+ */
+export interface ValorReferenciaEditarRequest {
+  valor: string;
+  descripcion: string;
+  fuente: string;
+}
+
+/**
+ * `LogActividadResponse` (plan 080). `LogActividadResource`
+ * (`@Path("/admin/logs")`, `@RolesAllowed("SUPER_ADMIN")`, sólo GET) — sin
+ * mutaciones, sin exportación. Confirmado por `curl` contra el backend real el
+ * 2026-09-10.
+ *
+ * `usuarioId` es el UUID del actor, no el BIGINT interno; `usuarioId` y
+ * `usuarioNombre` llegan `null` explícito cuando el log no tiene actor
+ * (`LogActividadResponse.from`). `entidadId` también llega `null` explícito —
+ * se ve en la captura — así que aquí va `.nullable()`, no `.optional()`
+ * (Patrón C invertido, ver plan 080 §05).
+ *
+ * `detalle` es JSON libre; el backend garantiza que no lleva PII
+ * (`LogActividadDetalleValidator`, `LogActividadSinPiiTest`): la UI lo muestra
+ * tal cual, sin interpretarlo.
+ */
+export interface LogActividadResponse {
+  id: string;
+  usuarioId: string | null;
+  usuarioNombre: string | null;
+  evento: string;
+  entidad: string;
+  entidadId: string | null;
+  detalle: Record<string, unknown>;
+  fecha: string;
 }
 
 // ————— Display config —————

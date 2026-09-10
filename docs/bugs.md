@@ -247,3 +247,69 @@ Cosas que no dan error y te hacen perder una tarde.
    backend es la fuente de verdad del contrato; los docs se corrigen cuando discrepan.
 4. **Mira las capturas.** Que el test pase no es prueba de que la pantalla se vea. Ese fue el
    defecto #36 y estuvo commiteado en el repo, en un PNG, a la vista de todos, durante semanas.
+
+---
+
+## 6. Ronda 077–081: la validación entró y las fixtures se quedaron atrás (2026-09-10)
+
+Levantado al cerrar la rama administrativa. **Frontend:** `plans/077-081`. **Backend:**
+`origin/main @ 2803575`, comprobado endpoint por endpoint con `curl`.
+
+El plan 076 metió validación runtime en el seam (`getValidado` + Zod `.strict()`) — la contramedida
+correcta al **Patrón A**. Pero las fixtures y los `server.use(...)` de los tests **no se
+actualizaron con ella**, así que quedaron describiendo formas que el backend real no manda. Efecto:
+**20 tests rojos, `typecheck` roto y `vite build` bloqueado** durante toda la rama del workspace.
+
+La moraleja no es «se olvidaron unas fixtures». Es que **una fixture es una afirmación sobre el
+backend**, y una que miente es tan dañina como un handler permisivo: no protege, y además hace
+fallar tests que sí estaban bien.
+
+### 6.1 Corregidos en esta ronda
+
+| #   | Qué estaba roto                                                                     | Causa                                                                                                                                                                                                                                                                                | Patrón |
+| --- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| 41  | `ParametrosSistemaResponse` declaraba **12 campos y el backend manda 22**           | La interfaz omitía `id`, `updatedAt`, los seis booleanos de display, `mensajeFooter` y `modoCodigoRubro` «porque la UI no los usa». Quedó mintiendo respecto a `parametrosSistemaSchema`, que sí los exige: la fixture cumplía el **tipo** y fallaba el **esquema**                  | A      |
+| 42  | `/perfil` fallaba siempre                                                           | Los handlers devolvían el usuario de la **sesión**. El DTO real de perfil trae `fechaCreacion` y **no** `emailVerificado`; `perfilSchema` es `.strict()`                                                                                                                             | A      |
+| 43  | `POST /auth/registro` devolvía `null` en el mock                                    | El backend real devuelve **201 con el usuario creado**. El registro entero se caía en cuanto se validó la respuesta                                                                                                                                                                  | A      |
+| 44  | `parametrosFixture` sin `proyectoId`                                                | El backend lo manda y el esquema lo exige. Tumbaba 7 tests en cuatro archivos                                                                                                                                                                                                        | A      |
+| 45  | **Tres tests de `apu-editor` probaban el camino de error creyendo probar el feliz** | Sus `server.use(...)` mandaban `fechaCreacion` en vez de `createdAt`, números como **string**, y objetos sin campos obligatorios. La respuesta se rechazaba, el hook no devolvía datos y el componente caía al fallback — mientras el test decía «AUTOGENERADO deshabilita el campo» | A + D  |
+| 46  | `useExportar` mandaba `formato=docx` **contra su propio comentario**                | El comentario del hook decía «es opcional… así que no se manda» y el código lo mandaba. Dos tests del mismo archivo lo afirmaban. `DocumentoResource` sólo valida `formato` **si llega**                                                                                             | —      |
+| 47  | Un fallo de red pintaba **inglés de axios** en una UI es-EC                         | Cuando el cuerpo de error no es `{codigo, mensaje}`, `client.ts` sintetiza un `Problem` con `codigo: "sin-respuesta"` y el `mensaje` de axios. Los dos `catch` de `useExportar` lo enseñaban tal cual: «Request failed with status code 500». Ahora comparten `esErrorDeContrato()`  | —      |
+| 48  | Un test de contrato pasaba **de milagro**                                           | `mutateAsync({ ...parametrosSistemaFixture })` funcionaba sólo porque a la fixture le faltaban justo los diez campos que el backend sí devuelve. Con la fixture honesta, el spread colaba `id` y `updatedAt` en el PUT                                                               | A      |
+
+**Un test obsoleto, reescrito en vez de borrado.** «El seam rechaza un parámetro que el backend no
+conoce» (plan 057) probaba un defecto **ya corregido**: `useActualizarParametros` tipaba el cuerpo
+como `Record<string, unknown>` y hoy tipa el DTO y reenvía sólo los cuatro campos del contrato. El
+campo de más ya no compila. Se reescribió para afirmar **que el PUT no lo lleva**, que es la misma
+garantía por la vía buena. Cuando un test deja de compilar porque alguien **endureció** un tipo, el
+tipo ganó: actualiza el test, no lo revientes.
+
+### 6.2 Pendiente, anotado y no arreglado
+
+- **Código muerto que se conserva a propósito.** Con `MODULOS_SIN_BACKEND` vacío (plan 081),
+  `ModuloSinBackend` es `never` y `MOTIVO_SIN_BACKEND`, `ModuloNoDisponible` e `InsigniaPronto` ya
+  no tienen ni un consumidor. Se dejan porque el patrón de degradación sigue documentado en
+  `AGENTS.md` y volverá a hacer falta. **Si en la próxima ronda siguen sin usarse, bórralos**: un
+  componente sin llamantes es la clase de promesa que el siguiente agente cree cumplida.
+- **Los planes 083–089 se escribieron el mismo día, con el mismo formato y las mismas cuatro
+  premisas falsas que 077–081.** Están enumeradas en
+  [`../plans/README.md`](../plans/README.md) §«Rama administrativa 077–081». **Compruébalas contra
+  el código y el backend antes de despachar cualquiera de ellos**, no después.
+- **No hay ningún `SUPER_ADMIN` sembrado** (`V004__seed_escenarios.sql` crea dos `USUARIO`), así que
+  ninguna ruta `/admin/**` se puede ejercitar contra el backend real sin promover un usuario a mano
+  en la BD de desarrollo. Se hizo y se revirtió. Sembrar uno es del backend, no de aquí.
+- **`verify` no comprueba tipos en `e2e/`**, y sigue sin comprobarlos: el punto ciego que ya
+  documenta §4 no se tocó en esta ronda.
+
+### 6.3 La regla que faltaba
+
+**Una fixture es una afirmación sobre el backend, y se verifica como tal.** Cuando toques un
+esquema del seam, `grep` sus fixtures y sus `server.use(...)` en el mismo commit. La forma se saca
+de una respuesta HTTP real —`curl`— o del record de Java, nunca de lo que la pantalla necesita para
+pintar.
+
+Y su corolario, que costó tres tests de esta ronda: **un `server.use(...)` escrito a mano es una
+fixture sin revisar.** Parte de la fixture canónica y cambia sólo lo que el caso prueba
+(`{ ...parametrosFixture, modoCodigoRubro: "AUTOGENERADO" }`). Escrito desde cero, se le olvida un
+campo obligatorio, la validación lo rechaza y el test acaba probando el camino de error mientras su
+nombre promete el feliz.

@@ -39,11 +39,33 @@ export const qk = {
   cronogramaExportPreflight: (presupuestoId: string, formato: string) =>
     ["presupuesto", presupuestoId, "export-cronograma", formato] as const,
 
-  // Solo quedan las dos con backend real (plan 050): usuarios, plantillas de
-  // sistema, valores de referencia y logs no existen en origin/main.
+  // Usuarios (077), plantillas de sistema (078), valores de referencia (079)
+  // y logs de actividad (080) ya tienen backend real; sus gates siguen
+  // cerrados en `MODULOS_SIN_BACKEND` hasta el 081.
   adminBases: (f?: Record<string, unknown>) => [...qk.adminBasesFamilia(), f ?? {}] as const,
   adminBase: (id: string) => [...qk.adminBasesFamilia(), id] as const,
   adminParametros: () => ["admin", "parametros-sistema"] as const,
+
+  adminUsuariosFamilia: () => ["admin", "usuarios"] as const,
+  adminUsuarios: (f?: Record<string, unknown>) => [...qk.adminUsuariosFamilia(), f ?? {}] as const,
+  adminUsuario: (id: string) => [...qk.adminUsuariosFamilia(), id] as const,
+
+  // Plantillas APU de sistema (plan 078): mismo molde que usuarios.
+  adminPlantillasFamilia: () => ["admin", "plantillas-apu"] as const,
+  adminPlantillas: (f?: Record<string, unknown>) =>
+    [...qk.adminPlantillasFamilia(), f ?? {}] as const,
+  adminPlantilla: (id: string) => [...qk.adminPlantillasFamilia(), id] as const,
+
+  // Valores de referencia (plan 079): mismo molde que plantillas. Sin `q`: el
+  // recurso sólo admite `page`/`size`.
+  adminValoresFamilia: () => ["admin", "valores-referencia"] as const,
+  adminValores: (f?: Record<string, unknown>) => [...qk.adminValoresFamilia(), f ?? {}] as const,
+  adminValor: (clave: string) => [...qk.adminValoresFamilia(), clave] as const,
+
+  // Logs de actividad (plan 080): sólo lectura, sin mutaciones que invaliden
+  // la familia — se mantiene por simetría con el resto de recursos admin.
+  adminLogsFamilia: () => ["admin", "logs"] as const,
+  adminLogs: (f?: Record<string, unknown>) => [...qk.adminLogsFamilia(), f ?? {}] as const,
 
   displayConfig: () => ["display-config"] as const,
 } as const;
