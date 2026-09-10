@@ -11,9 +11,7 @@ import {
   useRevisarCronograma,
 } from "../hooks/useCronograma";
 import { useCronogramaVistas } from "../hooks/useCronogramaVistas";
-import { TablaActividades } from "../components/TablaActividades";
-import { GanttChart } from "../components/GanttChart";
-import { JerarquiaCronograma } from "../components/JerarquiaCronograma";
+import { GanttJerarquicoInteractivo } from "../components/GanttJerarquicoInteractivo";
 import { CronogramaValorizado } from "../components/CronogramaValorizado";
 import { CurvaSChart } from "../components/CurvaSChart";
 import { BadgeDesactualizado } from "../components/BadgeDesactualizado";
@@ -199,16 +197,15 @@ export function CronogramaPage() {
               </TabsList>
             </div>
 
-            <TabsContent value="gantt" className="space-y-8 pt-4">
-              {vistas.data && <JerarquiaCronograma gantt={vistas.data.gantt} />}
-              {/* Las superficies de edición permanecen juntas hasta que el Plan 091
-                  las unifique con el Gantt jerárquico. */}
-              <TablaActividades
-                actividades={cronograma.actividades}
-                periodos={cronograma.numeroPeriodos}
-                onClickActividad={setActividadEdit}
-              />
-              <GanttChart cronograma={cronograma} />
+            <TabsContent value="gantt" className="pt-4">
+              {vistas.data && (
+                <GanttJerarquicoInteractivo
+                  gantt={vistas.data.gantt}
+                  cronogramaId={cronograma.id}
+                  presupuestoId={versionId}
+                  onClickActividad={setActividadEdit}
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="valorizado" className="pt-4">

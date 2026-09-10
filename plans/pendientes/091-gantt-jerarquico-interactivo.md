@@ -1,5 +1,7 @@
 # Plan 091: Gantt jerárquico interactivo
 
+> **Estado: DONE.** Implementado en `CronogramaPage` con una única cuadrícula jerárquica, edición preservada, controles accesibles y drag/resize progresivo.
+
 ## 01. Estado y dependencia
 
 Depende del Plan 090. Sustituye la duplicación actual entre `JerarquiaCronograma`, `TablaActividades` y `GanttChart` por una única superficie dentro del panel Gantt, sin cambiar los flujos de configuración o revisión.
@@ -94,3 +96,7 @@ Entregar al Plan 089 requests capturados, estados de 409, evidencias de segmento
 ## 17. Invariantes
 
 Períodos ordinales; segmentos del servidor; mutaciones semánticas; sin cálculo monetario; una query de vistas; edición/revisión preservadas; UI accesible.
+
+## 18. Cierre
+
+Implementado en `GanttJerarquicoInteractivo.tsx` e integrado en `CronogramaPage.tsx`. Se retiraron del render final las superficies duplicadas, se conservaron los componentes legacy aún cubiertos por pruebas, y se añadieron pruebas de jerarquía, segmentos discontinuos, teclado, resize, drag y rollback `409`. La verificación queda en verde: `pnpm run verify` ejecuta 607 pruebas en 88 archivos, además de typecheck, lint, guard ADR9, formato y build. Se mantienen advertencias lint preexistentes y la advertencia de `role="button"` necesaria para la barra con handles anidados.

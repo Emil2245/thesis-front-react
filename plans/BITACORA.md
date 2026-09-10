@@ -1,8 +1,8 @@
 # Bitácora
 
-> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). Los Planes 077–087 y 090 están cerrados e integrados; 088 queda SUPERSEDED y el Plan 091 es la siguiente tarea.
+> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). Los Planes 077–087, 090 y 091 están cerrados e integrados; 088 queda SUPERSEDED.
 
-**Encargo activo: siguiente tarea pendiente, Plan 091** · **Actualizada:** 2026-09-10
+**Encargo activo: siguiente tarea pendiente, Plan 092** · **Actualizada:** 2026-09-10
 **Ronda de paridad 1** · **CERRADA**
 
 > La lleva el orquestador ([`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md)). Se escribe **en el momento** en que
@@ -17,6 +17,12 @@
 - La única instancia de `useCronogramaVistas` permanece en el padre: cambiar tabs no repite `GET /cronogramas/{id}/vistas`. La edición continúa en Gantt y bloquea temporalmente el selector mientras el diálogo está abierto.
 - Evidencia: 62 pruebas focalizadas de cronograma; `pnpm run verify` completo con **600/600 tests en 87 archivos**, typecheck, lint, ADR9, formato y build verdes; capturas Playwright de cronograma en Chromium **3/3 verdes** después de instalar el navegador requerido.
 - `e2e/screenshots.spec.ts` ahora sirve la proyección `/vistas`, conserva versión/vista explícitas y verifica el tab y panel antes de capturar. Se inspeccionaron `screenshots/10-cronograma.png`, `10-cronograma-valorizado.png` y `10-cronograma-curva-s.png`; cada una muestra exclusivamente su panel.
+
+## Cierre del Plan 091 (2026-09-10)
+
+- Plan 091 queda **✅ verde / IMPLEMENTADO**: `GanttJerarquicoInteractivo` reemplaza en el render final las tres presentaciones duplicadas por una tabla única con jerarquía, timeline ordinal, segmentos discontinuos y columnas sticky.
+- Se preservan edición, configuración, revisión, estados desactualizado/BORRADOR y la única GET de vistas. Mover y redimensionar usan exclusivamente los cuerpos canónicos, con preview, confirmación, alternativa accesible y rollback anunciado para `409 segmento-solapado`.
+- Evidencia: 68 pruebas focalizadas de cronograma; `pnpm run verify` verde con **607/607 tests en 88 archivos**, typecheck, lint, guard ADR9, formato y build. El E2E completo continúa pendiente por la limitación documentada de navegadores.
 
 ## Corrección del listado de proyectos (2026-09-10)
 

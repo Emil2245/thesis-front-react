@@ -39,7 +39,7 @@ pnpm run e2e:manual        # capturas de docs/manual/ (chromium)
 pnpm run dev      # http://localhost:5173
 ```
 
-Baseline actual: **601 tests unitarios en 87 archivos, todos en verde**, y `pnpm run verify` pasa
+Baseline actual: **607 tests unitarios en 88 archivos, todos en verde**, y `pnpm run verify` pasa
 entero —typecheck, lint, guard:adr9, format:check, test y build—. Medido el 2026-09-10 después de
 corregir la respuesta nullable de proyectos y de integrar el selector de vistas del Plan 090 sobre los Planes 077–087. Antes de esa rama eran 459 ✅ / **20 ❌** en 75 archivos, con `typecheck` y
 `format:check` rojos y `vite build` bloqueado; los 20 fallos eran fixtures y `server.use(...)` que

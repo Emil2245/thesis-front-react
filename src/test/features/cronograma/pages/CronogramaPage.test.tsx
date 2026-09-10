@@ -76,17 +76,21 @@ describe("CronogramaPage", () => {
     });
   });
 
-  it("muestra el diagrama de Gantt", async () => {
+  it("muestra el Gantt jerárquico", async () => {
     await setupCronogramaPage();
     await waitFor(() => {
-      expect(screen.getByText(/Diagrama de Gantt/)).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Gantt jerárquico" })).toBeInTheDocument();
+      expect(screen.getByText("Obras preliminares")).toBeInTheDocument();
     });
   });
 
-  it("muestra avance por período y acumulado", async () => {
+  it("muestra períodos y peso en el Gantt jerárquico", async () => {
     await setupCronogramaPage();
-    expect(screen.getByText("Avance por período")).toBeInTheDocument();
-    expect(screen.getByText("Avance acumulado")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Peso (%)")).toBeInTheDocument();
+      expect(screen.getByText("M1")).toBeInTheDocument();
+      expect(screen.getByText("M4")).toBeInTheDocument();
+    });
   });
 
   it("abre diálogo de reconfiguración", async () => {
@@ -122,7 +126,10 @@ describe("CronogramaPage", () => {
 
   it("abre diálogo de editar actividad al hacer click en una fila", async () => {
     const { user } = await setupCronogramaPage();
-    await user.click(screen.getAllByText("Excavación a máquina")[0]);
+    await waitFor(() => {
+      expect(screen.getAllByText("Excavación a máquina").length).toBeGreaterThan(0);
+    });
+    await user.click(screen.getAllByRole("button", { name: "Excavación a máquina" })[0]);
     await waitFor(() => {
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
@@ -144,10 +151,12 @@ describe("CronogramaPage", () => {
     });
   });
 
-  it("los períodos en la tabla usan índice 1-based", async () => {
+  it("los períodos del Gantt usan etiquetas del backend", async () => {
     await setupCronogramaPage();
-    expect(screen.getByText("P1")).toBeInTheDocument();
-    expect(screen.getByText("P4")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("M1")).toBeInTheDocument();
+      expect(screen.getByText("M4")).toBeInTheDocument();
+    });
   });
 
   // El camino completo del 409 de configuración: reducir períodos sin
