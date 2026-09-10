@@ -734,9 +734,42 @@ export interface BloqueoExportDetalle {
 }
 
 // ————— Super-Admin (§11) —————
-// Los DTO de usuarios, valores de referencia y logs de actividad se borraron
-// con sus hooks (plan 050): ninguno de esos recursos existe en origin/main, y
-// un tipo sin endpoint es una promesa que el próximo agente cree cumplida.
+// Los DTO de valores de referencia y logs de actividad se borraron con sus
+// hooks (plan 050): esos dos recursos siguen sin existir en origin/main, y un
+// tipo sin endpoint es una promesa que el próximo agente cree cumplida.
+//
+// Usuarios sí tiene backend real (plan 077): `UsuarioAdminResource`
+// (`@Path("/admin/usuarios")`, `@RolesAllowed("SUPER_ADMIN")`). El gate
+// `admin-usuarios` sigue cerrado en `MODULOS_SIN_BACKEND` — este DTO ya
+// funciona, pero la pantalla real aún no está enchufada al Set (plan 081).
+export interface UsuarioAdminResponse {
+  id: string;
+  nombre: string;
+  email: string;
+  rol: Rol;
+  activo: boolean;
+  emailVerificado: boolean;
+  fechaCreacion: string;
+}
+
+/** `POST /admin/usuarios` — los tres campos son `@NotNull`. */
+export interface UsuarioInvitarRequest {
+  nombre: string;
+  email: string;
+  rol: Rol;
+}
+
+/**
+ * `PUT /admin/usuarios/{id}` — los tres campos son `@NotNull`. Sin `email`: el
+ * correo no se edita por aquí (el backend lo ignora en silencio si se manda,
+ * pero el frontend no lo manda nunca).
+ */
+export interface UsuarioAdminEditarRequest {
+  nombre: string;
+  rol: Rol;
+  activo: boolean;
+}
+
 /**
  * `GET /proyectos/parametros-sistema` devuelve la **entidad cruda**
  * `ParametrosSistema`, no un DTO: trae además seis booleanos de display,
