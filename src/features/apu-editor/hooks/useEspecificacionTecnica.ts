@@ -1,8 +1,7 @@
 import { useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getValidado, putValidado } from "@/api/request";
+import { getEspecificacionTecnica, putEspecificacionTecnica } from "@/api/apus";
 import { qk } from "@/api/queryKeys";
-import { apuSchema, especificacionTecnicaSchema } from "@/api/schemas";
 
 type GuardarEspecificacionVariables = {
   apuId: string;
@@ -15,24 +14,30 @@ type GuardarEspecificacionVariables = {
  * existing specification panel; WorkspacePage should not add another query or
  * mutation for this resource.
  */
-export function useEspecificacionTecnica(apuId: string | null) {
+export function useEspecificacionTecnica(apuId: string | null, presupuestoId?: string) {
   const queryClient = useQueryClient();
   const query = useQuery({
-    queryKey: qk.apuEspecificacion(apuId ?? ""),
+    queryKey: presupuestoId
+      ? qk.apuEspecificacionWorkspace(presupuestoId, apuId ?? "")
+      : qk.apuEspecificacion(apuId ?? ""),
     queryFn: () => {
       if (!apuId) throw new Error("No hay un APU seleccionado.");
-      return getValidado(`/apus/${apuId}/especificacion-tecnica`, especificacionTecnicaSchema);
+      return getEspecificacionTecnica(apuId);
     },
     enabled: Boolean(apuId),
   });
 
   const mutation = useMutation({
-    mutationKey: qk.apuEspecificacion(apuId ?? ""),
+    mutationKey: presupuestoId
+      ? qk.apuEspecificacionWorkspace(presupuestoId, apuId ?? "")
+      : qk.apuEspecificacion(apuId ?? ""),
     mutationFn: ({ apuId: targetApuId, texto }: GuardarEspecificacionVariables) =>
-      putValidado(`/apus/${targetApuId}/especificacion-tecnica`, apuSchema, { texto }),
+      putEspecificacionTecnica(targetApuId, texto),
     onSuccess: async (_response, variables) => {
       await queryClient.invalidateQueries({
-        queryKey: qk.apuEspecificacion(variables.apuId),
+        queryKey: presupuestoId
+          ? qk.apuEspecificacionWorkspace(presupuestoId, variables.apuId)
+          : qk.apuEspecificacion(variables.apuId),
       });
     },
   });

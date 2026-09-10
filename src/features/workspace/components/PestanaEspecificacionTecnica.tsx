@@ -1,5 +1,6 @@
 import { PanelEspecificacionTecnica } from "@/features/apu-editor/components/PanelEspecificacionTecnica";
 import { useEspecificacionTecnica } from "@/features/apu-editor/hooks/useEspecificacionTecnica";
+import { mensajeCarga } from "../error";
 import { EstadoVacio } from "@/components/comunes/EstadoVacio";
 
 /**
@@ -8,8 +9,14 @@ import { EstadoVacio } from "@/components/comunes/EstadoVacio";
  * WorkspacePage provides only this prop; HTTP, validation, caching, and
  * persistence remain in the reusable specification hook.
  */
-export function PestanaEspecificacionTecnica({ apuId }: { apuId: string | null }) {
-  const { query, mutation, guardar } = useEspecificacionTecnica(apuId);
+export function PestanaEspecificacionTecnica({
+  apuId,
+  presupuestoId,
+}: {
+  apuId: string | null;
+  presupuestoId?: string;
+}) {
+  const { query, mutation, guardar } = useEspecificacionTecnica(apuId, presupuestoId);
 
   if (!apuId) {
     return (
@@ -22,10 +29,11 @@ export function PestanaEspecificacionTecnica({ apuId }: { apuId: string | null }
 
   if (query.isPending) return <output>Cargando especificación técnica…</output>;
 
+  if (query.isFetching) return <output aria-busy="true">Cargando especificación técnica…</output>;
   if (query.isError) {
     return (
       <div className="space-y-2 p-4">
-        <p role="alert">No se pudo cargar la especificación técnica.</p>
+        <p role="alert">{mensajeCarga(query.error, "la especificación técnica")}</p>
         <button type="button" onClick={() => query.refetch()} className="underline">
           Reintentar
         </button>
@@ -55,11 +63,9 @@ export function PestanaEspecificacionTecnica({ apuId }: { apuId: string | null }
       aria-busy={mutationBelongsToApu && mutation.isPending ? true : undefined}
     >
       <output className="text-sm text-muted-foreground" aria-live="polite">
-        {contenido === null
-          ? "Este APU aún no tiene contenido de especificación técnica."
-          : contenido === ""
-            ? "La especificación técnica está vacía."
-            : "Especificación técnica disponible para edición."}
+        {contenido === null || contenido === ""
+          ? "Sin especificación técnica"
+          : "Especificación técnica disponible para edición."}
       </output>
       {mutationBelongsToApu && mutation.isPending && (
         <output aria-live="polite">Guardando especificación técnica…</output>

@@ -326,7 +326,8 @@ export interface ApuResponse {
   porcentajeIndirecto?: number;
   /** El %CI realmente aplicado tras la herencia: distingue heredado de override (P-23). */
   porcentajeIndirectoEfectivo: number;
-  costoIndirecto: number;
+  /** Omitido cuando no existe un costo indirecto configurado. */
+  costoIndirecto?: number;
   secciones: Array<{
     tipo: SeccionTipo;
     orden: number;

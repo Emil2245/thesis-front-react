@@ -17,8 +17,12 @@ export const qk = {
   apus: (presupuestoId: string, filtros?: Record<string, unknown>) =>
     ["presupuesto", presupuestoId, "apus", filtros ?? {}] as const,
   apu: (apuId: string) => ["apu", apuId] as const,
+  apuWorkspace: (presupuestoId: string, apuId: string) =>
+    ["presupuesto", presupuestoId, "apu", apuId] as const,
   apuCalculo: (apuId: string) => ["apu", apuId, "calculo"] as const,
   apuEspecificacion: (apuId: string) => ["apu", apuId, "especificacion-tecnica"] as const,
+  apuEspecificacionWorkspace: (presupuestoId: string, apuId: string) =>
+    ["presupuesto", presupuestoId, "apu", apuId, "especificacion-tecnica"] as const,
   plantillas: (filtros?: Record<string, unknown>) => ["plantillas-apu", filtros ?? {}] as const,
 
   presupuesto: (presupuestoId: string) => ["presupuesto", presupuestoId] as const,

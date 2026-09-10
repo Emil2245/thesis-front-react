@@ -275,7 +275,7 @@ export const apuSchema = z
     costoTotal: z.number(),
     porcentajeIndirecto: z.number().optional(),
     porcentajeIndirectoEfectivo: z.number(),
-    costoIndirecto: z.number(),
+    costoIndirecto: z.number().optional(),
     secciones: z.array(
       z
         .object({

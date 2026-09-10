@@ -101,6 +101,78 @@ describe("PestanaApu", () => {
     ).resolves.toHaveAttribute("href", `/proyectos/proyecto-1/apus/${apuDetalleFixture.id}`);
   });
 
+  it("shows an empty state for an APU without sections", async () => {
+    server.use(http.get(apuUrl, () => HttpResponse.json({ ...apuDetalleFixture, secciones: [] })));
+    renderApu();
+    expect(await screen.findByText("APU sin secciones")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("does not render the first delayed response after selecting a second APU", async () => {
+    let releaseFirst!: () => void;
+    const first = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    server.use(
+      http.get(apuUrl, async ({ params }) => {
+        if (params.id === apuDetalleFixture.id) {
+          await first;
+          return HttpResponse.json(apuDetalleFixture);
+        }
+        return HttpResponse.json({ ...apuDetalleFixture, id: "apu-2", codigo: "APU-002" });
+      }),
+    );
+    const view = renderConProviders(
+      <PestanaApu
+        apuId={apuDetalleFixture.id}
+        proyectoId="proyecto-1"
+        presupuestoId="presupuesto-1"
+      />,
+    );
+    view.rerender(
+      <PestanaApu apuId="apu-2" proyectoId="proyecto-1" presupuestoId="presupuesto-1" />,
+    );
+    expect(await screen.findByText("APU-002")).toBeInTheDocument();
+    releaseFirst();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.queryByText("APU-001")).not.toBeInTheDocument();
+  });
+
+  it.each([401, 403, 404, 500])("distinguishes HTTP %s errors", async (status) => {
+    server.use(
+      http.get(apuUrl, () => HttpResponse.json({ codigo: "error", mensaje: "fallo" }, { status })),
+    );
+    renderApu();
+    expect(await screen.findByRole("alert")).toHaveTextContent(`Error ${status}`);
+  });
+
+  it("uses the current budget scope instead of another budget cache", async () => {
+    let requests = 0;
+    server.use(
+      http.get(apuUrl, () => {
+        requests += 1;
+        return HttpResponse.json({ ...apuDetalleFixture, codigo: `APU-${requests}` });
+      }),
+    );
+    const view = renderConProviders(
+      <PestanaApu
+        apuId={apuDetalleFixture.id}
+        proyectoId="proyecto-1"
+        presupuestoId="presupuesto-1"
+      />,
+    );
+    expect(await screen.findByText("APU-1")).toBeInTheDocument();
+    view.rerender(
+      <PestanaApu
+        apuId={apuDetalleFixture.id}
+        proyectoId="proyecto-1"
+        presupuestoId="presupuesto-2"
+      />,
+    );
+    expect(await screen.findByText("APU-2")).toBeInTheDocument();
+    expect(requests).toBe(2);
+  });
+
   it("shows an error and retries successfully", async () => {
     let requests = 0;
     server.use(
