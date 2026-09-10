@@ -464,10 +464,43 @@ export interface PlantillaApuDetalleResponse extends PlantillaApuResumenResponse
   advertencias?: AdvertenciaPlantillaResponse[];
 }
 
+/**
+ * `POST /admin/plantillas-apu` (plan 078). `descripcionRubro`, no
+ * `descripcion`: la forma anterior de esta interfaz no coincidía con
+ * `PlantillaSistemaCrearRequest` del backend (`@ 2803575`) y no la usaba nadie
+ * todavía, así que se corrige aquí en vez de arrastrar el nombre equivocado.
+ */
 export interface PlantillaSistemaCrearRequest {
-  nombre: string;
-  descripcion?: string;
   desdeApuId: string;
+  nombre: string;
+  descripcionRubro?: string;
+}
+
+/**
+ * `GET/POST/PUT /admin/plantillas-apu` (`PlantillaApuAdminResponse`, plan
+ * 078). Distinto de `PlantillaApuResumenResponse`/`PlantillaApuDetalleResponse`
+ * (recurso `/plantillas-apu` sin rol, personal + sistema): éste sólo lista
+ * SISTEMA, trae `usuarioId` (siempre `null` aquí, explícito — no ausente) y
+ * `fechaCreacion` en vez de `createdAt`/`updatedAt`.
+ */
+export interface PlantillaApuAdminResponse {
+  id: string;
+  nombre: string;
+  tipo: "SISTEMA";
+  usuarioId: number | null;
+  descripcionRubro: string | null;
+  fechaCreacion: string;
+}
+
+/**
+ * `PUT /admin/plantillas-apu/{id}` — `JsonNullable<String>` en los dos campos:
+ * el backend distingue «clave ausente» (no toca el campo) de «clave con
+ * `null`» (lo borra). El frontend sólo manda las claves que cambian; nunca
+ * manda el objeto entero.
+ */
+export interface PlantillaApuAdminEditarRequest {
+  nombre?: string;
+  descripcionRubro?: string;
 }
 
 // ————— Presupuesto y versiones (§11) —————

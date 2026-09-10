@@ -45,5 +45,11 @@ export const qk = {
   adminUsuarios: (f?: Record<string, unknown>) => [...qk.adminUsuariosFamilia(), f ?? {}] as const,
   adminUsuario: (id: string) => [...qk.adminUsuariosFamilia(), id] as const,
 
+  // Plantillas APU de sistema (plan 078): mismo molde que usuarios.
+  adminPlantillasFamilia: () => ["admin", "plantillas-apu"] as const,
+  adminPlantillas: (f?: Record<string, unknown>) =>
+    [...qk.adminPlantillasFamilia(), f ?? {}] as const,
+  adminPlantilla: (id: string) => [...qk.adminPlantillasFamilia(), id] as const,
+
   displayConfig: () => ["display-config"] as const,
 } as const;

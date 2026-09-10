@@ -164,6 +164,23 @@ export const plantillaApuResumenSchema = z
   })
   .strict();
 
+/**
+ * `PlantillaApuAdminResponse` (plan 078). `usuarioId` llega siempre `null`
+ * explícito (`PlantillaApuAdminResponse.from()` lo pasa a pelo), no ausente:
+ * `.nullable()`, no `.optional()`. Igual para `descripcionRubro`, que el
+ * backend no exige en el alta.
+ */
+export const plantillaApuAdminSchema = z
+  .object({
+    id: z.string(),
+    nombre: z.string(),
+    tipo: z.literal("SISTEMA"),
+    usuarioId: z.number().nullable(),
+    descripcionRubro: z.string().nullable(),
+    fechaCreacion: z.string(),
+  })
+  .strict();
+
 export const parametrosProyectoSchema = z
   .object({
     proyectoId: z.string(),
