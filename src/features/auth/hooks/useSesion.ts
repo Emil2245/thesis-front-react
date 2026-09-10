@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { post } from "@/api/request";
+import { postValidado } from "@/api/request";
 import { setAccessToken, setOnSesionExpirada, setRefrescador } from "@/api/client";
-import type { TokenResponse } from "@/api/contract";
+import { tokenSchema } from "@/api/schemas";
 import { leerRefreshGuardado, useSesionStore } from "../sesion";
 
 export function useBootstrapSesion() {
@@ -12,7 +12,7 @@ export function useBootstrapSesion() {
       const refreshToken = useSesionStore.getState().refreshToken ?? leerRefreshGuardado();
       if (!refreshToken) return null;
       try {
-        const r = await post<TokenResponse>("/auth/refresh", { refreshToken });
+        const r = await postValidado("/auth/refresh", tokenSchema, { refreshToken });
         iniciar(r.usuario, r.refreshToken ?? refreshToken, !!localStorage.getItem("apu.refresh"));
         return r.accessToken;
       } catch {
@@ -33,7 +33,7 @@ export function useBootstrapSesion() {
     }
     void (async () => {
       try {
-        const r = await post<TokenResponse>("/auth/refresh", { refreshToken: guardado });
+        const r = await postValidado("/auth/refresh", tokenSchema, { refreshToken: guardado });
         setAccessToken(r.accessToken);
         iniciar(r.usuario, r.refreshToken ?? guardado, !!localStorage.getItem("apu.refresh"));
       } catch {

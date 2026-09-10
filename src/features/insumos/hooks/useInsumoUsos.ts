@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { get } from "@/api/request";
+import { getValidado } from "@/api/request";
+import { z } from "zod";
+import { insumoUsoSchema } from "@/api/schemas";
 import { qk } from "@/api/queryKeys";
-import type { InsumoUsoResponse } from "@/api/contract";
 
 export function useInsumoUsos(
   proyectoId: string,
@@ -10,7 +11,8 @@ export function useInsumoUsos(
 ) {
   return useQuery({
     queryKey: qk.insumoUso(proyectoId, insumoId),
-    queryFn: () => get<InsumoUsoResponse[]>(`/proyectos/${proyectoId}/insumos/${insumoId}/usos`),
+    queryFn: () =>
+      getValidado(`/proyectos/${proyectoId}/insumos/${insumoId}/usos`, z.array(insumoUsoSchema)),
     enabled: habilitado,
   });
 }

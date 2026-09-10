@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { get } from "@/api/request";
+import { getValidado } from "@/api/request";
+import { baseCentralSchema } from "@/api/schemas";
 import { qk } from "@/api/queryKeys";
-import type { BaseInsumosResponse } from "@/api/contract";
+import { z } from "zod";
 
 export function useBasesCentrales() {
   return useQuery({
     queryKey: qk.basesCentrales(),
-    queryFn: () => get<BaseInsumosResponse[]>("/bases-centrales"),
+    queryFn: () => getValidado("/bases-centrales", z.array(baseCentralSchema)),
   });
 }

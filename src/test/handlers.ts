@@ -832,7 +832,7 @@ export const handlers = [
 
   // ———— Exportar (Plan 051) ————
   // El único endpoint de documentos que existe en origin/main. `formato` es
-  // opcional y solo admite `docx`; cualquier otro valor es 400.
+  // opcional y solo admite `docx`; cualquier otro valor es 400 `validacion`.
   http.get<PathParams, DefaultBodyType, Problem | ArrayBuffer>(
     `${API}/documentos/especificaciones-tecnicas/:id`,
     ({ request }) => {
@@ -840,7 +840,7 @@ export const handlers = [
       if (formato !== null && formato !== "docx")
         return problema(
           400,
-          "formato-no-soportado",
+          "validacion",
           `Formato no soportado: ${formato} (solo DOCX en esta iteración)`,
         );
       return HttpResponse.arrayBuffer(new ArrayBuffer(8), {

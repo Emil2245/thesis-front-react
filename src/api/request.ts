@@ -28,8 +28,30 @@ export const getValidado = async <S extends z.ZodTypeAny>(
 export const post = async <T>(url: string, body?: unknown): Promise<T> =>
   (await http.post<T>(url, body)).data;
 
+export const postValidado = async <S extends z.ZodTypeAny>(
+  url: string,
+  schema: S,
+  body?: unknown,
+): Promise<z.infer<S>> => {
+  const { data } = await http.post(url, body);
+  const r = schema.safeParse(data);
+  if (!r.success) throw errorDeRespuesta(url, r.error);
+  return r.data;
+};
+
 export const put = async <T>(url: string, body?: unknown): Promise<T> =>
   (await http.put<T>(url, body)).data;
+
+export const putValidado = async <S extends z.ZodTypeAny>(
+  url: string,
+  schema: S,
+  body?: unknown,
+): Promise<z.infer<S>> => {
+  const { data } = await http.put(url, body);
+  const r = schema.safeParse(data);
+  if (!r.success) throw errorDeRespuesta(url, r.error);
+  return r.data;
+};
 
 export const patch = async <T>(
   url: string,
@@ -37,7 +59,29 @@ export const patch = async <T>(
   config?: AxiosRequestConfig,
 ): Promise<T> => (await http.patch<T>(url, body, config)).data;
 
+export const patchValidado = async <S extends z.ZodTypeAny>(
+  url: string,
+  schema: S,
+  body?: unknown,
+  config?: AxiosRequestConfig,
+): Promise<z.infer<S>> => {
+  const { data } = await http.patch(url, body, config);
+  const r = schema.safeParse(data);
+  if (!r.success) throw errorDeRespuesta(url, r.error);
+  return r.data;
+};
+
 export const del = async <T = void>(url: string): Promise<T> => (await http.delete<T>(url)).data;
+
+export const delValidado = async <S extends z.ZodTypeAny>(
+  url: string,
+  schema: S,
+): Promise<z.infer<S>> => {
+  const { data } = await http.delete(url);
+  const r = schema.safeParse(data);
+  if (!r.success) throw errorDeRespuesta(url, r.error);
+  return r.data;
+};
 
 /**
  * El nombre del archivo lo pone el backend en `Content-Disposition`; el cliente

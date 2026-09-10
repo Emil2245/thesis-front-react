@@ -1,8 +1,9 @@
 import { createContext, useContext } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { get } from "@/api/request";
+import { getValidado } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import type { DisplayConfigResponse } from "@/api/contract";
+import { displayConfigSchema } from "@/api/schemas";
 
 export const DISPLAY_DEFAULTS: DisplayConfigResponse = {
   precisionDinero: 2,
@@ -14,7 +15,7 @@ export const DisplayConfigCtx = createContext<DisplayConfigResponse>(DISPLAY_DEF
 export function useDisplayConfig() {
   return useQuery({
     queryKey: qk.displayConfig(),
-    queryFn: () => get<DisplayConfigResponse>("/config/display"),
+    queryFn: () => getValidado("/config/display", displayConfigSchema),
     staleTime: Infinity,
     placeholderData: DISPLAY_DEFAULTS,
   });

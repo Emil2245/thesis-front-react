@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { post, put } from "@/api/request";
+import { post, postValidado, put, putValidado } from "@/api/request";
 import { setAccessToken } from "@/api/client";
 import { queryClient } from "@/api/queryClient";
 import { notificarError } from "@/lib/manejoErrores";
@@ -11,8 +11,8 @@ import type {
   PasswordCambiarRequest,
   RegistroRequest,
   RestablecerPasswordRequest,
-  TokenResponse,
 } from "@/api/contract";
+import { perfilSchema, tokenSchema, usuarioSchema } from "@/api/schemas";
 import { leerRefreshGuardado } from "../sesion";
 import { useSesionStore } from "../sesion";
 
@@ -21,7 +21,7 @@ export function useLogin() {
   const iniciar = useSesionStore((s) => s.iniciar);
 
   return useMutation({
-    mutationFn: (body: LoginRequest) => post<TokenResponse>("/auth/login", body),
+    mutationFn: (body: LoginRequest) => postValidado("/auth/login", tokenSchema, body),
     onSuccess: (r, vars) => {
       setAccessToken(r.accessToken);
       iniciar(r.usuario, r.refreshToken ?? null, vars.recordarSesion);
@@ -35,7 +35,7 @@ export function useRegistro() {
   const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: (body: RegistroRequest) => post<unknown>("/auth/registro", body),
+    mutationFn: (body: RegistroRequest) => postValidado("/auth/registro", usuarioSchema, body),
     onSuccess: (_data, vars) => {
       navigate(`/verificar-email?email=${encodeURIComponent(vars.email)}`);
     },
@@ -89,7 +89,7 @@ export function useCerrarSesion() {
  */
 export function useActualizarPerfil() {
   return useMutation({
-    mutationFn: (body: PerfilActualizarRequest) => put("/perfil", body),
+    mutationFn: (body: PerfilActualizarRequest) => putValidado("/perfil", perfilSchema, body),
     onError: (error) => {
       notificarError(error, "No se pudo actualizar el perfil");
     },

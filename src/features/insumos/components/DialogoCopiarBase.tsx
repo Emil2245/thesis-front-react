@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { post } from "@/api/request";
-import { qk } from "@/api/queryKeys";
 import { toast } from "sonner";
 import { useBasesCentrales } from "../hooks/useBasesCentrales";
+import { useCopiarBase } from "../hooks/useInsumoMutaciones";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -37,22 +35,14 @@ export function DialogoCopiarBase({
   const { data: bases } = useBasesCentrales();
   const [baseId, setBaseId] = useState<string>("");
   const [resultado, setResultado] = useState<CopiaBaseResultadoResponse | null>(null);
-  const qc = useQueryClient();
+  const copiar = useCopiarBase(proyectoId);
 
-  const copiar = useMutation({
-    mutationFn: () =>
-      post<CopiaBaseResultadoResponse>(`/proyectos/${proyectoId}/insumos/copiar`, {
-        fuenteTipo: "CENTRAL",
-        baseId: Number(baseId),
-      }),
-    onSuccess: (data) => {
-      setResultado(data);
-      qc.invalidateQueries({ queryKey: qk.insumos(proyectoId) });
-    },
-    onError: () => {
-      toast.error("Error al copiar la base");
-    },
-  });
+  const handleCopy = () => {
+    copiar.mutate(
+      { fuenteTipo: "CENTRAL", baseId },
+      { onSuccess: setResultado, onError: () => toast.error("Error al copiar la base") },
+    );
+  };
 
   const handleClose = () => {
     setBaseId("");
@@ -89,7 +79,7 @@ export function DialogoCopiarBase({
             </Field>
 
             <DialogFooter>
-              <Button onClick={() => copiar.mutate()} disabled={!baseId || copiar.isPending}>
+              <Button onClick={handleCopy} disabled={!baseId || copiar.isPending}>
                 {copiar.isPending ? (
                   <>
                     <Spinner /> Copiando…

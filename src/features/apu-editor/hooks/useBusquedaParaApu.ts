@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { get } from "@/api/request";
+import { getValidado } from "@/api/request";
 import { qk } from "@/api/queryKeys";
-import type { InsumoBusquedaResponse, Page } from "@/api/contract";
+import { paginaDe, insumoBusquedaSchema } from "@/api/schemas";
 
 interface BusquedaParams {
   proyectoId: string;
@@ -17,7 +17,11 @@ export function useBusquedaParaApu({ proyectoId, fuente, q }: BusquedaParams) {
   return useQuery({
     queryKey: [...qk.insumos(proyectoId, params), "selector"],
     queryFn: () =>
-      get<Page<InsumoBusquedaResponse>>(`/proyectos/${proyectoId}/insumos/selector`, params),
+      getValidado(
+        `/proyectos/${proyectoId}/insumos/selector`,
+        paginaDe(insumoBusquedaSchema),
+        params,
+      ),
     enabled: !!proyectoId,
   });
 }

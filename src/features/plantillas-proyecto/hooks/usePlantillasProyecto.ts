@@ -1,18 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { get, post, del } from "@/api/request";
+import { getValidado, postValidado, del } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import { toast } from "sonner";
-import type {
-  PlantillaProyectoResponse,
-  PlantillaProyectoCrearRequest,
-  ProyectoDesdePlantillaRequest,
-  ProyectoDesdePlantillaResponse,
-} from "@/api/contract";
+import { z } from "zod";
+import { plantillaProyectoSchema, proyectoDesdePlantillaSchema } from "@/api/schemas";
+import type { PlantillaProyectoCrearRequest, ProyectoDesdePlantillaRequest } from "@/api/contract";
 
 export function usePlantillasProyecto() {
   return useQuery({
     queryKey: qk.plantillasProyecto(),
-    queryFn: () => get<PlantillaProyectoResponse[]>("/plantillas-proyecto"),
+    queryFn: () => getValidado("/plantillas-proyecto", z.array(plantillaProyectoSchema)),
   });
 }
 
@@ -21,7 +18,7 @@ export function useGuardarPlantillaProyecto(proyectoId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: PlantillaProyectoCrearRequest) =>
-      post<PlantillaProyectoResponse>(`/proyectos/${proyectoId}/guardar-plantilla`, body),
+      postValidado(`/proyectos/${proyectoId}/guardar-plantilla`, plantillaProyectoSchema, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.plantillasProyecto() });
       toast.success("Plantilla guardada");
@@ -41,7 +38,8 @@ export function useCrearDesdePlantilla() {
       body: ProyectoDesdePlantillaRequest;
       // Se devuelve el envoltorio sin aplanar: `advertencias` es información real
       // y la pantalla debe poder mostrarla más adelante.
-    }) => post<ProyectoDesdePlantillaResponse>(`/proyectos/desde-plantilla/${plantillaId}`, body),
+    }) =>
+      postValidado(`/proyectos/desde-plantilla/${plantillaId}`, proyectoDesdePlantillaSchema, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.proyectos() });
       toast.success("Proyecto creado desde la plantilla");

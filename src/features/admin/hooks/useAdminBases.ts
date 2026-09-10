@@ -1,8 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getValidado, post, put, del } from "@/api/request";
+import { getValidado, postValidado, putValidado, del } from "@/api/request";
 import { baseCentralSchema, paginaDe } from "@/api/schemas";
 import { qk } from "@/api/queryKeys";
-import type { BaseInsumosResponse } from "@/api/contract";
 import { toast } from "sonner";
 
 const CLAVE_FAMILIA_BASES = qk.adminBasesFamilia();
@@ -54,7 +53,7 @@ export function useCrearBase() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: { nombre: string }) =>
-      post<BaseInsumosResponse>("/admin/bases-centrales", body),
+      postValidado("/admin/bases-centrales", baseCentralSchema, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: CLAVE_FAMILIA_BASES });
       toast.success("Base creada");
@@ -67,7 +66,7 @@ export function useRenombrarBase() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, nombre }: { id: string; nombre: string }) =>
-      put<BaseInsumosResponse>(`/admin/bases-centrales/${id}`, { nombre }),
+      putValidado(`/admin/bases-centrales/${id}`, baseCentralSchema, { nombre }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: CLAVE_FAMILIA_BASES });
       toast.success("Base renombrada");
@@ -91,7 +90,8 @@ export function useEliminarBase() {
 export function useArchivarBase() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => post<BaseInsumosResponse>(`/admin/bases-centrales/${id}/archivar`),
+    mutationFn: (id: string) =>
+      postValidado(`/admin/bases-centrales/${id}/archivar`, baseCentralSchema),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: CLAVE_FAMILIA_BASES });
       toast.success("Base archivada/restaurada");

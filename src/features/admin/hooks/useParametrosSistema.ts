@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { get, put } from "@/api/request";
+import { getValidado, putValidado } from "@/api/request";
 import { qk } from "@/api/queryKeys";
-import type { ParametrosSistemaResponse, ParametrosSistemaEditarRequest } from "@/api/contract";
+import { parametrosSistemaSchema } from "@/api/schemas";
+import type { ParametrosSistemaEditarRequest } from "@/api/contract";
 import { toast } from "sonner";
 
 // El backend expone esta lectura sin rol de admin, en el recurso de
@@ -9,7 +10,7 @@ import { toast } from "sonner";
 export function useParametrosSistema() {
   return useQuery({
     queryKey: qk.adminParametros(),
-    queryFn: () => get<ParametrosSistemaResponse>("/proyectos/parametros-sistema"),
+    queryFn: () => getValidado("/proyectos/parametros-sistema", parametrosSistemaSchema),
   });
 }
 
@@ -20,7 +21,7 @@ export function useActualizarParametros() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: ParametrosSistemaEditarRequest) =>
-      put<ParametrosSistemaResponse>("/proyectos/parametros-sistema", body),
+      putValidado("/proyectos/parametros-sistema", parametrosSistemaSchema, body),
     onSuccess: (data) => {
       qc.setQueryData(qk.adminParametros(), data);
       toast.success("Parámetros actualizados");

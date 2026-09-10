@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { post, del } from "@/api/request";
+import { postValidado, del } from "@/api/request";
 import { qk } from "@/api/queryKeys";
-import type { PresupuestoVersionResponse } from "@/api/contract";
 import { toast } from "sonner";
 import { notificarError } from "@/lib/manejoErrores";
+import { versionSchema } from "@/api/schemas";
 
 export function useVersionMutaciones(proyectoId: string) {
   const queryClient = useQueryClient();
@@ -14,7 +14,7 @@ export function useVersionMutaciones(proyectoId: string) {
 
   const crear = useMutation({
     mutationFn: ({ origenId, notas }: { origenId: string; notas?: string }) =>
-      post<PresupuestoVersionResponse>(`/proyectos/${proyectoId}/presupuestos`, {
+      postValidado(`/proyectos/${proyectoId}/presupuestos`, versionSchema, {
         origenId,
         notas,
       }),
@@ -27,7 +27,7 @@ export function useVersionMutaciones(proyectoId: string) {
 
   const marcarVigente = useMutation({
     mutationFn: (versionId: string) =>
-      post<PresupuestoVersionResponse>(`/presupuestos/${versionId}/vigente`),
+      postValidado(`/presupuestos/${versionId}/vigente`, versionSchema),
     onSuccess: () => {
       invalidateVersiones();
       toast.success("Versión vigente actualizada");

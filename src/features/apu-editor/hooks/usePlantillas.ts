@@ -1,14 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { get, getValidado, put, del, post } from "@/api/request";
+import { getValidado, putValidado, del, postValidado } from "@/api/request";
 import { qk } from "@/api/queryKeys";
-import { plantillaApuResumenSchema } from "@/api/schemas";
+import { plantillaApuResumenSchema, plantillaApuDetalleSchema } from "@/api/schemas";
 import { z } from "zod";
-import type {
-  PlantillaApuResumenResponse,
-  PlantillaApuDetalleResponse,
-  PlantillaApuCrearRequest,
-  PlantillaApuEditarRequest,
-} from "@/api/contract";
+import type { PlantillaApuCrearRequest, PlantillaApuEditarRequest } from "@/api/contract";
 
 export function usePlantillas(tipo?: string) {
   return useQuery({
@@ -23,7 +18,7 @@ export function usePlantillas(tipo?: string) {
 export function usePlantillaDetalle(id: string | null) {
   return useQuery({
     queryKey: ["plantilla-apu", id],
-    queryFn: () => get<PlantillaApuDetalleResponse>(`/plantillas-apu/${id}`),
+    queryFn: () => getValidado(`/plantillas-apu/${id}`, plantillaApuDetalleSchema),
     enabled: !!id,
   });
 }
@@ -32,7 +27,7 @@ export function useRenombrarPlantilla() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, body }: { id: string; body: PlantillaApuEditarRequest }) =>
-      put<PlantillaApuResumenResponse>(`/plantillas-apu/${id}`, body),
+      putValidado(`/plantillas-apu/${id}`, plantillaApuResumenSchema, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["plantillas-apu"] });
     },
@@ -53,7 +48,7 @@ export function useGuardarPlantilla(apuId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: PlantillaApuCrearRequest) =>
-      post<PlantillaApuResumenResponse>(`/apus/${apuId}/guardar-plantilla`, body),
+      postValidado(`/apus/${apuId}/guardar-plantilla`, plantillaApuResumenSchema, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["plantillas-apu"] });
     },

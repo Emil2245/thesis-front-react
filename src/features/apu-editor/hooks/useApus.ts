@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getValidado, post, del } from "@/api/request";
+import { getValidado, postValidado, del } from "@/api/request";
 import { qk } from "@/api/queryKeys";
-import { paginaDe, apuResumenSchema } from "@/api/schemas";
-import type { ApuResponse, ApuCrearRequest } from "@/api/contract";
+import { paginaDe, apuResumenSchema, apuSchema } from "@/api/schemas";
+import type { ApuCrearRequest } from "@/api/contract";
 
 export function useApus(presupuestoId: string, filtros?: Record<string, unknown>) {
   return useQuery({
@@ -17,7 +17,7 @@ export function useCrearApu(presupuestoId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: ApuCrearRequest) =>
-      post<ApuResponse>(`/presupuestos/${presupuestoId}/apus`, body),
+      postValidado(`/presupuestos/${presupuestoId}/apus`, apuSchema, body),
     onSuccess: (data) => {
       qc.setQueryData(qk.apu(data.id), data);
       qc.invalidateQueries({ queryKey: qk.apus(presupuestoId) });
@@ -38,7 +38,7 @@ export function useEliminarApu(presupuestoId: string) {
 export function useDuplicarApu(presupuestoId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (apuId: string) => post<ApuResponse>(`/apus/${apuId}/duplicar`),
+    mutationFn: (apuId: string) => postValidado(`/apus/${apuId}/duplicar`, apuSchema),
     onSuccess: (data) => {
       qc.setQueryData(qk.apu(data.id), data);
       qc.invalidateQueries({ queryKey: qk.apus(presupuestoId) });

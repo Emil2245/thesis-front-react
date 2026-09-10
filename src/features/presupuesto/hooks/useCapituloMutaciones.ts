@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { post, put, patch, del } from "@/api/request";
+import { postValidado, putValidado, patchValidado, delValidado } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import type { PresupuestoResponse, CapituloMoverRequest } from "@/api/contract";
+import { presupuestoSchema } from "@/api/schemas";
 import { toast } from "sonner";
 
 export function useCapituloMutaciones(presupuestoId: string) {
@@ -13,7 +14,7 @@ export function useCapituloMutaciones(presupuestoId: string) {
 
   const crear = useMutation({
     mutationFn: (body: { descripcion: string; parentId?: string }) =>
-      post<PresupuestoResponse>(`/presupuestos/${presupuestoId}/capitulos`, body),
+      postValidado(`/presupuestos/${presupuestoId}/capitulos`, presupuestoSchema, body),
     onSuccess: (data) => {
       onSuccess(data);
       toast.success("Capítulo creado");
@@ -23,7 +24,7 @@ export function useCapituloMutaciones(presupuestoId: string) {
 
   const editar = useMutation({
     mutationFn: ({ capituloId, descripcion }: { capituloId: string; descripcion: string }) =>
-      put<PresupuestoResponse>(`/presupuestos/${presupuestoId}/capitulos/${capituloId}`, {
+      putValidado(`/presupuestos/${presupuestoId}/capitulos/${capituloId}`, presupuestoSchema, {
         descripcion,
       }),
     onSuccess: (data) => {
@@ -35,8 +36,9 @@ export function useCapituloMutaciones(presupuestoId: string) {
 
   const mover = useMutation({
     mutationFn: ({ capituloId, body }: { capituloId: string; body: CapituloMoverRequest }) =>
-      patch<PresupuestoResponse>(
+      patchValidado(
         `/presupuestos/${presupuestoId}/capitulos/${capituloId}/mover`,
+        presupuestoSchema,
         body,
       ),
     onSuccess: (data) => {
@@ -48,7 +50,7 @@ export function useCapituloMutaciones(presupuestoId: string) {
 
   const eliminar = useMutation({
     mutationFn: (capituloId: string) =>
-      del<PresupuestoResponse>(`/presupuestos/${presupuestoId}/capitulos/${capituloId}`),
+      delValidado(`/presupuestos/${presupuestoId}/capitulos/${capituloId}`, presupuestoSchema),
     onSuccess: (data) => {
       onSuccess(data);
       toast.success("Capítulo eliminado");

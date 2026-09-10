@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { get } from "@/api/request";
+import { getValidado } from "@/api/request";
+import { apuCalculoSchema } from "@/api/schemas";
 import { qk } from "@/api/queryKeys";
-import type { ApuCalculoResponse } from "@/api/contract";
 
 export function useApuCalculo(apuId: string, habilitado = true) {
   return useQuery({
     queryKey: qk.apuCalculo(apuId),
-    queryFn: () => get<ApuCalculoResponse>(`/apus/${apuId}/calculo`),
+    queryFn: () => getValidado(`/apus/${apuId}/calculo`, apuCalculoSchema),
     enabled: habilitado,
   });
 }

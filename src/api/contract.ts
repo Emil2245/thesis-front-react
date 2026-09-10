@@ -189,11 +189,11 @@ export interface ParametrosProyectoResponse {
   modoCodigoRubro: "AUTOGENERADO" | "MANUAL";
 }
 
-export interface ParametrosProyectoActualizarRequest {
+export interface ParametrosProyectoEditarRequest {
   porcentajeHerramientaMenor: number;
   porcentajeIndirecto?: number | null;
   iva: number;
-  moneda: string;
+  moneda?: string;
 }
 
 // ————— Insumos y bases (§11) —————
@@ -201,6 +201,18 @@ export type TipoInsumo = "EQUIPO" | "MANO_OBRA" | "MATERIAL" | "TRANSPORTE";
 
 // `fuente` y `baseNombre` no están aquí: son de InsumoBusquedaResponse, el DTO
 // del selector multi-fuente. Los listados de insumos del proyecto no los traen.
+/** @deprecated Use ParametrosProyectoEditarRequest. */
+export type ParametrosProyectoActualizarRequest = Partial<ParametrosProyectoEditarRequest> & {
+  mostrarSeccionesVacias?: boolean;
+  sufijosSeccionActivos?: boolean;
+  mostrarSubtotalesSeccion?: boolean;
+  mostrarSubtotalesPie?: boolean;
+  mostrarNombreProyectoHeader?: boolean;
+  enumerarApus?: boolean;
+  mensajeFooter?: string | null;
+  modoCodigoRubro?: "AUTOGENERADO" | "MANUAL";
+};
+
 export interface InsumoResponse {
   id: string;
   codigo: string;
@@ -262,8 +274,7 @@ export interface ImportResultadoResponse {
 
 export interface CopiarBaseRequest {
   fuenteTipo: "CENTRAL" | "PROYECTO";
-  baseId?: string;
-  proyectoId?: string;
+  baseId: string;
 }
 
 export interface CopiaBaseResultadoResponse {

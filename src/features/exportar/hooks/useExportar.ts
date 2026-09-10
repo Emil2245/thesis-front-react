@@ -1,16 +1,17 @@
 import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { get, descargar, getValidado } from "@/api/request";
+import { descargar, getValidado } from "@/api/request";
 import { qk } from "@/api/queryKeys";
-import type { FormatoExportCronograma, ValidacionPresupuestoResponse } from "@/api/contract";
-import { cronogramaExportPreflightSchema } from "@/api/schemas";
+import type { FormatoExportCronograma } from "@/api/contract";
+import { cronogramaExportPreflightSchema, validacionPresupuestoSchema } from "@/api/schemas";
 import { ApiError } from "@/api/problem";
 import { toast } from "sonner";
 
 export function useValidacionExport(presupuestoId: string) {
   return useQuery({
     queryKey: qk.presupuestoValidacion(presupuestoId),
-    queryFn: () => get<ValidacionPresupuestoResponse>(`/presupuestos/${presupuestoId}/validacion`),
+    queryFn: () =>
+      getValidado(`/presupuestos/${presupuestoId}/validacion`, validacionPresupuestoSchema),
     enabled: !!presupuestoId,
   });
 }
@@ -66,10 +67,13 @@ export function useExportar() {
     try {
       const { blob, nombreArchivo } = await descargar(
         `/documentos/especificaciones-tecnicas/${presupuestoId}`,
+        { formato: "docx" },
       );
       guardar(blob, nombreArchivo ?? "especificaciones-tecnicas.docx");
-    } catch {
-      toast.error("Error al descargar");
+    } catch (e) {
+      toast.error(
+        e instanceof ApiError ? `${e.problem.codigo}: ${e.problem.mensaje}` : "Error al descargar",
+      );
     }
   }, []);
 

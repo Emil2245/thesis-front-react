@@ -1,8 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { post, patch, del } from "@/api/request";
+import { postValidado, patchValidado, delValidado } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import type { PresupuestoResponse } from "@/api/contract";
 import { toast } from "sonner";
+import { presupuestoSchema } from "@/api/schemas";
 
 export function useRubroMutaciones(presupuestoId: string) {
   const queryClient = useQueryClient();
@@ -22,10 +23,11 @@ export function useRubroMutaciones(presupuestoId: string) {
       apuId: string;
       cantidad: string;
     }) =>
-      post<PresupuestoResponse>(`/presupuestos/${presupuestoId}/capitulos/${capituloId}/rubros`, {
-        apuId,
-        cantidad,
-      }),
+      postValidado(
+        `/presupuestos/${presupuestoId}/capitulos/${capituloId}/rubros`,
+        presupuestoSchema,
+        { apuId, cantidad },
+      ),
     onSuccess: (data) => {
       onSuccess(data);
       toast.success("Rubro agregado");
@@ -43,8 +45,9 @@ export function useRubroMutaciones(presupuestoId: string) {
       rubroId: string;
       cantidad: string;
     }) =>
-      patch<PresupuestoResponse>(
+      patchValidado(
         `/presupuestos/${presupuestoId}/capitulos/${capituloId}/rubros/${rubroId}`,
+        presupuestoSchema,
         { cantidad },
       ),
     onSuccess: (data) => {
@@ -56,8 +59,9 @@ export function useRubroMutaciones(presupuestoId: string) {
 
   const eliminar = useMutation({
     mutationFn: ({ capituloId, rubroId }: { capituloId: string; rubroId: string }) =>
-      del<PresupuestoResponse>(
+      delValidado(
         `/presupuestos/${presupuestoId}/capitulos/${capituloId}/rubros/${rubroId}`,
+        presupuestoSchema,
       ),
     onSuccess: (data) => {
       onSuccess(data);

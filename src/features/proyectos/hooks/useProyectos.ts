@@ -1,8 +1,8 @@
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { get, getValidado, post, put, del } from "@/api/request";
+import { getValidado, postValidado, putValidado, del } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import { paginaDe, proyectoSchema } from "@/api/schemas";
-import type { ProyectoResponse, ProyectoCrearRequest, ProyectoEditarRequest } from "@/api/contract";
+import type { ProyectoCrearRequest, ProyectoEditarRequest } from "@/api/contract";
 
 export function useProyectos(filtros?: Record<string, unknown>) {
   return useQuery({
@@ -15,7 +15,7 @@ export function useProyectos(filtros?: Record<string, unknown>) {
 export function useProyecto(id: string | null) {
   return useQuery({
     queryKey: qk.proyecto(id ?? ""),
-    queryFn: () => get<ProyectoResponse>(`/proyectos/${id}`),
+    queryFn: () => getValidado(`/proyectos/${id}`, proyectoSchema),
     enabled: id != null,
   });
 }
@@ -23,7 +23,7 @@ export function useProyecto(id: string | null) {
 export function useCrearProyecto() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: ProyectoCrearRequest) => post<ProyectoResponse>("/proyectos", body),
+    mutationFn: (body: ProyectoCrearRequest) => postValidado("/proyectos", proyectoSchema, body),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.proyectos() }),
   });
 }
@@ -31,7 +31,8 @@ export function useCrearProyecto() {
 export function useEditarProyecto(id: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: ProyectoEditarRequest) => put<ProyectoResponse>(`/proyectos/${id}`, body),
+    mutationFn: (body: ProyectoEditarRequest) =>
+      putValidado(`/proyectos/${id}`, proyectoSchema, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.proyectos() });
       qc.invalidateQueries({ queryKey: qk.proyecto(id) });

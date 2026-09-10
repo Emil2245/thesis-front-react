@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { get, patch, post, put, del } from "@/api/request";
+import { getValidado, patchValidado, postValidado, putValidado, delValidado } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import { asDecimal, parsearEntradaDecimal, type Decimal } from "@/lib/decimal";
 import { celdaCantidadSchema, celdaRendimientoSchema, precioOverrideSchema } from "../schemas";
@@ -11,9 +11,9 @@ import type {
   ApuPatchRequest,
   ApuDetallePatchRequest,
   ApuDetalleCrearRequest,
-  EspecificacionTecnicaResponse,
 } from "@/api/contract";
 import type { ApiError } from "@/api/problem";
+import { apuSchema, especificacionTecnicaSchema } from "@/api/schemas";
 
 export type EstadoCelda = "estable" | "pendiente" | "error";
 
@@ -82,14 +82,15 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
 
   const { data: apu, isPending: cargando } = useQuery({
     queryKey: qk.apu(apuId),
-    queryFn: () => get<ApuResponse>(`/apus/${apuId}`),
+    queryFn: () => getValidado(`/apus/${apuId}`, apuSchema),
   });
 
   // La ET se leía a ciegas: el frontend sólo hacía PUT y nunca este GET, así que
   // el panel no podía mostrar lo guardado sin recargar el APU entero.
   const { data: especificacion } = useQuery({
     queryKey: qk.apuEspecificacion(apuId),
-    queryFn: () => get<EspecificacionTecnicaResponse>(`/apus/${apuId}/especificacion-tecnica`),
+    queryFn: () =>
+      getValidado(`/apus/${apuId}/especificacion-tecnica`, especificacionTecnicaSchema),
   });
 
   const secciones = useMemo<SeccionEditor[]>(() => {
@@ -117,7 +118,7 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
 
   const editMutation = useMutation({
     mutationFn: ({ detalleId, body }: { detalleId: string; body: ApuDetallePatchRequest }) =>
-      patch<ApuResponse>(`/apus/${apuId}/detalles/${detalleId}`, body),
+      patchValidado(`/apus/${apuId}/detalles/${detalleId}`, apuSchema, body),
     onSuccess: (response) => {
       qc.setQueryData(qk.apu(apuId), response);
       if (presupuestoId) {
@@ -129,7 +130,7 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
 
   const agregarMutation = useMutation({
     mutationFn: (body: ApuDetalleCrearRequest) =>
-      post<ApuResponse>(`/apus/${apuId}/detalles`, body),
+      postValidado(`/apus/${apuId}/detalles`, apuSchema, body),
     onSuccess: (response) => {
       qc.setQueryData(qk.apu(apuId), response);
       if (presupuestoId) {
@@ -140,7 +141,8 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
   });
 
   const eliminarMutation = useMutation({
-    mutationFn: (detalleId: string) => del<ApuResponse>(`/apus/${apuId}/detalles/${detalleId}`),
+    mutationFn: (detalleId: string) =>
+      delValidado(`/apus/${apuId}/detalles/${detalleId}`, apuSchema),
     onSuccess: (response) => {
       qc.setQueryData(qk.apu(apuId), response);
       if (presupuestoId) {
@@ -151,7 +153,7 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
   });
 
   const encabezadoMutation = useMutation({
-    mutationFn: (body: ApuPatchRequest) => patch<ApuResponse>(`/apus/${apuId}`, body),
+    mutationFn: (body: ApuPatchRequest) => patchValidado(`/apus/${apuId}`, apuSchema, body),
     onSuccess: (response) => {
       qc.setQueryData(qk.apu(apuId), response);
       if (presupuestoId) {
@@ -167,7 +169,7 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
   // pedirlo a mano (plan 062 §1).
   const porcentajeCiMutation = useMutation({
     mutationFn: (valor: Decimal | null) =>
-      patch<ApuResponse>(`/apus/${apuId}/porcentaje-indirecto`, valor, {
+      patchValidado(`/apus/${apuId}/porcentaje-indirecto`, apuSchema, valor, {
         headers: { "Content-Type": "application/json" },
       }),
     onSuccess: (response) => {
@@ -317,7 +319,10 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
 
   const guardarEspecificacionTecnica = useCallback(
     async (texto: string) => {
-      await put(`/apus/${apuId}/especificacion-tecnica`, { texto });
+      const response = await putValidado(`/apus/${apuId}/especificacion-tecnica`, apuSchema, {
+        texto,
+      });
+      qc.setQueryData(qk.apu(apuId), response);
       qc.invalidateQueries({ queryKey: qk.apuEspecificacion(apuId) });
     },
     [apuId, qc],

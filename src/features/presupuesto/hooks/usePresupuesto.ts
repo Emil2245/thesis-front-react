@@ -1,18 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
-import { get } from "@/api/request";
+import { getValidado } from "@/api/request";
 import { qk } from "@/api/queryKeys";
-import type {
-  PresupuestoResponse,
-  PresupuestoVersionResponse,
-  ValidacionPresupuestoResponse,
-  ResumenComponentesResponse,
-  ComparacionVersionesResponse,
-} from "@/api/contract";
+import { z } from "zod";
+import {
+  presupuestoSchema,
+  versionSchema,
+  resumenComponentesSchema,
+  validacionPresupuestoCompletaSchema,
+  comparacionVersionesSchema,
+} from "@/api/schemas";
 
 export function usePresupuesto(presupuestoId: string) {
   return useQuery({
     queryKey: qk.presupuesto(presupuestoId),
-    queryFn: () => get<PresupuestoResponse>(`/presupuestos/${presupuestoId}`),
+    queryFn: () => getValidado(`/presupuestos/${presupuestoId}`, presupuestoSchema),
     enabled: !!presupuestoId,
   });
 }
@@ -20,7 +21,7 @@ export function usePresupuesto(presupuestoId: string) {
 export function useResumen(presupuestoId: string) {
   return useQuery({
     queryKey: qk.presupuestoResumen(presupuestoId),
-    queryFn: () => get<ResumenComponentesResponse>(`/presupuestos/${presupuestoId}/resumen`),
+    queryFn: () => getValidado(`/presupuestos/${presupuestoId}/resumen`, resumenComponentesSchema),
     enabled: !!presupuestoId,
   });
 }
@@ -28,7 +29,8 @@ export function useResumen(presupuestoId: string) {
 export function useValidacion(presupuestoId: string) {
   return useQuery({
     queryKey: qk.presupuestoValidacion(presupuestoId),
-    queryFn: () => get<ValidacionPresupuestoResponse>(`/presupuestos/${presupuestoId}/validacion`),
+    queryFn: () =>
+      getValidado(`/presupuestos/${presupuestoId}/validacion`, validacionPresupuestoCompletaSchema),
     enabled: !!presupuestoId,
   });
 }
@@ -36,7 +38,7 @@ export function useValidacion(presupuestoId: string) {
 export function useVersiones(proyectoId: string) {
   return useQuery({
     queryKey: qk.versiones(proyectoId),
-    queryFn: () => get<PresupuestoVersionResponse[]>(`/proyectos/${proyectoId}/presupuestos`),
+    queryFn: () => getValidado(`/proyectos/${proyectoId}/presupuestos`, z.array(versionSchema)),
     enabled: !!proyectoId,
   });
 }
@@ -45,7 +47,7 @@ export function useComparacion(presupuestoId: string, conPresupuestoId?: string)
   return useQuery({
     queryKey: [...qk.presupuesto(presupuestoId), "comparar", conPresupuestoId] as const,
     queryFn: () =>
-      get<ComparacionVersionesResponse>(`/presupuestos/${presupuestoId}/comparar`, {
+      getValidado(`/presupuestos/${presupuestoId}/comparar`, comparacionVersionesSchema, {
         con: conPresupuestoId,
       }),
     enabled: !!presupuestoId && !!conPresupuestoId,

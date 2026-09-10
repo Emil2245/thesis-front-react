@@ -1,12 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { get, post, put, del } from "@/api/request";
+import { getValidado, postValidado, putValidado, del } from "@/api/request";
 import { qk } from "@/api/queryKeys";
-import type { FirmanteResponse } from "@/api/contract";
+import { firmanteSchema } from "@/api/schemas";
+import { z } from "zod";
 
 export function useFirmantes(proyectoId: string | null) {
   return useQuery({
     queryKey: qk.firmantes(proyectoId ?? ""),
-    queryFn: () => get<FirmanteResponse[]>(`/proyectos/${proyectoId}/firmantes`),
+    queryFn: () => getValidado(`/proyectos/${proyectoId}/firmantes`, z.array(firmanteSchema)),
     enabled: proyectoId != null,
   });
 }
@@ -19,7 +20,7 @@ export function useCrearFirmante(proyectoId: string) {
       cargo: string;
       rol: "CONSOLIDADO" | "APROBADO";
       orden: number;
-    }) => post<FirmanteResponse>(`/proyectos/${proyectoId}/firmantes`, body),
+    }) => postValidado(`/proyectos/${proyectoId}/firmantes`, firmanteSchema, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.firmantes(proyectoId) });
     },
@@ -34,7 +35,7 @@ export function useEditarFirmante(proyectoId: string, firmanteId: string) {
       cargo?: string;
       rol?: "CONSOLIDADO" | "APROBADO";
       orden?: number;
-    }) => put<FirmanteResponse>(`/proyectos/${proyectoId}/firmantes/${firmanteId}`, body),
+    }) => putValidado(`/proyectos/${proyectoId}/firmantes/${firmanteId}`, firmanteSchema, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.firmantes(proyectoId) });
     },
