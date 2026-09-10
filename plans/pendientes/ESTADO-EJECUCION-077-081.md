@@ -23,8 +23,8 @@
 | — reactivación | ✅ hecho | — | — | — | banner quitado, índice a TODO, bitácora escrita (`5a7e480`) |
 | 077 usuarios | ✅ **DONE, mergeado** | (worktree retirado) | `wa-077` @ `ce226b4` | 1/2 | merge `d23c7e8`; índice a DONE |
 | 078 plantillas | ✅ **DONE, mergeado** | (worktree retirado) | `wa-078` @ `67ccd60` | 0/2 | aprobado sin ronda de revisión |
-| 079 valores | 🔄 despachado | `.claude/worktrees/wa-079` | `wa-079` | 0/2 | plan corregido por deriva |
-| 080 logs | ⏳ pendiente | — | — | — | no despachar hasta mergear 079 |
+| 079 valores | ✅ **DONE, mergeado** | (worktree retirado) | `wa-079` @ `c90d4ce` | 1/2 | ronda de formato únicamente |
+| 080 logs | 🔄 despachado | `.claude/worktrees/wa-080` | `wa-080` | 0/2 | plan corregido: su §08 mandaba editar el test intocable |
 | 081 retirar gates | ⏳ pendiente | — | — | — | exige 077–080 en DONE |
 
 ## Por qué en serie
@@ -188,3 +188,19 @@ no de calidad.
 Confirmado lo que anticipaba la §9bis: el alta **no se verificó contra el backend real** porque no
 hay ningún APU alcanzable por la cuenta admin. Lo dijo así en su informe, sin adornarlo. Merge
 `4489287`.
+
+## 079 cerrado (2026-09-10)
+
+Alcance exacto de la §8. `src/api/request.ts` **puramente aditivo**: 19 líneas, ningún helper
+existente modificado. Suite completa **511 pasan / 20 fallan** contra 495/20: +16 tests, cero
+regresiones. `lint` 0 errores, `guard:adr9` limpio, ninguna aritmética sobre `valor`, y la BD de
+desarrollo quedó con sus cuatro claves sembradas (su `ZZZ_VERIF_079` no quedó colgando).
+
+Repetí sus mutaciones sin fiarme del informe: `creado: false` tumba «crea (201, creado=true) …» y
+quitar `encodeURIComponent` tumba «codifica la clave en la ruta». Cazan de verdad.
+
+**Una ronda de revisión, y el fallo era mío:** la §13 que le pasé no incluía `format:check`, que sí
+está encadenado en `verify`, así que dos de sus archivos quedaron mal formateados. Se lo dije
+reconociendo la omisión; lo arregló con `prettier --write` y verifiqué que el diff es reflujo de
+líneas puro, sin cambio semántico. **`format:check` añadido a la §13 de 080** para que no se
+repita. Merge `f22b7c9`.
