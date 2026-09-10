@@ -21,8 +21,8 @@
 | Plan | Estado | Worktree | Rama | Rondas | Nota |
 | --- | --- | --- | --- | --- | --- |
 | — reactivación | ✅ hecho | — | — | — | banner quitado, índice a TODO, bitácora escrita (`5a7e480`) |
-| 077 usuarios | 🟡 vuelto, en revisión ronda 1 | `.claude/worktrees/wa-077` | `wa-077` | **1/2** | ejecutor COMPLETE en `4e10904`; revisión pide 3 arreglos |
-| 078 plantillas | ⏳ pendiente | — | — | — | no despachar hasta mergear 077 |
+| 077 usuarios | ✅ **DONE, mergeado** | (worktree retirado) | `wa-077` @ `ce226b4` | 1/2 | merge `d23c7e8`; índice a DONE |
+| 078 plantillas | 🔄 despachado | `.claude/worktrees/wa-078` | `wa-078` | 0/2 | plan corregido (deriva + §9bis de la cascada) |
 | 079 valores | ⏳ pendiente | — | — | — | no despachar hasta mergear 078 |
 | 080 logs | ⏳ pendiente | — | — | — | no despachar hasta mergear 079 |
 | 081 retirar gates | ⏳ pendiente | — | — | — | exige 077–080 en DONE |
@@ -144,3 +144,26 @@ Los dos pertenecen a otra estirpe (el WIP `98fd848`, rama del workspace/082), no
 3. **`AGENTS.md` miente sobre el `*`**: dice «en MSW y en Playwright», pero en MSW no se usa nunca
    y añadirlo rompería el enrutado. Corregir al cierre, junto con el baseline de tests (§9.7 del
    encargo).
+
+## 077 cerrado (2026-09-10)
+
+Ronda 1 verificada por mí: el test del 409 al eliminar **ahora sí caza la rotura** —con el
+`onClick` neutralizado pasa a fallar, antes pasaba—, `useUsuarioAdmin` y su handler `GET /:id`
+borrados. Conservó `qk.adminUsuario(id)` con motivo declarado en NOTES (fábrica de clave inerte que
+la §8 pide explícitamente): desviación documentada, aceptada.
+
+**De mis tres puntos, el tercero era mío y estaba equivocado**: el `disabled` de «Invitar» ya
+estaba desde el primer commit (`ca86859:115`); yo había grepeado `required`, no `disabled`. El
+ejecutor lo demostró con el historial en vez de tragárselo.
+
+Suite completa: **478 pasan / 20 fallan** contra **459/20** de la línea base. +19 tests, +1 archivo,
+**cero regresiones**; los 20 fallos y los 11 archivos rojos son idénticos a los de base. Merge
+`d23c7e8`. Worktree retirado; la rama `wa-078` sale ya con 077 dentro.
+
+**El baseline de la rama está roja por tres vías, todas del WIP `98fd848`:** 20 tests,
+`typecheck` (`contrato.test.tsx:197`) y `format:check` (`useApuEditor.ts`). `pnpm run verify` no
+puede ir verde sin tocar archivos ajenos a 077–081 — decisión pendiente para el cierre, y va dicha
+en el informe final pase lo que pase.
+
+**Baseline real de `AGENTS.md` a corregir al cierre:** dice «475 tests en 73 archivos»; medido hoy,
+la base eran **479 en 75** y tras 077 son **498 en 76**.
