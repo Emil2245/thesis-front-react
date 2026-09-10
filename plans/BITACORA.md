@@ -1,8 +1,8 @@
 # Bitácora
 
-> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). Los Planes 077–087 están cerrados e integrados; el Plan 088 es la siguiente tarea pendiente.
+> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). Los Planes 077–087 están cerrados e integrados; 088 queda SUPERSEDED y el Plan 090 es la siguiente tarea.
 
-**Encargo activo: siguiente tarea pendiente, Plan 088** · **Actualizada:** 2026-09-10
+**Encargo activo: siguiente tarea pendiente, Plan 090** · **Actualizada:** 2026-09-10
 **Ronda de paridad 1** · **CERRADA**
 
 > La lleva el orquestador ([`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md)). Se escribe **en el momento** en que
@@ -10,6 +10,14 @@
 > aquí no ocurrió.
 >
 > Estados: `⏳ pendiente` · `🔄 en curso` · `🟡 vuelto, sin revisar` · `❌ rechazado` · `✅ verde`
+
+## Planificación UX del cronograma (2026-09-10)
+
+- Se revisaron las tres imágenes aportadas: navegación por vistas, Gantt con jerarquía alineada junto al timeline y Curva S como gráfica; también la entrevista N05, el backend Plan 030/DTOs/IT, la implementación frontend del Plan 087 y la referencia funcional acotada de `../ingepresupuestos/`.
+- La investigación web contrastó [Kibo UI Gantt](https://www.kibo-ui.com/components/gantt), [Frappe Gantt](https://github.com/frappe/gantt), [gantt-task-react](https://github.com/MaTeMaTuK/gantt-task-react) y la guía a11y de [visx](https://github.com/airbnb/visx/blob/master/packages/visx-a11y/Readme.md). No se adopta librería: los Gantt evaluados son date-oriented o no demuestran garantías específicas de teclado/lector de pantalla, mientras el contrato local es ordinal por períodos y usa PATCH semánticos.
+- Quedan creados cuatro cortes: **090** selector dentro de `CronogramaPage`; **091** Gantt jerárquico interactivo; **092** matriz valorizada; **093** Curva S SVG accesible. El DAG es `087 → 090 → {091, 092, 093} → 089`.
+- Límites confirmados: una sola GET `/cronogramas/{id}/vistas`; sin fechas de actividad, avance real, SPI, dependencias, CPM, ruta crítica, lag, hitos, auto-programación ni subtotales monetarios por capítulo. Drag/resize solo puede traducirse a `MOVER_SEGMENTO`/`REDIMENSIONAR_SEGMENTO`.
+- El Plan 088 queda **SUPERSEDED**: Resumen continúa en `ResumenProyectoPage` y Cronograma como ruta independiente del sidebar; no se crean pestañas de ambos en `WorkspacePage`.
 
 ## Integración de Planes 077–081 en main (2026-09-10)
 
