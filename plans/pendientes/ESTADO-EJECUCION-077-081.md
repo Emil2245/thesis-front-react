@@ -24,8 +24,8 @@
 | 077 usuarios | ✅ **DONE, mergeado** | (worktree retirado) | `wa-077` @ `ce226b4` | 1/2 | merge `d23c7e8`; índice a DONE |
 | 078 plantillas | ✅ **DONE, mergeado** | (worktree retirado) | `wa-078` @ `67ccd60` | 0/2 | aprobado sin ronda de revisión |
 | 079 valores | ✅ **DONE, mergeado** | (worktree retirado) | `wa-079` @ `c90d4ce` | 1/2 | ronda de formato únicamente |
-| 080 logs | 🔄 despachado | `.claude/worktrees/wa-080` | `wa-080` | 0/2 | plan corregido: su §08 mandaba editar el test intocable |
-| 081 retirar gates | ⏳ pendiente | — | — | — | exige 077–080 en DONE |
+| 080 logs | ✅ **DONE, mergeado** | (worktree retirado) | `wa-080` @ `dc9ae53` | 0/2 | aprobado sin ronda de revisión |
+| 081 retirar gates | 🔄 despachado | `.claude/worktrees/wa-081` | `wa-081` | 0/2 | matriz de evidencia completa; §08bis con los 8 errores medidos |
 
 ## Por qué en serie
 
@@ -204,3 +204,35 @@ está encadenado en `verify`, así que dos de sus archivos quedaron mal formatea
 reconociendo la omisión; lo arregló con `prettier --write` y verifiqué que el diff es reflujo de
 líneas puro, sin cambio semántico. **`format:check` añadido a la §13 de 080** para que no se
 repita. Merge `f22b7c9`.
+
+## 080 cerrado (2026-09-10)
+
+Aprobado **sin ronda de revisión**. Alcance exacto de la §08. Suite completa **527 pasan / 20
+fallan** contra 511/20: +16 tests, cero regresiones. `lint` 0 errores, `guard:adr9` limpio,
+`format:check` sólo con el ajeno.
+
+Mis tres mutaciones, todas cazadas: mandar los filtros vacíos en vez de omitirlos (caen 3 tests con
+nombre), quitar `.nullable()` de `entidadId` (caen 15) y **forzar el gate abierto**, que tumba
+`AdminLogsPage (degradada)` en `paginas-admin.test.tsx`. Esa última importa más que las otras dos:
+demuestra que el test intocable es una red de seguridad real para 081.
+
+Decisión de criterio suya, aceptada: `<input type="date">` nativo para el rango de fechas en vez
+del `DatePicker` custom, por ser un filtro secundario. Menos código y sin dependencia extra.
+
+Hallazgo de contrato que anotó y merece quedar: los 400 del backend llevan **`codigo:"validacion"`
+fijo** y el slug específico (`evento-largo`, `rango-fechas-invalido`, `parametro-invalido`) va en
+`mensaje`, no en `codigo`. Coincide con lo que vi en 077 (`{"codigo":"validacion","mensaje":"must
+be a well-formed email address"}`).
+
+## Progreso de la suite (siempre con los mismos 20 fallos preexistentes)
+
+| Momento | Tests | Archivos |
+| --- | --- | --- |
+| línea base (antes de la rama) | 459 ✅ / 20 ❌ | 75 |
+| tras 077 | 478 / 20 | 76 |
+| tras 078 | 495 / 20 | 77 |
+| tras 079 | 511 / 20 | 78 |
+| tras 080 | 527 / 20 | 79 |
+
+**+68 tests, cero regresiones.** El baseline de `AGENTS.md` («475 en 73») está caducado y hay que
+actualizarlo al cierre.
