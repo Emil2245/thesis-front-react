@@ -39,9 +39,9 @@ pnpm run e2e:manual        # capturas de docs/manual/ (chromium)
 pnpm run dev      # http://localhost:5173
 ```
 
-Baseline actual: **551 tests unitarios en 79 archivos, todos en verde**, y `pnpm run verify` pasa
-entero —typecheck, lint, guard:adr9, format:check, test y build—. Medido el 2026-09-10 al cerrar la
-rama 077–081. Antes de esa rama eran 459 ✅ / **20 ❌** en 75 archivos, con `typecheck` y
+Baseline actual: **596 tests unitarios en 87 archivos, todos en verde**, y `pnpm run verify` pasa
+entero —typecheck, lint, guard:adr9, format:check, test y build—. Medido el 2026-09-10 después de
+integrar la rama 077–081 sobre los Planes 082–087. Antes de esa rama eran 459 ✅ / **20 ❌** en 75 archivos, con `typecheck` y
 `format:check` rojos y `vite build` bloqueado; los 20 fallos eran fixtures y `server.use(...)` que
 no se actualizaron cuando el plan 076 metió validación runtime en el seam. Están en
 [`docs/bugs.md`](docs/bugs.md) §6, con la regla que faltaba: **una fixture es una afirmación sobre
