@@ -95,13 +95,20 @@ export function WorkspacePage() {
                 <TabsTrigger value="especificacion">Especificación técnica</TabsTrigger>
               </TabsList>
               <TabsContent value="apu">
-                <PestanaApu apuId={selectedApuId} proyectoId={proyecto.id} />
+                <PestanaApu
+                  apuId={selectedApuId}
+                  proyectoId={proyecto.id}
+                  presupuestoId={activa?.presupuestoId ?? ""}
+                />
               </TabsContent>
               <TabsContent value="insumos">
-                <PestanaInsumos apuId={selectedApuId} />
+                <PestanaInsumos apuId={selectedApuId} presupuestoId={activa?.presupuestoId ?? ""} />
               </TabsContent>
               <TabsContent value="especificacion">
-                <PestanaEspecificacionTecnica apuId={selectedApuId} />
+                <PestanaEspecificacionTecnica
+                  apuId={selectedApuId}
+                  presupuestoId={activa?.presupuestoId ?? ""}
+                />
               </TabsContent>
             </Tabs>
           </TarjetaTabla>

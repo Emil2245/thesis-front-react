@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { useSearchParams } from "react-router-dom";
 import { PresupuestoCompacto } from "@/features/workspace/components/PresupuestoCompacto";
 import { presupuestoFixture, RUBRO_1_1_1, RUBRO_1_2_1 } from "@/test/fixtures/presupuesto";
@@ -64,7 +64,7 @@ describe("PresupuestoCompacto", () => {
     expect(screen.getByTestId("search-params")).toHaveTextContent(`v=3&rubro=${RUBRO_1_2_1}`);
   });
 
-  it("falls back from a stale rubro with all ancestors visible", async () => {
+  it("preserves a stale rubro without silently selecting another entry", () => {
     renderConProviders(
       <>
         <PresupuestoCompacto presupuesto={presupuestoFixture} />
@@ -72,13 +72,8 @@ describe("PresupuestoCompacto", () => {
       </>,
       { ruta: "/proyectos/presupuesto?v=3&rubro=stale" },
     );
-    await waitFor(() =>
-      expect(screen.getByTestId("search-params")).toHaveTextContent(`v=3&rubro=${RUBRO_1_1_1}`),
-    );
-    expect(screen.getByRole("row", { name: /Preliminares/ })).toBeInTheDocument();
-    expect(screen.getByRole("row", { name: /Instalación de campamento/ })).toBeInTheDocument();
-    expect(screen.getByText("Excavación a máquina")).toBeInTheDocument();
-    expect(screen.getAllByRole("row", { selected: true })).toHaveLength(1);
+    expect(screen.getByTestId("search-params")).toHaveTextContent("v=3&rubro=stale");
+    expect(screen.queryAllByRole("row", { selected: true })).toHaveLength(0);
   });
 
   it("has no CRUD controls", () => {

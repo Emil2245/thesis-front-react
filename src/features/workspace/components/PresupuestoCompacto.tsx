@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { useMemo, useState, type KeyboardEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { CapituloResponse, PresupuestoResponse, RubroResponse } from "@/api/contract";
 import type { ReactNode } from "react";
@@ -24,26 +24,9 @@ export function PresupuestoCompacto({ presupuesto }: { presupuesto: PresupuestoR
   const visibleExpanded = useMemo(() => {
     const forced = selected?.id
       ? entries.find(({ rubro }) => rubro.id === selected.id)?.ancestors
-      : selectedId && !selected
-        ? entries[0]?.ancestors
-        : undefined;
+      : undefined;
     return forced ? new Set([...expanded, ...forced]) : expanded;
-  }, [entries, expanded, selected, selectedId]);
-
-  useEffect(() => {
-    const fallback = entries[0];
-    if (selectedId && !selected) {
-      setParams(
-        (previous) => {
-          const next = new URLSearchParams(previous);
-          if (fallback) next.set("rubro", fallback.rubro.id);
-          else next.delete("rubro");
-          return next;
-        },
-        { replace: true },
-      );
-    }
-  }, [entries, selected, selectedId, setParams]);
+  }, [entries, expanded, selected]);
 
   const select = (rubro: RubroResponse) => {
     setParams(

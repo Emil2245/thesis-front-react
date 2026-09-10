@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { getValidado } from "@/api/request";
-import { apuSchema } from "@/api/schemas";
+import { getApu } from "@/api/apus";
 import { qk } from "@/api/queryKeys";
 import type { ApuResponse } from "@/api/contract";
+import { mensajeCarga } from "../error";
 import { EstadoVacio } from "@/components/comunes/EstadoVacio";
 
 const ORDEN_SECCIONES: readonly ApuResponse["secciones"][number]["tipo"][] = [
@@ -19,10 +19,16 @@ const etiquetas: Record<(typeof ORDEN_SECCIONES)[number], string> = {
   TRANSPORTE: "Transporte",
 };
 
-export function PestanaInsumos({ apuId }: { apuId: string | null }) {
+export function PestanaInsumos({
+  apuId,
+  presupuestoId,
+}: {
+  apuId: string | null;
+  presupuestoId?: string;
+}) {
   const query = useQuery({
-    queryKey: qk.apu(apuId ?? ""),
-    queryFn: () => getValidado(`/apus/${apuId}`, apuSchema),
+    queryKey: presupuestoId ? qk.apuWorkspace(presupuestoId, apuId ?? "") : qk.apu(apuId ?? ""),
+    queryFn: () => getApu(apuId!),
     enabled: Boolean(apuId),
   });
 
@@ -41,10 +47,11 @@ export function PestanaInsumos({ apuId }: { apuId: string | null }) {
       </output>
     );
   }
+  if (query.isFetching) return <output aria-busy="true">Cargando insumos…</output>;
   if (query.isError) {
     return (
       <div className="space-y-2 p-4">
-        <p role="alert">No se pudieron cargar los insumos.</p>
+        <p role="alert">{mensajeCarga(query.error, "los insumos")}</p>
         <button type="button" onClick={() => query.refetch()} className="underline">
           Reintentar
         </button>

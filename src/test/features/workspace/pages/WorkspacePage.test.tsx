@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { http, HttpResponse } from "msw";
 import { screen } from "@testing-library/react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { WorkspacePage } from "@/features/workspace/pages/WorkspacePage";
+import { apuDetalleFixture } from "@/test/fixtures/apu";
 import { PRESUPUESTO_V2, RUBRO_1_1_1 } from "@/test/fixtures/presupuesto";
 import { renderConProviders } from "@/test/render";
+import { server } from "@/test/server";
 
 describe("WorkspacePage", () => {
   it("mounts on the authenticated route shape and preserves the selected version", async () => {
@@ -32,7 +35,14 @@ describe("WorkspacePage", () => {
     expect(screen.getByLabelText("Ubicación")).toHaveTextContent(`?v=${PRESUPUESTO_V2}`);
   });
 
-  it("resolves a nested selected rubro to its APU", async () => {
+  it("resolves a nested selected rubro to its APU endpoint by apuId", async () => {
+    let observedPath = "";
+    server.use(
+      http.get("*/api/v1/apus/:id", ({ request }) => {
+        observedPath = new URL(request.url).pathname;
+        return HttpResponse.json(apuDetalleFixture);
+      }),
+    );
     renderConProviders(
       <Routes>
         <Route path="/proyectos/:id/workspace" element={<WorkspacePage />} />
@@ -44,6 +54,7 @@ describe("WorkspacePage", () => {
 
     expect(await screen.findByText("APU-001")).toBeInTheDocument();
     expect(screen.getByText("Equipo")).toBeInTheDocument();
+    expect(observedPath).toBe(`/api/v1/apus/${apuDetalleFixture.id}`);
   });
 
   it("shows an accessible loading state while the project is pending", () => {
