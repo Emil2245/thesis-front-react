@@ -197,6 +197,26 @@ export const valorReferenciaSchema = z
   })
   .strict();
 
+/**
+ * `LogActividadResponse` (plan 080). `usuarioId`, `usuarioNombre` y
+ * `entidadId` llegan `null` explícito, no ausentes (Patrón C invertido): van
+ * `.nullable()`, no `.optional()`. `detalle` es JSON libre que el backend
+ * garantiza sin PII (`LogActividadDetalleValidator`): se valida como
+ * `Record<string, unknown>` y no se interpreta.
+ */
+export const logActividadSchema = z
+  .object({
+    id: z.string(),
+    usuarioId: z.string().nullable(),
+    usuarioNombre: z.string().nullable(),
+    evento: z.string(),
+    entidad: z.string(),
+    entidadId: z.string().nullable(),
+    detalle: z.record(z.unknown()),
+    fecha: z.string(),
+  })
+  .strict();
+
 export const parametrosProyectoSchema = z
   .object({
     proyectoId: z.string(),
