@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { screen } from "@testing-library/react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { WorkspacePage } from "@/features/workspace/pages/WorkspacePage";
-import { PRESUPUESTO_V2 } from "@/test/fixtures/presupuesto";
+import { PRESUPUESTO_V2, RUBRO_1_1_1 } from "@/test/fixtures/presupuesto";
 import { renderConProviders } from "@/test/render";
 
 describe("WorkspacePage", () => {
@@ -30,6 +30,20 @@ describe("WorkspacePage", () => {
     expect(await screen.findByText(/Versión 2/)).toBeInTheDocument();
     expect(screen.getByText("Workspace del proyecto")).toBeInTheDocument();
     expect(screen.getByLabelText("Ubicación")).toHaveTextContent(`?v=${PRESUPUESTO_V2}`);
+  });
+
+  it("resolves a nested selected rubro to its APU", async () => {
+    renderConProviders(
+      <Routes>
+        <Route path="/proyectos/:id/workspace" element={<WorkspacePage />} />
+      </Routes>,
+      {
+        ruta: `/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/workspace?v=${PRESUPUESTO_V2}&rubro=${RUBRO_1_1_1}`,
+      },
+    );
+
+    expect(await screen.findByText("APU-001")).toBeInTheDocument();
+    expect(screen.getByText("Equipo")).toBeInTheDocument();
   });
 
   it("shows an accessible loading state while the project is pending", () => {

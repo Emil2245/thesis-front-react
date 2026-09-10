@@ -1,4 +1,4 @@
-# 084 — Pestaña APU
+# 084 — Pestaña APU — IMPLEMENTADO / DONE
 
 ## 01. Estado inicial verificable
 `EditorApuPage` y `useApuEditor` existen para `/proyectos/:id/apus/:apuId`, con edición y mutaciones. El workspace de 082–083 necesita un detalle derecho que no replique ese estado.
@@ -41,7 +41,10 @@ Afirmar: sin selección muestra “Selecciona un rubro”; loading muestra skele
 La pestaña presenta composición server-returned sin editar; cero mutaciones; no duplica `EditorApuPage` ni estado; todos los estados y deep link están cubiertos.
 
 ## 13. Verificación focalizada
-`pnpm exec vitest run src/test/features/workspace/components/PestanaApu.test.tsx src/test/features/apu-editor/pages/EditorApuPage.test.tsx`; `pnpm exec tsc -b --pretty false`; `pnpm run lint`; `git diff --check`.
+- `pnpm exec vitest run src/test/features/workspace/components/PestanaApu.test.tsx src/test/features/apu-editor/pages/EditorApuPage.test.tsx src/test/features/workspace/pages/WorkspacePage.test.tsx`: **14 tests en 3 archivos** (PestanaApu: 6, WorkspacePage: 3, EditorApuPage: 5), ✅ verde.
+- Prettier, lint y `git diff --check`: ✅ verdes.
+- `pnpm exec tsc -b --pretty false`: bloqueado únicamente por el error conocido del Plan 076 en `src/test/features/proyectos/hooks/contrato.test.tsx:197`, porque `mostrarSeccionesVacias` está ausente de `ParametrosProyectoEditarRequest`.
+- No se ejecutó E2E.
 
 ## 14. STOP
 STOP si el rubro no expone `apuId`, si APU requiere otra API no documentada, si los componentes existentes mutan al montarse, o si no puede preservarse `?v=`. Entregar discrepancia a 085 sin añadir workaround.
@@ -50,7 +53,7 @@ STOP si el rubro no expone `apuId`, si APU requiere otra API no documentada, si 
 Retirar pestaña e integración workspace; no revertir ni modificar el editor APU existente.
 
 ## 16. Handoff
-A 085: componente, props, estados, query/cache reutilizada, deep link y pruebas que garantizan read-only.
+A 085: `PestanaApu` es una vista autónoma y de solo lectura. Usa `qk.apu`, `getValidado` y `apuSchema` con un GET compatible con caché; resuelve recursivamente `rubro → apuId`, muestra literalmente los valores del servidor y expone estados accesibles de carga, error y reintento. No contiene controles ni endpoints de mutación. El deep link al editor conserva `v` y omite `rubro`. No se reutilizaron los componentes existentes del editor APU porque están acoplados a mutaciones.
 
 ## 17. Invariantes
-APU y totales provienen del servidor; sin CRUD/mutaciones; sin queries duplicadas; `src/api/` única HTTP; accesible; `?v=` coherente.
+APU y totales provienen del servidor; sin CRUD/mutaciones; sin queries duplicadas; `src/api/` única HTTP; accesible; `?v=` coherente. **Cierre:** Plan 084 implementado y validado; queda listo el handoff a 085.

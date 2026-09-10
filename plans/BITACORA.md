@@ -1,8 +1,8 @@
 # Bitácora
 
-> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). El Plan 083 está cerrado; el Plan 084 es la siguiente tarea pendiente y aún no se inicia.
+> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). El Plan 084 está cerrado; el Plan 085 es la siguiente tarea pendiente y aún no se inicia.
 
-**Encargo activo: siguiente tarea pendiente, Plan 084** · **Actualizada:** 2026-09-09
+**Encargo activo: siguiente tarea pendiente, Plan 085** · **Actualizada:** 2026-09-09
 **Ronda de paridad 1** · **CERRADA** · **Backend alineado hasta:** **`5673615`**
 
 > La lleva el orquestador ([`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md)). Se escribe **en el momento** en que
@@ -10,6 +10,12 @@
 > aquí no ocurrió.
 >
 > Estados: `⏳ pendiente` · `🔄 en curso` · `🟡 vuelto, sin revisar` · `❌ rechazado` · `✅ verde`
+
+## Cierre del Plan 084 (2026-09-09)
+
+- Plan 084 queda **✅ verde / IMPLEMENTADO**: `PestanaApu` es read-only y autosuficiente; usa `qk.apu`, `getValidado` y `apuSchema` con GET compatible con caché, resuelve recursivamente `rubro → apuId`, conserva literalmente los valores del servidor, ofrece estados accesibles de carga/error/reintento y no incluye controles ni endpoints de mutación. El enlace al editor conserva `v` y omite `rubro`. No se reutilizaron los componentes existentes del editor APU porque están acoplados a mutaciones.
+- La verificación focalizada pasó con **14 tests en 3 archivos** (PestanaApu: 6, WorkspacePage: 3, EditorApuPage: 5); Prettier, lint y `git diff --check` pasaron. El typecheck sigue bloqueado únicamente por el error conocido del Plan 076 en `src/test/features/proyectos/hooks/contrato.test.tsx:197`, porque `mostrarSeccionesVacias` está ausente de `ParametrosProyectoEditarRequest`. No se ejecutó E2E.
+- Plan 085 queda como siguiente plan pendiente, sin iniciarlo.
 
 ## Cierre del Plan 083 (2026-09-09)
 

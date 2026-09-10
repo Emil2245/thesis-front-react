@@ -5,6 +5,7 @@ import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
 import { usePresupuesto } from "@/features/presupuesto/hooks/usePresupuesto";
 import { useProyecto } from "@/features/proyectos/hooks/useProyectos";
 import { useProyectoActivoId, useVersionActiva } from "@/shell/contexto";
+import { PestanaApu } from "../components/PestanaApu";
 import { PresupuestoCompacto } from "../components/PresupuestoCompacto";
 import { WorkspaceSplit } from "../components/WorkspaceSplit";
 
@@ -15,6 +16,17 @@ export function WorkspacePage() {
   const presupuestoQuery = usePresupuesto(activa?.presupuestoId ?? "");
   const [params] = useSearchParams();
   const rubroId = params.get("rubro");
+  const selectedApuId = presupuestoQuery.data
+    ? (function findApu(capitulos: typeof presupuestoQuery.data.capitulos): string | null {
+        for (const capitulo of capitulos) {
+          const rubro = capitulo.rubros.find((item) => item.id === rubroId);
+          if (rubro) return rubro.apuId;
+          const nested = findApu(capitulo.subcapitulos);
+          if (nested) return nested;
+        }
+        return null;
+      })(presupuestoQuery.data.capitulos)
+    : null;
 
   if (proyectoPendiente || versionPendiente || (activa && presupuestoQuery.isPending))
     return <output className="block">Cargando proyecto, versión y presupuesto…</output>;
@@ -72,15 +84,8 @@ export function WorkspacePage() {
           </TarjetaTabla>
         }
         right={
-          <TarjetaTabla titulo="Detalle del proyecto">
-            <EstadoVacio
-              titulo={rubroId ? "Rubro seleccionado" : "Selecciona un elemento"}
-              descripcion={
-                rubroId
-                  ? "El detalle del rubro estará disponible en un plan posterior."
-                  : "Selecciona un rubro del presupuesto para consultar su detalle."
-              }
-            />
+          <TarjetaTabla titulo="APU">
+            <PestanaApu apuId={selectedApuId} proyectoId={proyecto.id} />
           </TarjetaTabla>
         }
       />
