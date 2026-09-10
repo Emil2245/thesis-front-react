@@ -572,9 +572,9 @@ describe("contrato de useValoresReferencia", () => {
       fuente: "f",
     });
 
-    expect(ultima(peticiones, "PUT", `/admin/valores-referencia/${encodeURIComponent("A/B")}`)?.ruta).toBe(
-      `${RUTA}/admin/valores-referencia/${encodeURIComponent("A/B")}`,
-    );
+    expect(
+      ultima(peticiones, "PUT", `/admin/valores-referencia/${encodeURIComponent("A/B")}`)?.ruta,
+    ).toBe(`${RUTA}/admin/valores-referencia/${encodeURIComponent("A/B")}`);
   });
 
   it("un campo desconocido al guardar es un 400, no un éxito silencioso", async () => {

@@ -50,7 +50,12 @@ function DialogoValor({
 }: {
   valorExistente: ValorReferenciaResponse | null;
   onClose: () => void;
-  onGuardar: (datos: { clave: string; valor: string; descripcion: string; fuente: string }) => Promise<unknown>;
+  onGuardar: (datos: {
+    clave: string;
+    valor: string;
+    descripcion: string;
+    fuente: string;
+  }) => Promise<unknown>;
 }) {
   const [clave, setClave] = useState(valorExistente?.clave ?? "");
   const [valor, setValor] = useState(valorExistente?.valor ?? "");
@@ -81,7 +86,9 @@ function DialogoValor({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>{valorExistente ? "Editar valor de referencia" : "Nuevo valor de referencia"}</DialogTitle>
+          <DialogTitle>
+            {valorExistente ? "Editar valor de referencia" : "Nuevo valor de referencia"}
+          </DialogTitle>
         </DialogHeader>
         {errorGeneral ? <p className="text-sm text-destructive">{errorGeneral}</p> : null}
         <div className="space-y-4">
@@ -257,7 +264,12 @@ export function AdminValoresPageActiva() {
                       textoConfirmar="Eliminar valor"
                       onConfirmar={() => manejarEliminar(v.clave)}
                     >
-                      <Button variant="ghost" size="icon" title="Eliminar" className="text-destructive">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Eliminar"
+                        className="text-destructive"
+                      >
                         <Trash2Icon />
                       </Button>
                     </ConfirmarDestructivo>
