@@ -34,11 +34,16 @@ export const qk = {
   cronogramaExportPreflight: (presupuestoId: string, formato: string) =>
     ["presupuesto", presupuestoId, "export-cronograma", formato] as const,
 
-  // Solo quedan las dos con backend real (plan 050): usuarios, plantillas de
-  // sistema, valores de referencia y logs no existen en origin/main.
+  // Plantillas de sistema, valores de referencia y logs no existen en
+  // origin/main (plan 050). Usuarios sí (plan 077), aunque el gate
+  // `admin-usuarios` siga cerrado hasta el 081.
   adminBases: (f?: Record<string, unknown>) => [...qk.adminBasesFamilia(), f ?? {}] as const,
   adminBase: (id: string) => [...qk.adminBasesFamilia(), id] as const,
   adminParametros: () => ["admin", "parametros-sistema"] as const,
+
+  adminUsuariosFamilia: () => ["admin", "usuarios"] as const,
+  adminUsuarios: (f?: Record<string, unknown>) => [...qk.adminUsuariosFamilia(), f ?? {}] as const,
+  adminUsuario: (id: string) => [...qk.adminUsuariosFamilia(), id] as const,
 
   displayConfig: () => ["display-config"] as const,
 } as const;

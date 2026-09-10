@@ -63,6 +63,24 @@ export const usuarioSchema = z
     emailVerificado: z.boolean(),
   })
   .strict();
+
+/**
+ * `GET/POST/PUT /admin/usuarios` (`UsuarioAdminResponse`, plan 077). Id UUID,
+ * a diferencia de `usuarioSchema` (el perfil de sesión, `id: number`) — no es
+ * el mismo DTO aunque comparta forma parcial.
+ */
+export const usuarioAdminSchema = z
+  .object({
+    id: z.string(),
+    nombre: z.string(),
+    email: z.string(),
+    rol: z.enum(["USUARIO", "SUPER_ADMIN"]),
+    activo: z.boolean(),
+    emailVerificado: z.boolean(),
+    fechaCreacion: z.string(),
+  })
+  .strict();
+
 export const tokenSchema = z
   .object({
     accessToken: z.string(),

@@ -47,7 +47,11 @@ import {
   preflightBloqueadoFixture,
   preflightExportableFixture,
 } from "./fixtures/cronograma";
-import { parametrosSistemaFixture, basesCentralesFixtureAdmin } from "./fixtures/admin";
+import {
+  parametrosSistemaFixture,
+  basesCentralesFixtureAdmin,
+  usuariosAdminFixture,
+} from "./fixtures/admin";
 
 const API = "*/api/v1";
 
@@ -58,6 +62,10 @@ export const DETALLE_HM = "018f8a50-0000-7000-8000-000000000200";
 // UUIDs eso es NaN y nunca entraban. Eran handlers de error inalcanzables.
 export const INSUMO_EN_USO = "018f8a20-0000-7000-8000-000000000099";
 export const APU_REFERENCIADO = "018f8a40-0000-7000-8000-000000000099";
+// `DELETE /admin/usuarios/{id}` con este id simula el 409 real
+// `usuario-con-proyectos-impedido` (`TC-12-P38-03-delete-con-proyectos.bru`),
+// que no se pudo provocar por curl sin ensuciar datos del backend real.
+export const USUARIO_CON_PROYECTOS = "018f8a40-0000-7000-8000-000000000199";
 // Los dos presupuestos con los que la exportación del cronograma se sale del
 // camino feliz: uno ajeno (404) y uno con bloqueos (preflight `exportable:
 // false` y 409 en la descarga).
@@ -958,5 +966,71 @@ export const handlers = [
       id: String(params.id),
       archivada: true,
     }),
+  ),
+
+  // ———— Admin: usuarios (Plan 077) ————
+  // `UsuarioAdminResource`. El gate `admin-usuarios` sigue cerrado
+  // (`MODULOS_SIN_BACKEND`), pero el contrato ya existe y se prueba aquí sin
+  // esperar al 081. Sin `*` final: MSW ya ignora el query string al casar el
+  // pathname, igual que `/admin/bases-centrales` un poco más arriba.
+  http.get(`${API}/admin/usuarios`, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const q = params.get("q")?.toLowerCase();
+    const activo = params.get("activo");
+    const page = Number(params.get("page") ?? 0);
+    const size = Number(params.get("size") ?? 25);
+    let items = usuariosAdminFixture;
+    if (q) {
+      items = items.filter(
+        (u) => u.nombre.toLowerCase().includes(q) || u.email.toLowerCase().includes(q),
+      );
+    }
+    if (activo != null) items = items.filter((u) => String(u.activo) === activo);
+    return HttpResponse.json({
+      items: items.slice(page * size, (page + 1) * size),
+      total: items.length,
+      page,
+      size,
+      totalPaginas: items.length === 0 ? 0 : Math.ceil(items.length / size),
+    });
+  }),
+  http.get(`${API}/admin/usuarios/:id`, ({ params }) => {
+    const usuario = usuariosAdminFixture.find((u) => u.id === params.id);
+    return usuario
+      ? HttpResponse.json(usuario)
+      : problema(404, "no-encontrado", "Usuario no encontrado");
+  }),
+  http.post(
+    `${API}/admin/usuarios`,
+    async ({ request }) =>
+      (await soloCampos(request, "nombre", "email", "rol")) ??
+      HttpResponse.json(
+        { ...usuariosAdminFixture[1], id: "018f8a40-0000-7000-8000-000000000104" },
+        { status: 201 },
+      ),
+  ),
+  http.put(
+    `${API}/admin/usuarios/:id`,
+    async ({ request, params }) =>
+      (await soloCampos(request, "nombre", "rol", "activo")) ??
+      HttpResponse.json({
+        ...usuariosAdminFixture[1],
+        id: String(params.id),
+      }),
+  ),
+  http.post(`${API}/admin/usuarios/:id/desactivar`, ({ params }) =>
+    HttpResponse.json({ ...usuariosAdminFixture[1], id: String(params.id), activo: false }),
+  ),
+  http.post(`${API}/admin/usuarios/:id/reactivar`, ({ params }) =>
+    HttpResponse.json({ ...usuariosAdminFixture[2], id: String(params.id), activo: true }),
+  ),
+  http.delete(`${API}/admin/usuarios/:id`, ({ params }) =>
+    params.id === USUARIO_CON_PROYECTOS
+      ? problema(
+          409,
+          "usuario-con-proyectos-impedido",
+          "No se puede eliminar: el usuario tiene proyectos propios",
+        )
+      : HttpResponse.json(null, { status: 204 }),
   ),
 ];

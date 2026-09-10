@@ -1,4 +1,8 @@
-import type { ParametrosSistemaResponse, BaseInsumosResponse } from "@/api/contract";
+import type {
+  ParametrosSistemaResponse,
+  BaseInsumosResponse,
+  UsuarioAdminResponse,
+} from "@/api/contract";
 
 // Los `as never` se fueron con la política de dinero: el backend serializa
 // estos BigDecimal como número JSON (plan 061 + 050).
@@ -41,5 +45,38 @@ export const basesCentralesFixtureAdmin: BaseInsumosResponse[] = [
     tipo: "CENTRAL",
     archivada: true,
     totalInsumos: 42,
+  },
+];
+
+// `GET /admin/usuarios` — `Page<UsuarioAdminResponse>`. Un SUPER_ADMIN, un
+// USUARIO activo y un USUARIO inactivo, para tener algo que reactivar sin
+// mutar el fixture en el propio test.
+export const usuariosAdminFixture: UsuarioAdminResponse[] = [
+  {
+    id: "018f8a40-0000-7000-8000-000000000101",
+    nombre: "Ana de Armas",
+    email: "ana.armas@gmail.com",
+    rol: "SUPER_ADMIN",
+    activo: true,
+    emailVerificado: true,
+    fechaCreacion: "2026-01-10T12:00:00Z",
+  },
+  {
+    id: "018f8a40-0000-7000-8000-000000000102",
+    nombre: "John Doe",
+    email: "john.doe@uce.edu.ec",
+    rol: "USUARIO",
+    activo: true,
+    emailVerificado: true,
+    fechaCreacion: "2026-02-15T09:30:00Z",
+  },
+  {
+    id: "018f8a40-0000-7000-8000-000000000103",
+    nombre: "Usuario Inactivo",
+    email: "inactivo@example.com",
+    rol: "USUARIO",
+    activo: false,
+    emailVerificado: false,
+    fechaCreacion: "2026-03-01T08:00:00Z",
   },
 ];
