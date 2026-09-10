@@ -994,12 +994,6 @@ export const handlers = [
       totalPaginas: items.length === 0 ? 0 : Math.ceil(items.length / size),
     });
   }),
-  http.get(`${API}/admin/usuarios/:id`, ({ params }) => {
-    const usuario = usuariosAdminFixture.find((u) => u.id === params.id);
-    return usuario
-      ? HttpResponse.json(usuario)
-      : problema(404, "no-encontrado", "Usuario no encontrado");
-  }),
   http.post(
     `${API}/admin/usuarios`,
     async ({ request }) =>

@@ -190,6 +190,7 @@ export function AdminUsuariosPageActiva() {
   const [page, setPage] = useState(0);
   const [invitando, setInvitando] = useState(false);
   const [editando, setEditando] = useState<UsuarioAdminResponse | null>(null);
+  const [errorEliminar, setErrorEliminar] = useState("");
 
   const { data: usuarios, isPending, isError, error } = useUsuariosAdmin({ q, page, size: 25 });
   const invitar = useInvitarUsuario();
@@ -218,6 +219,20 @@ export function AdminUsuariosPageActiva() {
       </>
     );
 
+  // El 409 `usuario-con-proyectos-impedido` (y cualquier otro fallo del
+  // borrado) se muestra aquí, no sólo en el toast: `mutate` + `onError` en el
+  // hook basta para el toast, pero un test —y un usuario que no vio el
+  // toast— necesita algo que siga en pantalla.
+  async function manejarEliminar(id: string) {
+    setErrorEliminar("");
+    try {
+      await eliminar.mutateAsync(id);
+      setPage(0);
+    } catch (e) {
+      setErrorEliminar(e instanceof ApiError ? e.problem.mensaje : "Error al eliminar usuario");
+    }
+  }
+
   return (
     <>
       <EncabezadoPagina
@@ -228,6 +243,8 @@ export function AdminUsuariosPageActiva() {
           </Button>
         }
       />
+
+      {errorEliminar ? <p className="text-sm text-destructive">{errorEliminar}</p> : null}
 
       <div className="max-w-sm">
         <Label htmlFor="buscar-usuarios" className="sr-only">
@@ -325,7 +342,7 @@ export function AdminUsuariosPageActiva() {
                       size="icon"
                       title="Eliminar"
                       className="text-destructive"
-                      onClick={() => eliminar.mutate(u.id, { onSuccess: () => setPage(0) })}
+                      onClick={() => manejarEliminar(u.id)}
                     >
                       <Trash2Icon />
                     </Button>

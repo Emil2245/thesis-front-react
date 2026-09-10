@@ -168,7 +168,12 @@ describe("AdminUsuariosPageActiva", () => {
     const fila = (await screen.findByText(superAdmin.nombre)).closest("tr")!;
     await user.click(within(fila).getByTitle("Eliminar"));
 
-    await waitFor(() => expect(screen.getByText(superAdmin.nombre)).toBeInTheDocument());
+    // El mensaje real del backend, no uno genérico: es lo que prueba que el
+    // 409 se manejó de verdad y no se tragó en silencio.
+    expect(
+      await screen.findByText("No se puede eliminar: el usuario tiene proyectos propios"),
+    ).toBeInTheDocument();
+    expect(screen.getByText(superAdmin.nombre)).toBeInTheDocument();
   });
 
   it("renderiza una lista vacía sin romper la tabla", async () => {

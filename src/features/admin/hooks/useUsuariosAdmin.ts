@@ -44,14 +44,6 @@ export function useUsuariosAdmin(filtros: FiltrosUsuarios = {}) {
   });
 }
 
-export function useUsuarioAdmin(id: string) {
-  return useQuery({
-    queryKey: qk.adminUsuario(id),
-    enabled: !!id,
-    queryFn: () => getValidado(`/admin/usuarios/${id}`, usuarioAdminSchema),
-  });
-}
-
 export function useInvitarUsuario() {
   const qc = useQueryClient();
   return useMutation({
