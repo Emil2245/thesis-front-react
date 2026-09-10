@@ -6,7 +6,11 @@ import { http, HttpResponse } from "msw";
 
 import { crearQueryClient } from "@/test/render";
 import { espiar, ultima, cuerpoInvalido } from "@/test/espia";
-import { basesCentralesFixtureAdmin, parametrosSistemaFixture } from "@/test/fixtures/admin";
+import {
+  basesCentralesFixtureAdmin,
+  parametrosSistemaFixture,
+  usuariosAdminFixture,
+} from "@/test/fixtures/admin";
 import { ApiError } from "@/api/problem";
 import { server } from "@/test/server";
 import {
@@ -21,6 +25,13 @@ import {
   useParametrosSistema,
   useActualizarParametros,
 } from "@/features/admin/hooks/useParametrosSistema";
+import {
+  useUsuariosAdmin,
+  useInvitarUsuario,
+  useEditarUsuario,
+  useEliminarUsuario,
+} from "@/features/admin/hooks/useUsuariosAdmin";
+import { USUARIO_CON_PROYECTOS } from "@/test/handlers";
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
@@ -231,5 +242,118 @@ describe("contrato de useParametrosSistema", () => {
 
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).status).toBe(400);
+  });
+});
+
+// `UsuarioAdminResource` (plan 077): el gate `admin-usuarios` sigue cerrado
+// (`MODULOS_SIN_BACKEND`), pero el contrato ya se prueba a nivel de hook,
+// igual que Bases lo hizo mientras esperaba activarse.
+describe("contrato de useUsuariosAdmin", () => {
+  it("lista con GET /admin/usuarios y manda page y size explícitos", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useUsuariosAdmin(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const p = ultima(peticiones, "GET", "/admin/usuarios");
+    expect(p?.ruta).toBe(`${RUTA}/admin/usuarios`);
+    expect(p?.url.searchParams.get("page")).toBe("0");
+    expect(p?.url.searchParams.get("size")).toBe("25");
+  });
+
+  it("devuelve la página normalizada con los usuarios del fixture", async () => {
+    const { result } = renderHook(() => useUsuariosAdmin(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.contenido).toHaveLength(usuariosAdminFixture.length);
+    expect(result.current.data?.totalElementos).toBe(usuariosAdminFixture.length);
+  });
+
+  it("manda el filtro q como query param", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useUsuariosAdmin({ q: "ana" }), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(ultima(peticiones, "GET", "/admin/usuarios")?.url.searchParams.get("q")).toBe("ana");
+  });
+
+  it("invita con POST /admin/usuarios y un cuerpo de nombre, email y rol", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useInvitarUsuario(), { wrapper });
+    await result.current.mutateAsync({
+      nombre: "Nuevo Usuario",
+      email: "nuevo@example.com",
+      rol: "USUARIO",
+    });
+
+    const p = ultima(peticiones, "POST", "/admin/usuarios");
+    expect(p?.ruta).toBe(`${RUTA}/admin/usuarios`);
+    await waitFor(() =>
+      expect(p?.cuerpo).toEqual({
+        nombre: "Nuevo Usuario",
+        email: "nuevo@example.com",
+        rol: "USUARIO",
+      }),
+    );
+  });
+
+  // Un campo de más (aquí, un email en el alta con una clave distinta) es un
+  // 400 del handler estricto, no un éxito silencioso.
+  it("un campo desconocido al invitar es un 400, no un éxito silencioso", async () => {
+    const { result } = renderHook(() => useInvitarUsuario(), { wrapper });
+
+    const error = await result.current
+      .mutateAsync(cuerpoInvalido({ nombre: "X", email: "x@x.com", rol: "USUARIO", activo: true }))
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).status).toBe(400);
+  });
+
+  // El PUT nunca manda `email`: no es editable por este endpoint aunque el
+  // backend real lo ignore en silencio si se lo mandan.
+  it("edita con PUT /admin/usuarios/{id} sin mandar email nunca", async () => {
+    const peticiones = espiar();
+    const objetivo = usuariosAdminFixture[1];
+
+    const { result } = renderHook(() => useEditarUsuario(), { wrapper });
+    await result.current.mutateAsync({
+      id: objetivo.id,
+      nombre: "Editado",
+      rol: "USUARIO",
+      activo: true,
+    });
+
+    const p = ultima(peticiones, "PUT", `/admin/usuarios/${objetivo.id}`);
+    expect(p?.ruta).toBe(`${RUTA}/admin/usuarios/${objetivo.id}`);
+    await waitFor(() =>
+      expect(p?.cuerpo).toEqual({ nombre: "Editado", rol: "USUARIO", activo: true }),
+    );
+  });
+
+  it("elimina con DELETE /admin/usuarios/{id}", async () => {
+    const peticiones = espiar();
+    const objetivo = usuariosAdminFixture[1];
+
+    const { result } = renderHook(() => useEliminarUsuario(), { wrapper });
+    await result.current.mutateAsync(objetivo.id);
+
+    expect(ultima(peticiones, "DELETE", `/admin/usuarios/${objetivo.id}`)?.ruta).toBe(
+      `${RUTA}/admin/usuarios/${objetivo.id}`,
+    );
+  });
+
+  // TC-12-P38-03: borrar un usuario con proyectos propios es un 409, no un
+  // 204 silencioso.
+  it("eliminar un usuario con proyectos propios es un 409 usuario-con-proyectos-impedido", async () => {
+    const { result } = renderHook(() => useEliminarUsuario(), { wrapper });
+
+    const error = await result.current.mutateAsync(USUARIO_CON_PROYECTOS).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).status).toBe(409);
+    expect((error as ApiError).slug).toBe("usuario-con-proyectos-impedido");
   });
 });

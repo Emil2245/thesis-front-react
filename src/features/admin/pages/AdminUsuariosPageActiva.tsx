@@ -304,16 +304,19 @@ export function AdminUsuariosPageActiva() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" title="Editar" onClick={() => setEditando(u)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Editar"
+                      onClick={() => setEditando(u)}
+                    >
                       <PencilIcon />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       title={u.activo ? "Desactivar" : "Reactivar"}
-                      onClick={() =>
-                        u.activo ? desactivar.mutate(u.id) : reactivar.mutate(u.id)
-                      }
+                      onClick={() => (u.activo ? desactivar.mutate(u.id) : reactivar.mutate(u.id))}
                     >
                       <PowerIcon />
                     </Button>

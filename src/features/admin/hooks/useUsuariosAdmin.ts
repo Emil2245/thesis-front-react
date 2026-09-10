@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { getValidado, postValidado, putValidado, del } from "@/api/request";
 import { usuarioAdminSchema, paginaDe } from "@/api/schemas";
 import { qk } from "@/api/queryKeys";
@@ -35,6 +35,12 @@ export function useUsuariosAdmin(filtros: FiltrosUsuarios = {}) {
   return useQuery({
     queryKey: qk.adminUsuarios(params),
     queryFn: () => getValidado("/admin/usuarios", listaDeUsuarios, params),
+    // Sin esto, cada tecla de la búsqueda cambia la queryKey, la página pierde
+    // su `data` un instante y el componente entero —incluido el input con el
+    // foco— se reemplaza por el esqueleto de carga: la siguiente tecla cae en
+    // el vacío. Con `keepPreviousData` la tabla vieja se queda pintada (con
+    // `isFetching` en verdad) mientras llega la nueva.
+    placeholderData: keepPreviousData,
   });
 }
 
