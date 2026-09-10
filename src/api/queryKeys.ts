@@ -51,5 +51,11 @@ export const qk = {
     [...qk.adminPlantillasFamilia(), f ?? {}] as const,
   adminPlantilla: (id: string) => [...qk.adminPlantillasFamilia(), id] as const,
 
+  // Valores de referencia (plan 079): mismo molde que plantillas. Sin `q`: el
+  // recurso sólo admite `page`/`size`.
+  adminValoresFamilia: () => ["admin", "valores-referencia"] as const,
+  adminValores: (f?: Record<string, unknown>) => [...qk.adminValoresFamilia(), f ?? {}] as const,
+  adminValor: (clave: string) => [...qk.adminValoresFamilia(), clave] as const,
+
   displayConfig: () => ["display-config"] as const,
 } as const;

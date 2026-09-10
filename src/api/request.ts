@@ -53,6 +53,25 @@ export const putValidado = async <S extends z.ZodTypeAny>(
   return r.data;
 };
 
+/**
+ * Como `putValidado`, pero además dice si el `PUT` creó el recurso o lo
+ * actualizó. Existe sólo para el upsert de valores de referencia (plan 079,
+ * §9bis): el backend distingue creación de actualización únicamente por el
+ * status (201 vs 200, mismo cuerpo), y ningún otro helper de este archivo
+ * expone el status de la respuesta. Precedente: `descargar()` más abajo
+ * también devuelve más que `.data` cuando el llamante lo necesita.
+ */
+export const putValidadoConEstado = async <S extends z.ZodTypeAny>(
+  url: string,
+  schema: S,
+  body?: unknown,
+): Promise<{ datos: z.infer<S>; creado: boolean }> => {
+  const r = await http.put(url, body);
+  const parsed = schema.safeParse(r.data);
+  if (!parsed.success) throw errorDeRespuesta(url, parsed.error);
+  return { datos: parsed.data, creado: r.status === 201 };
+};
+
 export const patch = async <T>(
   url: string,
   body?: unknown,

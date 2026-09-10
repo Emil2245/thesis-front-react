@@ -767,9 +767,13 @@ export interface BloqueoExportDetalle {
 }
 
 // ————— Super-Admin (§11) —————
-// Los DTO de valores de referencia y logs de actividad se borraron con sus
-// hooks (plan 050): esos dos recursos siguen sin existir en origin/main, y un
-// tipo sin endpoint es una promesa que el próximo agente cree cumplida.
+// El DTO de logs de actividad se borró con su hook (plan 050): ese recurso
+// sigue sin existir en origin/main, y un tipo sin endpoint es una promesa que
+// el próximo agente cree cumplida.
+//
+// Valores de referencia sí tiene backend real (plan 079):
+// `ValorReferenciaAdminResource` (`@Path("/admin/valores-referencia")`,
+// `@RolesAllowed("SUPER_ADMIN")`). Ver más abajo, junto a `UsuarioAdminResponse`.
 //
 // Usuarios sí tiene backend real (plan 077): `UsuarioAdminResource`
 // (`@Path("/admin/usuarios")`, `@RolesAllowed("SUPER_ADMIN")`). El gate
@@ -847,6 +851,32 @@ export interface ParametrosSistemaEditarRequest {
   rangoIvaMin: number;
   rangoIvaMax: number;
   moneda?: string;
+}
+
+/**
+ * `ValorReferenciaAdminResponse` (plan 079). `valor` viaja como `string`: es un
+ * decimal de sólo lectura (ADR 9, cero aritmética), se muestra tal cual y se
+ * edita como texto — no `number`. `actualizado` es un `Instant` ISO-8601, una
+ * fecha, no dinero: no pasa por ningún formateador de importes. La `clave` va
+ * siempre en el path de la petición, nunca en el cuerpo.
+ */
+export interface ValorReferenciaResponse {
+  clave: string;
+  valor: string;
+  descripcion: string;
+  fuente: string;
+  actualizado: string;
+}
+
+/**
+ * `PUT /admin/valores-referencia/{clave}` — los tres campos son `@NotBlank`
+ * (`valor` con `@Size(max=100)`, `fuente` con `@Size(max=200)`). Sin `clave`:
+ * va codificada en el path, no en el cuerpo.
+ */
+export interface ValorReferenciaEditarRequest {
+  valor: string;
+  descripcion: string;
+  fuente: string;
 }
 
 // ————— Display config —————
