@@ -1,8 +1,8 @@
 # Bitácora
 
-> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). La siguiente tarea autorizada es el plan 082.
+> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). El Plan 083 está cerrado; el Plan 084 es la siguiente tarea pendiente y aún no se inicia.
 
-**Encargo activo: workspace principal del proyecto** · **Actualizada:** 2026-09-09
+**Encargo activo: siguiente tarea pendiente, Plan 084** · **Actualizada:** 2026-09-09
 **Ronda de paridad 1** · **CERRADA** · **Backend alineado hasta:** **`5673615`**
 
 > La lleva el orquestador ([`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md)). Se escribe **en el momento** en que
@@ -10,6 +10,12 @@
 > aquí no ocurrió.
 >
 > Estados: `⏳ pendiente` · `🔄 en curso` · `🟡 vuelto, sin revisar` · `❌ rechazado` · `✅ verde`
+
+## Cierre del Plan 083 (2026-09-09)
+
+- Plan 083 queda **✅ verde / IMPLEMENTADO**: el árbol compacto usa `?rubro`, conserva `v`, es recursivo, accesible y de solo lectura; muestra `Decimal` strings del servidor, sin CRUD ni API nueva.
+- La selección del rubro queda como contrato para el panel derecho y la pestaña APU de 084. La verificación focalizada pasó con **10 tests en 4 archivos** (el test compacto cubre 6); Prettier, lint y `git diff --check` pasaron. El typecheck sigue bloqueado únicamente por el error conocido del Plan 076 en `src/test/features/proyectos/hooks/contrato.test.tsx:197`. No se ejecutó E2E.
+- Plan 084 queda como siguiente plan pendiente, sin iniciarlo.
 
 ## Decisión de secuencia: Plan 082 (2026-09-09)
 

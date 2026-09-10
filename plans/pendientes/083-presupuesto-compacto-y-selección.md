@@ -1,5 +1,9 @@
 # 083 — Presupuesto compacto y selección
 
+**Estado: IMPLEMENTADO / DONE** · Verificado el 2026-09-09.
+
+Evidencia: `pnpm exec vitest run src/test/features/workspace src/test/routes/index.test.tsx` pasó con **10 tests en 4 archivos** (el test focalizado del compacto cubre 6); Prettier, lint y `git diff --check` pasaron. El typecheck permanece bloqueado únicamente por el error conocido del Plan 076 en `src/test/features/proyectos/hooks/contrato.test.tsx:197` (`mostrarSeccionesVacias` no pertenece a `ParametrosProyectoEditarRequest`). No se ejecutó E2E.
+
 ## 01. Estado inicial verificable
 `PresupuestoPage` usa `useVersionActiva`, `usePresupuesto` y `ArbolPresupuesto`; el árbol está orientado a CRUD (`FilaCapitulo`, `FilaRubro`) y no publica un rubro seleccionado en URL ni en un panel hermano.
 
@@ -41,7 +45,7 @@ Afirmar antes de implementar: columnas exactas; capítulo colapsado no muestra h
 Selección reproducible por URL, fallback y limpieza verificables; `v` intacto; columnas y valores server-rendered; sin mutaciones/CRUD ni aritmética; teclado y estados cubiertos.
 
 ## 13. Verificación focalizada
-`pnpm exec vitest run src/test/features/workspace src/test/features/presupuesto/pages/PresupuestoPage.test.tsx`; `pnpm exec tsc -b --pretty false`; `pnpm run lint`; `git diff --check`.
+**IMPLEMENTADO / DONE.** `pnpm exec vitest run src/test/features/workspace src/test/routes/index.test.tsx` pasó con **10 tests en 4 archivos** (el test focalizado de `PresupuestoCompacto` cubre 6). Prettier, lint y `git diff --check` pasaron. El typecheck permanece bloqueado únicamente por el error conocido del Plan 076 en `src/test/features/proyectos/hooks/contrato.test.tsx:197` (`mostrarSeccionesVacias` no está en `ParametrosProyectoEditarRequest`). No se ejecutó E2E.
 
 ## 14. STOP
 STOP si DTO no contiene unidad/cantidad/precio/parcial como se supone, si un rubro no tiene ID estable, o si seleccionar exige otra query/mutación. Documentar la discrepancia y handoff a revisión, no inventar campos.
@@ -50,7 +54,7 @@ STOP si DTO no contiene unidad/cantidad/precio/parcial como se supone, si un rub
 Retirar componente compacto e integración de 082; dejar intacto el árbol CRUD y hooks existentes.
 
 ## 16. Handoff
-A 084: contrato `rubro`, prop de selección, rubro seleccionado y shape de APU disponible; confirmar que no existe edición en compact view.
+**Cerrado y entregado a 084:** la selección es propietaria de la URL mediante `?rubro`, conserva `v`, renderiza un árbol recursivo accesible y de solo lectura, muestra literalmente los `Decimal` string del servidor y no añade CRUD ni API. El contrato para el panel derecho y la pestaña APU es el rubro seleccionado; 084 debe consumir esa selección y su shape de APU disponible. No existe edición en compact view.
 
 ## 17. Invariantes
 `usePresupuesto` y versión activa se reutilizan; URL conserva `?v=`; dinero del servidor; no CRUD; accesibilidad; no API nueva.
