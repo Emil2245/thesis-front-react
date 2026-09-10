@@ -22,8 +22,8 @@
 | --- | --- | --- | --- | --- | --- |
 | — reactivación | ✅ hecho | — | — | — | banner quitado, índice a TODO, bitácora escrita (`5a7e480`) |
 | 077 usuarios | ✅ **DONE, mergeado** | (worktree retirado) | `wa-077` @ `ce226b4` | 1/2 | merge `d23c7e8`; índice a DONE |
-| 078 plantillas | 🔄 despachado | `.claude/worktrees/wa-078` | `wa-078` | 0/2 | plan corregido (deriva + §9bis de la cascada) |
-| 079 valores | ⏳ pendiente | — | — | — | no despachar hasta mergear 078 |
+| 078 plantillas | ✅ **DONE, mergeado** | (worktree retirado) | `wa-078` @ `67ccd60` | 0/2 | aprobado sin ronda de revisión |
+| 079 valores | 🔄 despachado | `.claude/worktrees/wa-079` | `wa-079` | 0/2 | plan corregido por deriva |
 | 080 logs | ⏳ pendiente | — | — | — | no despachar hasta mergear 079 |
 | 081 retirar gates | ⏳ pendiente | — | — | — | exige 077–080 en DONE |
 
@@ -167,3 +167,24 @@ en el informe final pase lo que pase.
 
 **Baseline real de `AGENTS.md` a corregir al cierre:** dice «475 tests en 73 archivos»; medido hoy,
 la base eran **479 en 75** y tras 077 son **498 en 76**.
+
+## 078 cerrado (2026-09-10)
+
+Aprobado **sin ronda de revisión**. Alcance exacto de la §8; ninguno de los intocables tocado.
+Suite completa **495 pasan / 20 fallan** contra 478/20 de partida: +17 tests, cero regresiones,
+mismos 20 fallos y 11 archivos rojos preexistentes. `lint` 0 errores, `guard:adr9` limpio,
+`typecheck` y `format:check` con los mismos fallos ajenos de siempre.
+
+**Comprobación de la parte delicada:** rompí la semántica de presencia del PUT (que mandara siempre
+las dos claves) y el test «edita sólo la descripción … sin mandar nombre» se puso rojo. Caza la
+rotura. El handler del mock también imita `JsonNullable`: sólo esparce lo que llegó, en vez de
+rellenar con el fixture entero.
+
+Dos desviaciones documentadas, ambas aceptadas: corrigió `PlantillaSistemaCrearRequest`
+(`descripcion` → `descripcionRubro`, no casaba con el DTO del backend y no lo usaba nadie —
+verificado por grep), e hizo un solo commit en vez de uno por paso; el coste es de trazabilidad,
+no de calidad.
+
+Confirmado lo que anticipaba la §9bis: el alta **no se verificó contra el backend real** porque no
+hay ningún APU alcanzable por la cuenta admin. Lo dijo así en su informe, sin adornarlo. Merge
+`4489287`.
