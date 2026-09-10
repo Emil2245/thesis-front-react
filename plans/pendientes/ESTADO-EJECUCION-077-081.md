@@ -51,3 +51,49 @@
   cuatro recursos admin responden 200 con datos reales; `USUARIO` → 403, sin token → 401.
 - **2026-09-10** — Diferimiento levantado y comiteado en `5a7e480` (solo documentación).
 - **2026-09-10** — Plan 077 corregido por deriva (§§1, 5, 8, 9, 14) y despachado a `wa-077`.
+
+## Recon del backend para 078–080 (hecho el 2026-09-10 @ `2803575`, no repetir)
+
+Los cuatro recursos son `@RolesAllowed("SUPER_ADMIN")` a nivel de clase y todos paginan con
+`Page<T>` = `{items,total,page,size,totalPaginas}`, que el interceptor de `src/api/client.ts`
+normaliza a `{contenido,totalElementos,…}`. `size` válido 1..200, `page` ≥ 0.
+
+### 078 — `PlantillaApuAdminResource` → `/admin/plantillas-apu`
+
+| Método | Ruta | Notas |
+| --- | --- | --- |
+| GET | `?q=&tipo=SISTEMA&page=0&size=25` | `tipo` **sólo** admite `SISTEMA`; cualquier otro valor → 400 `validacion` «tipo debe ser SISTEMA». Es el `@DefaultValue`. |
+| POST | `/admin/plantillas-apu` | `{desdeApuId, nombre, descripcionRubro}` → **201**. Se crea **desde un APU existente**, no desde cero. |
+| PUT | `/{id}` | DTO tipo *merge-patch*: `PlantillaApuAdminEditarRequest` distingue **campo ausente** de **campo nulo** (`nombrePresente()`/`nombreOrNull()`). Patrón C en estado puro: mandar `null` ≠ no mandar la clave. |
+| DELETE | `/{id}` | 204 |
+
+Respuesta real: `{"id","nombre","descripcionRubro","tipo":"SISTEMA","usuarioId":null,"fechaCreacion"}`.
+Ojo: `usuarioId` llegó **`null` explícito**, no ausente.
+
+### 079 — `ValorReferenciaAdminResource` → `/admin/valores-referencia`
+
+| Método | Ruta | Notas |
+| --- | --- | --- |
+| GET | `?page=0&size=25` | paginado |
+| PUT | `/{clave}` | **upsert**: devuelve **201 si la creó** y **200 si la actualizó**. Esa distinción es el contrato, no un detalle. |
+| DELETE | `/{clave}` | 204 |
+
+`clave` no vacía y ≤ 50 (400 `clave-requerida` / `clave-excedida`). Respuesta real:
+`{"clave":"SBU","valor":"450.00","descripcion":"…","fuente":"…","actualizado":"…"}` — **`valor`
+viaja como string**. No hagas aritmética con él (ADR 9); trátalo como decimal de sólo lectura.
+
+### 080 — `LogActividadResource` → `/admin/logs`
+
+Sólo **GET**, con `usuarioId` (UUIDv7), `evento`, `desde`, `hasta`, `page`, `size`. `evento` debe
+casar `^[a-z0-9._-]+$` y ≤ 60 (400 `evento-formato-invalido` / `evento-largo`); `desde`/`hasta` son
+`Instant` ISO-8601 (400 `parametro-invalido`) y `desde > hasta` → 400 `rango-fechas-invalido`.
+Respuesta real:
+`{"id","usuarioId","usuarioNombre","evento":"auth.login","entidad":"auth","entidadId":null,"detalle":{"resultado":"ok"},"fecha"}`.
+`detalle` es un objeto JSON libre y `entidadId` puede ser `null`. **No hay PII más allá del nombre
+del actor** — la prueba `TC-12-P42-02-filtro-evento-sin-pii.bru` lo afirma; consérvalo así.
+
+### Colección Bruno del backend (evidencia adicional, sólo lectura)
+
+`../thesis-back-quarkus/api/bruno/12-admin/` cubre los cuatro recursos: `TC-12-P38-*` usuarios,
+`TC-12-P40-01` plantillas, `TC-12-P41-*` valores/parámetros, `TC-12-P42-*` logs. Es contrato
+ejecutable escrito por el backend; úsalo antes de inventar una forma.
