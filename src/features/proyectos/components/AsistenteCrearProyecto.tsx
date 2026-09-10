@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const PASOS = ["Datos generales", "Confirmar"];
 
@@ -115,7 +116,11 @@ export function AsistenteCrearProyecto({
             </Field>
             <Field>
               <Label htmlFor="fechaInicio">Fecha de inicio</Label>
-              <Input id="fechaInicio" type="date" {...form.register("fechaInicio")} />
+              <DatePicker
+                id="fechaInicio"
+                value={form.watch("fechaInicio")}
+                onChange={(v) => form.setValue("fechaInicio", v)}
+              />
             </Field>
             <div className="grid grid-cols-2 gap-4">
               <Field>

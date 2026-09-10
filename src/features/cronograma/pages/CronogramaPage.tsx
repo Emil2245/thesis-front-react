@@ -107,7 +107,7 @@ export function CronogramaPage() {
                 Revisar
               </Button>
             )}
-            <Button onClick={() => setConfigDialog(true)}>
+            <Button onClick={() => setConfigDialog(true)} disabled={!versionId}>
               {cronograma ? "Reconfigurar" : "Crear cronograma"}
             </Button>
           </>

@@ -279,8 +279,16 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
       try {
         // `cantidad` es @NotNull con mínimo 0.000001: el selector no la pide,
         // así que la fila nace en 1 y el usuario la corrige en su celda.
-        // `rendimiento` se omite; mandarlo a 0 sería otro 400.
-        await agregarMutation.mutateAsync({ ...sel, cantidad: asDecimal("1") });
+        // `rendimiento` es @NotNull para EQUIPO/MANO_OBRA (ApuCrudService.
+        // rendimientoSegunSeccion) — sin él el backend responde 400 y la fila
+        // ni se crea. Mismo patrón que `cantidad`: nace en 1, se corrige después.
+        const necesitaRendimiento =
+          sel.seccionTipo === "EQUIPO" || sel.seccionTipo === "MANO_OBRA";
+        await agregarMutation.mutateAsync({
+          ...sel,
+          cantidad: asDecimal("1"),
+          ...(necesitaRendimiento ? { rendimiento: asDecimal("1") } : {}),
+        });
       } catch {
         // handled by react-query
       }

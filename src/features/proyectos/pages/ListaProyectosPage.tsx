@@ -96,26 +96,34 @@ export function ListaProyectosPage() {
   const hayFiltros = q !== "" || estado !== "";
 
   if (!data?.contenido.length) {
-    return hayFiltros ? (
-      <EstadoVacio
-        titulo="Sin resultados"
-        descripcion="Ningún proyecto coincide con la búsqueda."
-        accion={
-          <Button variant="outline" onClick={limpiarFiltros}>
-            Limpiar filtros
-          </Button>
-        }
-      />
-    ) : (
-      <EstadoVacio
-        titulo="No hay proyectos"
-        descripcion="Crea tu primer proyecto para empezar."
-        accion={
-          <Button onClick={() => setAsistenteAbierto(true)}>
-            <PlusIcon /> Crear proyecto
-          </Button>
-        }
-      />
+    return (
+      <>
+        {hayFiltros ? (
+          <EstadoVacio
+            titulo="Sin resultados"
+            descripcion="Ningún proyecto coincide con la búsqueda."
+            accion={
+              <Button variant="outline" onClick={limpiarFiltros}>
+                Limpiar filtros
+              </Button>
+            }
+          />
+        ) : (
+          <EstadoVacio
+            titulo="No hay proyectos"
+            descripcion="Crea tu primer proyecto para empezar."
+            accion={
+              <Button onClick={() => setAsistenteAbierto(true)}>
+                <PlusIcon /> Crear proyecto
+              </Button>
+            }
+          />
+        )}
+        <AsistenteCrearProyecto
+          abierto={asistenteAbierto}
+          onClose={() => setAsistenteAbierto(false)}
+        />
+      </>
     );
   }
 

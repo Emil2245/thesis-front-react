@@ -221,7 +221,25 @@ describe("useApuEditor", () => {
   });
 
   // `rendimiento` es @DecimalMin("0.000001"): mandar 0 es un 400. Se omite.
-  it("agregarFila no manda rendimiento", async () => {
+  it("agregarFila no manda rendimiento para MATERIAL/TRANSPORTE", async () => {
+    let cuerpo: Record<string, unknown> = {};
+    server.use(
+      http.post(`${API}/apus/:id/detalles`, async ({ request }) => {
+        cuerpo = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(apuDetalleFixture, { status: 201 });
+      }),
+    );
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    await act(async () => {
+      await result.current.agregarFila({ seccionTipo: "MATERIAL", insumoId: INSUMO_ID });
+    });
+
+    expect(Object.keys(cuerpo)).not.toContain("rendimiento");
+  });
+
+  it("agregarFila manda rendimiento para EQUIPO/MANO_OBRA (@NotNull en el backend)", async () => {
     let cuerpo: Record<string, unknown> = {};
     server.use(
       http.post(`${API}/apus/:id/detalles`, async ({ request }) => {
@@ -236,7 +254,7 @@ describe("useApuEditor", () => {
       await result.current.agregarFila({ seccionTipo: "EQUIPO", insumoId: INSUMO_ID });
     });
 
-    expect(Object.keys(cuerpo)).not.toContain("rendimiento");
+    expect(cuerpo.rendimiento).toBeDefined();
   });
 
   it("editing a cell invalidates presupuesto and cronograma keys", async () => {

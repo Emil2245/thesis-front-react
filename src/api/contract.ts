@@ -306,7 +306,7 @@ export interface ApuDetalleResponse {
   cantidad?: number | null;
   rendimiento?: number | null;
   unidad?: string | null;
-  precioEfectivo: number;
+  precioEfectivo: number | null;
   precioHeredado: boolean;
   costoHora?: number | null;
   costo: number;
@@ -324,8 +324,8 @@ export interface ApuResponse {
   costoTotal: number;
   /** Override del APU; ausente cuando hereda del proyecto. */
   porcentajeIndirecto?: number;
-  /** El %CI realmente aplicado tras la herencia: distingue heredado de override (P-23). */
-  porcentajeIndirectoEfectivo: number;
+  /** El %CI realmente aplicado tras la herencia; ausente cuando el proyecto no tiene %CI configurado. */
+  porcentajeIndirectoEfectivo?: number | null;
   costoIndirecto: number;
   secciones: Array<{
     tipo: SeccionTipo;

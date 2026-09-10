@@ -253,7 +253,7 @@ export const apuDetalleSchema = z
     cantidad: z.number().nullable().optional(),
     rendimiento: z.number().nullable().optional(),
     unidad: z.string().nullable().optional(),
-    precioEfectivo: z.number(),
+    precioEfectivo: z.number().nullable(),
     precioHeredado: z.boolean(),
     costoHora: z.number().nullable().optional(),
     costo: z.number(),
@@ -268,7 +268,7 @@ export const apuSchema = z
     costoDirecto: z.number(),
     costoTotal: z.number(),
     porcentajeIndirecto: z.number().optional(),
-    porcentajeIndirectoEfectivo: z.number(),
+    porcentajeIndirectoEfectivo: z.number().nullable().optional(),
     costoIndirecto: z.number(),
     secciones: z.array(
       z
