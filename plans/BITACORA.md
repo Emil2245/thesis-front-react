@@ -53,6 +53,38 @@ tocan. Se quita el banner `DIFERIDO` de los cinco planes, DEFERRED → TODO en e
    de no repetirla. La §9 de los planes pedía «adaptar»; el ejecutor **no** debe volver a
    normalizar.
 
+## Defectos ajenos encontrados al ejecutar 077–081 — anotados y NO arreglados (2026-09-10)
+
+El encargo prohíbe arreglar lo que pertenece a otro plan. Los tres son **anteriores** a esta rama:
+medidos en el árbol limpio antes de despachar 077, y ninguno lo introdujo 077–081. Juntos hacen que
+**`pnpm run verify` no pueda ir verde**, que es el punto 4 de la definición de terminado del
+encargo. Se dice aquí y en el informe final en vez de disimularlo.
+
+1. **`typecheck` rojo — una línea, y por una buena razón.**
+   `src/test/features/proyectos/hooks/contrato.test.tsx:197`, `TS2353`:
+   `'mostrarSeccionesVacias' does not exist in type 'ParametrosProyectoEditarRequest'`.
+   El test es del **plan 057** y es deliberado: afirma que el seam rechaza un parámetro que el
+   backend no conoce. Su propio comentario explica que el hook estaba tipado con el
+   `ParametrosProyectoActualizarRequest` deprecado —un `Partial & {…}` que dejaba pasar cualquier
+   campo— y que por eso el fallo sólo aparecía en runtime. Alguien **endureció** ese tipo en el WIP
+   `98fd848` («fixes de contrato»), que es lo correcto, y al hacerlo el error pasó a compilación: el
+   test ya no compila porque le pasa a propósito un campo inválido. Arreglo: una línea en el test,
+   para construir el cuerpo inválido sin que TypeScript lo rechace. **Es de quien sea dueño de
+   `98fd848`, no de 077–081.**
+
+2. **20 tests rojos en 11 archivos** (auth, exportar, proyectos/parámetros, ResumenProyecto y
+   AdminParámetros). Comparten causa: las **fixtures y handlers no casan con los esquemas Zod**
+   endurecidos. Muestra literal:
+   `ApiError: /perfil — fechaCreacion: Required; (raíz): Unrecognized key(s) in object: 'emailVerificado'`.
+   Es justo la clase de defecto que el plan 076 quiso cazar al meter validación runtime en el seam:
+   la validación entró, las fixtures no se actualizaron.
+
+3. **`format:check` rojo** en `src/features/apu-editor/hooks/useApuEditor.ts`, del mismo WIP.
+
+**Medición de la línea base, para que nadie la confunda con daño de esta rama:** antes de tocar
+nada, la suite iba **459 pasan / 20 fallan en 75 archivos**. `AGENTS.md` decía «475 tests en 73
+archivos», o sea que su baseline ya estaba caducado.
+
 ## Decisión de secuencia: Plan 082 (2026-09-09)
 
 - Plan 076 queda cerrado en código y documentación.
