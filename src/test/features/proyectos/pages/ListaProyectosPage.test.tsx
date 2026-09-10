@@ -50,6 +50,46 @@ describe("ListaProyectosPage", () => {
     });
   });
 
+  it("acepta campos opcionales nulos del backend", async () => {
+    server.use(
+      http.get(`${API}/proyectos`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: "01a08c1f-0fe2-78b5-9140-296fa20d45c6",
+              nombreProyecto: "Proyecto Prueba 1",
+              codigo: "PR999",
+              descripcion: null,
+              anio: null,
+              fechaInicio: null,
+              plazoEjecucion: null,
+              plazoUnidad: null,
+              estado: "BORRADOR",
+              direccionInstitucional: null,
+              subdireccionInstitucional: null,
+              tieneLogo: false,
+              updatedAt: null,
+            },
+          ],
+          page: 0,
+          size: 25,
+          total: 1,
+          totalPaginas: 1,
+        }),
+      ),
+    );
+
+    renderConProviders(
+      <Routes>
+        <Route path="/proyectos" element={<ListaProyectosPage />} />
+      </Routes>,
+      { ruta: "/proyectos" },
+    );
+
+    expect(await screen.findByText("Proyecto Prueba 1")).toBeInTheDocument();
+    expect(screen.queryByText("No hay proyectos")).not.toBeInTheDocument();
+  });
+
   it("buscar filtra la lista contra el servidor", async () => {
     const { user } = renderConProviders(
       <Routes>

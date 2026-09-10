@@ -18,6 +18,12 @@
 - Evidencia: 62 pruebas focalizadas de cronograma; `pnpm run verify` completo con **600/600 tests en 87 archivos**, typecheck, lint, ADR9, formato y build verdes; capturas Playwright de cronograma en Chromium **3/3 verdes** después de instalar el navegador requerido.
 - `e2e/screenshots.spec.ts` ahora sirve la proyección `/vistas`, conserva versión/vista explícitas y verifica el tab y panel antes de capturar. Se inspeccionaron `screenshots/10-cronograma.png`, `10-cronograma-valorizado.png` y `10-cronograma-curva-s.png`; cada una muestra exclusivamente su panel.
 
+## Corrección del listado de proyectos (2026-09-10)
+
+- Se reprodujo con Orca y la cuenta de prueba: `GET /api/v1/proyectos?page=0` respondía `200`, pero el frontend mostraba «No hay proyectos» porque `proyectoSchema` rechazaba `null` explícitos en campos nullable (`descripcion`, datos institucionales y metadatos opcionales).
+- `proyectoSchema` ahora acepta esos `null` y los normaliza a `undefined`, sin cambiar el contrato de escritura ni el backend. Se añadió una prueba de regresión con la respuesta real.
+- Evidencia: prueba focalizada 8/8, `pnpm run verify` 601/601 y navegador Orca autenticado mostrando los 4 proyectos reales. No fue necesario reiniciar Docker ni ejecutar `docker compose down -v`.
+
 ## Planificación UX del cronograma (2026-09-10)
 
 - Se revisaron las tres imágenes aportadas: navegación por vistas, Gantt con jerarquía alineada junto al timeline y Curva S como gráfica; también la entrevista N05, el backend Plan 030/DTOs/IT, la implementación frontend del Plan 087 y la referencia funcional acotada de `../ingepresupuestos/`.

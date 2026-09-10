@@ -105,15 +105,49 @@ export const proyectoSchema = z
       .nullable()
       .transform((codigo) => codigo ?? ""),
     estado: z.enum(["BORRADOR", "EN_PROCESO", "FINALIZADO"]),
-    descripcion: z.string().optional(),
-    direccionInstitucional: z.string().optional(),
-    subdireccionInstitucional: z.string().optional(),
-    anio: z.number().optional(),
-    fechaInicio: z.string().optional(),
-    plazoEjecucion: z.number().optional(),
-    plazoUnidad: z.string().optional(),
+    // El backend serializa estos campos nullable como `null`, no los omite.
+    // Se normalizan a `undefined` para conservar el contrato que consume la UI.
+    descripcion: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((valor) => valor ?? undefined),
+    direccionInstitucional: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((valor) => valor ?? undefined),
+    subdireccionInstitucional: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((valor) => valor ?? undefined),
+    anio: z
+      .number()
+      .nullable()
+      .optional()
+      .transform((valor) => valor ?? undefined),
+    fechaInicio: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((valor) => valor ?? undefined),
+    plazoEjecucion: z
+      .number()
+      .nullable()
+      .optional()
+      .transform((valor) => valor ?? undefined),
+    plazoUnidad: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((valor) => valor ?? undefined),
     tieneLogo: z.boolean().optional(),
-    updatedAt: z.string().optional(),
+    updatedAt: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((valor) => valor ?? undefined),
   })
   .strict();
 
