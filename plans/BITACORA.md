@@ -53,6 +53,83 @@ tocan. Se quita el banner `DIFERIDO` de los cinco planes, DEFERRED → TODO en e
    de no repetirla. La §9 de los planes pedía «adaptar»; el ejecutor **no** debe volver a
    normalizar.
 
+## Rama administrativa 077–081: CERRADA (2026-09-10)
+
+Cinco planes, cinco ejecutores en worktrees aislados, uno por plan y en serie porque 077–080 tocan
+los mismos cuatro archivos compartidos. **Ningún plan bloqueado.** Baseline de la suite:
+459 ✅ / 20 ❌ al empezar → **531 ✅ / 20 ❌** al cerrar: **+72 tests, cero regresiones**, y los 20
+rojos son exactamente los mismos de partida, comprobado por nombre.
+
+**Un asiento por plan:**
+
+- **077 — usuarios e invitaciones** (merge `d23c7e8`, 1 ronda de revisión). Siete operaciones
+  contra `/admin/usuarios`. La revisión encontró que el test del 409 al eliminar **no probaba
+  nada**: se demostró neutralizando el `onClick` del botón, y el test seguía verde. Patrón D de
+  `docs/bugs.md`. Corregido y re-verificado rompiendo el camino a propósito. De los tres puntos que
+  se le pidieron, **el tercero era del revisor y estaba equivocado** — el `disabled` del formulario
+  ya estaba desde el primer commit; el ejecutor lo demostró con el historial en vez de tragárselo.
+- **078 — plantillas APU de sistema** (merge `4489287`, sin rondas). Su §14 marcaba STOP «si crear
+  exige selector no disponible». Se investigó: **no existe listado global de APUs** —sólo cuelgan
+  de `/presupuestos/{id}/apus`— y el único proyecto visible para la cuenta admin no tiene
+  presupuestos, luego **no hay ni un APU alcanzable**. Decisión: no bloquear el plan entero por una
+  de cuatro operaciones; el alta se construye encadenando `useProyectos` → `useVersiones` →
+  `useApus`, hooks que ya existían, con estado vacío honesto. **El alta no se verificó contra datos
+  reales** y así consta. De paso corrigió `PlantillaSistemaCrearRequest`, que tenía `descripcion`
+  en vez de `descripcionRubro` y no casaba con el DTO del backend.
+- **079 — valores de referencia** (merge `f22b7c9`, 1 ronda). Su §14 marcaba STOP «si el upsert no
+  permite determinar la creación». Se comprobó por `curl` que sí: 201 al crear, 200 al actualizar,
+  mismo cuerpo. Pero **ningún helper de `src/api/request.ts` exponía el status**, y el hook no
+  puede importar `http` sin romper la invariante de que sólo `src/api/` sabe que existe HTTP. Se
+  metió `request.ts` en alcance **sólo** para añadir `putValidadoConEstado` (precedente:
+  `descargar()` ya devuelve más que `.data`). Se prohibió expresamente la salida fácil —inferir la
+  creación mirando si la clave estaba en la lista—, que es adivinar cuando el contrato lo dice.
+  `valor` viaja como string y se trata como decimal de sólo lectura: cero aritmética.
+  **La ronda de revisión fue por un fallo del revisor**: la §13 que se le entregó no incluía
+  `format:check`, que sí está en `verify`, y dejó pasar dos archivos mal formateados.
+- **080 — logs de actividad** (merge `3d87b5e`, sin rondas). Tabla de sólo lectura con filtros AND
+  que se omiten cuando vienen vacíos. Este plan traía **los dos peores errores de la rama**: su §08
+  mandaba *editar* `paginas-admin.test.tsx` —el test intocable— y su §06 pedía «reemplazar el
+  wrapper por export activo», que **habría abierto el gate antes de 081**. Ambos corregidos antes
+  de despachar. Aquí el Patrón C aparece invertido: `entidadId` llega `null` **explícito**, no
+  ausente, así que va `.nullable()` y en la fixture se pone `null` en vez de omitir la clave.
+- **081 — retirar gates** (merge `9e3d55c`, sin rondas). En vez de suponer qué rompía vaciar el
+  `Set`, **se ejecutó el cambio y se midió**: exactamente 8 errores de compilación, cuatro en los
+  wrappers y cuatro en `RUTAS_ADMIN`. Vaciar el `Set` convierte `ModuloSinBackend` en `never`, así
+  que **el compilador impide dejar el gate a medias**. Los cuatro casos «(degradada)» no se
+  borraron, se **invirtieron**: donde afirmaban que la página no pedía nada, ahora afirman que pide
+  su endpoint real. `RutaAdmin` sin tocar.
+
+**Decisiones tomadas en ausencia del usuario, además de las de cada plan:**
+
+1. **La deriva compartida de los cinco planes:** daban por existente un «wrapper de
+   disponibilidad» que **no existía**. Las cuatro páginas renderizaban `ModuloNoDisponible`
+   incondicionalmente y `MODULOS_SIN_BACKEND` sólo alimentaba la insignia del `Sidebar`; vaciar el
+   `Set` en 081 no habría encendido nada. Se corrigieron los cinco planes: 077–080 crean el wrapper
+   y 081 lo retira. Beneficio lateral: `paginas-admin.test.tsx` siguió verde y sin editarse durante
+   077–080, y se convirtió en la red de seguridad que avisaba si alguien abría el gate antes de
+   tiempo — comprobado forzándolo.
+2. **`SUPER_ADMIN` de pruebas.** El seed no crea ninguno, así que las rutas admin no se podían
+   ejercitar. Se promovió temporalmente a `ana.armas@gmail.com` **en la BD de desarrollo** (nunca en
+   el repo del backend) y **se revirtió al cerrar**: hoy los tres usuarios son `USUARIO` y
+   `/admin/usuarios` con su token devuelve 403, comprobado.
+3. **Método de despacho.** Los worktrees se crearon a mano (`git worktree add -b wa-0XX … plans/077-081`)
+   y los ejecutores se lanzaron **sin** `isolation`, contra lo que pedía el encargo, porque esta
+   bitácora ya registraba que `isolation: "worktree"` ramificó desde `main` y perdió el trabajo de
+   un ejecutor en este mismo repo.
+4. **Colisión de numeración.** Los worktrees `w-077` y `w-078` que ya existían son de los capítulos
+   del manual (`plans/077-manual-*`), otra estirpe y sin mergear. No se tocaron; los de esta rama
+   se llamaron `wa-0XX`.
+5. **`AGENTS.md` mentía en tres puntos** y se corrigió: el baseline («475 en 73» → 551 en 79), el
+   inventario de gates (el `Set` ya está vacío) y **la regla del `*`**, que decía «en MSW y en
+   Playwright» cuando en MSW no se usa nunca —0 de 51 handlers— porque casa por pathname ignorando
+   el query string; añadirlo capturaría también las rutas hijas.
+
+**Método de revisión.** Ningún plan se aprobó por su informe. En cada uno se re-corrieron los
+criterios, se comparó `git diff --stat` contra la §8, se leyó el diff completo y **se rompió el
+código a propósito** para comprobar que los tests lo cazaban. Así se encontró el único fallo grave
+de la rama (el test del 409 en 077). Dos ejecutores empezaron a hacer esas mutaciones por su cuenta
+antes de entregar.
+
 ## Defectos ajenos encontrados al ejecutar 077–081 — anotados y NO arreglados (2026-09-10)
 
 El encargo prohíbe arreglar lo que pertenece a otro plan. Los tres son **anteriores** a esta rama:
