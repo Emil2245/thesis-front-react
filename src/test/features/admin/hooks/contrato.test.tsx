@@ -10,6 +10,7 @@ import {
   basesCentralesFixtureAdmin,
   parametrosSistemaFixture,
   usuariosAdminFixture,
+  plantillasAdminFixture,
 } from "@/test/fixtures/admin";
 import { ApiError } from "@/api/problem";
 import { server } from "@/test/server";
@@ -31,6 +32,12 @@ import {
   useEditarUsuario,
   useEliminarUsuario,
 } from "@/features/admin/hooks/useUsuariosAdmin";
+import {
+  usePlantillasAdmin,
+  useCrearPlantillaAdmin,
+  useEditarPlantillaAdmin,
+  useEliminarPlantillaAdmin,
+} from "@/features/admin/hooks/usePlantillasAdmin";
 import { USUARIO_CON_PROYECTOS } from "@/test/handlers";
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
@@ -355,5 +362,122 @@ describe("contrato de useUsuariosAdmin", () => {
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).status).toBe(409);
     expect((error as ApiError).slug).toBe("usuario-con-proyectos-impedido");
+  });
+});
+
+// `PlantillaApuAdminResource` (plan 078): mismo molde que usuarios (077),
+// mismo gate cerrado (`admin-plantillas`, plan 081).
+describe("contrato de usePlantillasAdmin", () => {
+  it("lista con GET /admin/plantillas-apu y manda siempre tipo=SISTEMA", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => usePlantillasAdmin(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const p = ultima(peticiones, "GET", "/admin/plantillas-apu");
+    expect(p?.ruta).toBe(`${RUTA}/admin/plantillas-apu`);
+    expect(p?.url.searchParams.get("tipo")).toBe("SISTEMA");
+    expect(p?.url.searchParams.get("page")).toBe("0");
+    expect(p?.url.searchParams.get("size")).toBe("25");
+  });
+
+  // `usuarioId` llega siempre `null` explícito, no ausente (Patrón C): el
+  // fixture y el schema lo declaran `.nullable()`, no `.optional()`.
+  it("devuelve la página normalizada con usuarioId null explícito", async () => {
+    const { result } = renderHook(() => usePlantillasAdmin(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.contenido).toHaveLength(plantillasAdminFixture.length);
+    expect(result.current.data?.totalElementos).toBe(plantillasAdminFixture.length);
+    expect(result.current.data?.contenido[0].usuarioId).toBeNull();
+  });
+
+  it("manda el filtro q como query param", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => usePlantillasAdmin({ q: "porcelanato" }), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(ultima(peticiones, "GET", "/admin/plantillas-apu")?.url.searchParams.get("q")).toBe(
+      "porcelanato",
+    );
+  });
+
+  it("crea con POST /admin/plantillas-apu y un cuerpo de solo desdeApuId, nombre y descripcionRubro", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useCrearPlantillaAdmin(), { wrapper });
+    await result.current.mutateAsync({
+      desdeApuId: "018f8a20-0000-7000-8000-000000000001",
+      nombre: "Plantilla nueva",
+      descripcionRubro: "Descripción reutilizable",
+    });
+
+    const p = ultima(peticiones, "POST", "/admin/plantillas-apu");
+    expect(p?.ruta).toBe(`${RUTA}/admin/plantillas-apu`);
+    await waitFor(() =>
+      expect(p?.cuerpo).toEqual({
+        desdeApuId: "018f8a20-0000-7000-8000-000000000001",
+        nombre: "Plantilla nueva",
+        descripcionRubro: "Descripción reutilizable",
+      }),
+    );
+  });
+
+  it("un campo desconocido al crear es un 400, no un éxito silencioso", async () => {
+    const { result } = renderHook(() => useCrearPlantillaAdmin(), { wrapper });
+
+    const error = await result.current
+      .mutateAsync(
+        cuerpoInvalido({
+          desdeApuId: "018f8a20-0000-7000-8000-000000000001",
+          nombre: "X",
+          tipo: "PERSONAL",
+        }),
+      )
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).status).toBe(400);
+  });
+
+  // El PUT es semántica de presencia (§9 del plan 078): editar sólo la
+  // descripción NO debe mandar la clave `nombre`, y viceversa. Un `!== null`
+  // o un objeto completo aquí sería el Patrón C en el lado del request.
+  it("edita sólo la descripción con PUT /admin/plantillas-apu/{id} sin mandar nombre", async () => {
+    const peticiones = espiar();
+    const objetivo = plantillasAdminFixture[0];
+
+    const { result } = renderHook(() => useEditarPlantillaAdmin(), { wrapper });
+    await result.current.mutateAsync({ id: objetivo.id, descripcionRubro: "Nueva descripción" });
+
+    const p = ultima(peticiones, "PUT", `/admin/plantillas-apu/${objetivo.id}`);
+    expect(p?.ruta).toBe(`${RUTA}/admin/plantillas-apu/${objetivo.id}`);
+    await waitFor(() => expect(p?.cuerpo).toEqual({ descripcionRubro: "Nueva descripción" }));
+    expect(p?.cuerpo).not.toHaveProperty("nombre");
+  });
+
+  it("edita sólo el nombre con PUT /admin/plantillas-apu/{id} sin mandar descripcionRubro", async () => {
+    const peticiones = espiar();
+    const objetivo = plantillasAdminFixture[0];
+
+    const { result } = renderHook(() => useEditarPlantillaAdmin(), { wrapper });
+    await result.current.mutateAsync({ id: objetivo.id, nombre: "Nombre editado" });
+
+    const p = ultima(peticiones, "PUT", `/admin/plantillas-apu/${objetivo.id}`);
+    await waitFor(() => expect(p?.cuerpo).toEqual({ nombre: "Nombre editado" }));
+    expect(p?.cuerpo).not.toHaveProperty("descripcionRubro");
+  });
+
+  it("elimina con DELETE /admin/plantillas-apu/{id}", async () => {
+    const peticiones = espiar();
+    const objetivo = plantillasAdminFixture[0];
+
+    const { result } = renderHook(() => useEliminarPlantillaAdmin(), { wrapper });
+    await result.current.mutateAsync(objetivo.id);
+
+    expect(ultima(peticiones, "DELETE", `/admin/plantillas-apu/${objetivo.id}`)?.ruta).toBe(
+      `${RUTA}/admin/plantillas-apu/${objetivo.id}`,
+    );
   });
 });

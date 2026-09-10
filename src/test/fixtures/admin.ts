@@ -2,6 +2,7 @@ import type {
   ParametrosSistemaResponse,
   BaseInsumosResponse,
   UsuarioAdminResponse,
+  PlantillaApuAdminResponse,
 } from "@/api/contract";
 
 // Los `as never` se fueron con la política de dinero: el backend serializa
@@ -78,5 +79,28 @@ export const usuariosAdminFixture: UsuarioAdminResponse[] = [
     activo: false,
     emailVerificado: false,
     fechaCreacion: "2026-03-01T08:00:00Z",
+  },
+];
+
+// `GET /admin/plantillas-apu` — `Page<PlantillaApuAdminResponse>`, sólo
+// SISTEMA. `usuarioId` es siempre `null` explícito (Patrón C, §5 del plan
+// 078): la segunda entra con `descripcionRubro: null` para probar lo mismo en
+// ese campo, que el alta no exige.
+export const plantillasAdminFixture: PlantillaApuAdminResponse[] = [
+  {
+    id: "0192f6c4-7c8a-7abc-8000-000000002001",
+    nombre: "Retiro de pisos de porcelanato/cerámica (Sistema)",
+    tipo: "SISTEMA",
+    usuarioId: null,
+    descripcionRubro: "Retiro de pisos de porcelanato/cerámica",
+    fechaCreacion: "2026-09-10T03:56:41.070085Z",
+  },
+  {
+    id: "0192f6c4-7c8a-7abc-8000-000000002002",
+    nombre: "Contrapiso de hormigón simple (Sistema)",
+    tipo: "SISTEMA",
+    usuarioId: null,
+    descripcionRubro: null,
+    fechaCreacion: "2026-09-08T10:00:00.000000Z",
   },
 ];

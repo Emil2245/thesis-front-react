@@ -51,6 +51,7 @@ import {
   parametrosSistemaFixture,
   basesCentralesFixtureAdmin,
   usuariosAdminFixture,
+  plantillasAdminFixture,
 } from "./fixtures/admin";
 
 const API = "*/api/v1";
@@ -1027,4 +1028,54 @@ export const handlers = [
         )
       : HttpResponse.json(null, { status: 204 }),
   ),
+
+  // ———— Admin: plantillas APU de sistema (Plan 078) ————
+  // `PlantillaApuAdminResource`. El gate `admin-plantillas` sigue cerrado
+  // (`MODULOS_SIN_BACKEND`), pero el contrato ya se prueba aquí, igual que
+  // usuarios (plan 077). Sin `*` final: MSW ignora el query string al casar
+  // el pathname.
+  http.get(`${API}/admin/plantillas-apu`, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const q = params.get("q")?.toLowerCase();
+    const page = Number(params.get("page") ?? 0);
+    const size = Number(params.get("size") ?? 25);
+    let items = plantillasAdminFixture;
+    if (q) items = items.filter((p) => p.nombre.toLowerCase().includes(q));
+    return HttpResponse.json({
+      items: items.slice(page * size, (page + 1) * size),
+      total: items.length,
+      page,
+      size,
+      totalPaginas: items.length === 0 ? 0 : Math.ceil(items.length / size),
+    });
+  }),
+  http.post(
+    `${API}/admin/plantillas-apu`,
+    async ({ request }) =>
+      (await soloCampos(request, "desdeApuId", "nombre", "descripcionRubro")) ??
+      HttpResponse.json(
+        { ...plantillasAdminFixture[0], id: "0192f6c4-7c8a-7abc-8000-000000002099" },
+        { status: 201 },
+      ),
+  ),
+  http.put(`${API}/admin/plantillas-apu/:id`, async ({ request, params }) => {
+    // `soloCampos` ya consume el body con `request.json()`; un `clone()`
+    // posterior sobre la misma request revienta con "unusable" (undici). Se
+    // lee una sola vez y se reutiliza el objeto ya parseado.
+    const cuerpo = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    const permitidos = ["nombre", "descripcionRubro"];
+    const sobran = Object.keys(cuerpo).filter((k) => !permitidos.includes(k));
+    if (sobran.length > 0) {
+      return problema(400, "campo-desconocido", `El backend no acepta: ${sobran.join(", ")}`);
+    }
+    // El backend real preserva lo que no viene en el cuerpo (`JsonNullable`);
+    // el mock hace lo mismo en vez de rellenar con el fixture entero, para que
+    // un test que asegure la ausencia de una clave no se cuele por aquí.
+    return HttpResponse.json({
+      ...plantillasAdminFixture[0],
+      id: String(params.id),
+      ...cuerpo,
+    });
+  }),
+  http.delete(`${API}/admin/plantillas-apu/:id`, () => HttpResponse.json(null, { status: 204 })),
 ];
