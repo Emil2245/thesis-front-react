@@ -21,7 +21,7 @@
 | Plan | Estado | Worktree | Rama | Rondas | Nota |
 | --- | --- | --- | --- | --- | --- |
 | — reactivación | ✅ hecho | — | — | — | banner quitado, índice a TODO, bitácora escrita (`5a7e480`) |
-| 077 usuarios | 🔄 despachado | `.claude/worktrees/wa-077` | `wa-077` | 0/2 | plan corregido por deriva antes de despachar |
+| 077 usuarios | 🟡 vuelto, en revisión ronda 1 | `.claude/worktrees/wa-077` | `wa-077` | **1/2** | ejecutor COMPLETE en `4e10904`; revisión pide 3 arreglos |
 | 078 plantillas | ⏳ pendiente | — | — | — | no despachar hasta mergear 077 |
 | 079 valores | ⏳ pendiente | — | — | — | no despachar hasta mergear 078 |
 | 080 logs | ⏳ pendiente | — | — | — | no despachar hasta mergear 079 |
@@ -97,3 +97,50 @@ del actor** — la prueba `TC-12-P42-02-filtro-evento-sin-pii.bru` lo afirma; co
 `../thesis-back-quarkus/api/bruno/12-admin/` cubre los cuatro recursos: `TC-12-P38-*` usuarios,
 `TC-12-P40-01` plantillas, `TC-12-P41-*` valores/parámetros, `TC-12-P42-*` logs. Es contrato
 ejecutable escrito por el backend; úsalo antes de inventar una forma.
+
+## Revisión de 077 — ronda 1 (2026-09-10)
+
+Ejecutor: STATUS COMPLETE, dos commits (`ca86859`, `4e10904`). **Verificado por mí, no por su
+informe:**
+
+- **Alcance limpio.** `git diff --stat 1aedeb0..HEAD` = exactamente los 10 archivos de §8. No toca
+  `plans/`, ni `src/lib/disponibilidad.ts`, ni `Guards.tsx`, ni `Sidebar.tsx`, ni
+  `paginas-admin.test.tsx`. El gate `admin-usuarios` sigue cerrado.
+- **Tests:** 47 pasan en `src/test/features/admin` (+19 nuevos sobre los 28 de base).
+- **Los 5 fallos y el error de typecheck son preexistentes**, comprobado corriendo la misma suite
+  en el árbol principal @ `52ec950` (código idéntico a `1aedeb0`): fallan igual sin sus cambios, y
+  los cinco son de `AdminParametrosPage`/`useParametrosSistema`, nada que ver con usuarios.
+- **Los tests de contrato sí afirman** ruta, método, query params y cuerpo saliente exacto — no son
+  Patrón D. El `.strict()` de `usuarioAdminSchema` es la garantía estructural de «no secretos»: si
+  el backend añadiera `passwordHash`, `getValidado` reventaría.
+
+**Desviación aceptada:** el handler de listado no lleva `*` final, contra lo que dicen `AGENTS.md`
+y el encargo. Tenía razón: **0 de los 51 handlers MSW del archivo lo llevan**, MSW casa por
+pathname ignorando el query string, y `${API}/admin/usuarios*` habría capturado también
+`/admin/usuarios/:id` y las rutas de acción. La regla del `*` es de **Playwright** (`page.route`),
+donde sí es real (`e2e/screenshots.spec.ts:486`).
+
+**Tres arreglos pedidos (ronda 1/2):**
+
+1. El test del 409 al eliminar **no prueba nada**. Lo demostré: cambié el `onClick` del botón
+   «Eliminar» por `() => {}` y el test siguió verde. El `mutate` de
+   `AdminUsuariosPageActiva.tsx:328` no lleva `onError`, así que el 409 sólo va a `toast.error`, y
+   `sonner` está mockeado en ese archivo. Patrón D puro.
+2. `useUsuarioAdmin` (GET por id) no lo llama nadie.
+3. El formulario de invitar deja mandar campos vacíos → 400 con mensaje de Hibernate **en inglés**
+   en una UI española.
+
+## Defectos ajenos encontrados — anotados, NO arreglados
+
+Los dos pertenecen a otra estirpe (el WIP `98fd848`, rama del workspace/082), no a 077–081:
+
+1. **`pnpm run typecheck` ya estaba rojo antes de empezar esta rama**:
+   `src/test/features/proyectos/hooks/contrato.test.tsx(197,47)`, `TS2353`
+   `'mostrarSeccionesVacias' does not exist in type 'ParametrosProyectoEditarRequest'`. **Esto
+   bloquea el punto 4 de la definición de terminado** (`pnpm run verify` verde): no se puede poner
+   verde sin tocar un archivo fuera de 077–081. Decidir al cierre de la rama; no se disimula.
+2. **Cinco tests rojos preexistentes** en `AdminParametrosPage`/`useParametrosSistema`, misma
+   procedencia.
+3. **`AGENTS.md` miente sobre el `*`**: dice «en MSW y en Playwright», pero en MSW no se usa nunca
+   y añadirlo rompería el enrutado. Corregir al cierre, junto con el baseline de tests (§9.7 del
+   encargo).
