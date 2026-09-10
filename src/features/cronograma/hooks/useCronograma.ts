@@ -46,6 +46,7 @@ export function useCrearCronograma(presupuestoId: string) {
       postValidado(`/presupuestos/${presupuestoId}/cronograma`, cronogramaSchema, body),
     onSuccess: (data) => {
       qc.setQueryData(qk.cronograma(presupuestoId), data);
+      void qc.invalidateQueries({ queryKey: qk.cronogramaVistas(data.id) });
       toast.success("Cronograma creado");
     },
     onError: (err) => {
@@ -72,6 +73,7 @@ export function useConfigurarCronograma(
       putValidado(`/cronogramas/${cronogramaId}/configuracion`, cronogramaSchema, body),
     onSuccess: (data) => {
       qc.setQueryData(qk.cronograma(presupuestoId), data);
+      void qc.invalidateQueries({ queryKey: qk.cronogramaVistas(cronogramaId) });
       toast.success("Cronograma actualizado");
     },
     onError: (err) => {
@@ -99,6 +101,7 @@ export function useProgramarActividad(cronogramaId: string, presupuestoId: strin
       ),
     onSuccess: (data) => {
       qc.setQueryData(qk.cronograma(presupuestoId), data);
+      void qc.invalidateQueries({ queryKey: qk.cronogramaVistas(cronogramaId) });
       toast.success("Actividad programada");
     },
     onError: (err) => {
@@ -117,6 +120,7 @@ export function useRevisarCronograma(cronogramaId: string, presupuestoId: string
     mutationFn: () => postValidado(`/cronogramas/${cronogramaId}/revisado`, cronogramaSchema),
     onSuccess: (data) => {
       qc.setQueryData(qk.cronograma(presupuestoId), data);
+      void qc.invalidateQueries({ queryKey: qk.cronogramaVistas(cronogramaId) });
       toast.success("Cronograma revisado");
     },
     onError: () => toast.error("Error al revisar cronograma"),

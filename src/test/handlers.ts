@@ -43,6 +43,7 @@ import {
 } from "./fixtures/presupuesto";
 import {
   cronogramaFixture,
+  cronogramaVistasFixture,
   perdidasFixture,
   preflightBloqueadoFixture,
   preflightExportableFixture,
@@ -778,6 +779,12 @@ export const handlers = [
   ),
 
   // ———— Cronograma (plan 055, contrato de `origin/main` c337950) ————
+
+  http.get(`${API}/cronogramas/:id/vistas`, ({ params }) =>
+    params.id === cronogramaVistasFixture.cronogramaId
+      ? HttpResponse.json(cronogramaVistasFixture)
+      : errorCronograma(404, "no-encontrado", "No existe"),
+  ),
   http.get(`${API}/presupuestos/:id/cronograma`, ({ params }) =>
     params.id === cronogramaFixture.presupuestoId
       ? HttpResponse.json(cronogramaFixture)

@@ -5,6 +5,12 @@ import type {
   CopiaBaseResultadoResponse,
   ComparacionVersionesResponse,
   CronogramaResponse,
+  CronogramaVistasResponse,
+  CapituloCronogramaResponse,
+  RubroCronogramaResponse,
+  PeriodoValorizadoResponse,
+  TotalesCronogramaResponse,
+  PuntoCurvaSResponse,
   PresupuestoResponse,
   PresupuestoVersionResponse,
   RubroResponse,
@@ -528,6 +534,85 @@ export const cronogramaSchema: z.ZodType<CronogramaResponse, z.ZodTypeDef, unkno
     avanceAcumulado: z.array(decimalSchema),
   })
   .strict();
+const actividadVistasSchema = actividadSchema;
+
+const rubroCronogramaSchema: z.ZodType<RubroCronogramaResponse, z.ZodTypeDef, unknown> = z
+  .object({
+    id: z.string(),
+    item: z.string(),
+    codigo: z.string(),
+    descripcion: z.string(),
+    unidad: z.string(),
+    cantidad: decimalSchema,
+    precioUnitario: decimalSchema,
+    precioTotal: decimalSchema,
+    montoPorPeriodo: z.record(decimalSchema).nullable(),
+    montoTotal: decimalSchema.nullable(),
+    actividad: actividadVistasSchema.nullable(),
+  })
+  .strict();
+
+const capituloCronogramaSchema: z.ZodType<CapituloCronogramaResponse, z.ZodTypeDef, unknown> =
+  z.lazy(() =>
+    z
+      .object({
+        id: z.string(),
+        item: z.string(),
+        descripcion: z.string(),
+        subcapitulos: z.array(capituloCronogramaSchema),
+        rubros: z.array(rubroCronogramaSchema),
+      })
+      .strict(),
+  );
+
+const periodoValorizadoSchema: z.ZodType<PeriodoValorizadoResponse, z.ZodTypeDef, unknown> = z
+  .object({
+    periodo: z.number(),
+    porcentajeParcial: decimalSchema,
+    porcentajeAcumulado: decimalSchema,
+    montoParcial: decimalSchema,
+    montoAcumulado: decimalSchema,
+  })
+  .strict();
+
+const totalesCronogramaSchema: z.ZodType<TotalesCronogramaResponse, z.ZodTypeDef, unknown> = z
+  .object({
+    avanceFinalPorcentaje: decimalSchema,
+    montoTotalGeneral: decimalSchema,
+    porcentajeCierre: decimalSchema,
+  })
+  .strict();
+
+const puntoCurvaSSchema: z.ZodType<PuntoCurvaSResponse, z.ZodTypeDef, unknown> = z
+  .object({
+    periodo: z.number(),
+    porcentajeParcial: decimalSchema,
+    porcentajeAcumulado: decimalSchema,
+    montoParcial: decimalSchema,
+    montoAcumulado: decimalSchema,
+  })
+  .strict();
+
+export const cronogramaVistasSchema: z.ZodType<CronogramaVistasResponse, z.ZodTypeDef, unknown> = z
+  .object({
+    cronogramaId: z.string(),
+    gantt: z
+      .object({
+        cronograma: cronogramaSchema,
+        capitulos: z.array(capituloCronogramaSchema),
+      })
+      .strict(),
+    valorizado: z
+      .object({
+        periodos: z.array(periodoValorizadoSchema),
+        capitulos: z.array(capituloCronogramaSchema),
+        totales: totalesCronogramaSchema,
+      })
+      .strict(),
+    curvaS: z.object({ puntos: z.array(puntoCurvaSSchema) }).strict(),
+  })
+  .strict();
+
 export const errorPayloadSchema = z
   .object({
     codigo: z.string(),

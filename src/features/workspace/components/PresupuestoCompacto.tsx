@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { CapituloResponse, PresupuestoResponse, RubroResponse } from "@/api/contract";
-import type { ReactNode } from "react";
 
 type RubroEntry = { rubro: RubroResponse; ancestors: string[] };
 
@@ -15,20 +14,57 @@ function collectRubros(capitulos: CapituloResponse[], ancestors: string[] = []):
   });
 }
 
-export function PresupuestoCompacto({ presupuesto }: { presupuesto: PresupuestoResponse }) {
+function coincideConBusqueda(rubro: RubroResponse, query: string) {
+  return [rubro.item, rubro.codigo, rubro.descripcion, rubro.unidad].some((valor) =>
+    valor.toLocaleLowerCase().includes(query),
+  );
+}
+
+function filtrarCapitulos(capitulos: CapituloResponse[], query: string): CapituloResponse[] {
+  if (!query) return capitulos;
+
+  return capitulos.flatMap((capitulo) => {
+    const rubros = capitulo.rubros.filter((rubro) => coincideConBusqueda(rubro, query));
+    const subcapitulos = filtrarCapitulos(capitulo.subcapitulos, query);
+    if (!rubros.length && !subcapitulos.length) return [];
+
+    return [{ ...capitulo, rubros, subcapitulos }];
+  });
+}
+
+export function PresupuestoCompacto({
+  presupuesto,
+  busqueda = "",
+}: {
+  presupuesto: PresupuestoResponse;
+  busqueda?: string;
+}) {
   const [params, setParams] = useSearchParams();
   const entries = useMemo(() => collectRubros(presupuesto.capitulos), [presupuesto.capitulos]);
   const selectedId = params.get("rubro");
   const selected = entries.find(({ rubro }) => rubro.id === selectedId)?.rubro;
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+  const query = busqueda.trim().toLocaleLowerCase();
+  const capitulosVisibles = useMemo(
+    () => filtrarCapitulos(presupuesto.capitulos, query),
+    [presupuesto.capitulos, query],
+  );
+  const matchingEntries = useMemo(() => collectRubros(capitulosVisibles), [capitulosVisibles]);
+  const [expanded, setExpanded] = useState<Set<string>>(
+    () => new Set(presupuesto.capitulos.map((capitulo) => capitulo.id)),
+  );
+
   const visibleExpanded = useMemo(() => {
-    const forced = selected?.id
+    const forced = selected
       ? entries.find(({ rubro }) => rubro.id === selected.id)?.ancestors
       : selectedId && !selected
         ? entries[0]?.ancestors
         : undefined;
-    return forced ? new Set([...expanded, ...forced]) : expanded;
-  }, [entries, expanded, selected, selectedId]);
+    return new Set([
+      ...expanded,
+      ...(forced ?? []),
+      ...(query ? matchingEntries.flatMap(({ ancestors }) => ancestors) : []),
+    ]);
+  }, [entries, expanded, matchingEntries, query, selected, selectedId]);
 
   useEffect(() => {
     const fallback = entries[0];
@@ -55,6 +91,7 @@ export function PresupuestoCompacto({ presupuesto }: { presupuesto: PresupuestoR
       { replace: false },
     );
   };
+
   const activate = (event: KeyboardEvent<HTMLTableRowElement>, rubro: RubroResponse) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
@@ -65,13 +102,19 @@ export function PresupuestoCompacto({ presupuesto }: { presupuesto: PresupuestoR
   const renderChapters = (chapters: CapituloResponse[]): ReactNode[] =>
     chapters.flatMap((chapter) => {
       const isExpanded = visibleExpanded.has(chapter.id);
+      const hasChildren = chapter.subcapitulos.length > 0 || chapter.rubros.length > 0;
       return [
         <tr key={chapter.id} className="border-t bg-muted/40">
-          <th colSpan={6} className="px-3 py-2 text-left font-medium">
+          <th colSpan={6} className="px-2 py-1.5 text-left font-medium">
             <button
               type="button"
-              aria-label={`${isExpanded ? "Contraer" : "Expandir"} ${chapter.descripcion}`}
-              aria-expanded={isExpanded}
+              disabled={!hasChildren}
+              aria-label={
+                hasChildren
+                  ? `${isExpanded ? "Contraer" : "Expandir"} ${chapter.descripcion}`
+                  : `Sin contenido ${chapter.descripcion}`
+              }
+              aria-expanded={hasChildren ? isExpanded : undefined}
               onClick={() =>
                 setExpanded((previous) => {
                   const next = new Set(previous);
@@ -80,9 +123,9 @@ export function PresupuestoCompacto({ presupuesto }: { presupuesto: PresupuestoR
                   return next;
                 })
               }
-              className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded hover:bg-muted"
+              className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded hover:bg-muted disabled:cursor-default disabled:opacity-40"
             >
-              {isExpanded ? "▾" : "▸"}
+              <span aria-hidden>{hasChildren ? (isExpanded ? "▾" : "▸") : "•"}</span>
             </button>
             {chapter.item} · {chapter.descripcion}
           </th>
@@ -98,12 +141,12 @@ export function PresupuestoCompacto({ presupuesto }: { presupuesto: PresupuestoR
                 onKeyDown={(event) => activate(event, rubro)}
                 className="cursor-pointer border-t hover:bg-muted/50 aria-selected:bg-muted"
               >
-                <td className="px-3 py-2">{rubro.item}</td>
-                <td className="px-3 py-2">{rubro.descripcion}</td>
-                <td className="px-3 py-2">{rubro.unidad}</td>
-                <td className="px-3 py-2">{rubro.cantidad}</td>
-                <td className="px-3 py-2">{rubro.precioUnitario}</td>
-                <td className="px-3 py-2">{rubro.precioTotal}</td>
+                <td className="px-2 py-1.5">{rubro.item}</td>
+                <td className="px-2 py-1.5">{rubro.descripcion}</td>
+                <td className="px-2 py-1.5">{rubro.unidad}</td>
+                <td className="px-2 py-1.5">{rubro.cantidad}</td>
+                <td className="px-2 py-1.5">{rubro.precioUnitario}</td>
+                <td className="px-2 py-1.5">{rubro.precioTotal}</td>
               </tr>
             ))
           : []),
@@ -116,21 +159,27 @@ export function PresupuestoCompacto({ presupuesto }: { presupuesto: PresupuestoR
         Este presupuesto no contiene rubros.
       </output>
     );
+
+  if (query && !matchingEntries.length)
+    return (
+      <output className="block p-4 text-sm text-muted-foreground">No se encontraron rubros.</output>
+    );
+
   return (
     <div className="min-w-0 overflow-x-auto">
-      <table className="w-full min-w-[640px] text-sm">
+      <table className="w-full min-w-[560px] text-sm">
         <caption className="sr-only">Árbol compacto del presupuesto</caption>
         <thead>
           <tr className="border-b text-left text-xs text-muted-foreground">
-            <th className="px-3 py-2">Ítem</th>
-            <th className="px-3 py-2">Descripción</th>
-            <th className="px-3 py-2">Und.</th>
-            <th className="px-3 py-2">Cantidad</th>
-            <th className="px-3 py-2">P.U.</th>
-            <th className="px-3 py-2">Parcial</th>
+            <th className="px-2 py-1.5">Ítem</th>
+            <th className="px-2 py-1.5">Descripción</th>
+            <th className="px-2 py-1.5">Und.</th>
+            <th className="px-2 py-1.5">Cantidad</th>
+            <th className="px-2 py-1.5">P.U.</th>
+            <th className="px-2 py-1.5">Parcial</th>
           </tr>
         </thead>
-        <tbody>{renderChapters(presupuesto.capitulos)}</tbody>
+        <tbody>{renderChapters(capitulosVisibles)}</tbody>
       </table>
     </div>
   );

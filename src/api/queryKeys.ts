@@ -27,6 +27,7 @@ export const qk = {
   versiones: (proyectoId: string) => ["proyecto", proyectoId, "presupuestos"] as const,
 
   cronograma: (presupuestoId: string) => ["presupuesto", presupuestoId, "cronograma"] as const,
+  cronogramaVistas: (cronogramaId: string) => ["cronograma", cronogramaId, "vistas"] as const,
 
   // El `formato` va DENTRO de la clave: el preflight de `mspdi` puede traer un
   // bloqueo (`mspdi-fecha-inicio-requerida`) que el de `xlsx` no tiene, así que

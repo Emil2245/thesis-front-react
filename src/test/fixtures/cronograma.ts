@@ -2,6 +2,10 @@ import type {
   ActividadCronogramaResponse,
   CronogramaExportPreflightResponse,
   CronogramaResponse,
+  CronogramaVistasResponse,
+  CapituloCronogramaResponse,
+  PeriodoValorizadoResponse,
+  RubroCronogramaResponse,
 } from "@/api/contract";
 import { asDecimal } from "@/lib/decimal";
 import { PRESUPUESTO_V2, RUBRO_1_1_1, RUBRO_1_1_2, RUBRO_1_2_1, RUBRO_2_1 } from "./presupuesto";
@@ -154,6 +158,105 @@ export const cronogramaFixture: CronogramaResponse = {
   // Denso y 1-based por posición: el índice 0 es el período 1.
   avancePorPeriodo: densa("4.9550", "35.5855", "28.8288", "30.6307"),
   avanceAcumulado: densa("4.9550", "40.5405", "69.3693", "100.0000"),
+};
+
+const rubroVistas = (
+  id: string,
+  item: string,
+  actividad: ActividadCronogramaResponse | null,
+): RubroCronogramaResponse => ({
+  id,
+  item,
+  codigo: `APU-${item}`,
+  descripcion: actividad?.descripcion ?? "Rubro sin actividad",
+  unidad: actividad?.unidad ?? "u",
+  cantidad: actividad?.cantidad ?? asDecimal("1.000000"),
+  precioUnitario: actividad?.precioUnitario ?? asDecimal("0.000000"),
+  precioTotal: actividad?.precioTotal ?? asDecimal("0.000000"),
+  montoPorPeriodo: actividad
+    ? {
+        "1": asDecimal("2000.000000"),
+        "2": asDecimal("500.000000"),
+      }
+    : null,
+  montoTotal: actividad ? asDecimal("2500.000000") : null,
+  actividad,
+});
+
+const capitulosVistas: CapituloCronogramaResponse[] = [
+  {
+    id: "0198c1a3-0000-7000-8000-000000000010",
+    item: "1",
+    descripcion: "Obras preliminares",
+    subcapitulos: [
+      {
+        id: "0198c1a3-0000-7000-8000-000000000011",
+        item: "1.1",
+        descripcion: "Movimiento de tierras",
+        subcapitulos: [],
+        rubros: [
+          rubroVistas(RUBRO_1_1_1, "1.1.1", actividadesFixture[0]),
+          rubroVistas(RUBRO_1_1_2, "1.1.2", null),
+        ],
+      },
+    ],
+    rubros: [rubroVistas(RUBRO_1_2_1, "1.2.1", actividadesFixture[2])],
+  },
+  {
+    id: "0198c1a3-0000-7000-8000-000000000020",
+    item: "2",
+    descripcion: "Estructura",
+    subcapitulos: [],
+    rubros: [rubroVistas(RUBRO_2_1, "2.1", actividadesFixture[3])],
+  },
+];
+
+const periodosVistas: PeriodoValorizadoResponse[] = [
+  {
+    periodo: 1,
+    porcentajeParcial: asDecimal("4.9550"),
+    porcentajeAcumulado: asDecimal("4.9550"),
+    montoParcial: asDecimal("916.675000"),
+    montoAcumulado: asDecimal("916.675000"),
+  },
+  {
+    periodo: 2,
+    porcentajeParcial: asDecimal("35.5855"),
+    porcentajeAcumulado: asDecimal("40.5405"),
+    montoParcial: asDecimal("6583.317500"),
+    montoAcumulado: asDecimal("7499.992500"),
+  },
+  {
+    periodo: 3,
+    porcentajeParcial: asDecimal("28.8288"),
+    porcentajeAcumulado: asDecimal("69.3693"),
+    montoParcial: asDecimal("5333.328000"),
+    montoAcumulado: asDecimal("12833.320500"),
+  },
+  {
+    periodo: 4,
+    porcentajeParcial: asDecimal("30.6307"),
+    porcentajeAcumulado: asDecimal("100.0000"),
+    montoParcial: asDecimal("5666.679500"),
+    montoAcumulado: asDecimal("18500.000000"),
+  },
+];
+
+export const cronogramaVistasFixture: CronogramaVistasResponse = {
+  cronogramaId: CRONOGRAMA_ID,
+  gantt: { cronograma: cronogramaFixture, capitulos: capitulosVistas },
+  valorizado: {
+    periodos: periodosVistas,
+    capitulos: capitulosVistas,
+    totales: {
+      avanceFinalPorcentaje: asDecimal("100.0000"),
+      montoTotalGeneral: asDecimal("18500.000000"),
+      porcentajeCierre: asDecimal("100.0000"),
+    },
+  },
+  curvaS: {
+    puntos: periodosVistas.map((periodo) => ({ ...periodo })),
+  },
 };
 
 /**

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useVersionActiva } from "@/shell/contexto";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,8 +9,12 @@ import {
   useProgramarActividad,
   useRevisarCronograma,
 } from "../hooks/useCronograma";
+import { useCronogramaVistas } from "../hooks/useCronogramaVistas";
 import { TablaActividades } from "../components/TablaActividades";
 import { GanttChart } from "../components/GanttChart";
+import { JerarquiaCronograma } from "../components/JerarquiaCronograma";
+import { CronogramaValorizado } from "../components/CronogramaValorizado";
+import { CurvaSChart } from "../components/CurvaSChart";
 import { BadgeDesactualizado } from "../components/BadgeDesactualizado";
 import { DialogoConfigurarCronograma } from "../components/DialogoConfigurarCronograma";
 import { DialogoConfirmarReduccion } from "../components/DialogoConfirmarReduccion";
@@ -31,9 +35,9 @@ export function CronogramaPage() {
   const { presupuestoId } = useVersionActiva();
   const versionId = presupuestoId ?? "";
 
-  // `data` es `null` —no `undefined`— cuando el backend responde 404: este
-  // presupuesto todavía no tiene cronograma, que es un estado, no un fallo.
-  const { data: cronograma, isLoading } = useCronograma(versionId);
+  // Esta primera lectura conserva el contrato existente y obtiene el id que
+  // necesita la proyección única de vistas.
+  const { data: cronograma, isLoading, isError: cronogramaError } = useCronograma(versionId);
   const crearCrono = useCrearCronograma(versionId);
 
   const [configDialog, setConfigDialog] = useState(false);
@@ -45,6 +49,7 @@ export function CronogramaPage() {
   const [ultimaConfig, setUltimaConfig] = useState<CronogramaConfigurarRequest | null>(null);
 
   const cronogramaId = cronograma?.id ?? "";
+  const vistas = useCronogramaVistas(cronogramaId);
   const configCrono = useConfigurarCronograma(cronogramaId, versionId, (perdidas) => {
     if (ultimaConfig) setReduccion({ body: ultimaConfig, perdidas });
   });
@@ -83,6 +88,13 @@ export function CronogramaPage() {
     );
   }
 
+  if (cronogramaError) {
+    return <p role="alert">No se pudo cargar el cronograma.</p>;
+  }
+
+  const desactualizado =
+    cronograma?.desactualizado === true || vistas.data?.gantt.cronograma.desactualizado === true;
+
   return (
     <>
       <EncabezadoPagina
@@ -97,7 +109,7 @@ export function CronogramaPage() {
             {cronograma?.estadoDistribucion === "BORRADOR" && (
               <Badge variant="secondary">Distribución incompleta</Badge>
             )}
-            <BadgeDesactualizado desactualizado={cronograma?.desactualizado ?? false} />
+            <BadgeDesactualizado desactualizado={desactualizado} />
           </>
         }
         acciones={
@@ -115,13 +127,37 @@ export function CronogramaPage() {
       />
 
       {!cronograma && (
-        <div className="text-center py-16 text-muted-foreground">
+        <div className="py-16 text-center text-muted-foreground">
           No hay cronograma para esta versión del presupuesto.
         </div>
       )}
 
       {cronograma && (
         <>
+          <section aria-label="Estado de las vistas del cronograma" className="space-y-2">
+            {vistas.isLoading && <output>Cargando vistas del cronograma…</output>}
+            {vistas.isFetching && !vistas.isLoading && <output>Actualizando vistas…</output>}
+            {desactualizado && !vistas.isError && (
+              <output className="text-sm text-muted-foreground">
+                La vista está desactualizada respecto del presupuesto; se muestran los valores
+                entregados por el servidor.
+              </output>
+            )}
+            {vistas.isError && <p role="alert">No se pudieron cargar las vistas del cronograma.</p>}
+            {!vistas.isLoading && !vistas.isError && vistas.data === null && (
+              <output>No hay vistas disponibles para este cronograma.</output>
+            )}
+          </section>
+
+          {vistas.data && (
+            <div className="space-y-8">
+              <JerarquiaCronograma gantt={vistas.data.gantt} />
+              <CronogramaValorizado valorizado={vistas.data.valorizado} />
+              <CurvaSChart curvaS={vistas.data.curvaS} />
+            </div>
+          )}
+
+          {/* The existing editing view remains backed by CronogramaResponse. */}
           <TablaActividades
             actividades={cronograma.actividades}
             periodos={cronograma.numeroPeriodos}
@@ -129,8 +165,6 @@ export function CronogramaPage() {
           />
           <GanttChart cronograma={cronograma} />
 
-          {/* Sólo con una actividad de verdad: el objeto ficticio que había
-              aquí existía para contentar al tipado viejo. */}
           {actividadEdit && (
             <DialogoEditarActividad
               open

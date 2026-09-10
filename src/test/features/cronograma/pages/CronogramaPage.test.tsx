@@ -8,6 +8,7 @@ import { usuarioFixture } from "@/test/fixtures/auth";
 import {
   cronogramaBorradorFixture,
   cronogramaDesactualizadoFixture,
+  cronogramaVistasFixture,
 } from "@/test/fixtures/cronograma";
 import { server } from "@/test/server";
 import { CronogramaPage } from "@/features/cronograma/pages/CronogramaPage";
@@ -186,6 +187,79 @@ describe("CronogramaPage", () => {
     );
     await waitFor(() => {
       expect(screen.getByText("Desactualizado")).toBeInTheDocument();
+      expect(screen.getByText(/la vista está desactualizada/i)).toBeInTheDocument();
     });
+  });
+
+  it("integra el Gantt jerárquico, valorizado y curva S de la única vista", async () => {
+    await setupCronogramaPage();
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Gantt jerárquico" })).toBeInTheDocument(),
+    );
+
+    expect(screen.getByRole("heading", { name: "Gantt jerárquico" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Cronograma valorizado" })).toBeInTheDocument();
+    expect(screen.getByText("Curva S")).toBeInTheDocument();
+    expect(screen.getAllByText("Movimiento de tierras").length).toBeGreaterThan(0);
+    expect(screen.getByText("Sin actividad")).toBeInTheDocument();
+    expect(screen.getByText("2–2")).toBeInTheDocument();
+    expect(screen.getByText("4–4")).toBeInTheDocument();
+    expect(screen.getAllByText("4.9550").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("18500.000000").length).toBeGreaterThan(0);
+  });
+
+  it("mantiene visible el estado de carga de las vistas", async () => {
+    let liberar!: () => void;
+    const pendiente = new Promise<void>((resolve) => {
+      liberar = resolve;
+    });
+    server.use(
+      http.get(`${API}/cronogramas/:id/vistas`, async () => {
+        await pendiente;
+        return HttpResponse.json(cronogramaVistasFixture);
+      }),
+    );
+    const resultado = renderConProviders(
+      <Routes>
+        <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
+      </Routes>,
+      {
+        ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/cronograma?v=0198c1a0-0000-7000-8000-000000000011",
+      },
+    );
+
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/cargando vistas/i));
+    liberar();
+    await waitFor(() => expect(screen.getByText("Curva S")).toBeInTheDocument());
+    resultado.unmount();
+  });
+
+  it("distingue la vista 404 del cronograma existente", async () => {
+    server.use(
+      http.get(`${API}/cronogramas/:id/vistas`, () =>
+        HttpResponse.json({ codigo: "no-encontrado", mensaje: "No existe" }, { status: 404 }),
+      ),
+    );
+    await setupCronogramaPage();
+
+    await waitFor(() =>
+      expect(
+        screen.getByText("No hay vistas disponibles para este cronograma."),
+      ).toBeInTheDocument(),
+    );
+  });
+
+  it("muestra error de vistas sin ocultar el flujo de edición", async () => {
+    server.use(
+      http.get(`${API}/cronogramas/:id/vistas`, () =>
+        HttpResponse.json({ codigo: "servidor", mensaje: "fallo" }, { status: 500 }),
+      ),
+    );
+    await setupCronogramaPage();
+
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent(/no se pudieron cargar/i),
+    );
+    expect(screen.getByRole("button", { name: /reconfigurar/i })).toBeInTheDocument();
   });
 });

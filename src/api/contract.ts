@@ -639,6 +639,68 @@ export interface CronogramaResponse {
   avanceAcumulado: Decimal[];
 }
 
+export interface GanttBloqueResponse {
+  cronograma: CronogramaResponse;
+  capitulos: CapituloCronogramaResponse[];
+}
+/** Read-only projection returned by GET /cronogramas/{id}/vistas. */
+export interface CronogramaVistasResponse {
+  cronogramaId: string;
+  gantt: GanttBloqueResponse;
+  valorizado: ValorizadoBloqueResponse;
+  curvaS: CurvaSResponse;
+}
+/** Recursive chapter tree shared by the Gantt and valued projections. */
+export interface CapituloCronogramaResponse {
+  id: string;
+  item: string;
+  descripcion: string;
+  subcapitulos: CapituloCronogramaResponse[];
+  rubros: RubroCronogramaResponse[];
+}
+export interface RubroCronogramaResponse {
+  id: string;
+  item: string;
+  codigo: string;
+  descripcion: string;
+  unidad: string;
+  cantidad: Decimal;
+  precioUnitario: Decimal;
+  precioTotal: Decimal;
+  /** Null when the rubro has no activity in the cronograma. */
+  montoPorPeriodo: Record<string, Decimal> | null;
+  /** Null when the rubro has no activity in the cronograma. */
+  montoTotal: Decimal | null;
+  actividad: ActividadCronogramaResponse | null;
+}
+export interface PeriodoValorizadoResponse {
+  periodo: number;
+  porcentajeParcial: Decimal;
+  porcentajeAcumulado: Decimal;
+  montoParcial: Decimal;
+  montoAcumulado: Decimal;
+}
+export interface TotalesCronogramaResponse {
+  avanceFinalPorcentaje: Decimal;
+  montoTotalGeneral: Decimal;
+  porcentajeCierre: Decimal;
+}
+export interface ValorizadoBloqueResponse {
+  periodos: PeriodoValorizadoResponse[];
+  capitulos: CapituloCronogramaResponse[];
+  totales: TotalesCronogramaResponse;
+}
+export interface PuntoCurvaSResponse {
+  periodo: number;
+  porcentajeParcial: Decimal;
+  porcentajeAcumulado: Decimal;
+  montoParcial: Decimal;
+  montoAcumulado: Decimal;
+}
+export interface CurvaSResponse {
+  puntos: PuntoCurvaSResponse[];
+}
+
 export interface CronogramaCrearRequest {
   unidadTiempo: UnidadTiempo;
   numeroPeriodos: number;
