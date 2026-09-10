@@ -4,6 +4,9 @@
 > y verificando después con `git log`, `git worktree list` y `git status`. No reiniciar desde cero,
 > no re-despachar un plan ya aprobado, no duplicar worktrees.
 
+**RAMA CERRADA el 2026-09-10.** Los cinco planes en DONE y mergeados. Este archivo queda como
+registro; ya no hay nada en curso.
+
 **Encargo:** [`../PROMPT-ORQUESTADOR-077-081.md`](../PROMPT-ORQUESTADOR-077-081.md)
 **Rama destino:** `plans/077-081` · **Actualizado:** 2026-09-10
 
@@ -13,7 +16,7 @@
 | --- | --- |
 | Backend contra el que se razona | `../thesis-back-quarkus` @ **`2803575`** (`main`, tras `fetch --all`) |
 | Backend en ejecución | `http://localhost:8080`, prefijo `/api/v1`, con datos |
-| Credenciales SUPER_ADMIN de prueba | `ana.armas@gmail.com` / `Clave1234` — **promovida a mano en la BD de desarrollo**, revertir a `USUARIO` al cerrar la rama |
+| Credenciales SUPER_ADMIN de prueba | `ana.armas@gmail.com` / `Clave1234` — se promovió a mano en la BD de desarrollo y **ya se revirtió** (2026-09-10): los tres usuarios son `USUARIO` y esa cuenta recibe 403 en `/admin/usuarios`, comprobado |
 | Prefijo de worktrees | `wa-0XX` (los `w-077`/`w-078` que ya existían son de los capítulos del manual, **otra estirpe**, no tocar) |
 
 ## Tablero
@@ -25,7 +28,7 @@
 | 078 plantillas | ✅ **DONE, mergeado** | (worktree retirado) | `wa-078` @ `67ccd60` | 0/2 | aprobado sin ronda de revisión |
 | 079 valores | ✅ **DONE, mergeado** | (worktree retirado) | `wa-079` @ `c90d4ce` | 1/2 | ronda de formato únicamente |
 | 080 logs | ✅ **DONE, mergeado** | (worktree retirado) | `wa-080` @ `dc9ae53` | 0/2 | aprobado sin ronda de revisión |
-| 081 retirar gates | 🔄 despachado | `.claude/worktrees/wa-081` | `wa-081` | 0/2 | matriz de evidencia completa; §08bis con los 8 errores medidos |
+| 081 retirar gates | ✅ **DONE, mergeado** | (worktree retirado) | `wa-081` @ `fa20f5f` | 0/2 | aprobado sin ronda |
 
 ## Por qué en serie
 
@@ -236,3 +239,39 @@ be a well-formed email address"}`).
 
 **+68 tests, cero regresiones.** El baseline de `AGENTS.md` («475 en 73») está caducado y hay que
 actualizarlo al cierre.
+
+## Cierre de la rama (2026-09-10)
+
+Los cinco planes DONE y mergeados en `plans/077-081`; ningún worktree pendiente; sin `git push`.
+Relato completo en `plans/BITACORA.md`.
+
+**Definición de terminado del encargo, punto por punto:**
+
+| # | Requisito | Estado |
+| --- | --- | --- |
+| 1 | Los cinco planes DONE con evidencia concreta | ✅ |
+| 2 | Las cuatro páginas admin renderizan su página real con datos, sin `ModuloNoDisponible` ni «pronto» | ✅ ninguna página admin importa ya `ModuloNoDisponible`; 0 entradas con `modulo` en el `Sidebar` |
+| 3 | `MODULOS_SIN_BACKEND` vacío, `RUTAS_ADMIN` sin `modulo`, `RutaAdmin` sin relajar | ✅ `Guards.tsx` con 0 líneas de diff contra `main` |
+| 4 | `pnpm run verify` verde | ❌ **NO** — tres defectos ajenos y preexistentes lo impiden |
+| 5 | Banner DIFERIDO fuera de los cinco planes | ✅ |
+| 6 | `plans/BITACORA.md` con el relato en orden | ✅ |
+| 7 | `AGENTS.md` actualizado | ✅ baseline, inventario de gates y la regla del `*` |
+| 8 | Ningún worktree sin mergear, ningún `git push` | ✅ |
+
+**El punto 4 es el único que no se cumple, y no es alcanzable dentro de este encargo.** `verify`
+cae en su **primera** puerta, `typecheck`, por el error de
+`src/test/features/proyectos/hooks/contrato.test.tsx:197`, que es preexistente y ajeno. `build`
+cae por lo mismo (`tsc -b` antes de `vite build`), así que **la rama no produce build de
+producción**. Arreglarlo exige tocar un archivo fuera de 077–081, que el encargo prohíbe
+expresamente. Está diagnosticado en la bitácora con el arreglo propuesto: **una línea**.
+
+Puertas de `verify` medidas por separado en la rama mergeada:
+
+| Puerta | Resultado |
+| --- | --- |
+| `typecheck` | ❌ 1 error, ajeno (`contrato.test.tsx:197`) |
+| `lint` | ✅ verde |
+| `guard:adr9` | ✅ verde |
+| `format:check` | ❌ 1 archivo, ajeno (`useApuEditor.ts`) |
+| `test` | 531 ✅ / 20 ❌ — los 20 ajenos y preexistentes, idénticos por nombre a los de partida |
+| `build` | ❌ bloqueado por el mismo `typecheck` |
