@@ -6,6 +6,7 @@ import {
   ACTIVIDAD_3,
   ACTIVIDAD_4,
   CRONOGRAMA_ID,
+  cronogramaVistasFixture,
 } from "../src/test/fixtures/cronograma";
 import { basesCentralesFixture } from "../src/test/fixtures/insumos";
 import {
@@ -658,23 +659,42 @@ test("09-versiones", async ({ page }, testInfo) => {
   await capturar(page, "09-versiones", testInfo);
 });
 
-test("10-cronograma", async ({ page }, testInfo) => {
-  await baseAutenticado(page);
-  await page.route(`${API}/proyectos/${PROYECTO_1}`, (route) =>
-    route.fulfill(json(proyectoDetalle)),
-  );
-  await page.route(`${API}/proyectos/${PROYECTO_1}/presupuestos*`, (route) =>
-    route.fulfill(json(versiones)),
-  );
-  await page.route(`${API}/presupuestos/${PRESUPUESTO_V2}/cronograma`, (route) =>
-    route.fulfill(json(cronograma)),
-  );
-  await page.goto(`/proyectos/${PROYECTO_1}/cronograma`, {
-    waitUntil: "networkidle",
-    timeout: 30000,
+for (const vista of [
+  { valor: "gantt", etiqueta: "Gantt", captura: "10-cronograma" },
+  {
+    valor: "valorizado",
+    etiqueta: "Cronograma valorizado",
+    captura: "10-cronograma-valorizado",
+  },
+  { valor: "curva-s", etiqueta: "Curva S", captura: "10-cronograma-curva-s" },
+] as const) {
+  test(`10-cronograma-${vista.valor}`, async ({ page }, testInfo) => {
+    await baseAutenticado(page);
+    await page.route(`${API}/proyectos/${PROYECTO_1}`, (route) =>
+      route.fulfill(json(proyectoDetalle)),
+    );
+    await page.route(`${API}/proyectos/${PROYECTO_1}/presupuestos*`, (route) =>
+      route.fulfill(json(versiones)),
+    );
+    await page.route(`${API}/presupuestos/${PRESUPUESTO_V2}/cronograma`, (route) =>
+      route.fulfill(json(cronograma)),
+    );
+    await page.route(`${API}/cronogramas/${CRONOGRAMA_ID}/vistas`, (route) =>
+      route.fulfill(json(cronogramaVistasFixture)),
+    );
+    await page.goto(
+      `/proyectos/${PROYECTO_1}/cronograma?v=${PRESUPUESTO_V2}&vista=${vista.valor}`,
+      { waitUntil: "networkidle", timeout: 30000 },
+    );
+    await expect(page.getByRole("tablist", { name: "Vistas del cronograma" })).toBeVisible();
+    await expect(page.getByRole("tab", { name: vista.etiqueta })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await expect(page.getByRole("tabpanel", { name: vista.etiqueta })).not.toBeEmpty();
+    await capturar(page, vista.captura, testInfo);
   });
-  await capturar(page, "10-cronograma", testInfo);
-});
+}
 
 test("11-documentos", async ({ page }, testInfo) => {
   await baseAutenticado(page);

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { renderConProviders } from "@/test/render";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import { useSesionStore } from "@/features/auth/sesion";
 import { usuarioFixture } from "@/test/fixtures/auth";
 import {
@@ -19,20 +19,38 @@ beforeEach(() => {
   useSesionStore.setState({ usuario: usuarioFixture, cargando: false });
 });
 
-async function setupCronogramaPage(version = "0198c1a0-0000-7000-8000-000000000011") {
+function UbicacionActual() {
+  const location = useLocation();
+  return (
+    <span data-testid="ubicacion-actual" hidden>{`${location.pathname}${location.search}`}</span>
+  );
+}
+
+async function setupCronogramaPage(
+  version = "0198c1a0-0000-7000-8000-000000000011",
+  vista?: string,
+) {
   const result = renderConProviders(
     <Routes>
-      <Route path="/proyectos/:id/cronograma" element={<CronogramaPage />} />
+      <Route
+        path="/proyectos/:id/cronograma"
+        element={
+          <>
+            <CronogramaPage />
+            <UbicacionActual />
+          </>
+        }
+      />
     </Routes>,
-    { ruta: `/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/cronograma?v=${version}` },
+    {
+      ruta: `/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/cronograma?v=${version}${vista ? `&vista=${vista}` : ""}`,
+    },
   );
   await waitFor(() => expect(screen.getByText("Cronograma")).toBeInTheDocument());
-  // La versión activa se resuelve de forma asíncrona (selector de la barra
-  // superior): esperar a que el fixture esté pintado, no solo el encabezado.
   await waitFor(() =>
-    expect(screen.getAllByText("Excavación a máquina").length).toBeGreaterThan(0),
+    expect(screen.getByRole("tablist", { name: "Vistas del cronograma" })).toBeInTheDocument(),
   );
-  return { user: result.user };
+  return { user: result.user, unmount: result.unmount };
 }
 
 describe("CronogramaPage", () => {
@@ -108,6 +126,7 @@ describe("CronogramaPage", () => {
     await waitFor(() => {
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
+    screen.getAllByRole("tab", { hidden: true }).forEach((tab) => expect(tab).toBeDisabled());
   });
 
   it("muestra 'Crear cronograma' cuando no existe uno", async () => {
@@ -191,21 +210,105 @@ describe("CronogramaPage", () => {
     });
   });
 
-  it("integra el Gantt jerárquico, valorizado y curva S de la única vista", async () => {
+  it("muestra tres vistas y deja Gantt seleccionado por defecto", async () => {
     await setupCronogramaPage();
+
+    const tabs = within(screen.getByRole("tablist", { name: "Vistas del cronograma" }));
+    expect(tabs.getAllByRole("tab")).toHaveLength(3);
+    expect(tabs.getByRole("tab", { name: "Gantt" })).toHaveAttribute("aria-selected", "true");
     await waitFor(() =>
       expect(screen.getByRole("heading", { name: "Gantt jerárquico" })).toBeInTheDocument(),
     );
-
-    expect(screen.getByRole("heading", { name: "Gantt jerárquico" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Cronograma valorizado" })).toBeInTheDocument();
-    expect(screen.getByText("Curva S")).toBeInTheDocument();
-    expect(screen.getAllByText("Movimiento de tierras").length).toBeGreaterThan(0);
+    expect(
+      screen.queryByRole("heading", { name: "Cronograma valorizado" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("figure", { name: "Curva S" })).not.toBeInTheDocument();
     expect(screen.getByText("Sin actividad")).toBeInTheDocument();
     expect(screen.getByText("2–2")).toBeInTheDocument();
     expect(screen.getByText("4–4")).toBeInTheDocument();
-    expect(screen.getAllByText("4.9550").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("18500.000000").length).toBeGreaterThan(0);
+  });
+
+  it("cambia de vista sin perder la versión de la URL", async () => {
+    const version = "0198c1a0-0000-7000-8000-000000000011";
+    const { user } = await setupCronogramaPage(version);
+
+    await user.click(screen.getByRole("tab", { name: "Cronograma valorizado" }));
+
+    expect(screen.getByRole("heading", { name: "Cronograma valorizado" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Gantt jerárquico" })).not.toBeInTheDocument();
+    expect(screen.getByTestId("ubicacion-actual")).toHaveTextContent(
+      `?v=${version}&vista=valorizado`,
+    );
+  });
+
+  it("permite recorrer las vistas con el teclado", async () => {
+    const { user } = await setupCronogramaPage();
+    const gantt = screen.getByRole("tab", { name: "Gantt" });
+    gantt.focus();
+
+    await user.keyboard("{ArrowRight}");
+
+    await waitFor(() =>
+      expect(screen.getByRole("tab", { name: "Cronograma valorizado" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      ),
+    );
+    expect(screen.getByTestId("ubicacion-actual")).toHaveTextContent("vista=valorizado");
+  });
+
+  it("abre una vista compartida desde la URL y normaliza valores inválidos", async () => {
+    const { user, unmount } = await setupCronogramaPage(undefined, "curva-s");
+    await waitFor(() =>
+      expect(screen.getByRole("figure", { name: "Curva S" })).toBeInTheDocument(),
+    );
+    expect(screen.queryByRole("heading", { name: "Gantt jerárquico" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Gantt" }));
+    expect(screen.getByTestId("ubicacion-actual")).toHaveTextContent("vista=gantt");
+    unmount();
+
+    const invalidResult = renderConProviders(
+      <Routes>
+        <Route
+          path="/proyectos/:id/cronograma"
+          element={
+            <>
+              <CronogramaPage />
+              <UbicacionActual />
+            </>
+          }
+        />
+      </Routes>,
+      {
+        ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/cronograma?v=0198c1a0-0000-7000-8000-000000000011&vista=invalida",
+      },
+    );
+    await waitFor(() =>
+      expect(screen.getByRole("tab", { name: "Gantt" })).toHaveAttribute("aria-selected", "true"),
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("ubicacion-actual")).not.toHaveTextContent("vista=invalida"),
+    );
+    invalidResult.unmount();
+  });
+
+  it("no repite GET /vistas al cambiar entre tabs", async () => {
+    let peticiones = 0;
+    server.use(
+      http.get(`${API}/cronogramas/:id/vistas`, () => {
+        peticiones += 1;
+        return HttpResponse.json(cronogramaVistasFixture);
+      }),
+    );
+    const { user } = await setupCronogramaPage();
+    expect(peticiones).toBe(1);
+
+    await user.click(screen.getByRole("tab", { name: "Cronograma valorizado" }));
+    await user.click(screen.getByRole("tab", { name: "Curva S" }));
+    await user.click(screen.getByRole("tab", { name: "Gantt" }));
+
+    expect(peticiones).toBe(1);
   });
 
   it("mantiene visible el estado de carga de las vistas", async () => {

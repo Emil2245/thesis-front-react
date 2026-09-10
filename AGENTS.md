@@ -33,21 +33,21 @@ El **código y las pruebas actuales de `../thesis-back-quarkus` son la fuente de
 ```bash
 pnpm install
 pnpm run verify   # typecheck + lint + guard:adr9 + format:check + test + build
-pnpm run e2e      # Playwright E2E (54 tests: 11 capturas + 3 smoke × 3 navegadores + 34 del manual)
-pnpm run e2e:screenshots   # solo las 11 capturas de escritorio (chromium)
+pnpm run e2e      # Playwright E2E (67 tests: 13 capturas + 3 smoke × 3 navegadores + 45 del manual)
+pnpm run e2e:screenshots   # solo las 13 capturas de escritorio (chromium)
 pnpm run e2e:manual        # capturas de docs/manual/ (chromium)
 pnpm run dev      # http://localhost:5173
 ```
 
-Baseline actual: **596 tests unitarios en 87 archivos, todos en verde**, y `pnpm run verify` pasa
+Baseline actual: **600 tests unitarios en 87 archivos, todos en verde**, y `pnpm run verify` pasa
 entero —typecheck, lint, guard:adr9, format:check, test y build—. Medido el 2026-09-10 después de
-integrar la rama 077–081 sobre los Planes 082–087. Antes de esa rama eran 459 ✅ / **20 ❌** en 75 archivos, con `typecheck` y
+integrar el selector de vistas del Plan 090 sobre los Planes 077–087. Antes de esa rama eran 459 ✅ / **20 ❌** en 75 archivos, con `typecheck` y
 `format:check` rojos y `vite build` bloqueado; los 20 fallos eran fixtures y `server.use(...)` que
 no se actualizaron cuando el plan 076 metió validación runtime en el seam. Están en
 [`docs/bugs.md`](docs/bugs.md) §6, con la regla que faltaba: **una fixture es una afirmación sobre
-el backend y se verifica como tal**. Los 65 lanzamientos E2E
-siguen sin medición funcional porque faltan los ejecutables de Playwright en el
-entorno. Si cambias el baseline, actualiza este número: el plan 060 se encontró
+el backend y se verifica como tal**. Los 67 lanzamientos E2E aún no tienen una
+medición completa; Chromium está instalado y las tres capturas del cronograma pasan,
+pero faltan ejecutar los demás journeys y los otros navegadores. Si cambias el baseline, actualiza este número: el plan 060 se encontró
 con el de 197/43, cinco olas caducado, y un baseline que miente no detecta nada.
 
 > **Punto ciego del gate:** `verify` **no comprueba tipos en `e2e/`**.

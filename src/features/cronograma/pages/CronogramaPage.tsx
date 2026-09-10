@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useVersionActiva } from "@/shell/contexto";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,6 +22,7 @@ import { DialogoConfirmarReduccion } from "../components/DialogoConfirmarReducci
 import { DialogoEditarActividad } from "../components/DialogoEditarActividad";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
   ActividadCronogramaResponse,
   ActividadProgramarRequest,
@@ -28,6 +30,12 @@ import type {
   PerdidaAvanceResponse,
   UnidadTiempo,
 } from "@/api/contract";
+
+type VistaCronograma = "gantt" | "valorizado" | "curva-s";
+
+function esVistaCronograma(valor: string | null): valor is VistaCronograma {
+  return valor === "gantt" || valor === "valorizado" || valor === "curva-s";
+}
 
 export function CronogramaPage() {
   // La versión la manda el selector de la barra superior, que ya cae en la
@@ -40,6 +48,9 @@ export function CronogramaPage() {
   const { data: cronograma, isLoading, isError: cronogramaError } = useCronograma(versionId);
   const crearCrono = useCrearCronograma(versionId);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const vistaParam = searchParams.get("vista");
+  const vistaActiva: VistaCronograma = esVistaCronograma(vistaParam) ? vistaParam : "gantt";
   const [configDialog, setConfigDialog] = useState(false);
   const [actividadEdit, setActividadEdit] = useState<ActividadCronogramaResponse | null>(null);
   const [reduccion, setReduccion] = useState<{
@@ -55,6 +66,30 @@ export function CronogramaPage() {
   });
   const { mutate: programar } = useProgramarActividad(cronogramaId, versionId);
   const { mutate: revisar } = useRevisarCronograma(cronogramaId, versionId);
+
+  useEffect(() => {
+    if (vistaParam === null || esVistaCronograma(vistaParam)) return;
+    setSearchParams(
+      (actuales) => {
+        const siguientes = new URLSearchParams(actuales);
+        siguientes.delete("vista");
+        return siguientes;
+      },
+      { replace: true },
+    );
+  }, [setSearchParams, vistaParam]);
+
+  const handleCambiarVista = useCallback(
+    (valor: string) => {
+      if (!esVistaCronograma(valor) || actividadEdit) return;
+      setSearchParams((actuales) => {
+        const siguientes = new URLSearchParams(actuales);
+        siguientes.set("vista", valor);
+        return siguientes;
+      });
+    },
+    [actividadEdit, setSearchParams],
+  );
 
   const handleConfigurar = useCallback(
     (unidadTiempo: UnidadTiempo, numeroPeriodos: number) => {
@@ -149,21 +184,41 @@ export function CronogramaPage() {
             )}
           </section>
 
-          {vistas.data && (
-            <div className="space-y-8">
-              <JerarquiaCronograma gantt={vistas.data.gantt} />
-              <CronogramaValorizado valorizado={vistas.data.valorizado} />
-              <CurvaSChart curvaS={vistas.data.curvaS} />
+          <Tabs value={vistaActiva} onValueChange={handleCambiarVista} className="min-w-0">
+            <div className="overflow-x-auto border-b">
+              <TabsList variant="line" aria-label="Vistas del cronograma" className="min-w-max">
+                <TabsTrigger value="gantt" disabled={actividadEdit !== null}>
+                  Gantt
+                </TabsTrigger>
+                <TabsTrigger value="valorizado" disabled={actividadEdit !== null}>
+                  Cronograma valorizado
+                </TabsTrigger>
+                <TabsTrigger value="curva-s" disabled={actividadEdit !== null}>
+                  Curva S
+                </TabsTrigger>
+              </TabsList>
             </div>
-          )}
 
-          {/* The existing editing view remains backed by CronogramaResponse. */}
-          <TablaActividades
-            actividades={cronograma.actividades}
-            periodos={cronograma.numeroPeriodos}
-            onClickActividad={setActividadEdit}
-          />
-          <GanttChart cronograma={cronograma} />
+            <TabsContent value="gantt" className="space-y-8 pt-4">
+              {vistas.data && <JerarquiaCronograma gantt={vistas.data.gantt} />}
+              {/* Las superficies de edición permanecen juntas hasta que el Plan 091
+                  las unifique con el Gantt jerárquico. */}
+              <TablaActividades
+                actividades={cronograma.actividades}
+                periodos={cronograma.numeroPeriodos}
+                onClickActividad={setActividadEdit}
+              />
+              <GanttChart cronograma={cronograma} />
+            </TabsContent>
+
+            <TabsContent value="valorizado" className="pt-4">
+              {vistas.data && <CronogramaValorizado valorizado={vistas.data.valorizado} />}
+            </TabsContent>
+
+            <TabsContent value="curva-s" className="pt-4">
+              {vistas.data && <CurvaSChart curvaS={vistas.data.curvaS} />}
+            </TabsContent>
+          </Tabs>
 
           {actividadEdit && (
             <DialogoEditarActividad

@@ -1,8 +1,10 @@
 # Plan 090: selector de vistas del cronograma
 
+**Estado: DONE — implementado y verificado el 2026-09-10.**
+
 ## 01. Estado y dependencia
 
-Depende del Plan 087, ya integrado. `CronogramaPage.tsx` obtiene una sola proyección con `useCronogramaVistas` y hoy apila el Gantt jerárquico, el valorizado, la tabla de Curva S y las superficies de edición.
+Depende del Plan 087, ya integrado. `CronogramaPage.tsx` conserva una sola proyección con `useCronogramaVistas` y presenta sus bloques mediante tabs controlados por la URL.
 
 ## 02. Resultado observable
 
@@ -75,9 +77,11 @@ STOP si el selector requiere una segunda query, si pierde `v`, si remonta mutaci
 
 Contenido desmontado puede perder estado de edición: cerrar o bloquear el cambio de tab mientras exista una edición no confirmada. Un test de conteo evita refetch accidental. La URL evita estado oculto no compartible.
 
-## 15. Handoff
+## 15. Evidencia y handoff
 
-Entrega al Plan 091 el panel Gantt estable y al 092/093 los paneles independientes, todos alimentados por la misma proyección.
+Implementado en `CronogramaPage.tsx` con tres tabs, `?vista=`, conservación de `?v=`, fallback de valor inválido, bloqueo durante edición y estados comunes. La prueba de página cubre tab inicial, contenido exclusivo, teclado, URL y una sola GET; las capturas `screenshots/10-cronograma*.png` usan el endpoint `/vistas` realista y cubren los tres paneles.
+
+Evidencia: 62 pruebas focalizadas de cronograma; `pnpm run verify` con 600/600 pruebas en 87 archivos y build verde; Playwright Chromium de Gantt, valorizado y Curva S 3/3 verde. Entrega al Plan 091 el panel Gantt estable y al 092/093 los paneles independientes, todos alimentados por la misma proyección.
 
 ## 16. Invariantes
 
