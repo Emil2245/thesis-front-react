@@ -83,32 +83,21 @@ const RUTAS_PROYECTO: {
   { sufijo: "/versiones", icono: GitBranchIcon, etiqueta: "Versiones" },
 ];
 
-// El gate de admin es por página, no por grupo (plan 050): "Bases" tiene el
-// backend completo (`AdminBaseCentralResource`) y "Parámetros" tiene lectura y
-// escritura en el recurso de proyectos, así que ninguna de las dos lleva
-// `modulo`. Las otras cuatro no tienen un solo endpoint en main.
+// El gate de admin es por página (plan 050) y desde el plan 081 no queda
+// ninguna clave en MODULOS_SIN_BACKEND: las seis rutas tienen backend real,
+// así que ninguna entrada lleva `modulo` y ninguna pinta la insignia «pronto».
 const RUTAS_ADMIN: {
   ruta: string;
   icono: typeof UsersIcon;
   etiqueta: string;
   modulo?: ModuloSinBackend;
 }[] = [
-  { ruta: "/admin/usuarios", icono: UsersIcon, etiqueta: "Usuarios", modulo: "admin-usuarios" },
+  { ruta: "/admin/usuarios", icono: UsersIcon, etiqueta: "Usuarios" },
   { ruta: "/admin/bases", icono: DatabaseIcon, etiqueta: "Bases" },
-  {
-    ruta: "/admin/plantillas",
-    icono: BookTemplateIcon,
-    etiqueta: "Plantillas",
-    modulo: "admin-plantillas",
-  },
+  { ruta: "/admin/plantillas", icono: BookTemplateIcon, etiqueta: "Plantillas" },
   { ruta: "/admin/parametros", icono: SettingsIcon, etiqueta: "Parámetros" },
-  {
-    ruta: "/admin/valores",
-    icono: ScrollTextIcon,
-    etiqueta: "Valores ref.",
-    modulo: "admin-valores",
-  },
-  { ruta: "/admin/logs", icono: ActivityIcon, etiqueta: "Logs", modulo: "admin-logs" },
+  { ruta: "/admin/valores", icono: ScrollTextIcon, etiqueta: "Valores ref." },
+  { ruta: "/admin/logs", icono: ActivityIcon, etiqueta: "Logs" },
 ];
 
 export function AppSidebar() {

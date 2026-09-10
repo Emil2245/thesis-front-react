@@ -38,9 +38,11 @@ describe("AppSidebar", () => {
     expect(screen.getByText("Usuarios")).toBeInTheDocument();
   });
 
-  // El gate pasa de granularidad de módulo a granularidad de página: dentro de
-  // «admin» conviven una pantalla con backend completo (Bases) y cuatro sin él.
-  it("dentro de Admin, Bases ya no está pendiente pero Usuarios sí", () => {
+  // El gate era por página (plan 050): dentro de «admin» convivía una pantalla
+  // con backend completo (Bases) con cuatro sin él. El plan 081 retiró esas
+  // cuatro claves de MODULOS_SIN_BACKEND porque sus backends ya existen
+  // (planes 077-080), así que ninguna entrada de Admin queda pendiente.
+  it("dentro de Admin, ninguna entrada muestra la insignia pendiente", () => {
     useSesionStore.setState({ usuario: adminFixture, cargando: false });
     renderConProviders(
       <SidebarProvider>
@@ -51,11 +53,17 @@ describe("AppSidebar", () => {
       { ruta: "/" },
     );
 
-    const filaBases = screen.getByText("Bases").closest("a")!;
-    expect(within(filaBases).queryByText("pronto")).not.toBeInTheDocument();
-
-    const filaUsuarios = screen.getByText("Usuarios").closest("a")!;
-    expect(within(filaUsuarios).getByText("pronto")).toBeInTheDocument();
+    for (const etiqueta of [
+      "Bases",
+      "Usuarios",
+      "Plantillas",
+      "Parámetros",
+      "Valores ref.",
+      "Logs",
+    ]) {
+      const fila = screen.getByText(etiqueta).closest("a")!;
+      expect(within(fila).queryByText("pronto")).not.toBeInTheDocument();
+    }
   });
 
   // Planes 048 y 049: PlantillaApuResource y /plantillas-proyecto existen los

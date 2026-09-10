@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderConProviders } from "@/test/render";
@@ -8,29 +8,60 @@ import { AdminLogsPage } from "@/features/admin/pages/AdminLogsPage";
 import { AdminPlantillasPage } from "@/features/admin/pages/AdminPlantillasPage";
 import { AdminValoresPage } from "@/features/admin/pages/AdminValoresPage";
 import { AdminParametrosPage } from "@/features/admin/pages/AdminParametrosPage";
-import { parametrosSistemaFixture } from "@/test/fixtures/admin";
+import {
+  parametrosSistemaFixture,
+  usuariosAdminFixture,
+  plantillasAdminFixture,
+  valoresReferenciaFixture,
+  logsActividadFixture,
+} from "@/test/fixtures/admin";
 
-// El contrato de una pantalla degradada es *no pedir nada*: las rutas
-// `/admin/usuarios`, `/admin/logs`, `/admin/plantillas` y
-// `/admin/valores-referencia` no existen en el backend. Que el texto salga no
-// prueba gran cosa; que no salga ninguna petición, sí. `espiar()` lo mide.
-const degradadas = [
-  ["AdminUsuariosPage", AdminUsuariosPage, "Usuarios"],
-  ["AdminLogsPage", AdminLogsPage, "Registro de actividades"],
-  ["AdminPlantillasPage", AdminPlantillasPage, "Plantillas del sistema"],
-  ["AdminValoresPage", AdminValoresPage, "Valores de referencia"],
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+
+// El plan 081 retiró el gate `admin-*`: estas cuatro páginas ya no son
+// wrappers degradados, delegan directo en su `*PageActiva`. El contrato que
+// importa ahora es el inverso del de antes: que sí pidan su endpoint real y
+// pinten los datos que devuelve, y que ya no quede rastro del aviso "todavía
+// no está disponible".
+const activas = [
+  [
+    "AdminUsuariosPage",
+    AdminUsuariosPage,
+    usuariosAdminFixture[0].nombre,
+    "GET",
+    "/admin/usuarios",
+  ],
+  ["AdminLogsPage", AdminLogsPage, logsActividadFixture[0].evento, "GET", "/admin/logs"],
+  [
+    "AdminPlantillasPage",
+    AdminPlantillasPage,
+    plantillasAdminFixture[0].nombre,
+    "GET",
+    "/admin/plantillas-apu",
+  ],
+  [
+    "AdminValoresPage",
+    AdminValoresPage,
+    valoresReferenciaFixture[0].clave,
+    "GET",
+    "/admin/valores-referencia",
+  ],
 ] as const;
 
-describe.each(degradadas)("%s (degradada)", (_nombre, Pagina, titulo) => {
-  it("anuncia que no está disponible y no llama a ninguna ruta inexistente", async () => {
+describe.each(activas)("%s (activa)", (_nombre, Pagina, texto, metodo, ruta) => {
+  it("pinta datos reales del backend y ya no anuncia que falta", async () => {
+    renderConProviders(<Pagina />);
+
+    expect(await screen.findByText(texto)).toBeInTheDocument();
+    expect(screen.queryByText(/todavía no está disponible/i)).not.toBeInTheDocument();
+  });
+
+  it("pide su endpoint real, no se queda en silencio", async () => {
     const peticiones = espiar();
     renderConProviders(<Pagina />);
 
-    expect(screen.getByText(titulo)).toBeInTheDocument();
-    await waitFor(() =>
-      expect(screen.getByText(/todavía no está disponible/i)).toBeInTheDocument(),
-    );
-    expect(peticiones).toHaveLength(0);
+    await screen.findByText(texto);
+    expect(ultima(peticiones, metodo, ruta)?.ruta).toBe(`/api/v1${ruta}`);
   });
 });
 
