@@ -136,7 +136,18 @@ RED: handler exige ruta POST exacta, body y query; UI afirma filas/campos y no s
 Todas las rutas y statuses coinciden; POST es `/admin/usuarios`; campos de respuesta no contienen secretos; filtros q/activo y paginación llegan intactos; UI cubre loading/vacío/error/403/409; gate sigue presente.
 
 ## 13. Verificación
-`pnpm vitest run src/test/features/admin/usuarios src/test/features/admin/pages`; `pnpm run typecheck`; `pnpm run lint`; `git diff --check`.
+En el worktree, y **`pnpm` siempre, `npm` nunca**:
+
+```
+pnpm install                                    # el worktree arranca sin node_modules
+pnpm vitest run src/test/features/admin         # incluye hooks/ y pages/
+pnpm run typecheck                              # es `tsc -b --noEmit`; `npx tsc --noEmit` NO comprueba nada aquí
+pnpm run lint
+git diff --check
+```
+
+`src/test/features/admin/pages/paginas-admin.test.tsx` entra en esa carpeta y **tiene que seguir
+verde sin tocarlo**.
 
 ## 14. STOP conditions
 STOP si el recurso o los DTOs de `@ 2803575` contradicen la §9 (ruta, campo, status, rol o código
