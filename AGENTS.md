@@ -125,8 +125,8 @@ con el de 197/43, cinco olas caducado, y un baseline que miente no detecta nada.
   revienta. **En MSW no**, y esta línea decía lo contrario hasta el plan 077:
   `http.get()` casa por *pathname* e ignora el query string, así que ninguno de
   los handlers de `src/test/handlers.ts` lo lleva —se comprobó: **0 de 51**— y
-  añadirlo sería contraproducente, porque `\`${API}/admin/usuarios*\`` capturaría
-  también `/admin/usuarios/:id` y las rutas de acción
+  añadirlo sería contraproducente, porque `\`${API}/admin/usuarios*\``capturaría
+también`/admin/usuarios/:id` y las rutas de acción
 - Query by accessible role/label in Spanish
 - Shared test render wrapper in `src/test/render.tsx` (providers: QueryClient, Router, TooltipProvider)
 - Fixtures in `src/test/fixtures/`, handlers in `src/test/handlers.ts` (40+ endpoints)

@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 
 import { crearQueryClient } from "@/test/render";
 import { espiar, ultima, cuerpoInvalido } from "@/test/espia";
+import type { ParametrosProyectoEditarRequest } from "@/api/contract";
 import {
   useProyectos,
   useProyecto,
@@ -186,15 +187,30 @@ describe("contrato de parámetros de proyecto", () => {
     await waitFor(() => expect(p?.cuerpo).toEqual(body));
   });
 
-  // ponytail: `useActualizarParametros` tipa el cuerpo como `Record<string, unknown>`
-  // en vez de `ParametrosProyectoActualizarRequest`, así que TypeScript deja pasar
-  // cualquier campo y el error solo aparece en runtime. Defecto de producción, no
-  // se arregla aquí (plan 057 solo añade tests).
-  it("el seam rechaza un parámetro que el backend no conoce", async () => {
+  // El defecto que este test cazaba **está corregido**. Cuando se escribió (plan
+  // 057), `useActualizarParametros` tipaba el cuerpo como `Record<string, unknown>`
+  // y reenviaba lo que le dieran, así que un parámetro inventado llegaba a la red
+  // y sólo fallaba en runtime. Hoy tipa `ParametrosProyectoEditarRequest` y
+  // reenvía **sólo** los cuatro campos del contrato, de modo que el campo de más
+  // ya no compila ni sale del cliente.
+  //
+  // La garantía es la misma y sigue probada, ahora por la vía buena: se le pasa un
+  // campo que el backend no conoce y se afirma que el PUT **no lo lleva**. El cast
+  // es deliberado —simula a quien le pase el objeto leído tal cual— y es la única
+  // forma de ejercitar el filtro desde TypeScript.
+  it("el seam no reenvía un parámetro que el backend no conoce", async () => {
+    const peticiones = espiar();
     const { result } = renderHook(() => useActualizarParametros(PROYECTO_1), { wrapper });
 
-    await expect(
-      result.current.mutateAsync({ iva: 0.15, mostrarSeccionesVacias: true }),
-    ).rejects.toThrow();
+    await result.current.mutateAsync({
+      porcentajeHerramientaMenor: 0.05,
+      iva: 0.15,
+      mostrarSeccionesVacias: true,
+    } as unknown as ParametrosProyectoEditarRequest);
+
+    const p = ultima(peticiones, "PUT", `/proyectos/${PROYECTO_1}/parametros`);
+    const cuerpo = p?.cuerpo as Record<string, unknown>;
+    expect(cuerpo).not.toHaveProperty("mostrarSeccionesVacias");
+    expect(Object.keys(cuerpo).sort()).toEqual(["iva", "porcentajeHerramientaMenor"]);
   });
 });

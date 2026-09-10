@@ -282,8 +282,7 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
         // `rendimiento` es @NotNull para EQUIPO/MANO_OBRA (ApuCrudService.
         // rendimientoSegunSeccion) — sin él el backend responde 400 y la fila
         // ni se crea. Mismo patrón que `cantidad`: nace en 1, se corrige después.
-        const necesitaRendimiento =
-          sel.seccionTipo === "EQUIPO" || sel.seccionTipo === "MANO_OBRA";
+        const necesitaRendimiento = sel.seccionTipo === "EQUIPO" || sel.seccionTipo === "MANO_OBRA";
         await agregarMutation.mutateAsync({
           ...sel,
           cantidad: asDecimal("1"),

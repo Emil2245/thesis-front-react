@@ -227,7 +227,26 @@ describe("contrato de useParametrosSistema", () => {
     const peticiones = espiar();
 
     const { result } = renderHook(() => useActualizarParametros(), { wrapper });
-    await result.current.mutateAsync({ ...parametrosSistemaFixture });
+    // Sólo los doce campos de `ParametrosSistemaEditarRequest`, que es lo que
+    // manda `AdminParametrosPage`. Antes esto hacía `{ ...parametrosSistemaFixture }`
+    // y pasaba de milagro: la fixture tenía justo doce campos porque le faltaban
+    // los diez que el backend sí devuelve (`id`, `updatedAt`, los booleanos de
+    // display…). Con la fixture completa, el spread colaba esos diez en el PUT y
+    // el handler estricto los rechazaba, con razón.
+    await result.current.mutateAsync({
+      porcentajeHerramientaMenor: parametrosSistemaFixture.porcentajeHerramientaMenor,
+      porcentajeIndirecto: parametrosSistemaFixture.porcentajeIndirecto,
+      iva: parametrosSistemaFixture.iva,
+      rangoHmMin: parametrosSistemaFixture.rangoHmMin,
+      rangoHmMax: parametrosSistemaFixture.rangoHmMax,
+      rangoCiMin: parametrosSistemaFixture.rangoCiMin,
+      rangoCiMax: parametrosSistemaFixture.rangoCiMax,
+      rangoDescuentoMin: parametrosSistemaFixture.rangoDescuentoMin,
+      rangoDescuentoMax: parametrosSistemaFixture.rangoDescuentoMax,
+      rangoIvaMin: parametrosSistemaFixture.rangoIvaMin,
+      rangoIvaMax: parametrosSistemaFixture.rangoIvaMax,
+      moneda: parametrosSistemaFixture.moneda,
+    });
 
     const p = ultima(peticiones, "PUT", "/parametros-sistema");
     expect(p?.ruta).toBe(`${RUTA}/proyectos/parametros-sistema`);

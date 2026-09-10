@@ -74,6 +74,10 @@ export const proyectoDetalleFixture: ProyectoResponse = {
 };
 
 export const parametrosFixture: ParametrosProyectoResponse = {
+  // `proyectoId` lo manda el backend real y `parametrosProyectoSchema` lo exige
+  // (es `.strict()`): sin él, `getValidado` rechaza la respuesta y la pantalla
+  // no monta. Faltaba desde que el plan 076 metió validación en el seam.
+  proyectoId: PROYECTO_1,
   porcentajeHerramientaMenor: 0.05,
   porcentajeIndirecto: 0.15,
   iva: 0.12,

@@ -60,20 +60,32 @@ const extensionDe = (formato: FormatoExportCronograma) => (formato === "mspdi" ?
  * `formato` de la ET es opcional y su único valor válido es `docx`, así que no
  * se manda. El del cronograma es obligatorio y uno de tres.
  */
+/**
+ * El mensaje del backend se muestra tal cual **si es un error del contrato**
+ * (`{codigo, mensaje}`, en español). Cuando el cuerpo no lo era, `client.ts`
+ * sintetiza uno con `codigo: "sin-respuesta"` y un `mensaje` que viene de
+ * axios —en inglés—, así que ahí se usa el texto propio: la UI es es-EC y un
+ * «Request failed with status code 500» no es español.
+ */
+const mensajeDeError = (e: unknown) =>
+  e instanceof ApiError && e.problem.codigo !== "sin-respuesta"
+    ? `${e.problem.codigo}: ${e.problem.mensaje}`
+    : "Error al descargar";
+
 export function useExportar() {
   const cliente = useQueryClient();
 
   const descargarEspecificacionesTecnicas = useCallback(async (presupuestoId: string) => {
     try {
+      // Sin `formato`: es opcional en `DocumentoResource` (sólo valida si
+      // llega) y su único valor admitido es `docx`. Mandarlo era contradecir el
+      // comentario de arriba y el propio contrato.
       const { blob, nombreArchivo } = await descargar(
         `/documentos/especificaciones-tecnicas/${presupuestoId}`,
-        { formato: "docx" },
       );
       guardar(blob, nombreArchivo ?? "especificaciones-tecnicas.docx");
     } catch (e) {
-      toast.error(
-        e instanceof ApiError ? `${e.problem.codigo}: ${e.problem.mensaje}` : "Error al descargar",
-      );
+      toast.error(mensajeDeError(e));
     }
   }, []);
 

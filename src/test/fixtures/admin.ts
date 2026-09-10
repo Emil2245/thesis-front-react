@@ -10,6 +10,7 @@ import type {
 // Los `as never` se fueron con la política de dinero: el backend serializa
 // estos BigDecimal como número JSON (plan 061 + 050).
 export const parametrosSistemaFixture: ParametrosSistemaResponse = {
+  id: 1,
   porcentajeHerramientaMenor: 0.05,
   porcentajeIndirecto: 0.15,
   iva: 0.12,
@@ -22,6 +23,15 @@ export const parametrosSistemaFixture: ParametrosSistemaResponse = {
   rangoDescuentoMax: 0.5,
   rangoIvaMin: 0,
   rangoIvaMax: 0.3,
+  mostrarSeccionesVacias: true,
+  sufijosSeccionActivos: true,
+  mostrarSubtotalesSeccion: true,
+  mostrarSubtotalesPie: false,
+  mostrarNombreProyectoHeader: false,
+  enumerarApus: false,
+  mensajeFooter: "Este precio no incluye IVA",
+  modoCodigoRubro: "AUTOGENERADO",
+  updatedAt: "2026-09-10T03:56:40.582930Z",
 };
 
 // `GET /admin/bases-centrales` devuelve una lista pelada, no una `Page<T>`:

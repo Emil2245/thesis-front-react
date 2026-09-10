@@ -10,7 +10,7 @@ import type {
   ProyectoDesdePlantillaResponse,
 } from "@/api/contract";
 import type { Problem } from "@/api/problem";
-import { tokenFixture } from "./fixtures/auth";
+import { tokenFixture, usuarioFixture, perfilFixture } from "./fixtures/auth";
 import {
   proyectosFixture,
   proyectoDetalleFixture,
@@ -468,7 +468,11 @@ export const handlers = [
     `${API}/auth/registro`,
     async ({ request }) =>
       (await soloCampos(request, "nombre", "email", "password", "passwordConfirmacion")) ??
-      HttpResponse.json(null, { status: 201 }),
+      // El backend real devuelve 201 con el usuario creado
+      // (`{id,nombre,email,rol,emailVerificado}`), no un cuerpo vacío, y
+      // `usuarioSchema` lo valida. Devolver `null` hacía fallar el registro
+      // entero en cuanto el plan 076 metió validación en el seam.
+      HttpResponse.json({ ...usuarioFixture, emailVerificado: false }, { status: 201 }),
   ),
   http.post(
     `${API}/auth/verificar-email`,
@@ -496,11 +500,11 @@ export const handlers = [
     async ({ request }) =>
       (await soloCampos(request, "refreshToken")) ?? HttpResponse.json(null, { status: 204 }),
   ),
-  http.get(`${API}/perfil`, () => HttpResponse.json(tokenFixture.usuario)),
+  http.get(`${API}/perfil`, () => HttpResponse.json(perfilFixture)),
   http.put(
     `${API}/perfil`,
     async ({ request }) =>
-      (await soloCampos(request, "nombre", "email")) ?? HttpResponse.json(tokenFixture.usuario),
+      (await soloCampos(request, "nombre", "email")) ?? HttpResponse.json(perfilFixture),
   ),
   http.put(
     `${API}/perfil/password`,

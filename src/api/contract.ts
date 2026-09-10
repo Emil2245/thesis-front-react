@@ -805,9 +805,15 @@ export interface UsuarioAdminEditarRequest {
 
 /**
  * `GET /proyectos/parametros-sistema` devuelve la **entidad cruda**
- * `ParametrosSistema`, no un DTO: trae además seis booleanos de display,
- * `mensajeFooter`, `modoCodigoRubro` y `updatedAt`, que la UI no usa y por eso
- * no están aquí.
+ * `ParametrosSistema`, no un DTO: además de los once números trae `id`, seis
+ * booleanos de display, `mensajeFooter`, `modoCodigoRubro` y `updatedAt`.
+ *
+ * Antes esos diez campos **no estaban aquí** «porque la UI no los usa». Eso
+ * dejó la interfaz mintiendo respecto a `parametrosSistemaSchema`, que sí los
+ * exige y es `.strict()`: la fixture cumplía el tipo, fallaba el esquema, y
+ * cinco tests se caían en cuanto el plan 076 metió validación en el seam. Un
+ * DTO que describe menos de lo que llega no es más simple, es falso. Forma
+ * comprobada por `curl` contra el backend real (`@ 2803575`).
  *
  * Son `BigDecimal` serializados como número JSON, y son editables: `number`
  * por los dos ejes de la política de dinero (plan 061). Todas las columnas son
@@ -815,8 +821,9 @@ export interface UsuarioAdminEditarRequest {
  * que los ocho rangos llegan siempre y no hay que inventarles un valor.
  */
 export interface ParametrosSistemaResponse {
+  id: number;
   porcentajeHerramientaMenor: number;
-  porcentajeIndirecto?: number | null;
+  porcentajeIndirecto: number | null;
   iva: number;
   moneda: string;
   rangoHmMin: number;
@@ -827,6 +834,15 @@ export interface ParametrosSistemaResponse {
   rangoDescuentoMax: number;
   rangoIvaMin: number;
   rangoIvaMax: number;
+  mostrarSeccionesVacias: boolean;
+  sufijosSeccionActivos: boolean;
+  mostrarSubtotalesSeccion: boolean;
+  mostrarSubtotalesPie: boolean;
+  mostrarNombreProyectoHeader: boolean;
+  enumerarApus: boolean;
+  mensajeFooter: string | null;
+  modoCodigoRubro: "AUTOGENERADO" | "MANUAL";
+  updatedAt: string;
 }
 
 /**
