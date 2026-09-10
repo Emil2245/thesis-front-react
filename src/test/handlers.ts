@@ -53,6 +53,7 @@ import {
   usuariosAdminFixture,
   plantillasAdminFixture,
   valoresReferenciaFixture,
+  logsActividadFixture,
 } from "./fixtures/admin";
 
 const API = "*/api/v1";
@@ -1128,4 +1129,52 @@ export const handlers = [
       ? problema(404, "no-encontrado", "Valor de referencia no encontrado")
       : HttpResponse.json(null, { status: 204 }),
   ),
+
+  // ———— Admin: logs de actividad (Plan 080) ————
+  // `LogActividadResource`, sólo GET. El gate `admin-logs` sigue cerrado
+  // (`MODULOS_SIN_BACKEND`, plan 081). Forma confirmada por `curl` el
+  // 2026-09-10 (§05 del plan): sólo `usuarioId`, `evento`, `desde`, `hasta`,
+  // `page`, `size` — un parámetro fuera de esa lista es un 400, igual que en
+  // el backend real un campo mal escrito.
+  http.get(`${API}/admin/logs`, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const permitidos = ["usuarioId", "evento", "desde", "hasta", "page", "size"];
+    const sobran = [...params.keys()].filter((k) => !permitidos.includes(k));
+    if (sobran.length > 0) {
+      return problema(400, "parametro-invalido", `Parámetro no soportado: ${sobran.join(", ")}`);
+    }
+
+    const evento = params.get("evento");
+    if (evento) {
+      if (!/^[a-z0-9._-]+$/.test(evento)) {
+        return problema(400, "validacion", "evento-formato-invalido");
+      }
+      if (evento.length > 60) {
+        return problema(400, "validacion", "evento-largo");
+      }
+    }
+
+    const desde = params.get("desde");
+    const hasta = params.get("hasta");
+    if (desde && hasta && desde > hasta) {
+      return problema(400, "validacion", "rango-fechas-invalido");
+    }
+
+    const usuarioId = params.get("usuarioId");
+    let items = logsActividadFixture;
+    if (usuarioId) items = items.filter((l) => l.usuarioId === usuarioId);
+    if (evento) items = items.filter((l) => l.evento === evento);
+    if (desde) items = items.filter((l) => l.fecha >= desde);
+    if (hasta) items = items.filter((l) => l.fecha <= hasta);
+
+    const page = Number(params.get("page") ?? 0);
+    const size = Number(params.get("size") ?? 25);
+    return HttpResponse.json({
+      items: items.slice(page * size, (page + 1) * size),
+      total: items.length,
+      page,
+      size,
+      totalPaginas: items.length === 0 ? 0 : Math.ceil(items.length / size),
+    });
+  }),
 ];

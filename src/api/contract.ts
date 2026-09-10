@@ -767,10 +767,6 @@ export interface BloqueoExportDetalle {
 }
 
 // ————— Super-Admin (§11) —————
-// El DTO de logs de actividad se borró con su hook (plan 050): ese recurso
-// sigue sin existir en origin/main, y un tipo sin endpoint es una promesa que
-// el próximo agente cree cumplida.
-//
 // Valores de referencia sí tiene backend real (plan 079):
 // `ValorReferenciaAdminResource` (`@Path("/admin/valores-referencia")`,
 // `@RolesAllowed("SUPER_ADMIN")`). Ver más abajo, junto a `UsuarioAdminResponse`.
@@ -877,6 +873,33 @@ export interface ValorReferenciaEditarRequest {
   valor: string;
   descripcion: string;
   fuente: string;
+}
+
+/**
+ * `LogActividadResponse` (plan 080). `LogActividadResource`
+ * (`@Path("/admin/logs")`, `@RolesAllowed("SUPER_ADMIN")`, sólo GET) — sin
+ * mutaciones, sin exportación. Confirmado por `curl` contra el backend real el
+ * 2026-09-10.
+ *
+ * `usuarioId` es el UUID del actor, no el BIGINT interno; `usuarioId` y
+ * `usuarioNombre` llegan `null` explícito cuando el log no tiene actor
+ * (`LogActividadResponse.from`). `entidadId` también llega `null` explícito —
+ * se ve en la captura — así que aquí va `.nullable()`, no `.optional()`
+ * (Patrón C invertido, ver plan 080 §05).
+ *
+ * `detalle` es JSON libre; el backend garantiza que no lleva PII
+ * (`LogActividadDetalleValidator`, `LogActividadSinPiiTest`): la UI lo muestra
+ * tal cual, sin interpretarlo.
+ */
+export interface LogActividadResponse {
+  id: string;
+  usuarioId: string | null;
+  usuarioNombre: string | null;
+  evento: string;
+  entidad: string;
+  entidadId: string | null;
+  detalle: Record<string, unknown>;
+  fecha: string;
 }
 
 // ————— Display config —————

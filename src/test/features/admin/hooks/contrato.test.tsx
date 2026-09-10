@@ -13,6 +13,7 @@ import {
   usuariosAdminFixture,
   plantillasAdminFixture,
   valoresReferenciaFixture,
+  logsActividadFixture,
 } from "@/test/fixtures/admin";
 import { ApiError } from "@/api/problem";
 import { server } from "@/test/server";
@@ -45,6 +46,7 @@ import {
   useGuardarValorReferencia,
   useEliminarValorReferencia,
 } from "@/features/admin/hooks/useValoresReferencia";
+import { useLogsActividad } from "@/features/admin/hooks/useLogsActividad";
 import { USUARIO_CON_PROYECTOS, VALOR_INEXISTENTE } from "@/test/handlers";
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
@@ -616,5 +618,132 @@ describe("contrato de useValoresReferencia", () => {
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).status).toBe(404);
     expect((error as ApiError).slug).toBe("no-encontrado");
+  });
+});
+
+// `LogActividadResource` (plan 080): mismo molde de sólo lectura que
+// valores de referencia, sin mutaciones. Mismo gate cerrado (`admin-logs`).
+describe("contrato de useLogsActividad", () => {
+  it("lista con GET /admin/logs y manda page y size explícitos", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useLogsActividad(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const p = ultima(peticiones, "GET", "/admin/logs");
+    expect(p?.ruta).toBe(`${RUTA}/admin/logs`);
+    expect(p?.url.searchParams.get("page")).toBe("0");
+    expect(p?.url.searchParams.get("size")).toBe("25");
+  });
+
+  // Patrón C invertido (§05 del plan 080): `usuarioId`/`usuarioNombre` y
+  // `entidadId` llegan `null` explícito, no ausentes.
+  it("devuelve la página normalizada con los ocho campos, nulls explícitos incluidos", async () => {
+    const { result } = renderHook(() => useLogsActividad(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.contenido).toHaveLength(logsActividadFixture.length);
+    expect(result.current.data?.totalElementos).toBe(logsActividadFixture.length);
+    expect(result.current.data?.contenido[0].entidadId).toBeNull();
+    expect(result.current.data?.contenido[1].usuarioId).toBeNull();
+    expect(result.current.data?.contenido[1].usuarioNombre).toBeNull();
+    expect(result.current.data?.contenido[1].entidadId).toBe(logsActividadFixture[1].entidadId);
+  });
+
+  it("no manda ningún filtro cuando no se pide ninguno", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useLogsActividad(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const p = ultima(peticiones, "GET", "/admin/logs");
+    expect(p?.url.searchParams.has("usuarioId")).toBe(false);
+    expect(p?.url.searchParams.has("evento")).toBe(false);
+    expect(p?.url.searchParams.has("desde")).toBe(false);
+    expect(p?.url.searchParams.has("hasta")).toBe(false);
+  });
+
+  // Un filtro vacío se omite, no viaja como cadena vacía: `evento=""` no
+  // casa `^[a-z0-9._-]+$` en el backend y sería un 400 gratis.
+  it("omite evento y usuarioId cuando llegan como cadena vacía", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useLogsActividad({ evento: "", usuarioId: "" }), {
+      wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const p = ultima(peticiones, "GET", "/admin/logs");
+    expect(p?.url.searchParams.has("evento")).toBe(false);
+    expect(p?.url.searchParams.has("usuarioId")).toBe(false);
+  });
+
+  it("manda usuarioId, evento, desde y hasta como query params cuando se piden", async () => {
+    const peticiones = espiar();
+    const objetivo = logsActividadFixture[0];
+
+    const { result } = renderHook(
+      () =>
+        useLogsActividad({
+          usuarioId: objetivo.usuarioId ?? undefined,
+          evento: objetivo.evento,
+          desde: "2026-09-01T00:00:00.000Z",
+          hasta: "2026-09-30T23:59:59.999Z",
+        }),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const p = ultima(peticiones, "GET", "/admin/logs");
+    expect(p?.url.searchParams.get("usuarioId")).toBe(objetivo.usuarioId);
+    expect(p?.url.searchParams.get("evento")).toBe(objetivo.evento);
+    expect(p?.url.searchParams.get("desde")).toBe("2026-09-01T00:00:00.000Z");
+    expect(p?.url.searchParams.get("hasta")).toBe("2026-09-30T23:59:59.999Z");
+  });
+
+  // El backend real (curl, 2026-09-10) manda `codigo:"validacion"` fijo y el
+  // motivo específico en `mensaje` — no al revés. `.slug` lee `codigo`.
+  it("un evento con formato inválido es un 400 validacion con mensaje evento-formato-invalido", async () => {
+    const { result } = renderHook(() => useLogsActividad({ evento: "Auth Login" }), { wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    const error = result.current.error as ApiError;
+    expect(error.status).toBe(400);
+    expect(error.slug).toBe("validacion");
+    expect(error.problem.mensaje).toBe("evento-formato-invalido");
+  });
+
+  it("un rango de fechas invertido es un 400 validacion con mensaje rango-fechas-invalido", async () => {
+    const { result } = renderHook(
+      () =>
+        useLogsActividad({
+          desde: "2026-09-30T00:00:00.000Z",
+          hasta: "2026-09-01T00:00:00.000Z",
+        }),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    const error = result.current.error as ApiError;
+    expect(error.status).toBe(400);
+    expect(error.slug).toBe("validacion");
+    expect(error.problem.mensaje).toBe("rango-fechas-invalido");
+  });
+
+  it("un 403 por rol insuficiente se propaga como ApiError", async () => {
+    server.use(
+      http.get("*/api/v1/admin/logs", () =>
+        HttpResponse.json(
+          { codigo: "acceso-denegado", mensaje: "No posee los permisos necesarios" },
+          { status: 403 },
+        ),
+      ),
+    );
+
+    const { result } = renderHook(() => useLogsActividad(), { wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect((result.current.error as ApiError).status).toBe(403);
+    expect((result.current.error as ApiError).slug).toBe("acceso-denegado");
   });
 });

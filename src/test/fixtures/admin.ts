@@ -4,6 +4,7 @@ import type {
   UsuarioAdminResponse,
   PlantillaApuAdminResponse,
   ValorReferenciaResponse,
+  LogActividadResponse,
 } from "@/api/contract";
 
 // Los `as never` se fueron con la política de dinero: el backend serializa
@@ -137,5 +138,33 @@ export const valoresReferenciaFixture: ValorReferenciaResponse[] = [
     descripcion: "Horas de operación anual de equipo",
     fuente: "MOP 2025",
     actualizado: "2026-09-10T03:56:41.070085Z",
+  },
+];
+
+// `GET /admin/logs` — `Page<LogActividadResponse>`. Forma real capturada por
+// `curl` el 2026-09-10 (plan 080 §05). La primera entra con actor y
+// `entidadId` null explícito (auth no tiene entidad propia); la segunda es un
+// evento de sistema sin actor (`usuarioId`/`usuarioNombre` null explícito) con
+// `entidadId` presente, para ejercer las dos caras del Patrón C invertido.
+export const logsActividadFixture: LogActividadResponse[] = [
+  {
+    id: "01a08a31-06af-7c01-95a2-4636dbbc66da",
+    usuarioId: "0192f6c4-7c8a-7abc-8000-000000001002",
+    usuarioNombre: "Ana de Armas",
+    evento: "auth.login",
+    entidad: "auth",
+    entidadId: null,
+    detalle: { resultado: "ok" },
+    fecha: "2026-09-10T07:21:03.680815Z",
+  },
+  {
+    id: "01a08a2f-9911-7c01-95a2-4636dbbc66d1",
+    usuarioId: null,
+    usuarioNombre: null,
+    evento: "proyecto.creado",
+    entidad: "proyecto",
+    entidadId: "018f8a30-0000-7000-8000-000000000099",
+    detalle: { origen: "plantilla" },
+    fecha: "2026-09-09T12:00:00.000000Z",
   },
 ];
