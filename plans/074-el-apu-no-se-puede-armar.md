@@ -1,8 +1,8 @@
 # Plan 074: Que se pueda armar un APU
 
-**Estado: TODO** · **Prioridad: P1** · **Fecha de corrección: 2026-09-09**
+**Estado: DIFERIDO** · **Prioridad: P1** · **Fecha de corrección: 2026-09-09**
 
-> Plan funcional ejecutable. El audit registró el estado anterior como `NEEDS CORRECTION`; esta versión reemplaza instrucciones obsoletas y conserva TDD estricto. No invocar skills no disponibles ni fijar pisos de conteos futuros.
+> Por decisión del usuario, este plan no se ejecuta ahora. El armado/creación de APUs se reubica en una futura ampliación del workspace, potencialmente como diálogo flotante junto a la pestaña APU del plan 084. Este plan conserva el diagnóstico y no se considera implementado.
 
 ## 1. Estado inicial
 `SelectorInsumo` y `agregarFila` existen, pero `EditorApuPage` no los conecta. `GridSeccion` oculta secciones vacías y los errores de validación no llegan a la celda. Evidencia: `src/features/apu-editor/components/SelectorInsumo.tsx`, `useApuEditor.ts`, `GridSeccion.tsx`, `CeldaEditable.tsx`.

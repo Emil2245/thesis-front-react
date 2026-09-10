@@ -23,6 +23,7 @@ const NOMBRES: Record<string, string> = {
   apus: "APUs",
   presupuesto: "Presupuesto",
   cronograma: "Cronograma",
+  workspace: "Workspace",
   documentos: "Documentos",
   admin: "Administración",
   usuarios: "Usuarios",

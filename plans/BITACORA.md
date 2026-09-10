@@ -1,8 +1,8 @@
 # Bitácora
 
-> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). La siguiente tarea autorizada es el plan 075.
+> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). La siguiente tarea autorizada es el plan 082.
 
-**Encargo activo: manuales de usuario** · **Actualizada:** 2026-09-07
+**Encargo activo: workspace principal del proyecto** · **Actualizada:** 2026-09-09
 **Ronda de paridad 1** · **CERRADA** · **Backend alineado hasta:** **`5673615`**
 
 > La lleva el orquestador ([`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md)). Se escribe **en el momento** en que
@@ -10,6 +10,13 @@
 > aquí no ocurrió.
 >
 > Estados: `⏳ pendiente` · `🔄 en curso` · `🟡 vuelto, sin revisar` · `❌ rechazado` · `✅ verde`
+
+## Decisión de secuencia: Plan 082 (2026-09-09)
+
+- Plan 076 queda cerrado en código y documentación.
+- Plan 074 se difiere: el armado/creación de APUs se resolverá en una evolución futura del workspace, potencialmente como diálogo flotante junto a la pestaña APU de 084. No se trata como implementado.
+- Planes 077–081 se difieren como rama administrativa completa. Se conservan sus gates, dependencias y documentación; no se activa ni se retira ningún gate parcialmente.
+- Plan 082 pasa a ser el siguiente plan activo: introduce `/proyectos/:id/workspace`, la vista principal del proyecto y el split que después recibirán presupuesto, APU e insumos. No implementa todavía el árbol ni las pestañas de 083–086.
 
 ## Manuales de usuario — recon y arreglos previos (2026-09-07)
 

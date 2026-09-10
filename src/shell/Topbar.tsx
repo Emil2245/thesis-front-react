@@ -4,7 +4,14 @@ import { SelectorVersion } from "./SelectorVersion";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 
-const RUTAS_VERSION = ["/apus", "/presupuesto", "/cronograma", "/documentos", "/versiones"];
+const RUTAS_VERSION = [
+  "/apus",
+  "/presupuesto",
+  "/cronograma",
+  "/documentos",
+  "/versiones",
+  "/workspace",
+];
 
 function necesitaSelectorVersion(pathname: string, proyectoId: string | null): boolean {
   if (!proyectoId) return false;

@@ -88,6 +88,13 @@ export const router = createBrowserRouter([
                 ),
               },
               {
+                path: "/proyectos/:id/workspace",
+                lazy: lazyPage(
+                  () => import("@/features/workspace/pages/WorkspacePage"),
+                  "WorkspacePage",
+                ),
+              },
+              {
                 path: "/proyectos/:id/parametros",
                 lazy: lazyPage(
                   () => import("@/features/proyectos/pages/ParametrosPage"),

@@ -1,5 +1,7 @@
 # 079 — Valores de referencia
 
+**Estado: DIFERIDO por decisión de secuencia.** La rama administrativa 077–081 se pospone; este plan se conserva sin ejecutarse ni activar su gate.
+
 ## 1. Estado inicial
 `ValorReferenciaAdminResource.java` está en `/admin/valores-referencia`, exige SUPER_ADMIN; DTOs `src/main/java/ec/uce/propuestas/proyecto/dto/{ValorReferenciaRequest,ValorReferenciaResponse}.java`; IT `src/test/java/ec/uce/propuestas/proyecto/admin/ValorReferenciaAdminResourceIT.java`. La pantalla frontend existente y gate deben localizarse antes de editar; gate permanece.
 

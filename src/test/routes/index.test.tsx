@@ -22,6 +22,7 @@ describe("rutas del mapa §3", () => {
     "/perfil",
     "/plantillas",
     "/proyectos/:id",
+    "/proyectos/:id/workspace",
     "/proyectos/:id/parametros",
     "/proyectos/:id/insumos",
     "/proyectos/:id/versiones",
