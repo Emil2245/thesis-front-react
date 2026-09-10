@@ -3,6 +3,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { http, HttpResponse } from "msw";
+import { toast } from "sonner";
 
 import { crearQueryClient } from "@/test/render";
 import { espiar, ultima, cuerpoInvalido } from "@/test/espia";
@@ -11,6 +12,7 @@ import {
   parametrosSistemaFixture,
   usuariosAdminFixture,
   plantillasAdminFixture,
+  valoresReferenciaFixture,
 } from "@/test/fixtures/admin";
 import { ApiError } from "@/api/problem";
 import { server } from "@/test/server";
@@ -38,7 +40,12 @@ import {
   useEditarPlantillaAdmin,
   useEliminarPlantillaAdmin,
 } from "@/features/admin/hooks/usePlantillasAdmin";
-import { USUARIO_CON_PROYECTOS } from "@/test/handlers";
+import {
+  useValoresReferencia,
+  useGuardarValorReferencia,
+  useEliminarValorReferencia,
+} from "@/features/admin/hooks/useValoresReferencia";
+import { USUARIO_CON_PROYECTOS, VALOR_INEXISTENTE } from "@/test/handlers";
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
@@ -479,5 +486,135 @@ describe("contrato de usePlantillasAdmin", () => {
     expect(ultima(peticiones, "DELETE", `/admin/plantillas-apu/${objetivo.id}`)?.ruta).toBe(
       `${RUTA}/admin/plantillas-apu/${objetivo.id}`,
     );
+  });
+});
+
+// `ValorReferenciaAdminResource` (plan 079): mismo molde que plantillas
+// (078), mismo gate cerrado (`admin-valores`, plan 081).
+describe("contrato de useValoresReferencia", () => {
+  it("lista con GET /admin/valores-referencia y NO manda q", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useValoresReferencia(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const p = ultima(peticiones, "GET", "/admin/valores-referencia");
+    expect(p?.ruta).toBe(`${RUTA}/admin/valores-referencia`);
+    expect(p?.url.searchParams.get("page")).toBe("0");
+    expect(p?.url.searchParams.get("size")).toBe("25");
+    expect(p?.url.searchParams.has("q")).toBe(false);
+  });
+
+  it("devuelve la página normalizada con valor como string", async () => {
+    const { result } = renderHook(() => useValoresReferencia(), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.contenido).toHaveLength(valoresReferenciaFixture.length);
+    expect(result.current.data?.totalElementos).toBe(valoresReferenciaFixture.length);
+    expect(result.current.data?.contenido[0].valor).toBe(valoresReferenciaFixture[0].valor);
+    expect(typeof result.current.data?.contenido[0].valor).toBe("string");
+  });
+
+  // §9bis: el upsert distingue creación de actualización sólo por el status.
+  // Una clave ya sembrada → 200; una clave nueva → 201. La UI no debe
+  // adivinarlo mirando la lista.
+  it("actualiza (200, creado=false) con PUT /admin/valores-referencia/{clave} sobre una clave existente", async () => {
+    const peticiones = espiar();
+    const objetivo = valoresReferenciaFixture[0];
+
+    const { result } = renderHook(() => useGuardarValorReferencia(), { wrapper });
+    const respuesta = await result.current.mutateAsync({
+      clave: objetivo.clave,
+      valor: "500.00",
+      descripcion: "Descripción actualizada",
+      fuente: "Fuente actualizada",
+    });
+
+    expect(respuesta.creado).toBe(false);
+    expect(toast.success).toHaveBeenCalledWith("Valor actualizado");
+    const p = ultima(peticiones, "PUT", `/admin/valores-referencia/${objetivo.clave}`);
+    expect(p?.ruta).toBe(`${RUTA}/admin/valores-referencia/${objetivo.clave}`);
+    await waitFor(() =>
+      expect(p?.cuerpo).toEqual({
+        valor: "500.00",
+        descripcion: "Descripción actualizada",
+        fuente: "Fuente actualizada",
+      }),
+    );
+    expect(p?.cuerpo).not.toHaveProperty("clave");
+  });
+
+  it("crea (201, creado=true) con PUT /admin/valores-referencia/{clave} sobre una clave nueva", async () => {
+    const { result } = renderHook(() => useGuardarValorReferencia(), { wrapper });
+    const respuesta = await result.current.mutateAsync({
+      clave: "NUEVA_CLAVE",
+      valor: "1.6",
+      descripcion: "Descripción nueva",
+      fuente: "Fuente nueva",
+    });
+
+    expect(respuesta.creado).toBe(true);
+    expect(toast.success).toHaveBeenCalledWith("Valor creado");
+  });
+
+  // Una clave con "/" es la prueba real de la codificación: sin
+  // `encodeURIComponent` parte la ruta en un segmento de más y la petición no
+  // casa con `:clave` en absoluto (MSW la rechaza por no tener handler). Un
+  // espacio no sirve para esto: `URL` lo normaliza a `%20` igual sin ayuda.
+  it("codifica la clave en la ruta", async () => {
+    const peticiones = espiar();
+
+    const { result } = renderHook(() => useGuardarValorReferencia(), { wrapper });
+    await result.current.mutateAsync({
+      clave: "A/B",
+      valor: "1",
+      descripcion: "d",
+      fuente: "f",
+    });
+
+    expect(
+      ultima(peticiones, "PUT", `/admin/valores-referencia/${encodeURIComponent("A/B")}`)?.ruta,
+    ).toBe(`${RUTA}/admin/valores-referencia/${encodeURIComponent("A/B")}`);
+  });
+
+  it("un campo desconocido al guardar es un 400, no un éxito silencioso", async () => {
+    const { result } = renderHook(() => useGuardarValorReferencia(), { wrapper });
+
+    const error = await result.current
+      .mutateAsync(
+        cuerpoInvalido({
+          clave: "SBU",
+          valor: "1",
+          descripcion: "d",
+          fuente: "f",
+          extra: "no-deberia-ir",
+        }),
+      )
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).status).toBe(400);
+  });
+
+  it("elimina con DELETE /admin/valores-referencia/{clave}", async () => {
+    const peticiones = espiar();
+    const objetivo = valoresReferenciaFixture[0];
+
+    const { result } = renderHook(() => useEliminarValorReferencia(), { wrapper });
+    await result.current.mutateAsync(objetivo.clave);
+
+    expect(ultima(peticiones, "DELETE", `/admin/valores-referencia/${objetivo.clave}`)?.ruta).toBe(
+      `${RUTA}/admin/valores-referencia/${objetivo.clave}`,
+    );
+  });
+
+  it("borrar una clave inexistente es un 404, no un 204 silencioso", async () => {
+    const { result } = renderHook(() => useEliminarValorReferencia(), { wrapper });
+
+    const error = await result.current.mutateAsync(VALOR_INEXISTENTE).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).status).toBe(404);
+    expect((error as ApiError).slug).toBe("no-encontrado");
   });
 });

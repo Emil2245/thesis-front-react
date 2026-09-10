@@ -52,6 +52,7 @@ import {
   basesCentralesFixtureAdmin,
   usuariosAdminFixture,
   plantillasAdminFixture,
+  valoresReferenciaFixture,
 } from "./fixtures/admin";
 
 const API = "*/api/v1";
@@ -67,6 +68,9 @@ export const APU_REFERENCIADO = "018f8a40-0000-7000-8000-000000000099";
 // `usuario-con-proyectos-impedido` (`TC-12-P38-03-delete-con-proyectos.bru`),
 // que no se pudo provocar por curl sin ensuciar datos del backend real.
 export const USUARIO_CON_PROYECTOS = "018f8a40-0000-7000-8000-000000000199";
+// `DELETE /admin/valores-referencia/{clave}` con esta clave simula el 404 real
+// comprobado por curl el 2026-09-10: "borrar lo ya borrado".
+export const VALOR_INEXISTENTE = "ZZZ_NO_EXISTE";
 // Los dos presupuestos con los que la exportación del cronograma se sale del
 // camino feliz: uno ajeno (404) y uno con bloqueos (preflight `exportable:
 // false` y 409 en la descarga).
@@ -1078,4 +1082,50 @@ export const handlers = [
     });
   }),
   http.delete(`${API}/admin/plantillas-apu/:id`, () => HttpResponse.json(null, { status: 204 })),
+
+  // ———— Admin: valores de referencia (Plan 079) ————
+  // `ValorReferenciaAdminResource`. El gate `admin-valores` sigue cerrado
+  // (`MODULOS_SIN_BACKEND`, plan 081), pero el contrato ya se prueba aquí,
+  // igual que usuarios y plantillas. Sin `q`: el recurso real sólo admite
+  // `page`/`size` — no inventar un filtro que no existe.
+  http.get(`${API}/admin/valores-referencia`, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const page = Number(params.get("page") ?? 0);
+    const size = Number(params.get("size") ?? 25);
+    const items = valoresReferenciaFixture;
+    return HttpResponse.json({
+      items: items.slice(page * size, (page + 1) * size),
+      total: items.length,
+      page,
+      size,
+      totalPaginas: items.length === 0 ? 0 : Math.ceil(items.length / size),
+    });
+  }),
+  // El upsert distingue creación de actualización sólo por el status (§9bis):
+  // 201 si la clave del path no está entre las sembradas, 200 si ya existe.
+  // No hay estado mutable aquí a propósito — cada test elige una clave nueva
+  // o una existente según qué status quiere provocar.
+  http.put(`${API}/admin/valores-referencia/:clave`, async ({ request, params }) => {
+    const cuerpo = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    const permitidos = ["valor", "descripcion", "fuente"];
+    const sobran = Object.keys(cuerpo).filter((k) => !permitidos.includes(k));
+    if (sobran.length > 0) {
+      return problema(400, "campo-desconocido", `El backend no acepta: ${sobran.join(", ")}`);
+    }
+    const faltantes = permitidos.filter((k) => !cuerpo[k]);
+    if (faltantes.length > 0) {
+      return problema(400, "validacion", `${faltantes[0]}-requerido`);
+    }
+    const clave = decodeURIComponent(String(params.clave));
+    const existe = valoresReferenciaFixture.some((v) => v.clave === clave);
+    return HttpResponse.json(
+      { clave, ...cuerpo, actualizado: "2026-09-10T08:10:27.733539777Z" },
+      { status: existe ? 200 : 201 },
+    );
+  }),
+  http.delete(`${API}/admin/valores-referencia/:clave`, ({ params }) =>
+    decodeURIComponent(String(params.clave)) === VALOR_INEXISTENTE
+      ? problema(404, "no-encontrado", "Valor de referencia no encontrado")
+      : HttpResponse.json(null, { status: 204 }),
+  ),
 ];

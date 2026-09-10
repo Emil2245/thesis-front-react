@@ -181,6 +181,22 @@ export const plantillaApuAdminSchema = z
   })
   .strict();
 
+/**
+ * `ValorReferenciaAdminResponse` (plan 079). `valor` es `z.string()`, no
+ * `z.number()`: a diferencia de APU/insumo/parámetros, este campo es un
+ * decimal de sólo lectura que viaja y se muestra como string (ADR 9).
+ * `actualizado` es una fecha (`Instant`), no un importe.
+ */
+export const valorReferenciaSchema = z
+  .object({
+    clave: z.string(),
+    valor: z.string(),
+    descripcion: z.string(),
+    fuente: z.string(),
+    actualizado: z.string(),
+  })
+  .strict();
+
 export const parametrosProyectoSchema = z
   .object({
     proyectoId: z.string(),

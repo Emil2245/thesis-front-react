@@ -3,6 +3,7 @@ import type {
   BaseInsumosResponse,
   UsuarioAdminResponse,
   PlantillaApuAdminResponse,
+  ValorReferenciaResponse,
 } from "@/api/contract";
 
 // Los `as never` se fueron con la política de dinero: el backend serializa
@@ -102,5 +103,39 @@ export const plantillasAdminFixture: PlantillaApuAdminResponse[] = [
     usuarioId: null,
     descripcionRubro: null,
     fechaCreacion: "2026-09-08T10:00:00.000000Z",
+  },
+];
+
+// `GET /admin/valores-referencia` — `Page<ValorReferenciaResponse>`. Las
+// cuatro claves sembradas en el backend real (curl, 2026-09-10). `valor` es
+// `string`: un decimal de sólo lectura (ADR 9), nunca `number`.
+export const valoresReferenciaFixture: ValorReferenciaResponse[] = [
+  {
+    clave: "SBU",
+    valor: "450.00",
+    descripcion: "Salario básico unificado",
+    fuente: "MDT 2026",
+    actualizado: "2026-09-10T03:56:41.070085Z",
+  },
+  {
+    clave: "APORTE_PATRONAL",
+    valor: "12.15",
+    descripcion: "Aporte patronal IESS %",
+    fuente: "IESS 2023",
+    actualizado: "2026-09-10T03:56:41.070085Z",
+  },
+  {
+    clave: "FAS",
+    valor: "1.538",
+    descripcion: "Fondo de reserva y aportes sociales",
+    fuente: "IESS 2023",
+    actualizado: "2026-09-10T03:56:41.070085Z",
+  },
+  {
+    clave: "HORAS_OPERACION_ANUAL",
+    valor: "1800",
+    descripcion: "Horas de operación anual de equipo",
+    fuente: "MOP 2025",
+    actualizado: "2026-09-10T03:56:41.070085Z",
   },
 ];
