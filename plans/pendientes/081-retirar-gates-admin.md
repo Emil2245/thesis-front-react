@@ -1,7 +1,5 @@
 # 081 — Retirar gates de administración
 
-**Estado: DIFERIDO por decisión de secuencia.** No se retiran gates administrativos mientras la rama 077–080 permanezca pospuesta.
-
 ## 01. Estado inicial verificable
 `src/lib/disponibilidad.ts` contiene exactamente `admin-usuarios`, `admin-plantillas`, `admin-valores` y `admin-logs`. Las cuatro páginas aún pueden renderizar wrappers. Descuento global fue retirado del frontend en el Plan 075 porque no existe contrato backend.
 

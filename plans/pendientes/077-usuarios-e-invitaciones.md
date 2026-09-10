@@ -1,7 +1,5 @@
 # 077 — Usuarios e invitaciones
 
-**Estado: DIFERIDO por decisión de secuencia.** La rama administrativa 077–081 se pospone; este plan se conserva sin ejecutarse ni activar su gate.
-
 ## 1. Estado inicial
 `UsuarioAdminResource.java` declara `@Path("/admin/usuarios")`, `@RolesAllowed("SUPER_ADMIN")`; DTOs: `UsuarioInvitarRequest`, `UsuarioAdminEditarRequest`, `UsuarioAdminResponse`; IT: `src/test/java/ec/uce/propuestas/usuario/admin/UsuarioAdminResourceIT.java`. Frontend `src/features/admin/pages/AdminUsuariosPage.tsx`/gate debe inspeccionarse; no quitar gate (081).
 

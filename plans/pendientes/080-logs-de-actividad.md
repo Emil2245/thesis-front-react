@@ -1,7 +1,5 @@
 # 080 — Logs de actividad
 
-**Estado: DIFERIDO por decisión de secuencia.** La rama administrativa 077–081 se pospone; este plan se conserva sin ejecutarse ni activar su gate.
-
 ## 01. Estado inicial verificable
 `src/features/admin/pages/AdminLogsPage.tsx` es un wrapper `ModuloNoDisponible`; no existe contrato frontend para `/admin/logs`. El backend ya expone `LogActividadResource` como GET de solo lectura y `@RolesAllowed("SUPER_ADMIN")`.
 

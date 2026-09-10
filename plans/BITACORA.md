@@ -1,6 +1,6 @@
 # Bitácora
 
-> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). La siguiente tarea autorizada es el plan 082.
+> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). La siguiente tarea autorizada es la rama administrativa 077–081 (reactivada el 2026-09-10).
 
 **Encargo activo: workspace principal del proyecto** · **Actualizada:** 2026-09-09
 **Ronda de paridad 1** · **CERRADA** · **Backend alineado hasta:** **`5673615`**
@@ -10,6 +10,48 @@
 > aquí no ocurrió.
 >
 > Estados: `⏳ pendiente` · `🔄 en curso` · `🟡 vuelto, sin revisar` · `❌ rechazado` · `✅ verde`
+
+## Rama administrativa 077–081: reactivada (2026-09-10)
+
+Encargo: [`PROMPT-ORQUESTADOR-077-081.md`](PROMPT-ORQUESTADOR-077-081.md). **El usuario revoca
+explícitamente el diferimiento** decidido el 2026-09-09 y ordena completar 077, 078, 079, 080 y
+081 —ni uno más, ni uno menos— en serie, sobre la rama `plans/077-081`. 074 y 082–089 no se
+tocan. Se quita el banner `DIFERIDO` de los cinco planes, DEFERRED → TODO en el índice (filas
+077–081, notas 118/123 y el DAG de 127).
+
+**Verificación del estado inicial (2026-09-10):**
+
+- Frontend: rama `plans/077-081`, HEAD `98fd848`, árbol limpio salvo el propio prompt.
+- Backend: `../thesis-back-quarkus` @ **`2803575`** (`main`, tras `fetch --all`), levantado en
+  `http://localhost:8080` con datos. **Todo el contrato de esta rama se razona contra ese commit.**
+- Los cuatro recursos JAX-RS existen y responden 200 con datos reales, comprobado por `curl`
+  contra `http://localhost:8080/api/v1`: `/admin/usuarios`, `/admin/plantillas-apu`,
+  `/admin/valores-referencia` y `/admin/logs`. Un `USUARIO` recibe **403** `{"codigo":
+  "acceso-denegado"}`; sin token, **401**; una ruta admin inexistente, **404**.
+
+**Decisiones tomadas en ausencia del usuario:**
+
+1. **No había ningún `SUPER_ADMIN` sembrado** (`V004__seed_escenarios.sql` sólo crea dos
+   `USUARIO`), así que las rutas admin no se podían ejercitar. Se promueve **temporalmente** a
+   `ana.armas@gmail.com` a `SUPER_ADMIN` **en la base de datos de desarrollo** —no en el repo del
+   backend, que no se toca— para capturar formas de respuesta reales. Se revierte al cerrar la
+   rama. Es la única forma de cumplir «una respuesta HTTP real sí es evidencia».
+2. **Colisión de numeración de planes.** Existen worktrees `w-077` y `w-078` de otra estirpe: son
+   los capítulos del manual (`plans/077-manual-cap-07-documentos.md`,
+   `plans/078-manual-admin.md`), sin mergear. **No son esta rama y no se tocan.** Los worktrees de
+   este encargo se llaman `wa-077`…`wa-081` para no pisarlos.
+3. **Deriva real en los cinco planes: el «wrapper de disponibilidad» que dan por existente no
+   existe.** `MODULOS_SIN_BACKEND` sólo lo consume `src/shell/Sidebar.tsx` para pintar la insignia
+   «pronto»; las cuatro páginas admin renderizan `ModuloNoDisponible` **incondicionalmente**, con
+   el texto escrito a mano. No hay ni un solo `*PageActiva` en el repo pese a que `AGENTS.md` lo
+   documenta como convención. Vaciar el `Set` en 081 no encendería nada. Corrección aplicada a los
+   planes antes de despachar: 077–080 convierten su página en el wrapper que consulta el `Set` y
+   delega en `<Nombre>PageActiva`; el gate sigue **activo** durante 077–080 y 081 se reduce a
+   vaciar el `Set` y quitar `modulo` de `RUTAS_ADMIN`. `RutaAdmin` no se relaja.
+4. **La normalización de `Page` ya es central.** `src/api/client.ts` traduce
+   `{items,total}` → `{contenido,totalElementos}` en un interceptor, y `src/api/request.ts` avisa
+   de no repetirla. La §9 de los planes pedía «adaptar»; el ejecutor **no** debe volver a
+   normalizar.
 
 ## Decisión de secuencia: Plan 082 (2026-09-09)
 

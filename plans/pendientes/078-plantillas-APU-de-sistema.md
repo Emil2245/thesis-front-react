@@ -1,7 +1,5 @@
 # 078 — Plantillas APU de sistema
 
-**Estado: DIFERIDO por decisión de secuencia.** La rama administrativa 077–081 se pospone; este plan se conserva sin ejecutarse ni activar su gate.
-
 ## 1. Estado inicial
 `PlantillaApuAdminResource.java` usa `/admin/plantillas-apu`, SUPER_ADMIN; DTOs `PlantillaSistemaCrearRequest`, `PlantillaApuAdminEditarRequest`, `PlantillaApuAdminResponse`; IT `src/test/java/ec/uce/propuestas/plantilla/admin/PlantillaApuAdminResourceIT.java`. `src/features/admin/pages/AdminPlantillasPage.tsx` es wrapper no disponible.
 
