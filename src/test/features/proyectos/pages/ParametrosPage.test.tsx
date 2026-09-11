@@ -80,4 +80,37 @@ describe("ParametrosPage", () => {
       expect(sentBody).toMatchObject({ porcentajeHerramientaMenor: 0.07 });
     });
   });
+
+  // Los campos de porcentaje son de texto, no `type="number"`: ese input delega
+  // el separador decimal al locale del NAVEGADOR y en un Chrome en español
+  // pinta «7,5» donde el requisito es punto. jsdom no reproduce esa
+  // localización, así que lo que se fija aquí es lo que sí depende de nosotros:
+  // el campo acepta el punto y manda la fracción correcta.
+  it.each([
+    ["7.5", 0.075],
+    ["7,5", 0.075],
+  ])("acepta %s tecleado y manda la fracción %s", async (tecleado, esperado) => {
+    let sentBody: unknown = null;
+    server.use(
+      http.put(`${API}/proyectos/:id/parametros`, async ({ request }) => {
+        sentBody = await request.json();
+        return HttpResponse.json(parametrosFixture);
+      }),
+    );
+    const { user } = renderConProviders(
+      <Routes>
+        <Route path="/proyectos/:id/parametros" element={<ParametrosPage />} />
+      </Routes>,
+      { ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/parametros" },
+    );
+
+    const hm = await screen.findByDisplayValue("5");
+    await user.clear(hm);
+    await user.type(hm, tecleado);
+    await user.click(screen.getByRole("button", { name: /guardar parámetros/i }));
+
+    await waitFor(() => {
+      expect(sentBody).toMatchObject({ porcentajeHerramientaMenor: esperado });
+    });
+  });
 });

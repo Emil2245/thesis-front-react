@@ -82,9 +82,12 @@ describe("AdminParametrosPage", () => {
   it("pinta los valores que devuelve el backend", async () => {
     renderConProviders(<AdminParametrosPage />);
 
-    expect(await screen.findByLabelText("% Herramienta menor")).toHaveValue(
-      parametrosSistemaFixture.porcentajeHerramientaMenor,
-    );
+    // El campo es de texto, no `type="number"`: ese input pinta el decimal con
+    // el separador del locale del navegador («0,05» en español) y el requisito
+    // es punto siempre. Por eso el valor esperado es el string con punto, no el
+    // número de la fixture.
+    expect(parametrosSistemaFixture.porcentajeHerramientaMenor).toBe(0.05);
+    expect(await screen.findByLabelText("% Herramienta menor")).toHaveValue("0.05");
     expect(screen.getByLabelText("Moneda")).toHaveValue(parametrosSistemaFixture.moneda);
   });
 

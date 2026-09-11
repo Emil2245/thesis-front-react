@@ -131,12 +131,14 @@ export function AdminParametrosPage() {
   const campoFraccion = (nombre: keyof FormularioParametros, etiqueta: string) => (
     <Field>
       <Label htmlFor={nombre}>{etiqueta}</Label>
+      {/* Texto, no `type="number"`: ese input delega el separador decimal al
+          locale del navegador y en español pinta «0,1800» donde el requisito es
+          punto. El campo ya era un string validado por `fraccion` (zod +
+          `parsearEntradaNumerica`), que acepta punto y coma y acota a [0, 1]. */}
       <Input
         id={nombre}
-        type="number"
-        step="0.0001"
-        min="0"
-        max="1"
+        type="text"
+        inputMode="decimal"
         className="font-mono w-40"
         {...form.register(nombre)}
       />
