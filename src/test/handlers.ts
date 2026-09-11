@@ -31,6 +31,7 @@ import {
   apuConHmFixture,
   apuCalculoFixture,
   plantillaDetalleFixture,
+  PLANTILLA_LOTE_ERROR,
 } from "./fixtures/apu";
 import {
   presupuestoFixture,
@@ -79,6 +80,21 @@ export const VALOR_INEXISTENTE = "ZZZ_NO_EXISTE";
 export const PRESUPUESTO_AJENO = "018f8a60-0000-7000-8000-0000000000404";
 export const PRESUPUESTO_BLOQUEADO = "018f8a60-0000-7000-8000-0000000000409";
 export const PROYECTO_DESDE_PLANTILLA = "018f8a10-0000-7000-8000-000000000099";
+
+const esRegistro = (valor: unknown): valor is Record<string, unknown> =>
+  valor !== null && typeof valor === "object" && !Array.isArray(valor);
+
+const camposExactos = (valor: Record<string, unknown>, permitidos: readonly string[]) =>
+  Object.keys(valor).every((campo) => permitidos.includes(campo));
+
+const esDecimalPositivo = (valor: unknown) =>
+  (typeof valor === "number" || typeof valor === "string") &&
+  Number.isFinite(Number(valor)) &&
+  Number(valor) > 0;
+
+const esUuidV7 = (valor: unknown): valor is string =>
+  typeof valor === "string" &&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(valor);
 
 const CAMPOS_PROYECTO = [
   "nombreProyecto",
@@ -660,6 +676,44 @@ export const handlers = [
       ),
   ),
   // ———— Plantillas ————
+  http.get(`${API}/plantillas-apu/busqueda`, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const permitidos = ["q", "tipo", "page", "size"];
+    const sobran = [...params.keys()].filter((campo) => !permitidos.includes(campo));
+    const tipos = params.getAll("tipo");
+    const page = Number(params.get("page"));
+    const size = Number(params.get("size"));
+    if (
+      sobran.length > 0 ||
+      tipos.length === 0 ||
+      tipos.some((tipo) => tipo !== "SISTEMA" && tipo !== "PERSONAL") ||
+      !Number.isInteger(page) ||
+      page < 0 ||
+      !Number.isInteger(size) ||
+      size < 1 ||
+      size > 200
+    ) {
+      return problema(400, "validacion", "Parámetros de búsqueda inválidos");
+    }
+    const items = [
+      {
+        id: plantillaDetalleFixture.id,
+        nombre: plantillaDetalleFixture.nombre,
+        descripcionRubro: plantillaDetalleFixture.descripcionRubro,
+        unidad: plantillaDetalleFixture.unidad,
+        tipo: plantillaDetalleFixture.tipo,
+        createdAt: "2026-07-01T00:00:00",
+        updatedAt: "2026-07-01T00:00:00",
+      },
+    ].filter((plantilla) => tipos.includes(plantilla.tipo));
+    return HttpResponse.json({
+      items: items.slice(page * size, (page + 1) * size),
+      total: items.length,
+      page,
+      size,
+      totalPaginas: items.length === 0 ? 0 : Math.ceil(items.length / size),
+    });
+  }),
   http.get(`${API}/plantillas-apu`, ({ request }) => {
     const url = new URL(request.url);
     const tipo = url.searchParams.get("tipo");
@@ -687,7 +741,27 @@ export const handlers = [
       },
     ]);
   }),
-  http.get(`${API}/plantillas-apu/:id`, () => HttpResponse.json(plantillaDetalleFixture)),
+  http.get(`${API}/plantillas-apu/:id`, () =>
+    HttpResponse.json({
+      ...plantillaDetalleFixture,
+      snapshotSecciones: {
+        versionLegacy: 1,
+        secciones: [
+          {
+            tipo: "MATERIAL",
+            subtotalLegacy: "99.000000",
+            lineas: [
+              {
+                insumoCodigo: "MAT-001",
+                cantidad: "1.000000",
+                precioOverride: "99.000000",
+              },
+            ],
+          },
+        ],
+      },
+    }),
+  ),
   http.put(
     `${API}/plantillas-apu/:id`,
     async ({ request }) =>
@@ -790,6 +864,85 @@ export const handlers = [
   http.delete(`${API}/presupuestos/:id/capitulos/:cid/rubros/:rid`, () =>
     HttpResponse.json(presupuestoFixture),
   ),
+  http.post(`${API}/presupuestos/:id/rubros/desde-plantillas`, async ({ request }) => {
+    const cuerpo: unknown = await request.json().catch(() => null);
+    if (
+      !esRegistro(cuerpo) ||
+      !camposExactos(cuerpo, ["capituloId", "plantillaIds"]) ||
+      !Array.isArray(cuerpo.plantillaIds) ||
+      cuerpo.plantillaIds.length < 1 ||
+      cuerpo.plantillaIds.length > 20 ||
+      cuerpo.plantillaIds.some((id) => !esUuidV7(id)) ||
+      new Set(cuerpo.plantillaIds).size !== cuerpo.plantillaIds.length ||
+      ("capituloId" in cuerpo && !esUuidV7(cuerpo.capituloId))
+    ) {
+      return problema(400, "validacion", "Body de lote inválido");
+    }
+    if (cuerpo.plantillaIds.includes(PLANTILLA_LOTE_ERROR)) {
+      return problema(404, "no-encontrado", "Plantilla no encontrada", {
+        detalles: { indice: 0, plantillaId: PLANTILLA_LOTE_ERROR },
+      });
+    }
+    return HttpResponse.json(
+      {
+        presupuesto: presupuestoFixture,
+        resultados: cuerpo.plantillaIds.map((plantillaId, indice) => ({
+          plantillaId,
+          plantillaNombre: `Plantilla ${indice + 1}`,
+          apuId: `018f8a40-0000-7000-8000-00000000000${indice + 1}`,
+          codigo: `APU-${indice + 1}`,
+          advertencias: [],
+        })),
+      },
+      { status: 201 },
+    );
+  }),
+  http.post(`${API}/presupuestos/:id/apus/completo`, async ({ request }) => {
+    const cuerpo: unknown = await request.json().catch(() => null);
+    if (
+      !esRegistro(cuerpo) ||
+      !camposExactos(cuerpo, [
+        "codigo",
+        "descripcion",
+        "unidad",
+        "porcentajeIndirecto",
+        "capituloId",
+        "detalles",
+      ]) ||
+      ("codigo" in cuerpo && (typeof cuerpo.codigo !== "string" || cuerpo.codigo.length > 20)) ||
+      typeof cuerpo.descripcion !== "string" ||
+      cuerpo.descripcion.trim().length === 0 ||
+      cuerpo.descripcion.length > 255 ||
+      typeof cuerpo.unidad !== "string" ||
+      cuerpo.unidad.trim().length === 0 ||
+      cuerpo.unidad.length > 10 ||
+      ("porcentajeIndirecto" in cuerpo &&
+        (typeof cuerpo.porcentajeIndirecto !== "number" ||
+          cuerpo.porcentajeIndirecto < 0 ||
+          cuerpo.porcentajeIndirecto > 1)) ||
+      ("capituloId" in cuerpo && !esUuidV7(cuerpo.capituloId)) ||
+      !Array.isArray(cuerpo.detalles) ||
+      cuerpo.detalles.length < 1 ||
+      cuerpo.detalles.length > 200 ||
+      cuerpo.detalles.some(
+        (detalle) =>
+          !esRegistro(detalle) ||
+          !camposExactos(detalle, ["seccionTipo", "insumoId", "cantidad", "rendimiento"]) ||
+          !["EQUIPO", "MANO_OBRA", "MATERIAL", "TRANSPORTE"].includes(
+            String(detalle.seccionTipo),
+          ) ||
+          !esUuidV7(detalle.insumoId) ||
+          !esDecimalPositivo(detalle.cantidad) ||
+          ("rendimiento" in detalle && !esDecimalPositivo(detalle.rendimiento)),
+      )
+    ) {
+      return problema(400, "validacion", "Body de APU manual inválido");
+    }
+    return HttpResponse.json(
+      { apu: apuDetalleFixture, presupuesto: presupuestoFixture },
+      { status: 201 },
+    );
+  }),
 
   // ———— Display config ————
   http.get(`${API}/config/display`, () =>

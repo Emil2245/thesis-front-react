@@ -1,3 +1,5 @@
+import type { BuscarPlantillasParams } from "./contract";
+
 export const qk = {
   perfil: () => ["perfil"] as const,
 
@@ -24,6 +26,8 @@ export const qk = {
   apuEspecificacionWorkspace: (presupuestoId: string, apuId: string) =>
     ["presupuesto", presupuestoId, "apu", apuId, "especificacion-tecnica"] as const,
   plantillas: (filtros?: Record<string, unknown>) => ["plantillas-apu", filtros ?? {}] as const,
+  busquedaPlantillas: ({ q, tipos, page = 0, size = 20 }: BuscarPlantillasParams) =>
+    ["plantillas-apu", "busqueda", { q: q ?? "", tipos, page, size }] as const,
 
   presupuesto: (presupuestoId: string) => ["presupuesto", presupuestoId] as const,
   presupuestoResumen: (id: string) => ["presupuesto", id, "resumen"] as const,

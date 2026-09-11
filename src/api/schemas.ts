@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { ApiError } from "./problem";
 import type {
+  AgregarPlantillasResponse,
+  ApuManualCompletoResponse,
   CapituloResponse,
   CopiaBaseResultadoResponse,
   ComparacionVersionesResponse,
@@ -15,6 +17,7 @@ import type {
   PresupuestoVersionResponse,
   RubroResponse,
   ResumenComponentesResponse,
+  SnapshotPlantillaApu,
   ValidacionPresupuestoResponse,
 } from "./contract";
 import { asDecimal, type Decimal } from "@/lib/decimal";
@@ -203,6 +206,23 @@ export const plantillaApuResumenSchema = z
     updatedAt: z.string(),
   })
   .strict();
+
+const snapshotDecimalSchema = z.union([z.string().transform(asDecimal), z.number()]);
+const snapshotPlantillaLineaSchema = z.object({
+  esHerramientaMenor: z.boolean().optional(),
+  insumoCodigo: z.string().optional(),
+  cantidad: snapshotDecimalSchema.optional(),
+  rendimiento: snapshotDecimalSchema.optional(),
+});
+export const snapshotPlantillaApuSchema: z.ZodType<SnapshotPlantillaApu, z.ZodTypeDef, unknown> =
+  z.object({
+    secciones: z.array(
+      z.object({
+        tipo: z.enum(["EQUIPO", "MANO_OBRA", "MATERIAL", "TRANSPORTE"]),
+        lineas: z.array(snapshotPlantillaLineaSchema),
+      }),
+    ),
+  });
 
 /**
  * `PlantillaApuAdminResponse` (plan 078). `usuarioId` llega siempre `null`
@@ -444,7 +464,7 @@ export const plantillaApuDetalleSchema = z
     unidad: z.string().optional(),
     createdAt: z.string(),
     updatedAt: z.string(),
-    snapshotSecciones: z.unknown(),
+    snapshotSecciones: snapshotPlantillaApuSchema,
     advertencias: z.array(advertenciaPlantillaSchema).optional(),
   })
   .strict();
@@ -549,6 +569,31 @@ export const presupuestoSchema: z.ZodType<PresupuestoResponse, z.ZodTypeDef, unk
     capitulos: z.array(capituloSchema),
   })
   .strict();
+export const agregarPlantillasResponseSchema: z.ZodType<
+  AgregarPlantillasResponse,
+  z.ZodTypeDef,
+  unknown
+> = z
+  .object({
+    presupuesto: presupuestoSchema,
+    resultados: z.array(
+      z
+        .object({
+          plantillaId: z.string(),
+          plantillaNombre: z.string(),
+          apuId: z.string(),
+          codigo: z.string(),
+          advertencias: z.array(advertenciaPlantillaSchema),
+        })
+        .strict(),
+    ),
+  })
+  .strict();
+export const apuManualCompletoResponseSchema: z.ZodType<
+  ApuManualCompletoResponse,
+  z.ZodTypeDef,
+  unknown
+> = z.object({ apu: apuSchema, presupuesto: presupuestoSchema }).strict();
 export const versionSchema: z.ZodType<PresupuestoVersionResponse, z.ZodTypeDef, unknown> = z
   .object({
     presupuestoId: z.string(),

@@ -1,9 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getValidado, putValidado, del, postValidado } from "@/api/request";
 import { qk } from "@/api/queryKeys";
-import { plantillaApuResumenSchema, plantillaApuDetalleSchema } from "@/api/schemas";
+import { paginaDe, plantillaApuResumenSchema, plantillaApuDetalleSchema } from "@/api/schemas";
 import { z } from "zod";
-import type { PlantillaApuCrearRequest, PlantillaApuEditarRequest } from "@/api/contract";
+import type {
+  BuscarPlantillasParams,
+  PlantillaApuCrearRequest,
+  PlantillaApuEditarRequest,
+} from "@/api/contract";
 
 export function usePlantillas(tipo?: string) {
   return useQuery({
@@ -12,6 +16,21 @@ export function usePlantillas(tipo?: string) {
       const params = tipo ? `?tipo=${tipo}` : "";
       return getValidado(`/plantillas-apu${params}`, z.array(plantillaApuResumenSchema));
     },
+  });
+}
+
+export function useBusquedaPlantillas({ q, tipos, page = 0, size = 20 }: BuscarPlantillasParams) {
+  return useQuery({
+    queryKey: qk.busquedaPlantillas({ q, tipos, page, size }),
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (q) params.set("q", q);
+      tipos.forEach((tipo) => params.append("tipo", tipo));
+      params.set("page", String(page));
+      params.set("size", String(size));
+      return getValidado("/plantillas-apu/busqueda", paginaDe(plantillaApuResumenSchema), params);
+    },
+    enabled: tipos.length > 0,
   });
 }
 

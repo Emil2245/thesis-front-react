@@ -1,9 +1,28 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { postValidado, patchValidado, delValidado } from "@/api/request";
 import { qk } from "@/api/queryKeys";
-import type { PresupuestoResponse } from "@/api/contract";
+import type { AgregarPlantillasRequest, PresupuestoResponse } from "@/api/contract";
 import { toast } from "sonner";
-import { presupuestoSchema } from "@/api/schemas";
+import { agregarPlantillasResponseSchema, presupuestoSchema } from "@/api/schemas";
+
+export function useAgregarDesdePlantillas(presupuestoId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (body: AgregarPlantillasRequest) =>
+      postValidado(
+        `/presupuestos/${presupuestoId}/rubros/desde-plantillas`,
+        agregarPlantillasResponseSchema,
+        body,
+      ),
+    onSuccess: (data) => {
+      queryClient.setQueryData(qk.presupuesto(presupuestoId), data.presupuesto);
+      queryClient.invalidateQueries({ queryKey: qk.apus(presupuestoId) });
+      queryClient.invalidateQueries({ queryKey: qk.presupuestoValidacion(presupuestoId) });
+      queryClient.invalidateQueries({ queryKey: qk.cronograma(presupuestoId) });
+    },
+  });
+}
 
 export function useRubroMutaciones(presupuestoId: string) {
   const queryClient = useQueryClient();

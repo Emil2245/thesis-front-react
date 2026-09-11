@@ -460,8 +460,61 @@ export interface PlantillaApuEditarRequest {
 }
 
 export interface PlantillaApuDetalleResponse extends PlantillaApuResumenResponse {
-  snapshotSecciones: unknown;
+  snapshotSecciones: SnapshotPlantillaApu;
   advertencias?: AdvertenciaPlantillaResponse[];
+}
+
+export interface SnapshotPlantillaApuLinea {
+  esHerramientaMenor?: boolean;
+  insumoCodigo?: string;
+  cantidad?: Decimal | number;
+  rendimiento?: Decimal | number;
+}
+
+export interface SnapshotPlantillaApu {
+  secciones: Array<{
+    tipo: SeccionTipo;
+    lineas: SnapshotPlantillaApuLinea[];
+  }>;
+}
+
+export interface BuscarPlantillasParams {
+  q?: string;
+  tipos: Array<"SISTEMA" | "PERSONAL">;
+  page?: number;
+  size?: number;
+}
+
+export interface AgregarPlantillasRequest {
+  capituloId?: string;
+  plantillaIds: string[];
+}
+
+export interface ResultadoPlantillaLote {
+  plantillaId: string;
+  plantillaNombre: string;
+  apuId: string;
+  codigo: string;
+  advertencias: AdvertenciaPlantillaResponse[];
+}
+
+export interface AgregarPlantillasResponse {
+  presupuesto: PresupuestoResponse;
+  resultados: ResultadoPlantillaLote[];
+}
+
+export interface ApuManualCompletoRequest {
+  codigo?: string;
+  descripcion: string;
+  unidad: string;
+  porcentajeIndirecto?: number;
+  capituloId?: string;
+  detalles: ApuDetalleCrearRequest[];
+}
+
+export interface ApuManualCompletoResponse {
+  apu: ApuResponse;
+  presupuesto: PresupuestoResponse;
 }
 
 /**

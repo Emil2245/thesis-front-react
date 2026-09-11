@@ -4,6 +4,7 @@ import type {
   ApuResumenResponse,
   PlantillaApuDetalleResponse,
 } from "@/api/contract";
+import { asDecimal } from "@/lib/decimal";
 
 // UUIDv7 estables de los APU. Los comparte la suite E2E, que antes traía sus
 // propios ids numéricos (plan 060).
@@ -11,6 +12,9 @@ export const APU_1 = "018f8a40-0000-7000-8000-000000000001";
 export const APU_2 = "018f8a40-0000-7000-8000-000000000002";
 export const APU_3 = "018f8a40-0000-7000-8000-000000000003";
 export const APU_4 = "018f8a40-0000-7000-8000-000000000004";
+export const PLANTILLA_APU_1 = "018f8a1e-0000-7000-8000-000000000001";
+export const PLANTILLA_APU_2 = "018f8a1e-0000-7000-8000-000000000002";
+export const PLANTILLA_LOTE_ERROR = "018f8a1e-0000-7000-8000-000000000404";
 
 export const apuResumenFixture: ApuResumenResponse[] = [
   {
@@ -245,12 +249,23 @@ export const apuCalculoFixture: ApuCalculoResponse = {
 };
 
 export const plantillaDetalleFixture: PlantillaApuDetalleResponse = {
-  id: "018f8a1e-0000-7000-8000-000000000001",
+  id: PLANTILLA_APU_1,
   nombre: "Excavación típica",
   descripcionRubro: "Plantilla base para excavaciones",
   unidad: "m3",
   tipo: "SISTEMA",
   createdAt: "2026-07-23T00:00:00",
   updatedAt: "2026-07-23T00:00:00",
-  snapshotSecciones: apuDetalleFixture.secciones,
+  snapshotSecciones: {
+    secciones: [
+      {
+        tipo: "EQUIPO",
+        lineas: [{ esHerramientaMenor: true }],
+      },
+      {
+        tipo: "MATERIAL",
+        lineas: [{ insumoCodigo: "MAT-001", cantidad: asDecimal("1.000000") }],
+      },
+    ],
+  },
 };
