@@ -296,7 +296,7 @@ function FranjaTotales({
         componentes.map((c) => (
           <div key={c.etiqueta} className="flex flex-col gap-1 bg-card p-4">
             <span className="text-xs text-muted-foreground">
-              {c.etiqueta} · {formatearPorcentaje(c.porcentaje, 1)}
+              {c.etiqueta} · {formatearPorcentaje(c.porcentaje)}
             </span>
             <span className="text-lg font-medium tracking-tight">
               <Moneda valor={c.total} className="text-left" />

@@ -4,7 +4,11 @@ export const asDecimal = (v: string): Decimal => v as Decimal;
 
 export const DECIMAL_ZERO = asDecimal("0.000000");
 
-const LOCALE = "es-EC";
+// Requisito de negocio 2026-09-11: punto para decimales, coma para miles,
+// en todo el frontend — es la convención opuesta a la de es-EC
+// (`Intl.NumberFormat('es-EC')` da coma decimal / punto de miles).
+// en-US produce exactamente la convención pedida sin tocar cada función.
+const LOCALE = "en-US";
 
 export function formatearMoneda(valor: Decimal | number | null | undefined, dp = 2): string {
   if (valor == null || valor === "") return "—";
@@ -31,7 +35,10 @@ export function formatearNumero(
   }).format(n);
 }
 
-export function formatearPorcentaje(valor: Decimal | number | null | undefined, dp = 2): string {
+export function formatearPorcentaje(
+  valor: Decimal | number | null | undefined,
+  dp = ESCALA_PORCENTAJE,
+): string {
   if (valor == null || valor === "") return "—";
   const n = Number(valor);
   if (!Number.isFinite(n)) return "—";

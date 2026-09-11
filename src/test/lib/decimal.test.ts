@@ -17,7 +17,7 @@ import {
 
 describe("formateo es-EC", () => {
   it("formatea moneda con 2 decimales", () => {
-    expect(formatearMoneda(asDecimal("61.390000"))).toContain("61,39");
+    expect(formatearMoneda(asDecimal("61.390000"))).toContain("61.39");
   });
 
   it("muestra guion largo cuando no hay valor", () => {
@@ -26,11 +26,11 @@ describe("formateo es-EC", () => {
   });
 
   it("trata los porcentajes como fracción (0.1800 → 18 %)", () => {
-    expect(formatearPorcentaje(asDecimal("0.1800"))).toMatch(/18,00\s?%/);
+    expect(formatearPorcentaje(asDecimal("0.1800"))).toMatch(/18\.0000\s?%/);
   });
 
   it("conserva los decimales significativos de un rendimiento", () => {
-    expect(formatearNumero(asDecimal("0.100000"), { min: 2, max: 4 })).toBe("0,10");
+    expect(formatearNumero(asDecimal("0.100000"), { min: 2, max: 4 })).toBe("0.10");
   });
 });
 
