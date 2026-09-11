@@ -1,6 +1,6 @@
 # Bitácora
 
-> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). Los Planes 077–087 y 090–093 están cerrados; el flujo funcional del paquete de búsquedas frontend 004 está integrado con estado PARTIAL; 058 queda BLOCKED, 072 DEFERRED y 088 SUPERSEDED.
+> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). Los Planes 077–087, 090–093 y F-004 están cerrados; 058 queda BLOCKED, 072 DEFERRED y 088 SUPERSEDED.
 
 **Encargo activo: resolver el bloqueo de 058; Plan 072 diferido; Plan 089 pendiente** · **Actualizada:** 2026-09-10
 **Ronda de paridad 1** · **CERRADA**
@@ -18,6 +18,14 @@
 - Evidencia medida: `pnpm exec vitest run src/test/features/workspace src/test/features/apu-editor/hooks` → **80/80 en 13 archivos**; `pnpm run verify` → **635/635 en 92 archivos**, typecheck, lint, ADR9, formato y build verdes; `E2E_PORT=5194 pnpm exec playwright test e2e/manual/06-workspace.spec.ts --project=chromium` → **6/6**. El spec usa rutas explícitas, falla rutas no simuladas con 501 y aserta cuerpos exactos para selección simple, lote ordenado y alta manual automática/manual.
 - Limitaciones explícitas: no se levantaron backend ni PostgreSQL reales, por lo que owner-scope PERSONAL, búsqueda sin tilde y rollback inducido real quedan pendientes para 089. El mock solo prueba el filtro saliente. Axe WCAG 2A/2AA pasa sobre el formulario manual; el selector de plantillas mantiene un `nested-interactive` heredado (`role=option` con checkbox enfocable) en `ListaPlantillas.tsx`, fuera de las superficies autorizadas, y no se silenció la regla.
 - Plan 074 queda diferido únicamente para el armado posterior dentro de `EditorApuPage`; el alta inicial completa está activa. Plan 072 sigue DEFERRED hasta la pasada final y 089 añade F-004 como dependencia.
+
+## Cierre de F-004 — búsquedas y alta de APU (2026-09-11)
+
+- F-004 queda **✅ verde / DONE**. `DialogoAgregarApu` ofrece una sola superficie con selector de plantillas y formulario manual completo; `DialogoAgregarItem` y `DialogoNuevoApu` se conservan para sus consumidores externos.
+- La corrección `67da196` separa el botón de detalle y el checkbox en controles hermanos dentro de `ul/li`; la lista ya no produce `nested-interactive`. Axe WCAG 2A/2AA pasa sobre selector y formulario manual.
+- Evidencia frontend: `pnpm run verify` → **635/635 tests en 92 archivos**, typecheck, lint, ADR9, formato y build verdes; `pnpm exec playwright test --project=chromium` → **67/67**; `pnpm run e2e:screenshots` → **13/13**; el spec focal `e2e/manual/06-workspace.spec.ts` → **6/6**.
+- Evidencia backend real en `localhost:8090`: búsqueda FTS con y sin tilde, detalle SISTEMA/PERSONAL, owner-scope PERSONAL (John Doe ve una, Ana de Armas ninguna), lote mixto `201`, rollback `404` sin variar `totalGeneral` y creación manual `201` con código autogenerado.
+- Firefox no se ejecutó porque falta el binario Playwright; mobile-chrome sí pasó en la corrida disponible. F-004 queda cerrado; el bloqueo ambiental no se convierte en fallo de producto.
 
 ## Cierre del Plan 090 (2026-09-10)
 

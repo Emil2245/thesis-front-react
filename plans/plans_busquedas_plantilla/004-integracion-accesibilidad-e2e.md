@@ -1,8 +1,8 @@
 # Plan frontend 004 — Integración del diálogo, accesibilidad y E2E
 
-**Estado:** PARTIAL · **Prioridad:** P1 · **Depende de:** frontend 002 y 003
+**Estado:** DONE · **Prioridad:** P1 · **Depende de:** frontend 002 y 003
 
-**Integración:** 2026-09-10 · Flujo funcional implementado en `main`; cierre total pendiente por la limitación axe heredada y la validación backend-real.
+**Integración:** 2026-09-11 · Flujo selector/manual, accesibilidad crítica, E2E Chromium y validación backend-real cerrados.
 
 ## 01. Resultado observable
 
@@ -78,6 +78,7 @@ STOP ante deriva backend, éxito parcial, pérdida de owner-scope, cálculo mone
 
 - `DialogoAgregarApu` presenta un solo flujo: selector de plantillas o formulario manual completo; ya no encadena `DialogoAgregarItem` ni `DialogoNuevoApu` desde `WorkspacePage`.
 - Las pruebas focalizadas cubren búsqueda inicial, destino contextual, POST atómico exacto, creación manual, conservación de `?v=`/`?rubro=` y retorno de foco: 80/80 en 13 archivos. `pnpm run verify` pasa con 635/635 en 92 archivos, typecheck, lint, ADR9, formato y build.
-- `e2e/manual/06-workspace.spec.ts` cubre en Chromium seis journeys con rutas y cuerpos estrictos: búsqueda/filtros/detalle/destino, selección simple, lote ordenado, rollback visual, creación automática y creación con código manual, Escape/Cancelar/foco y axe del formulario manual.
-- No se ejecutó validación contra backend/PostgreSQL real en este cierre; por tanto no se acredita búsqueda sin tilde, rollback inducido real ni owner-scope PERSONAL. El E2E mock solo afirma que el frontend envía `tipo=PERSONAL`; no simula una plantilla ajena como falsa prueba de autorización.
-- El selector de plantillas conserva una violación axe `nested-interactive` heredada: cada fila `role="option"` contiene un checkbox enfocable. Corregir `ListaPlantillas.tsx` queda fuera de las superficies autorizadas de este plan. Axe sí pasa sobre el formulario manual integrado; no se silenció la regla.
+- `e2e/manual/06-workspace.spec.ts` cubre en Chromium seis journeys con rutas y cuerpos estrictos: búsqueda/filtros/detalle/destino, selección simple, lote ordenado, rollback visual, creación automática y creación con código manual, Escape/Cancelar/foco y axe del selector y del formulario manual. El conjunto Chromium completo pasó 67/67; las capturas pasaron 13/13.
+- Validación backend-real contra `http://localhost:8090` con PostgreSQL activo: búsqueda con y sin tilde devolvió los mismos resultados; el detalle SISTEMA y PERSONAL propio respondió 200; el owner-scope devolvió una plantilla PERSONAL para John Doe y cero para Ana de Armas; el lote mixto respondió 201 con dos resultados y destino implícito a la última hoja; el lote con una plantilla inexistente respondió 404 (`indice=1`) sin cambiar `totalGeneral` (9.250000 antes y después); la creación manual respondió 201 y generó `APU-006`.
+- `ListaPlantillas` ya no anida controles interactivos: usa una lista `ul/li` con botón de detalle y checkbox hermano. Axe WCAG 2A/2AA pasa sobre selector y formulario manual. No se simuló owner-scope con MSW: la evidencia se obtuvo contra el backend real.
+- Firefox no se ejecutó porque el binario Playwright no está instalado en el ambiente (`firefox-1538`); mobile-chrome no presentó fallos en la corrida completa. Esto queda como limitación ambiental, no como fallo de producto.
