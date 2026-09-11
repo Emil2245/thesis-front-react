@@ -705,6 +705,15 @@ export const handlers = [
         createdAt: "2026-07-01T00:00:00",
         updatedAt: "2026-07-01T00:00:00",
       },
+      {
+        id: "018f8a1e-0000-7000-8000-000000000002",
+        nombre: "Replanteo personal",
+        descripcionRubro: "Plantilla personal de replanteo",
+        unidad: "m2",
+        tipo: "PERSONAL" as const,
+        createdAt: "2026-07-20T00:00:00",
+        updatedAt: "2026-07-20T00:00:00",
+      },
     ].filter((plantilla) => tipos.includes(plantilla.tipo));
     return HttpResponse.json({
       items: items.slice(page * size, (page + 1) * size),
@@ -741,9 +750,18 @@ export const handlers = [
       },
     ]);
   }),
-  http.get(`${API}/plantillas-apu/:id`, () =>
+  http.get(`${API}/plantillas-apu/:id`, ({ params }) =>
     HttpResponse.json({
       ...plantillaDetalleFixture,
+      ...(params.id === "018f8a1e-0000-7000-8000-000000000002"
+        ? {
+            id: "018f8a1e-0000-7000-8000-000000000002",
+            nombre: "Replanteo personal",
+            descripcionRubro: "Plantilla personal de replanteo",
+            tipo: "PERSONAL" as const,
+            unidad: "m2",
+          }
+        : {}),
       snapshotSecciones: {
         versionLegacy: 1,
         secciones: [

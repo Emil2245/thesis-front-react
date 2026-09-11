@@ -40,7 +40,7 @@ describe("búsqueda paginada de plantillas", () => {
     expect(peticion?.url.searchParams.getAll("tipo")).toEqual(["SISTEMA", "PERSONAL"]);
     expect(peticion?.url.searchParams.get("page")).toBe("0");
     expect(peticion?.url.searchParams.get("size")).toBe("20");
-    expect(result.current.data?.contenido).toHaveLength(1);
+    expect(result.current.data?.contenido).toHaveLength(2);
   });
 
   it("cambia la key y la petición al cambiar fuentes", async () => {
