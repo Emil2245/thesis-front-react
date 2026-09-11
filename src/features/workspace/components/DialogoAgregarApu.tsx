@@ -1,5 +1,8 @@
-import { useMemo, useState } from "react";
-import type { CapituloResponse } from "@/api/contract";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+
+import type { CapituloResponse, Page, PlantillaApuResumenResponse } from "@/api/contract";
+import { ApiError } from "@/api/problem";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,17 +12,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { DialogoAgregarItem } from "@/features/presupuesto/components/DialogoAgregarItem";
-import { useRubroMutaciones } from "@/features/presupuesto/hooks/useRubroMutaciones";
-import { DialogoNuevoApu } from "@/features/apu-editor/components/DialogoNuevoApu";
+  usePlantillaDetalle,
+  useBusquedaPlantillas,
+} from "@/features/apu-editor/hooks/usePlantillas";
+import { useAgregarDesdePlantillas } from "@/features/presupuesto/hooks/useRubroMutaciones";
+import { BuscadorFiltrosPlantillas } from "./agregar-apu/BuscadorFiltrosPlantillas";
+import { DetallePlantilla } from "./agregar-apu/DetallePlantilla";
+import { ListaPlantillas } from "./agregar-apu/ListaPlantillas";
+import { CAPITULO_AL_FINAL, aplanarCapitulos } from "./agregar-apu/capitulos";
+import { SelectorCapitulo } from "./agregar-apu/SelectorCapitulo";
 
 interface DialogoAgregarApuProps {
   open: boolean;
@@ -28,138 +30,274 @@ interface DialogoAgregarApuProps {
   proyectoId: string;
   capitulos: CapituloResponse[];
   defaultCapituloId?: string;
+  onCrearManualmente?: () => void;
 }
 
-function aplanarCapitulos(capitulos: CapituloResponse[]): CapituloResponse[] {
-  return capitulos.flatMap((capitulo) => [capitulo, ...aplanarCapitulos(capitulo.subcapitulos)]);
+function useValorDebounced<T>(valor: T, esperaMs: number): T {
+  const [debounced, setDebounced] = useState(valor);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(valor), esperaMs);
+    return () => window.clearTimeout(timer);
+  }, [esperaMs, valor]);
+
+  return debounced;
+}
+
+function ordenarSeleccionVisual(
+  seleccionadas: PlantillaApuResumenResponse[],
+  ordenVisual: string[],
+): PlantillaApuResumenResponse[] {
+  const posiciones = new Map(ordenVisual.map((id, indice) => [id, indice]));
+  return seleccionadas.toSorted((a, b) => {
+    const posicionA = posiciones.get(a.id);
+    const posicionB = posiciones.get(b.id);
+    if (posicionA === undefined || posicionB === undefined) return 0;
+    return posicionA - posicionB;
+  });
+}
+
+function nombrePlantillaFallida(
+  error: unknown,
+  plantillas: PlantillaApuResumenResponse[],
+  idsEnviados: string[],
+): string | null {
+  if (!(error instanceof ApiError)) return null;
+  const detalles = error.problem.detalles;
+  if (!detalles || typeof detalles !== "object") return null;
+
+  let plantillaId: string | undefined;
+  if ("plantillaId" in detalles && typeof detalles.plantillaId === "string") {
+    plantillaId = detalles.plantillaId;
+  } else if (
+    "indice" in detalles &&
+    typeof detalles.indice === "number" &&
+    Number.isInteger(detalles.indice)
+  ) {
+    plantillaId = idsEnviados[detalles.indice];
+  }
+
+  return plantillas.find((plantilla) => plantilla.id === plantillaId)?.nombre ?? null;
 }
 
 export function DialogoAgregarApu({
   open,
   onOpenChange,
   presupuestoId,
-  proyectoId,
   capitulos,
   defaultCapituloId,
+  onCrearManualmente,
 }: DialogoAgregarApuProps) {
   const opcionesCapitulo = useMemo(() => aplanarCapitulos(capitulos), [capitulos]);
-  const defaultValido =
-    defaultCapituloId && opcionesCapitulo.some((capitulo) => capitulo.id === defaultCapituloId)
+  const capituloInicial =
+    defaultCapituloId && opcionesCapitulo.some(({ capitulo }) => capitulo.id === defaultCapituloId)
       ? defaultCapituloId
-      : (opcionesCapitulo[0]?.id ?? "");
-  const [capituloId, setCapituloId] = useState(defaultValido);
-  const [origen, setOrigen] = useState<"seleccion" | "existente" | "nuevo">("seleccion");
-  const { agregar } = useRubroMutaciones(presupuestoId);
+      : CAPITULO_AL_FINAL;
+  const [capituloId, setCapituloId] = useState(capituloInicial);
+  const [busqueda, setBusqueda] = useState("");
+  const busquedaDebounced = useValorDebounced(busqueda.trim(), 300);
+  const [incluirSistema, setIncluirSistema] = useState(true);
+  const [incluirPersonal, setIncluirPersonal] = useState(true);
+  const [page, setPage] = useState(0);
+  const [activa, setActiva] = useState<PlantillaApuResumenResponse | null>(null);
+  const [seleccionadas, setSeleccionadas] = useState<PlantillaApuResumenResponse[]>([]);
+  const [errorAgregar, setErrorAgregar] = useState<string | null>(null);
+  const [paginaAnterior, setPaginaAnterior] = useState<
+    Page<PlantillaApuResumenResponse> | undefined
+  >(undefined);
 
-  const cerrar = () => {
-    setOrigen("seleccion");
-    onOpenChange(false);
+  const tipos = useMemo(() => {
+    const fuentes: Array<"SISTEMA" | "PERSONAL"> = [];
+    if (incluirSistema) fuentes.push("SISTEMA");
+    if (incluirPersonal) fuentes.push("PERSONAL");
+    return fuentes;
+  }, [incluirPersonal, incluirSistema]);
+
+  const busquedaQuery = useBusquedaPlantillas({
+    q: busquedaDebounced || undefined,
+    tipos,
+    page,
+    size: 20,
+  });
+  const detalleQuery = usePlantillaDetalle(activa?.id ?? null);
+  const agregar = useAgregarDesdePlantillas(presupuestoId);
+  const paginaMostrada = busquedaQuery.data ?? paginaAnterior;
+  const plantillas = paginaMostrada?.contenido ?? [];
+  const seleccionadasIds = useMemo(
+    () => new Set(seleccionadas.map((plantilla) => plantilla.id)),
+    [seleccionadas],
+  );
+
+  const conservarPaginaActual = () => {
+    if (busquedaQuery.data) setPaginaAnterior(busquedaQuery.data);
   };
 
-  const elegirOrigen = (next: "existente" | "nuevo") => {
-    if (capituloId) setOrigen(next);
+  const cambiarBusqueda = (valor: string) => {
+    conservarPaginaActual();
+    setBusqueda(valor);
+    setPage(0);
   };
 
-  const vincular = (apuId: string, cantidad = "1.000000") => {
-    if (!capituloId) return;
-    agregar.mutate({ capituloId, apuId, cantidad });
-    cerrar();
+  const cambiarFuente = (fuente: "SISTEMA" | "PERSONAL", activo: boolean) => {
+    conservarPaginaActual();
+    if (fuente === "SISTEMA") setIncluirSistema(activo);
+    else setIncluirPersonal(activo);
+    setPage(0);
   };
+
+  const cambiarPagina = (siguiente: number) => {
+    conservarPaginaActual();
+    setPage(siguiente);
+  };
+
+  const seleccionar = (id: string, checked: boolean, ordenVisual: string[]) => {
+    const plantilla = plantillas.find((item) => item.id === id);
+    if (!plantilla) return;
+    setSeleccionadas((actuales) => {
+      const sinActual = actuales.filter((item) => item.id !== id);
+      return checked ? ordenarSeleccionVisual([...sinActual, plantilla], ordenVisual) : sinActual;
+    });
+    setErrorAgregar(null);
+  };
+
+  const agregarPlantillas = async () => {
+    const elegidas = seleccionadas.length > 0 ? seleccionadas : activa ? [activa] : [];
+    if (elegidas.length === 0) return;
+
+    const plantillaIds = elegidas.map((plantilla) => plantilla.id);
+    setErrorAgregar(null);
+    try {
+      const response = await agregar.mutateAsync({
+        ...(capituloId === CAPITULO_AL_FINAL ? {} : { capituloId }),
+        plantillaIds,
+      });
+      response.resultados.forEach((resultado) => {
+        if (resultado.advertencias.length === 0) return;
+        const mensajes = resultado.advertencias
+          .map((advertencia) => `${advertencia.insumoCodigo} — ${advertencia.mensaje}`)
+          .join("; ");
+        toast.warning(`${resultado.plantillaNombre}: ${mensajes}`);
+      });
+      toast.success(
+        plantillaIds.length === 1
+          ? "Plantilla agregada al presupuesto"
+          : "Plantillas agregadas al presupuesto",
+      );
+      onOpenChange(false);
+    } catch (error) {
+      const nombre = nombrePlantillaFallida(error, elegidas, plantillaIds);
+      const mensaje =
+        error instanceof ApiError
+          ? error.problem.mensaje
+          : "No se pudieron agregar las plantillas.";
+      setErrorAgregar(nombre ? `${mensaje}: ${nombre}.` : mensaje);
+    }
+  };
+
+  const ocultarResultados =
+    tipos.length > 0 &&
+    (busqueda !== busquedaDebounced || (busquedaQuery.isFetching && !busquedaQuery.data));
+  const puedeAgregar = seleccionadas.length > 0 || activa !== null;
 
   return (
-    <>
-      <Dialog
-        open={open && origen === "seleccion"}
-        onOpenChange={(nextOpen) => {
-          if (!nextOpen) cerrar();
-        }}
-      >
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Agregar APU</DialogTitle>
-            <DialogDescription>
-              Selecciona dónde quedará el rubro y el origen del APU.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="destino-capitulo">Capítulo de destino</Label>
-              <Select
-                value={capituloId}
-                onValueChange={setCapituloId}
-                disabled={!opcionesCapitulo.length}
-              >
-                <SelectTrigger id="destino-capitulo" aria-label="Capítulo de destino">
-                  <SelectValue placeholder="Seleccionar capítulo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {opcionesCapitulo.map((capitulo) => (
-                    <SelectItem key={capitulo.id} value={capitulo.id}>
-                      {capitulo.item} · {capitulo.descripcion}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-auto justify-start whitespace-normal p-3 text-left"
-                onClick={() => elegirOrigen("existente")}
-                disabled={!capituloId}
-              >
-                <span>
-                  <span className="block font-medium">Usar APU existente</span>
-                  <span className="block text-xs font-normal text-muted-foreground">
-                    Buscarlo en la versión actual.
-                  </span>
-                </span>
-              </Button>
-              <Button
-                type="button"
-                className="h-auto justify-start whitespace-normal p-3 text-left"
-                onClick={() => elegirOrigen("nuevo")}
-                disabled={!capituloId}
-              >
-                <span>
-                  <span className="block font-medium">Crear APU</span>
-                  <span className="block text-xs font-normal opacity-80">
-                    Desde cero o una plantilla.
-                  </span>
-                </span>
-              </Button>
-            </div>
-            {!opcionesCapitulo.length && (
-              <output className="block text-sm text-muted-foreground">
-                Debe crear un capítulo antes de agregar un APU.
-              </output>
-            )}
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!agregar.isPending) onOpenChange(nextOpen);
+      }}
+    >
+      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-hidden sm:max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>Agregar APU</DialogTitle>
+          <DialogDescription>
+            Busca plantillas, revisa su contenido y agrega una o varias al presupuesto.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="min-h-0 space-y-4 overflow-y-auto py-1">
+          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(15rem,0.7fr)] md:items-end">
+            <BuscadorFiltrosPlantillas
+              busqueda={busqueda}
+              onBusquedaChange={cambiarBusqueda}
+              sistema={incluirSistema}
+              onSistemaChange={(activo) => cambiarFuente("SISTEMA", activo)}
+              personal={incluirPersonal}
+              onPersonalChange={(activo) => cambiarFuente("PERSONAL", activo)}
+            />
+            <SelectorCapitulo
+              opciones={opcionesCapitulo}
+              value={capituloId}
+              onValueChange={setCapituloId}
+            />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={cerrar}>
+
+          <div className="grid min-h-0 gap-4 md:grid-cols-2">
+            <ListaPlantillas
+              plantillas={plantillas}
+              activaId={activa?.id ?? null}
+              seleccionadas={seleccionadasIds}
+              onActivar={(id) => {
+                const plantilla = plantillas.find((item) => item.id === id);
+                if (plantilla) setActiva(plantilla);
+                setErrorAgregar(null);
+              }}
+              onSeleccionar={seleccionar}
+              cargando={busquedaQuery.isFetching}
+              ocultarResultados={ocultarResultados}
+              error={busquedaQuery.isError}
+              sinFuentes={tipos.length === 0}
+              page={page}
+              totalPaginas={paginaMostrada?.totalPaginas ?? 0}
+              onPageChange={cambiarPagina}
+            />
+            <DetallePlantilla
+              detalle={detalleQuery.data}
+              cargando={detalleQuery.isFetching}
+              error={detalleQuery.isError}
+              hayActiva={activa !== null}
+            />
+          </div>
+
+          {errorAgregar ? (
+            <p
+              role="alert"
+              aria-live="assertive"
+              className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive"
+            >
+              {errorAgregar}
+            </p>
+          ) : null}
+        </div>
+
+        <DialogFooter className="sm:justify-between">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => onCrearManualmente?.()}
+            disabled={agregar.isPending}
+          >
+            Crear manualmente
+          </Button>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={agregar.isPending}
+            >
               Cancelar
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <DialogoAgregarItem
-        open={open && origen === "existente"}
-        onOpenChange={(nextOpen) => {
-          if (!nextOpen) setOrigen("seleccion");
-        }}
-        onConfirm={(apuId, cantidad) => vincular(apuId, cantidad)}
-        presupuestoId={presupuestoId}
-      />
-
-      <DialogoNuevoApu
-        abierto={open && origen === "nuevo"}
-        onClose={() => setOrigen("seleccion")}
-        presupuestoId={presupuestoId}
-        proyectoId={proyectoId}
-        onCreate={(apuId) => vincular(apuId)}
-      />
-    </>
+            <Button
+              type="button"
+              onClick={agregarPlantillas}
+              disabled={!puedeAgregar || agregar.isPending}
+              aria-label="Agregar plantillas"
+            >
+              {agregar.isPending ? "Agregando…" : "Agregar"}
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
