@@ -1,8 +1,8 @@
 # Bitácora
 
-> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). Los Planes 077–087, 090 y 091 están cerrados e integrados; 088 queda SUPERSEDED.
+> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). Los Planes 077–087, 090–092 están cerrados e integrados; 088 queda SUPERSEDED.
 
-**Encargo activo: siguiente tarea pendiente, Plan 092** · **Actualizada:** 2026-09-10
+**Encargo activo: siguiente tarea pendiente, Plan 093** · **Actualizada:** 2026-09-10
 **Ronda de paridad 1** · **CERRADA**
 
 > La lleva el orquestador ([`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md)). Se escribe **en el momento** en que
@@ -23,6 +23,12 @@
 - Plan 091 queda **✅ verde / IMPLEMENTADO**: `GanttJerarquicoInteractivo` reemplaza en el render final las tres presentaciones duplicadas por una tabla única con jerarquía, timeline ordinal, segmentos discontinuos y columnas sticky.
 - Se preservan edición, configuración, revisión, estados desactualizado/BORRADOR y la única GET de vistas. Mover y redimensionar usan exclusivamente los cuerpos canónicos, con preview, confirmación, alternativa accesible y rollback anunciado para `409 segmento-solapado`.
 - Evidencia: 68 pruebas focalizadas de cronograma; `pnpm run verify` verde con **607/607 tests en 88 archivos**, typecheck, lint, guard ADR9, formato y build. El E2E completo continúa pendiente por la limitación documentada de navegadores.
+
+## Cierre del Plan 092 (2026-09-10)
+
+- Plan 092 queda **✅ verde / IMPLEMENTADO**: `CronogramaValorizado` reemplaza las dos tablas por una matriz única con jerarquía recursiva, columnas base, `montoTotal`, montos por período y cuatro resúmenes del servidor.
+- Se conservan strings Decimal, ausencia/null como «—», una sola proyección de vistas y etiquetas `M1…Mn`/`S1…Sn` derivadas de la unidad temporal hermana del Gantt. El caso de 120 períodos permanece alcanzable mediante scroll.
+- Evidencia: `pnpm run verify` verde con **609/609 tests en 88 archivos**; Playwright Chromium de capturas **13/13 verde**; se actualizó `screenshots/10-cronograma-valorizado.png`.
 
 ## Corrección del listado de proyectos (2026-09-10)
 

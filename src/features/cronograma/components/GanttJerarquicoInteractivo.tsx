@@ -17,6 +17,7 @@ import type {
 import { ApiError } from "@/api/problem";
 import { formatearPuntosPorcentaje, type Decimal } from "@/lib/decimal";
 import { useProgramarActividad } from "../hooks/useCronograma";
+import { etiquetaPeriodo } from "./etiquetaPeriodo";
 
 const PERIOD_WIDTH = 64;
 const IDENTITY_WIDTHS = {
@@ -72,13 +73,6 @@ type Arrastre = {
   inicioX: number;
   numeroPeriodos: number;
 };
-
-function etiquetaPeriodo(
-  unidadTiempo: GanttBloqueResponse["cronograma"]["unidadTiempo"],
-  periodo: number,
-) {
-  return `${unidadTiempo === "SEMANA" ? "S" : "M"}${periodo}`;
-}
 
 function periodosDe(numeroPeriodos: number) {
   return Array.from({ length: numeroPeriodos }, (_, index) => index + 1);

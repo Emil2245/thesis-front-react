@@ -1,60 +1,221 @@
-import type { ReactElement } from "react";
+import type { CSSProperties, ReactElement } from "react";
 import type {
   CapituloCronogramaResponse,
   PeriodoValorizadoResponse,
   RubroCronogramaResponse,
+  UnidadTiempo,
   ValorizadoBloqueResponse,
 } from "@/api/contract";
+import { etiquetaPeriodo } from "./etiquetaPeriodo";
 
-function filasDeRubro(
-  rubro: RubroCronogramaResponse,
+const PERIOD_WIDTH = 96;
+const IDENTITY_WIDTHS = {
+  item: 88,
+  descripcion: 280,
+  unidad: 72,
+  cantidad: 112,
+  precioUnitario: 128,
+  precioTotal: 128,
+  montoValorizado: 128,
+} as const;
+const BASE_COLUMN_COUNT = Object.keys(IDENTITY_WIDTHS).length;
+const TABLE_MIN_WIDTH = Object.values(IDENTITY_WIDTHS).reduce((total, width) => total + width, 0);
+
+type CronogramaValorizadoProps = {
+  valorizado: ValorizadoBloqueResponse;
+  unidadTiempo: UnidadTiempo;
+};
+
+type Resumen = {
+  clave: string;
+  etiqueta: string;
+  valor: (periodo: PeriodoValorizadoResponse) => string;
+};
+
+const RESUMENES: Resumen[] = [
+  {
+    clave: "porcentaje-parcial",
+    etiqueta: "Porcentaje parcial",
+    valor: (periodo) => periodo.porcentajeParcial,
+  },
+  {
+    clave: "porcentaje-acumulado",
+    etiqueta: "Porcentaje acumulado",
+    valor: (periodo) => periodo.porcentajeAcumulado,
+  },
+  {
+    clave: "monto-parcial",
+    etiqueta: "Monto parcial",
+    valor: (periodo) => periodo.montoParcial,
+  },
+  {
+    clave: "monto-acumulado",
+    etiqueta: "Monto acumulado",
+    valor: (periodo) => periodo.montoAcumulado,
+  },
+];
+
+function indentacion(nivel: number): CSSProperties {
+  return { paddingLeft: `${12 + nivel * 16}px` };
+}
+
+function tieneRubros(capitulos: CapituloCronogramaResponse[]): boolean {
+  return capitulos.some(
+    (capitulo) => capitulo.rubros.length > 0 || tieneRubros(capitulo.subcapitulos),
+  );
+}
+
+function montoDelPeriodo(rubro: RubroCronogramaResponse, periodo: number) {
+  return rubro.montoPorPeriodo?.[String(periodo)] ?? "—";
+}
+
+function celdasEstructurales(periodos: PeriodoValorizadoResponse[]) {
+  return periodos.map((periodo) => (
+    <td key={periodo.periodo} className="border-l px-2 py-2 text-right text-muted-foreground">
+      —
+    </td>
+  ));
+}
+
+function filaCapitulo(
+  capitulo: CapituloCronogramaResponse,
   periodos: PeriodoValorizadoResponse[],
+  nivel: number,
 ): ReactElement[] {
   return [
-    <tr key={`rubro-valorizado-${rubro.id}`}>
-      <th scope="row" className="whitespace-nowrap px-3 py-2 text-left font-normal">
-        <span className="font-mono text-xs text-muted-foreground">{rubro.item}</span>{" "}
-        {rubro.descripcion}
+    <tr
+      key={`capitulo-valorizado-${capitulo.id}`}
+      data-level={nivel}
+      data-row-kind="capitulo"
+      className="border-t bg-muted/20"
+    >
+      <th
+        scope="row"
+        className="sticky left-0 z-20 border-r bg-muted/20 px-3 py-2 text-left font-semibold"
+        style={{ width: IDENTITY_WIDTHS.item }}
+      >
+        <span
+          style={indentacion(nivel)}
+          className="inline-block font-mono text-xs text-muted-foreground"
+        >
+          {capitulo.item}
+        </span>
       </th>
+      <td
+        className="sticky z-20 border-r bg-muted/20 px-3 py-2 font-semibold"
+        style={{ left: IDENTITY_WIDTHS.item, width: IDENTITY_WIDTHS.descripcion }}
+      >
+        <span style={indentacion(nivel)} className="inline-block">
+          {capitulo.descripcion}
+        </span>
+      </td>
+      <td colSpan={BASE_COLUMN_COUNT - 2} className="px-3 py-2 text-muted-foreground">
+        —
+      </td>
+      {celdasEstructurales(periodos)}
+    </tr>,
+    ...capitulo.subcapitulos.flatMap((hijo) => filaCapitulo(hijo, periodos, nivel + 1)),
+    ...capitulo.rubros.flatMap((rubro) => filaRubro(rubro, periodos, nivel + 1)),
+  ];
+}
+
+function filaRubro(
+  rubro: RubroCronogramaResponse,
+  periodos: PeriodoValorizadoResponse[],
+  nivel: number,
+): ReactElement[] {
+  return [
+    <tr
+      key={`rubro-valorizado-${rubro.id}`}
+      data-level={nivel}
+      data-row-kind="rubro"
+      className="border-t"
+    >
+      <th
+        scope="row"
+        className="sticky left-0 z-20 border-r bg-background px-3 py-2 text-left font-normal"
+        style={{ width: IDENTITY_WIDTHS.item }}
+      >
+        <span
+          style={indentacion(nivel)}
+          className="inline-block font-mono text-xs text-muted-foreground"
+        >
+          {rubro.item}
+        </span>
+      </th>
+      <td
+        className="sticky z-20 border-r bg-background px-3 py-2"
+        style={{ left: IDENTITY_WIDTHS.item, width: IDENTITY_WIDTHS.descripcion }}
+      >
+        <span style={indentacion(nivel)} className="inline-block">
+          {rubro.descripcion}
+          {rubro.actividad && (
+            <span className="ml-2 text-[10px] text-muted-foreground">
+              Actividad {rubro.actividad.codigo}
+            </span>
+          )}
+        </span>
+      </td>
+      <td className="px-3 py-2 text-muted-foreground">{rubro.unidad}</td>
+      <td className="px-3 py-2 text-right font-mono text-xs tabular-nums">{rubro.cantidad}</td>
+      <td className="px-3 py-2 text-right font-mono text-xs tabular-nums">
+        {rubro.precioUnitario}
+      </td>
+      <td className="px-3 py-2 text-right font-mono text-xs tabular-nums">{rubro.precioTotal}</td>
       <td className="px-3 py-2 text-right font-mono text-xs tabular-nums">
         {rubro.montoTotal ?? "—"}
       </td>
       {periodos.map((periodo) => (
         <td
           key={periodo.periodo}
+          data-periodo={periodo.periodo}
           className="border-l px-2 py-2 text-right font-mono text-xs tabular-nums"
         >
-          {rubro.montoPorPeriodo?.[String(periodo.periodo)] ?? "—"}
+          {montoDelPeriodo(rubro, periodo.periodo)}
         </td>
       ))}
     </tr>,
   ];
 }
 
-function filasDeCapitulo(
-  capitulo: CapituloCronogramaResponse,
+function filasDeCapitulos(
+  capitulos: CapituloCronogramaResponse[],
   periodos: PeriodoValorizadoResponse[],
 ): ReactElement[] {
-  return [
-    <tr key={`capitulo-valorizado-${capitulo.id}`}>
-      <th scope="row" className="whitespace-nowrap px-3 py-2 text-left font-semibold">
-        <span className="font-mono text-xs text-muted-foreground">{capitulo.item}</span>{" "}
-        {capitulo.descripcion}
-      </th>
-      <td
-        colSpan={periodos.length ? periodos.length + 1 : 2}
-        className="px-3 py-2 text-xs text-muted-foreground"
-      >
-        Capítulo
-      </td>
-    </tr>,
-    ...capitulo.subcapitulos.flatMap((hijo) => filasDeCapitulo(hijo, periodos)),
-    ...capitulo.rubros.flatMap((rubro) => filasDeRubro(rubro, periodos)),
-  ];
+  return capitulos.flatMap((capitulo) => filaCapitulo(capitulo, periodos, 0));
 }
 
-export function CronogramaValorizado({ valorizado }: { valorizado: ValorizadoBloqueResponse }) {
+function filasDeResumen(periodos: PeriodoValorizadoResponse[]) {
+  return RESUMENES.map((resumen) => (
+    <tr
+      key={resumen.clave}
+      data-testid={`resumen-${resumen.clave}`}
+      className="border-t bg-muted/30"
+    >
+      <th
+        scope="row"
+        colSpan={BASE_COLUMN_COUNT}
+        className="sticky left-0 z-20 border-r bg-muted/30 px-3 py-2 text-left text-xs font-medium"
+        style={{ width: TABLE_MIN_WIDTH }}
+      >
+        {resumen.etiqueta}
+      </th>
+      {periodos.map((periodo) => (
+        <td
+          key={periodo.periodo}
+          className="border-l px-2 py-2 text-right font-mono text-xs tabular-nums"
+        >
+          {resumen.valor(periodo)}
+        </td>
+      ))}
+    </tr>
+  ));
+}
+
+export function CronogramaValorizado({ valorizado, unidadTiempo }: CronogramaValorizadoProps) {
   const { periodos, capitulos, totales } = valorizado;
+  const hayRubros = tieneRubros(capitulos);
+  const filas = periodos.length > 0 && hayRubros ? filasDeCapitulos(capitulos, periodos) : [];
 
   return (
     <section aria-labelledby="cronograma-valorizado-titulo" className="space-y-3">
@@ -66,49 +227,74 @@ export function CronogramaValorizado({ valorizado }: { valorizado: ValorizadoBlo
         <p className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
           No hay períodos valorizados para mostrar.
         </p>
+      ) : !hayRubros ? (
+        <p className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
+          No hay rubros valorizados para mostrar.
+        </p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="min-w-full text-sm">
-            <caption className="sr-only">Valores valorizados por período</caption>
-            <thead className="bg-muted/50">
-              <tr>
+        <div className="max-h-[min(70vh,42rem)] overflow-auto rounded-lg border">
+          <table
+            className="border-collapse text-sm"
+            style={{ minWidth: TABLE_MIN_WIDTH + periodos.length * PERIOD_WIDTH }}
+          >
+            <caption className="sr-only">
+              Matriz del cronograma valorizado por rubro y período
+            </caption>
+            <colgroup>
+              <col style={{ width: IDENTITY_WIDTHS.item }} />
+              <col style={{ width: IDENTITY_WIDTHS.descripcion }} />
+              <col style={{ width: IDENTITY_WIDTHS.unidad }} />
+              <col style={{ width: IDENTITY_WIDTHS.cantidad }} />
+              <col style={{ width: IDENTITY_WIDTHS.precioUnitario }} />
+              <col style={{ width: IDENTITY_WIDTHS.precioTotal }} />
+              <col style={{ width: IDENTITY_WIDTHS.montoValorizado }} />
+              <col span={periodos.length} style={{ width: PERIOD_WIDTH }} />
+            </colgroup>
+            <thead className="sticky top-0 z-30 bg-muted/95">
+              <tr className="border-b">
+                <th
+                  scope="col"
+                  className="sticky left-0 z-40 border-r bg-muted/95 px-3 py-2 text-left font-medium"
+                  style={{ width: IDENTITY_WIDTHS.item }}
+                >
+                  Ítem
+                </th>
+                <th
+                  scope="col"
+                  className="sticky z-40 border-r bg-muted/95 px-3 py-2 text-left font-medium"
+                  style={{ left: IDENTITY_WIDTHS.item, width: IDENTITY_WIDTHS.descripcion }}
+                >
+                  Descripción
+                </th>
                 <th scope="col" className="px-3 py-2 text-left font-medium">
-                  Período
+                  Unidad
                 </th>
                 <th scope="col" className="px-3 py-2 text-right font-medium">
-                  Porcentaje parcial
+                  Cantidad
                 </th>
                 <th scope="col" className="px-3 py-2 text-right font-medium">
-                  Porcentaje acumulado
+                  Precio unitario
                 </th>
                 <th scope="col" className="px-3 py-2 text-right font-medium">
-                  Monto parcial
+                  Precio total
                 </th>
                 <th scope="col" className="px-3 py-2 text-right font-medium">
-                  Monto acumulado
+                  Monto valorizado
                 </th>
+                {periodos.map((periodo) => (
+                  <th
+                    key={periodo.periodo}
+                    scope="col"
+                    className="min-w-24 border-l px-2 py-2 text-right font-medium"
+                  >
+                    {etiquetaPeriodo(unidadTiempo, periodo.periodo)}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {periodos.map((periodo) => (
-                <tr key={periodo.periodo} className="border-t">
-                  <th scope="row" className="px-3 py-2 text-left font-medium">
-                    {periodo.periodo}
-                  </th>
-                  <td className="px-3 py-2 text-right font-mono text-xs tabular-nums">
-                    {periodo.porcentajeParcial}
-                  </td>
-                  <td className="px-3 py-2 text-right font-mono text-xs tabular-nums">
-                    {periodo.porcentajeAcumulado}
-                  </td>
-                  <td className="px-3 py-2 text-right font-mono text-xs tabular-nums">
-                    {periodo.montoParcial}
-                  </td>
-                  <td className="px-3 py-2 text-right font-mono text-xs tabular-nums">
-                    {periodo.montoAcumulado}
-                  </td>
-                </tr>
-              ))}
+              {filas}
+              {filasDeResumen(periodos)}
             </tbody>
           </table>
         </div>
@@ -128,45 +314,6 @@ export function CronogramaValorizado({ valorizado }: { valorizado: ValorizadoBlo
           <dd className="font-mono text-sm tabular-nums">{totales.porcentajeCierre}</dd>
         </div>
       </dl>
-
-      {capitulos.length === 0 ? (
-        <p className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-          No hay rubros valorizados para mostrar.
-        </p>
-      ) : (
-        <details open className="rounded-lg border">
-          <summary className="cursor-pointer px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            Detalle valorizado por rubro
-          </summary>
-          <div className="overflow-x-auto border-t">
-            <table className="min-w-full text-sm">
-              <caption className="sr-only">
-                Montos valorizados por capítulo, rubro y período
-              </caption>
-              <thead className="bg-muted/50">
-                <tr>
-                  <th scope="col" className="px-3 py-2 text-left font-medium">
-                    Rubro
-                  </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
-                    Monto total
-                  </th>
-                  {periodos.map((periodo) => (
-                    <th
-                      key={periodo.periodo}
-                      scope="col"
-                      className="min-w-24 px-2 py-2 text-right font-medium"
-                    >
-                      P{periodo.periodo}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>{capitulos.flatMap((capitulo) => filasDeCapitulo(capitulo, periodos))}</tbody>
-            </table>
-          </div>
-        </details>
-      )}
     </section>
   );
 }

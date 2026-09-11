@@ -1,5 +1,7 @@
 # Plan 092: cronograma valorizado matricial
 
+> **Estado: DONE.** Implementado con una matriz única, jerarquía recursiva, columnas sticky, períodos M/S y resúmenes literales del servidor.
+
 ## 01. Estado y dependencia
 
 Depende del Plan 090 y reutiliza sin modificar `CronogramaVistasResponse.valorizado`. La vista actual separa una tabla vertical de períodos y un detalle jerárquico desplegable; el resultado no se aproxima al documento valorizado de obra ni aprovecha el ancho disponible.
@@ -82,3 +84,9 @@ Entregar al Plan 089 matriz de payload→celda, captura a ancho reducido/amplio 
 ## 16. Invariantes
 
 Servidor calcula; matriz no agrega; Decimal string; jerarquía recursiva; una proyección; sin edición ni dependencia nueva; UI española y accesible.
+
+## 17. Cierre
+
+`CronogramaValorizado.tsx` ahora presenta una sola matriz semántica con identidad, valores base, `montoTotal`, montos por período y cuatro filas de resumen alimentadas directamente por `periodos[]`. La unidad temporal se recibe del bloque Gantt de la misma proyección, sin crear otra consulta. Se añadieron casos de ausencia/null, MES/SEMANA y 120 períodos.
+
+Evidencia: `pnpm run verify` verde con 609 pruebas en 88 archivos; Playwright Chromium de capturas 13/13 verde; la captura actualizada es `screenshots/10-cronograma-valorizado.png`.

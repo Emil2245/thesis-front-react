@@ -209,7 +209,12 @@ export function CronogramaPage() {
             </TabsContent>
 
             <TabsContent value="valorizado" className="pt-4">
-              {vistas.data && <CronogramaValorizado valorizado={vistas.data.valorizado} />}
+              {vistas.data && (
+                <CronogramaValorizado
+                  valorizado={vistas.data.valorizado}
+                  unidadTiempo={vistas.data.gantt.cronograma.unidadTiempo}
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="curva-s" className="pt-4">

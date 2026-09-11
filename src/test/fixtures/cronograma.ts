@@ -6,6 +6,7 @@ import type {
   CapituloCronogramaResponse,
   PeriodoValorizadoResponse,
   RubroCronogramaResponse,
+  ValorizadoBloqueResponse,
 } from "@/api/contract";
 import { asDecimal } from "@/lib/decimal";
 import { PRESUPUESTO_V2, RUBRO_1_1_1, RUBRO_1_1_2, RUBRO_1_2_1, RUBRO_2_1 } from "./presupuesto";
@@ -164,6 +165,8 @@ const rubroVistas = (
   id: string,
   item: string,
   actividad: ActividadCronogramaResponse | null,
+  montoPorPeriodo: RubroCronogramaResponse["montoPorPeriodo"] = null,
+  montoTotal: RubroCronogramaResponse["montoTotal"] = null,
 ): RubroCronogramaResponse => ({
   id,
   item,
@@ -173,13 +176,8 @@ const rubroVistas = (
   cantidad: actividad?.cantidad ?? asDecimal("1.000000"),
   precioUnitario: actividad?.precioUnitario ?? asDecimal("0.000000"),
   precioTotal: actividad?.precioTotal ?? asDecimal("0.000000"),
-  montoPorPeriodo: actividad
-    ? {
-        "1": asDecimal("2000.000000"),
-        "2": asDecimal("500.000000"),
-      }
-    : null,
-  montoTotal: actividad ? asDecimal("2500.000000") : null,
+  montoPorPeriodo,
+  montoTotal,
   actividad,
 });
 
@@ -195,19 +193,49 @@ const capitulosVistas: CapituloCronogramaResponse[] = [
         descripcion: "Movimiento de tierras",
         subcapitulos: [],
         rubros: [
-          rubroVistas(RUBRO_1_1_1, "1.1.1", actividadesFixture[0]),
+          rubroVistas(
+            RUBRO_1_1_1,
+            "1.1.1",
+            actividadesFixture[0],
+            {
+              "1": asDecimal("666.675000"),
+              "2": asDecimal("666.665000"),
+              "3": asDecimal("666.660000"),
+            },
+            asDecimal("2000.000000"),
+          ),
           rubroVistas(RUBRO_1_1_2, "1.1.2", null),
         ],
       },
     ],
-    rubros: [rubroVistas(RUBRO_1_2_1, "1.2.1", actividadesFixture[2])],
+    rubros: [
+      rubroVistas(
+        RUBRO_1_2_1,
+        "1.2.1",
+        actividadesFixture[2],
+        { "2": asDecimal("1000.000000"), "4": asDecimal("1000.000000") },
+        asDecimal("2000.000000"),
+      ),
+    ],
   },
   {
     id: "0198c1a3-0000-7000-8000-000000000020",
     item: "2",
     descripcion: "Estructura",
     subcapitulos: [],
-    rubros: [rubroVistas(RUBRO_2_1, "2.1", actividadesFixture[3])],
+    rubros: [
+      rubroVistas(
+        RUBRO_2_1,
+        "2.1",
+        actividadesFixture[3],
+        {
+          "2": asDecimal("4666.652500"),
+          "3": asDecimal("4666.668000"),
+          "4": asDecimal("4666.679500"),
+        },
+        asDecimal("14000.000000"),
+      ),
+    ],
   },
 ];
 
@@ -256,6 +284,22 @@ export const cronogramaVistasFixture: CronogramaVistasResponse = {
   },
   curvaS: {
     puntos: periodosVistas.map((periodo) => ({ ...periodo })),
+  },
+};
+
+export const cronogramaValorizado120PeriodosFixture: ValorizadoBloqueResponse = {
+  ...cronogramaVistasFixture.valorizado,
+  periodos: Array.from({ length: 120 }, (_, index) => ({
+    periodo: index + 1,
+    porcentajeParcial: asDecimal("0.0000"),
+    porcentajeAcumulado: asDecimal("0.0000"),
+    montoParcial: asDecimal("0.000000"),
+    montoAcumulado: asDecimal("0.000000"),
+  })),
+  totales: {
+    avanceFinalPorcentaje: asDecimal("0.0000"),
+    montoTotalGeneral: asDecimal("0.000000"),
+    porcentajeCierre: asDecimal("0.0000"),
   },
 };
 
