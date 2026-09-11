@@ -212,7 +212,11 @@ export function DialogoAgregarApu({
       }}
     >
       <DialogContent
-        className="max-h-[calc(100vh-2rem)] overflow-hidden sm:max-w-4xl"
+        className={
+          modo === "plantillas"
+            ? "max-h-[calc(100vh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-4xl"
+            : "max-h-[calc(100vh-2rem)] grid-rows-[auto_minmax(0,1fr)] overflow-hidden sm:max-w-4xl"
+        }
         onCloseAutoFocus={(event) => {
           if (!returnFocusRef?.current) return;
           event.preventDefault();

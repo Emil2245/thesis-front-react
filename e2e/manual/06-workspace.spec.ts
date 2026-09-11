@@ -158,7 +158,11 @@ async function abrirDialogo(page: Page) {
   const trigger = page.getByRole("button", { name: "Agregar APU" });
   await expect(trigger).toBeVisible();
   await trigger.click();
-  await expect(page.getByRole("dialog", { name: "Agregar APU" })).toBeVisible();
+  const dialog = page.getByRole("dialog", { name: "Agregar APU" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Crear manualmente" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Agregar plantillas" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Cancelar" })).toBeVisible();
   return trigger;
 }
 

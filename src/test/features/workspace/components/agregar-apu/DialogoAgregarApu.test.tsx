@@ -262,8 +262,12 @@ describe("DialogoAgregarApu", () => {
     expect(toast.warning).toHaveBeenCalledWith("Hormigón estructural: MAT-001 — Insumo sin precio");
   });
 
-  it("expone detalle price-free, navegación por teclado y la callback manual", async () => {
+  it("mantiene visibles las acciones del selector y del formulario manual", async () => {
     const { user, onCrearManualmente } = renderDialogo();
+
+    expect(screen.getByRole("button", { name: "Crear manualmente" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Agregar plantillas" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Cancelar" })).toBeVisible();
 
     const filaA = await screen.findByRole("button", {
       name: /Ver detalles de Hormigón estructural/,
@@ -291,5 +295,7 @@ describe("DialogoAgregarApu", () => {
 
     await user.click(screen.getByRole("button", { name: "Crear manualmente" }));
     expect(onCrearManualmente).toHaveBeenCalledOnce();
+    expect(screen.getByRole("button", { name: "Crear APU" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Cancelar" })).toBeVisible();
   });
 });
