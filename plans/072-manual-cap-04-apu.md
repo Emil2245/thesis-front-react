@@ -26,12 +26,32 @@
 
 ## Estado
 
+- **Estado**: **DEFERRED** — deferred by user decision until the final documentation pass.
 - **Prioridad**: P1
 - **Esfuerzo**: M
 - **Riesgo**: LOW
 - **Depende de**: el capítulo piloto 02, ya fusionado
 - **Categoría**: docs
 - **Planificado en**: commit `8505147`, 2026-09-07
+
+### Registro de decisión
+
+This chapter is deferred by explicit user decision until the final documentation pass. No manual
+files or screenshots were created.
+
+The required P-21 flow is absent from the current frontend:
+
+- `src/features/apu-editor/pages/EditorApuPage.tsx:1-115` does not import `SelectorInsumo` or
+  destructure `agregarFila`.
+- `src/features/apu-editor/components/GridSeccion.tsx:25` returns `null` for empty sections and
+  exposes no **Agregar insumo** control.
+- `src/features/apu-editor/components/SelectorInsumo.tsx` exists, but is not connected to the
+  editor.
+- `plans/074-el-apu-no-se-puede-armar.md:1-17` records the same diagnosis and marks Plan 074
+  **DIFERIDO**.
+
+Therefore P-21 cannot be documented or captured without inventing unavailable behavior. This
+decision preserves the Plan 072 stop condition until the final documentation pass.
 
 ## Por qué importa
 
