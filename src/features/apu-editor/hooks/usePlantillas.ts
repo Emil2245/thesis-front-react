@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getValidado, putValidado, del, postValidado } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import { paginaDe, plantillaApuResumenSchema, plantillaApuDetalleSchema } from "@/api/schemas";
@@ -31,6 +31,7 @@ export function useBusquedaPlantillas({ q, tipos, page = 0, size = 20 }: BuscarP
       return getValidado("/plantillas-apu/busqueda", paginaDe(plantillaApuResumenSchema), params);
     },
     enabled: tipos.length > 0,
+    placeholderData: keepPreviousData,
   });
 }
 
