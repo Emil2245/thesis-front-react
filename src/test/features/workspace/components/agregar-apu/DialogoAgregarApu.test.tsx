@@ -97,7 +97,7 @@ describe("DialogoAgregarApu", () => {
     const peticiones = espiar();
     const { user } = renderDialogo();
 
-    await screen.findByRole("option", { name: /Hormigón estructural/ });
+    await screen.findByRole("button", { name: /Ver detalles de Hormigón estructural/ });
     let busquedas = peticiones.filter((p) => p.url.pathname.endsWith("/plantillas-apu/busqueda"));
     expect(busquedas).toHaveLength(1);
     expect(busquedas[0]?.url.searchParams.getAll("tipo")).toEqual(["SISTEMA", "PERSONAL"]);
@@ -137,13 +137,16 @@ describe("DialogoAgregarApu", () => {
     const peticiones = espiar();
     const { user, onOpenChange } = renderDialogo();
 
-    const filaB = await screen.findByRole("option", { name: /Acero de refuerzo/ });
+    const filaB = await screen.findByRole("button", { name: /Ver detalles de Acero de refuerzo/ });
     await user.click(filaB);
     expect(await screen.findByRole("heading", { name: "Acero de refuerzo" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("checkbox", { name: "Seleccionar Acero de refuerzo" }));
+    const checkboxB = screen.getByRole("checkbox", { name: "Seleccionar Acero de refuerzo" });
+    expect(filaB).not.toContainElement(checkboxB);
+    expect(filaB.closest("li")).toContainElement(checkboxB);
+    await user.click(checkboxB);
     await user.click(screen.getByRole("checkbox", { name: "Seleccionar Hormigón estructural" }));
-    expect(filaB).toHaveAttribute("aria-selected", "true");
+    expect(filaB).toHaveAttribute("aria-current", "true");
 
     await user.click(screen.getByRole("button", { name: "Agregar plantillas" }));
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
@@ -165,7 +168,9 @@ describe("DialogoAgregarApu", () => {
     const peticiones = espiar();
     const { user } = renderDialogo({ defaultCapituloId: CAPITULO_1_1 });
 
-    await user.click(await screen.findByRole("option", { name: /Hormigón estructural/ }));
+    await user.click(
+      await screen.findByRole("button", { name: /Ver detalles de Hormigón estructural/ }),
+    );
     expect(screen.getByRole("combobox", { name: "Capítulo de destino" })).toHaveTextContent(
       "1.1 · Instalación de campamento",
     );
@@ -243,7 +248,9 @@ describe("DialogoAgregarApu", () => {
     const peticiones = espiar();
     const { user, onOpenChange } = renderDialogo();
 
-    await user.click(await screen.findByRole("option", { name: /Hormigón estructural/ }));
+    await user.click(
+      await screen.findByRole("button", { name: /Ver detalles de Hormigón estructural/ }),
+    );
     await user.click(screen.getByRole("button", { name: "Agregar plantillas" }));
 
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
@@ -258,20 +265,24 @@ describe("DialogoAgregarApu", () => {
   it("expone detalle price-free, navegación por teclado y la callback manual", async () => {
     const { user, onCrearManualmente } = renderDialogo();
 
-    const filaA = await screen.findByRole("option", { name: /Hormigón estructural/ });
-    await user.click(filaA);
+    const filaA = await screen.findByRole("button", {
+      name: /Ver detalles de Hormigón estructural/,
+    });
     filaA.focus();
+    await user.keyboard("{Enter}");
+    await screen.findByRole("heading", { name: "Hormigón estructural" });
+
     await user.keyboard("{ArrowDown}");
-    expect(screen.getByRole("option", { name: /Acero de refuerzo/ })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(
+      screen.getByRole("button", { name: /Ver detalles de Acero de refuerzo/ }),
+    ).toHaveAttribute("aria-current", "true");
     expect(
       screen.getByRole("checkbox", { name: "Seleccionar Acero de refuerzo" }),
     ).not.toBeChecked();
 
-    await user.click(filaA);
-    await screen.findByRole("heading", { name: "Hormigón estructural" });
+    filaA.focus();
+    await user.keyboard(" ");
+    expect(filaA).toHaveAttribute("aria-current", "true");
     const detalle = screen.getByRole("region", { name: "Detalle de plantilla" });
     expect(within(detalle).getByText("Materiales (O)")).toBeInTheDocument();
     expect(within(detalle).getByText("MAT-001")).toBeInTheDocument();

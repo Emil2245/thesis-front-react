@@ -81,7 +81,9 @@ describe("WorkspacePage", () => {
     await screen.findByText("Puente Ambato");
     await user.click(screen.getByRole("button", { name: "Agregar APU" }));
 
-    expect(await screen.findByRole("option", { name: /Excavación típica/ })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: /Ver detalles de Excavación típica/ }),
+    ).toBeInTheDocument();
     expect(searchUrl?.searchParams.getAll("tipo")).toEqual(["SISTEMA", "PERSONAL"]);
     expect(searchUrl?.searchParams.get("page")).toBe("0");
     expect(searchUrl?.searchParams.get("size")).toBe("20");
@@ -91,7 +93,7 @@ describe("WorkspacePage", () => {
       "1.1 · Instalación de campamento",
     );
 
-    await user.click(screen.getByRole("option", { name: /Excavación típica/ }));
+    await user.click(screen.getByRole("button", { name: /Ver detalles de Excavación típica/ }));
     expect(await screen.findByRole("heading", { name: "Excavación típica" })).toBeInTheDocument();
     expect(screen.queryByText("Agregar rubro al presupuesto")).not.toBeInTheDocument();
     expect(screen.queryByText("Nuevo APU")).not.toBeInTheDocument();
@@ -146,7 +148,9 @@ describe("WorkspacePage", () => {
     await screen.findByText("Puente Ambato");
     const trigger = screen.getByRole("button", { name: "Agregar APU" });
     await user.click(trigger);
-    await user.click(await screen.findByRole("option", { name: /Excavación típica/ }));
+    await user.click(
+      await screen.findByRole("button", { name: /Ver detalles de Excavación típica/ }),
+    );
     expect(
       screen.getByRole("checkbox", { name: "Seleccionar Excavación típica" }),
     ).not.toBeChecked();

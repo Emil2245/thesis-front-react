@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
-/* oxlint-disable jsx-a11y/prefer-tag-over-role -- selector compuesto con filas y checkboxes independientes */
 interface ListaPlantillasProps {
   plantillas: PlantillaApuResumenResponse[];
   activaId: string | null;
@@ -36,15 +35,10 @@ export function ListaPlantillas({
   totalPaginas,
   onPageChange,
 }: ListaPlantillasProps) {
-  const filasRef = useRef<Array<HTMLDivElement | null>>([]);
+  const filasRef = useRef<Array<HTMLButtonElement | null>>([]);
   const ordenVisual = plantillas.map((plantilla) => plantilla.id);
 
-  const navegar = (event: KeyboardEvent<HTMLDivElement>, indice: number) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      onActivar(plantillas[indice]?.id ?? "");
-      return;
-    }
+  const navegar = (event: KeyboardEvent<HTMLButtonElement>, indice: number) => {
     if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
     event.preventDefault();
     const siguiente = event.key === "ArrowDown" ? indice + 1 : indice - 1;
@@ -66,56 +60,54 @@ export function ListaPlantillas({
       aria-label="Plantillas disponibles"
       className="flex min-h-0 flex-col rounded-lg border"
     >
-      <div
-        role="listbox"
-        aria-label="Plantillas disponibles"
-        aria-busy={cargando}
-        className="relative min-h-48 flex-1 overflow-y-auto p-1"
-      >
+      <div aria-busy={cargando} className="relative min-h-48 flex-1 overflow-y-auto p-1">
         {estado ? (
           <p className="grid min-h-44 place-items-center px-4 text-center text-sm text-muted-foreground">
             {estado}
           </p>
         ) : (
-          <div
+          <ul
+            aria-label="Plantillas disponibles"
             className={cn("space-y-1", ocultarResultados && "invisible")}
             aria-hidden={ocultarResultados || undefined}
           >
             {plantillas.map((plantilla, indice) => (
-              <div
+              <li
                 key={plantilla.id}
-                ref={(elemento) => {
-                  filasRef.current[indice] = elemento;
-                }}
-                role="option"
-                aria-selected={activaId === plantilla.id}
-                tabIndex={activaId === plantilla.id || (!activaId && indice === 0) ? 0 : -1}
-                onClick={() => onActivar(plantilla.id)}
-                onKeyDown={(event) => navegar(event, indice)}
                 className={cn(
-                  "flex cursor-pointer items-start gap-3 rounded-md border border-transparent p-3 outline-none hover:bg-muted/60 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50",
+                  "flex items-start gap-3 rounded-md border border-transparent p-3 hover:bg-muted/60 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/50",
                   activaId === plantilla.id && "border-foreground/20 bg-muted",
                 )}
               >
                 <Checkbox
                   checked={seleccionadas.has(plantilla.id)}
                   aria-label={`Seleccionar ${plantilla.nombre}`}
-                  onClick={(event) => event.stopPropagation()}
                   onCheckedChange={(checked) =>
                     onSeleccionar(plantilla.id, checked === true, ordenVisual)
                   }
                   className="mt-0.5"
                 />
-                <span className="min-w-0 flex-1">
+                <button
+                  ref={(elemento) => {
+                    filasRef.current[indice] = elemento;
+                  }}
+                  type="button"
+                  aria-label={`Ver detalles de ${plantilla.nombre}`}
+                  aria-current={activaId === plantilla.id || undefined}
+                  tabIndex={activaId === plantilla.id || (!activaId && indice === 0) ? 0 : -1}
+                  onClick={() => onActivar(plantilla.id)}
+                  onKeyDown={(event) => navegar(event, indice)}
+                  className="min-w-0 flex-1 cursor-pointer text-left outline-none"
+                >
                   <span className="block truncate font-medium">{plantilla.nombre}</span>
                   <span className="mt-1 flex flex-wrap gap-x-2 text-xs text-muted-foreground">
                     <span>{plantilla.tipo === "SISTEMA" ? "Sistema" : "Personal"}</span>
                     {plantilla.unidad ? <span>{plantilla.unidad}</span> : null}
                   </span>
-                </span>
-              </div>
+                </button>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
         {ocultarResultados ? (
           <p className="absolute inset-0 grid place-items-center bg-background/80 text-sm text-muted-foreground">

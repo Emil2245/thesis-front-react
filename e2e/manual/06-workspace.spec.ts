@@ -168,23 +168,32 @@ test("abre, busca, filtra, muestra detalle y conserva el destino", async ({ page
   const trigger = await abrirDialogo(page);
 
   await expect(page.getByRole("searchbox", { name: "Buscar plantillas" })).toBeFocused();
-  await expect(page.getByRole("option", { name: /Excavación típica/ })).toBeVisible();
-  await expect(page.getByRole("option", { name: /Replanteo personal/ })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Ver detalles de Excavación típica/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Ver detalles de Replanteo personal/ }),
+  ).toBeVisible();
+  await sinViolacionesA11y(page);
   await expect(page.getByRole("combobox", { name: "Capítulo de destino" })).toContainText(
     "Al final (última hoja)",
   );
-  await page.getByRole("option", { name: /Excavación típica/ }).click();
+  await page.getByRole("button", { name: /Ver detalles de Excavación típica/ }).click();
   await expect(page.getByRole("region", { name: "Detalle de plantilla" })).toContainText("MAT-001");
 
   await page.getByRole("searchbox", { name: "Buscar plantillas" }).fill("replanteo");
   await expect
     .poll(() => consultas.some((url) => url.searchParams.get("q") === "replanteo"))
     .toBe(true);
-  await expect(page.getByRole("option", { name: /Replanteo personal/ })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Ver detalles de Replanteo personal/ }),
+  ).toBeVisible();
 
   await page.getByRole("checkbox", { name: "Incluir plantillas del sistema" }).uncheck();
   await expect.poll(() => consultas.at(-1)?.searchParams.getAll("tipo")).toEqual(["PERSONAL"]);
-  await expect(page.getByRole("option", { name: /Replanteo personal/ })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Ver detalles de Replanteo personal/ }),
+  ).toBeVisible();
 
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog", { name: "Agregar APU" })).toBeHidden();
@@ -222,7 +231,7 @@ test("selección simple sin checkbox hace un POST exacto y conserva la URL", asy
   );
   await abrirDialogo(page);
 
-  await page.getByRole("option", { name: /Excavación típica/ }).click();
+  await page.getByRole("button", { name: /Ver detalles de Excavación típica/ }).click();
   await expect(
     page.getByRole("checkbox", { name: "Seleccionar Excavación típica" }),
   ).not.toBeChecked();
