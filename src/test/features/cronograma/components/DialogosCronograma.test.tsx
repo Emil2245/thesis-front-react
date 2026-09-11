@@ -29,7 +29,7 @@ describe("DialogoConfirmarReduccion", () => {
     expect(filas).toHaveLength(perdidasFixture.length + 1);
     // La primera pérdida es del hormigón, período 4, 25,2253 puntos.
     expect(screen.getByText(HORMIGON.item)).toBeInTheDocument();
-    expect(screen.getByText("25,2253 %")).toBeInTheDocument();
+    expect(screen.getByText("25.2253 %")).toBeInTheDocument();
   });
 
   it("no promete nada cuando el 409 no trajo pérdidas", () => {
@@ -143,7 +143,7 @@ describe("DialogoEditarActividad", () => {
     await user.clear(screen.getByLabelText("Período 4"));
 
     // 75,6757 − (25,2252 + 25,2252) = 25,2253 sin repartir.
-    expect(screen.getByText(/25,2253 %/)).toBeInTheDocument();
+    expect(screen.getByText(/25\.2253 %/)).toBeInTheDocument();
   });
 
   // El backend ya sabe repartir el peso de la actividad entre los períodos que
@@ -184,7 +184,7 @@ describe("TablaActividades", () => {
   it("pinta el peso ponderado como puntos de porcentaje, no como fracción", () => {
     tabla();
 
-    expect(screen.getByText("75,6757 %")).toBeInTheDocument();
+    expect(screen.getByText("75.6757 %")).toBeInTheDocument();
     expect(screen.queryByText(/7\.567/)).not.toBeInTheDocument();
   });
 
@@ -192,7 +192,7 @@ describe("TablaActividades", () => {
   it("pinta los avances como porcentaje y el precio total como dinero", () => {
     tabla();
 
-    expect(screen.getByText("25,2253 %")).toBeInTheDocument();
-    expect(screen.getByText("$14.000,00")).toBeInTheDocument();
+    expect(screen.getByText("25.2253 %")).toBeInTheDocument();
+    expect(screen.getByText("$14,000.00")).toBeInTheDocument();
   });
 });
