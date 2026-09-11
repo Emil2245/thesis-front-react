@@ -218,7 +218,12 @@ export function CronogramaPage() {
             </TabsContent>
 
             <TabsContent value="curva-s" className="pt-4">
-              {vistas.data && <CurvaSChart curvaS={vistas.data.curvaS} />}
+              {vistas.data && (
+                <CurvaSChart
+                  curvaS={vistas.data.curvaS}
+                  unidadTiempo={vistas.data.gantt.cronograma.unidadTiempo}
+                />
+              )}
             </TabsContent>
           </Tabs>
 

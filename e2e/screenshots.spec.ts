@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { sinViolacionesA11y } from "./axe";
 import { APU_1, APU_2, APU_4 } from "../src/test/fixtures/apu";
 import {
   ACTIVIDAD_1,
@@ -692,6 +693,7 @@ for (const vista of [
       "true",
     );
     await expect(page.getByRole("tabpanel", { name: vista.etiqueta })).not.toBeEmpty();
+    if (vista.valor === "curva-s") await sinViolacionesA11y(page);
     await capturar(page, vista.captura, testInfo);
   });
 }

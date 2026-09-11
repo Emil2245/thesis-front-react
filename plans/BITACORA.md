@@ -1,8 +1,8 @@
 # Bitácora
 
-> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). Los Planes 077–087, 090–092 están cerrados e integrados; 088 queda SUPERSEDED.
+> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). Los Planes 077–087, 090–093 están cerrados e integrados; 088 queda SUPERSEDED.
 
-**Encargo activo: siguiente tarea pendiente, Plan 093** · **Actualizada:** 2026-09-10
+**Encargo activo: siguiente tarea pendiente, Plan 089** · **Actualizada:** 2026-09-10
 **Ronda de paridad 1** · **CERRADA**
 
 > La lleva el orquestador ([`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md)). Se escribe **en el momento** en que
@@ -29,6 +29,12 @@
 - Plan 092 queda **✅ verde / IMPLEMENTADO**: `CronogramaValorizado` reemplaza las dos tablas por una matriz única con jerarquía recursiva, columnas base, `montoTotal`, montos por período y cuatro resúmenes del servidor.
 - Se conservan strings Decimal, ausencia/null como «—», una sola proyección de vistas y etiquetas `M1…Mn`/`S1…Sn` derivadas de la unidad temporal hermana del Gantt. El caso de 120 períodos permanece alcanzable mediante scroll.
 - Evidencia: `pnpm run verify` verde con **609/609 tests en 88 archivos**; Playwright Chromium de capturas **13/13 verde**; se actualizó `screenshots/10-cronograma-valorizado.png`.
+
+## Cierre del Plan 093 (2026-09-10)
+
+- Plan 093 queda **✅ verde / IMPLEMENTADO**: `CurvaSChart` sustituye la tabla primaria por un SVG nativo responsive de programación acumulada, con eje porcentual 0–100, puntos del servidor en orden y etiquetas ordinales M/S.
+- Se conservan todos los campos en una tabla alternativa dentro de `<details>`, con detalle sincronizado por hover/foco y navegación por teclado. No se introducen avance real, SPI, forecast ni una segunda serie.
+- Evidencia: `pnpm run verify` verde con **612/612 tests en 88 archivos**; Playwright Chromium de capturas **13/13 verde** y axe WCAG 2A/2AA en Curva S; se actualizó `screenshots/10-cronograma-curva-s.png`.
 
 ## Corrección del listado de proyectos (2026-09-10)
 

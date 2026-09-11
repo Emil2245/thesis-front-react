@@ -1,5 +1,7 @@
 # Plan 093: Curva S gráfica
 
+> **Estado: DONE.** Implementada con SVG nativo responsive, detalle sincronizado, tabla alternativa accesible y etiquetas ordinales M/S.
+
 ## 01. Estado y dependencia
 
 Depende del Plan 090. `CurvaSChart.tsx` hoy presenta los puntos como tabla; el backend ya entrega la serie completa en `CronogramaVistasResponse.curvaS`, por lo que puede visualizarse sin recalcular la programación.
@@ -86,3 +88,9 @@ Entregar al Plan 089 evidencia de correspondencia punto→payload, teclado/axe, 
 ## 17. Invariantes
 
 Serie del servidor; porcentaje acumulado programado; períodos ordinales; geometría no es dominio; Decimal preservado; tabla alternativa; sin dependencia nueva.
+
+## 18. Cierre
+
+`CurvaSChart.tsx` sustituye la tabla primaria por un SVG nativo responsive con escala visual 0–100, puntos en el orden del payload, etiquetas ordinales, foco/hover y detalle accesible. La tabla completa permanece disponible en un `<details>` y conserva los strings Decimal del servidor. La unidad temporal se recibe del bloque Gantt de la misma proyección, sin crear una segunda consulta.
+
+Evidencia: `pnpm run verify` verde con 612 pruebas en 88 archivos; Playwright Chromium de capturas 13/13 verde con axe WCAG 2A/2AA para Curva S; captura actualizada `screenshots/10-cronograma-curva-s.png`. No se introdujo una serie de avance real, SPI ni una dependencia gráfica.
