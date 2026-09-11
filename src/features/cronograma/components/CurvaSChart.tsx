@@ -181,7 +181,7 @@ export function CurvaSChart({ curvaS, unidadTiempo }: CurvaSChartProps) {
         Programación acumulada por período; no representa avance ejecutado.
       </p>
 
-      <div className="overflow-x-auto rounded-lg border">
+      <div className="overflow-x-auto w-fit max-w-full rounded-lg border">
         <svg
           role="img"
           aria-labelledby={tituloId}
