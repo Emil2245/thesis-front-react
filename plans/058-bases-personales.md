@@ -1,6 +1,6 @@
 # Plan 058 — Procedencia del insumo (y por qué las bases personales no se pueden construir)
 
-**Status:** TODO — **reescrito 2026-09-06 por el orquestador**
+**Status:** BLOCKED — backend contract drift; provenance slice already complete (**audited 2026-09-10**)
 **Escrito contra:** frontend `43277fd` · backend `origin/main` @ `c337950`
 **Esfuerzo:** S (1–2 h) · **Riesgo:** BAJO
 **Depende de:** `061` → `053` → `059`
@@ -85,6 +85,18 @@ Anotada aquí porque no tiene otro sitio, y **no la resuelve el frontend**:
 
 Si el backend las completa, este plan se reabre con las rebanadas retiradas y el `fuente` ganará un
 tercer valor.
+
+### Auditoría 2026-09-10 — ejecución bloqueada
+
+La auditoría contra el `main` backend disponible (`2803575a`, `/home/kaandradec/Documents/workspace/uce/proyecto-grado/thesis-back-quarkus`) contradice la premisa anterior:
+
+- `ResolverInsumoProyectoService` soporta insumos `PERSONAL` y los materializa mediante copia al usar.
+- `BasesPersonalesResourceIT` documenta la alimentación de una base PERSONAL mediante ese flujo y prueba la cascada de sus insumos.
+- `BasesPersonalesResource` mantiene únicamente `GET`/`POST`/`DELETE` para la gestión directa, mientras `InsumoCatalogoService` sigue exponiendo en el selector sólo `CENTRAL` y `PROYECTO`.
+
+La ruta relativa `../thesis-back-quarkus` de este worktree existe como directorio vacío y no contiene un checkout Git; por ello se usó el checkout backend disponible indicado arriba, siempre en modo lectura. No se añade UI PERSONAL ni se cambia el contrato frontend hasta resolver esta divergencia.
+
+Además, la rebanada de procedencia ya está implementada y cubierta: `SelectorInsumo.tsx` muestra `Central`/`Local` y `baseNombre` condicional; `SelectorInsumo.test.tsx` cubre `CENTRAL`, `PROYECTO` y `baseNombre: null`; `contract.ts` y `schemas.ts` reflejan `fuente: CENTRAL | PROYECTO` y `baseNombre: string | null`.
 
 ## Definición de hecho
 
