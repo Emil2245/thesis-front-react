@@ -1,13 +1,13 @@
 # Plan 089: integración final y documentación
 
 ## 01. Estado y precondiciones
-Depende de 081, 058, 072, 086, 087 y 090–093 en estado terminal; 088 debe constar como SUPERSEDED. Este plan integra y valida; no implementa funcionalidades nuevas. Si 058 o 072 siguen bloqueados/no terminales, registrar el bloqueo y no afirmar cierre global.
+Depende de 081, 058, 072, 086, 087, 090–093 y del paquete de búsquedas de plantillas frontend 004 en estado terminal; 088 debe constar como SUPERSEDED. Este plan integra y valida; no implementa funcionalidades nuevas. Si 058 o 072 siguen bloqueados/no terminales, registrar el bloqueo y no afirmar cierre global.
 
 ## 02. Resultado observable
 Aplicación completa probada contra MSW estricto y backend real: auth, selección/versiones, workspace (Presupuesto, APU, Insumos y ET), Resumen como página propia, Cronograma como ruta independiente y admin. El selector, Gantt, matriz valorizada y Curva S tienen journeys específicos; documentación e índice reflejan evidencia medida.
 
 ## 03. Dependencias verificadas
-Registrar commit/estado de cada rama terminal y conflictos. Si una rama no está terminal, STOP de integración y devolver a su plan.
+Registrar commit/estado de cada rama terminal y conflictos, incluido `plans/plans_busquedas_plantilla/004-integracion-accesibilidad-e2e.md`. Si una rama no está terminal, STOP de integración y devolver a su plan.
 
 ## 04. Fuentes y archivos de cierre
 Frontend `src/api/contract.ts`, `src/api/queryKeys.ts`, `src/api/request.ts`, hooks/componentes/workspace de 081–087 y componentes de cronograma de 090–093, `src/test/handlers.ts`, tests `src/test/features/**`, `e2e/**`, `docs/bugs.md`, capturas/manual, `plans/README.md`, `plans/00.INDEX.md` y `plans/BITACORA.md`. Backend solo consulta/ejecuta; no modificarlo.

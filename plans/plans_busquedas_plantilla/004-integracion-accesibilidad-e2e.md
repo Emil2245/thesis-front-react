@@ -1,6 +1,8 @@
 # Plan frontend 004 — Integración del diálogo, accesibilidad y E2E
 
-**Estado:** TODO · **Prioridad:** P1 · **Depende de:** frontend 002 y 003
+**Estado:** PARTIAL · **Prioridad:** P1 · **Depende de:** frontend 002 y 003
+
+**Integración:** 2026-09-10 · Flujo funcional implementado en `main`; cierre total pendiente por la limitación axe heredada y la validación backend-real.
 
 ## 01. Resultado observable
 
@@ -67,7 +69,15 @@ STOP ante deriva backend, éxito parcial, pérdida de owner-scope, cálculo mone
 
 ## 08. Cierre documental
 
-- Reevaluar 074: registrar que el usuario reactivó en esta solicitud la creación inicial completa; el editor posterior puede seguir pendiente.
-- Mantener 072 diferido hasta capturar el flujo ya estable.
-- Añadir este paquete como dependencia de 089.
-- Actualizar el baseline de tests únicamente con conteo medido.
+- Plan 074 queda reevaluado: la creación inicial completa de un APU ya está activa en el workspace; el armado posterior dentro del editor continúa diferido.
+- Plan 072 se mantiene diferido hasta la pasada final de documentación.
+- Plan 089 depende también de este paquete 004.
+- El baseline se registra únicamente con los conteos medidos en los comandos de cierre.
+
+## 09. Evidencia y límites del cierre
+
+- `DialogoAgregarApu` presenta un solo flujo: selector de plantillas o formulario manual completo; ya no encadena `DialogoAgregarItem` ni `DialogoNuevoApu` desde `WorkspacePage`.
+- Las pruebas focalizadas cubren búsqueda inicial, destino contextual, POST atómico exacto, creación manual, conservación de `?v=`/`?rubro=` y retorno de foco: 80/80 en 13 archivos. `pnpm run verify` pasa con 635/635 en 92 archivos, typecheck, lint, ADR9, formato y build.
+- `e2e/manual/06-workspace.spec.ts` cubre en Chromium seis journeys con rutas y cuerpos estrictos: búsqueda/filtros/detalle/destino, selección simple, lote ordenado, rollback visual, creación automática y creación con código manual, Escape/Cancelar/foco y axe del formulario manual.
+- No se ejecutó validación contra backend/PostgreSQL real en este cierre; por tanto no se acredita búsqueda sin tilde, rollback inducido real ni owner-scope PERSONAL. El E2E mock solo afirma que el frontend envía `tipo=PERSONAL`; no simula una plantilla ajena como falsa prueba de autorización.
+- El selector de plantillas conserva una violación axe `nested-interactive` heredada: cada fila `role="option"` contiene un checkbox enfocable. Corregir `ListaPlantillas.tsx` queda fuera de las superficies autorizadas de este plan. Axe sí pasa sobre el formulario manual integrado; no se silenció la regla.

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type RefObject } from "react";
 import { toast } from "sonner";
 
 import type { CapituloResponse, Page, PlantillaApuResumenResponse } from "@/api/contract";
@@ -19,6 +19,7 @@ import {
 import { useAgregarDesdePlantillas } from "@/features/presupuesto/hooks/useRubroMutaciones";
 import { BuscadorFiltrosPlantillas } from "./agregar-apu/BuscadorFiltrosPlantillas";
 import { DetallePlantilla } from "./agregar-apu/DetallePlantilla";
+import { FormularioApuManualCompleto } from "./agregar-apu/FormularioApuManualCompleto";
 import { ListaPlantillas } from "./agregar-apu/ListaPlantillas";
 import { CAPITULO_AL_FINAL, aplanarCapitulos } from "./agregar-apu/capitulos";
 import { SelectorCapitulo } from "./agregar-apu/SelectorCapitulo";
@@ -31,6 +32,7 @@ interface DialogoAgregarApuProps {
   capitulos: CapituloResponse[];
   defaultCapituloId?: string;
   onCrearManualmente?: () => void;
+  returnFocusRef?: RefObject<HTMLButtonElement | null>;
 }
 
 function useValorDebounced<T>(valor: T, esperaMs: number): T {
@@ -84,9 +86,11 @@ export function DialogoAgregarApu({
   open,
   onOpenChange,
   presupuestoId,
+  proyectoId,
   capitulos,
   defaultCapituloId,
   onCrearManualmente,
+  returnFocusRef,
 }: DialogoAgregarApuProps) {
   const opcionesCapitulo = useMemo(() => aplanarCapitulos(capitulos), [capitulos]);
   const capituloInicial =
@@ -102,6 +106,7 @@ export function DialogoAgregarApu({
   const [activa, setActiva] = useState<PlantillaApuResumenResponse | null>(null);
   const [seleccionadas, setSeleccionadas] = useState<PlantillaApuResumenResponse[]>([]);
   const [errorAgregar, setErrorAgregar] = useState<string | null>(null);
+  const [modo, setModo] = useState<"plantillas" | "manual">("plantillas");
   const [paginaAnterior, setPaginaAnterior] = useState<
     Page<PlantillaApuResumenResponse> | undefined
   >(undefined);
@@ -206,97 +211,123 @@ export function DialogoAgregarApu({
         if (!agregar.isPending) onOpenChange(nextOpen);
       }}
     >
-      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-hidden sm:max-w-4xl">
+      <DialogContent
+        className="max-h-[calc(100vh-2rem)] overflow-hidden sm:max-w-4xl"
+        onCloseAutoFocus={(event) => {
+          if (!returnFocusRef?.current) return;
+          event.preventDefault();
+          returnFocusRef.current.focus();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Agregar APU</DialogTitle>
           <DialogDescription>
-            Busca plantillas, revisa su contenido y agrega una o varias al presupuesto.
+            {modo === "plantillas"
+              ? "Busca plantillas, revisa su contenido y agrega una o varias al presupuesto."
+              : "Completa los datos del APU y agrega al menos un insumo."}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 space-y-4 overflow-y-auto py-1">
-          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(15rem,0.7fr)] md:items-end">
-            <BuscadorFiltrosPlantillas
-              busqueda={busqueda}
-              onBusquedaChange={cambiarBusqueda}
-              sistema={incluirSistema}
-              onSistemaChange={(activo) => cambiarFuente("SISTEMA", activo)}
-              personal={incluirPersonal}
-              onPersonalChange={(activo) => cambiarFuente("PERSONAL", activo)}
-            />
-            <SelectorCapitulo
-              opciones={opcionesCapitulo}
-              value={capituloId}
-              onValueChange={setCapituloId}
+        {modo === "manual" ? (
+          <div className="min-h-0 overflow-y-auto py-1">
+            <FormularioApuManualCompleto
+              presupuestoId={presupuestoId}
+              proyectoId={proyectoId}
+              {...(capituloId === CAPITULO_AL_FINAL ? {} : { capituloId })}
+              onCreado={() => onOpenChange(false)}
+              onCancelar={() => setModo("plantillas")}
             />
           </div>
+        ) : (
+          <>
+            <div className="min-h-0 space-y-4 overflow-y-auto py-1">
+              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(15rem,0.7fr)] md:items-end">
+                <BuscadorFiltrosPlantillas
+                  busqueda={busqueda}
+                  onBusquedaChange={cambiarBusqueda}
+                  sistema={incluirSistema}
+                  onSistemaChange={(activo) => cambiarFuente("SISTEMA", activo)}
+                  personal={incluirPersonal}
+                  onPersonalChange={(activo) => cambiarFuente("PERSONAL", activo)}
+                />
+                <SelectorCapitulo
+                  opciones={opcionesCapitulo}
+                  value={capituloId}
+                  onValueChange={setCapituloId}
+                />
+              </div>
 
-          <div className="grid min-h-0 gap-4 md:grid-cols-2">
-            <ListaPlantillas
-              plantillas={plantillas}
-              activaId={activa?.id ?? null}
-              seleccionadas={seleccionadasIds}
-              onActivar={(id) => {
-                const plantilla = plantillas.find((item) => item.id === id);
-                if (plantilla) setActiva(plantilla);
-                setErrorAgregar(null);
-              }}
-              onSeleccionar={seleccionar}
-              cargando={busquedaQuery.isFetching}
-              ocultarResultados={ocultarResultados}
-              error={busquedaQuery.isError}
-              sinFuentes={tipos.length === 0}
-              page={page}
-              totalPaginas={paginaMostrada?.totalPaginas ?? 0}
-              onPageChange={cambiarPagina}
-            />
-            <DetallePlantilla
-              detalle={detalleQuery.data}
-              cargando={detalleQuery.isFetching}
-              error={detalleQuery.isError}
-              hayActiva={activa !== null}
-            />
-          </div>
+              <div className="grid min-h-0 gap-4 md:grid-cols-2">
+                <ListaPlantillas
+                  plantillas={plantillas}
+                  activaId={activa?.id ?? null}
+                  seleccionadas={seleccionadasIds}
+                  onActivar={(id) => {
+                    const plantilla = plantillas.find((item) => item.id === id);
+                    if (plantilla) setActiva(plantilla);
+                    setErrorAgregar(null);
+                  }}
+                  onSeleccionar={seleccionar}
+                  cargando={busquedaQuery.isFetching}
+                  ocultarResultados={ocultarResultados}
+                  error={busquedaQuery.isError}
+                  sinFuentes={tipos.length === 0}
+                  page={page}
+                  totalPaginas={paginaMostrada?.totalPaginas ?? 0}
+                  onPageChange={cambiarPagina}
+                />
+                <DetallePlantilla
+                  detalle={detalleQuery.data}
+                  cargando={detalleQuery.isFetching}
+                  error={detalleQuery.isError}
+                  hayActiva={activa !== null}
+                />
+              </div>
 
-          {errorAgregar ? (
-            <p
-              role="alert"
-              aria-live="assertive"
-              className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive"
-            >
-              {errorAgregar}
-            </p>
-          ) : null}
-        </div>
+              {errorAgregar ? (
+                <p
+                  role="alert"
+                  aria-live="assertive"
+                  className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive"
+                >
+                  {errorAgregar}
+                </p>
+              ) : null}
+            </div>
 
-        <DialogFooter className="sm:justify-between">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => onCrearManualmente?.()}
-            disabled={agregar.isPending}
-          >
-            Crear manualmente
-          </Button>
-          <div className="flex flex-col-reverse gap-2 sm:flex-row">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={agregar.isPending}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              onClick={agregarPlantillas}
-              disabled={!puedeAgregar || agregar.isPending}
-              aria-label="Agregar plantillas"
-            >
-              {agregar.isPending ? "Agregando…" : "Agregar"}
-            </Button>
-          </div>
-        </DialogFooter>
+            <DialogFooter className="sm:justify-between">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  onCrearManualmente?.();
+                  setModo("manual");
+                }}
+                disabled={agregar.isPending}
+              >
+                Crear manualmente
+              </Button>
+              <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={agregar.isPending}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  onClick={agregarPlantillas}
+                  disabled={!puedeAgregar || agregar.isPending}
+                  aria-label="Agregar plantillas"
+                >
+                  {agregar.isPending ? "Agregando…" : "Agregar"}
+                </Button>
+              </div>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SearchIcon, PlusIcon } from "lucide-react";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
@@ -48,6 +48,7 @@ export function WorkspacePage() {
   const selectedApuId = rubroContext?.apuId ?? null;
   const [busqueda, setBusqueda] = useState("");
   const [agregarApuAbierto, setAgregarApuAbierto] = useState(false);
+  const agregarApuTriggerRef = useRef<HTMLButtonElement>(null);
 
   if (proyectoPendiente || versionPendiente || (activa && presupuestoQuery.isPending))
     return <output className="block">Cargando proyecto, versión y presupuesto…</output>;
@@ -94,6 +95,7 @@ export function WorkspacePage() {
                   />
                 </div>
                 <Button
+                  ref={agregarApuTriggerRef}
                   type="button"
                   size="sm"
                   aria-label="Agregar APU"
@@ -168,6 +170,7 @@ export function WorkspacePage() {
           proyectoId={proyecto.id}
           capitulos={presupuestoQuery.data.capitulos}
           defaultCapituloId={rubroContext?.capituloId}
+          returnFocusRef={agregarApuTriggerRef}
         />
       ) : null}
     </div>

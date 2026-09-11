@@ -36,10 +36,11 @@
 
 ### Registro de decisión
 
-This chapter is deferred by explicit user decision until the final documentation pass. No manual
-files or screenshots were created.
+This chapter remains deferred by explicit user decision until the final documentation pass. Plan
+frontend 004 del paquete de búsquedas ya integró en el workspace el alta manual completa con filas,
+pero este plan no crea todavía el capítulo, sus capturas ni el spec `04-apu`.
 
-The required P-21 flow is absent from the current frontend:
+The required P-21 post-creation editor flow remains absent from the current frontend:
 
 - `src/features/apu-editor/pages/EditorApuPage.tsx:1-115` does not import `SelectorInsumo` or
   destructure `agregarFila`.
@@ -50,8 +51,9 @@ The required P-21 flow is absent from the current frontend:
 - `plans/074-el-apu-no-se-puede-armar.md:1-17` records the same diagnosis and marks Plan 074
   **DIFERIDO**.
 
-Therefore P-21 cannot be documented or captured without inventing unavailable behavior. This
-decision preserves the Plan 072 stop condition until the final documentation pass.
+Therefore P-21 still cannot be documented or captured without inventing unavailable behavior. The
+new workspace creation flow can be documented during the final pass, but it does not satisfy the
+post-creation editor journey. This decision preserves the Plan 072 stop condition until then.
 
 ## Por qué importa
 

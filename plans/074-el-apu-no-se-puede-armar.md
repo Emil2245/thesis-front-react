@@ -1,8 +1,8 @@
 # Plan 074: Que se pueda armar un APU
 
-**Estado: DIFERIDO** · **Prioridad: P1** · **Fecha de corrección: 2026-09-09**
+**Estado: DIFERIDO (alcance posterior al alta)** · **Prioridad: P1** · **Reevaluado: 2026-09-10**
 
-> Por decisión del usuario, este plan no se ejecuta ahora. El armado/creación de APUs se reubica en una futura ampliación del workspace, potencialmente como diálogo flotante junto a la pestaña APU del plan 084. Este plan conserva el diagnóstico y no se considera implementado.
+> El paquete de búsquedas de plantillas 004 reactivó e integró la **creación inicial completa** de un APU dentro del workspace, incluida al menos una fila de insumo. Este plan no se considera implementado porque su objetivo restante es distinto: armar o ampliar después un APU vacío desde `EditorApuPage`, conectar allí `SelectorInsumo` y mostrar sus secciones vacías. Ese alcance posterior continúa diferido por decisión del usuario; no se deben duplicar en el editor los controles del alta ya activos.
 
 ## 1. Estado inicial
 `SelectorInsumo` y `agregarFila` existen, pero `EditorApuPage` no los conecta. `GridSeccion` oculta secciones vacías y los errores de validación no llegan a la celda. Evidencia: `src/features/apu-editor/components/SelectorInsumo.tsx`, `useApuEditor.ts`, `GridSeccion.tsx`, `CeldaEditable.tsx`.
@@ -20,7 +20,7 @@ Plan 076 (contrato y validación API) antes de ejecutar; los planes 058 y 072 so
 La página no referencia `SelectorInsumo` ni destructura `agregarFila`; el early-return de `GridSeccion` elimina el punto de entrada; `editarCelda` marca error y retorna sin propagarlo.
 
 ## 6. Alcance incluido
-Conectar un selector único, botones por sección, render de secciones vacías y mensajes de validación. Añadir pruebas de hook, página y componentes necesarias.
+Conectar un selector único, botones por sección, render de secciones vacías y mensajes de validación **en el editor posterior al alta**. Añadir pruebas de hook, página y componentes necesarias. La creación inicial completa desde `WorkspacePage` ya pertenece al paquete de búsquedas de plantillas 004 y queda fuera de este alcance restante.
 
 ## 7. Fuera de alcance
 No rediseñar Equipo/Mano de obra, parámetros de exportación, disponibilidad, backend, manual, ni cálculos del motor.

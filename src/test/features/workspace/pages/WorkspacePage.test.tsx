@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { http, HttpResponse } from "msw";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { WorkspacePage } from "@/features/workspace/pages/WorkspacePage";
-import { APU_1, apuDetalleFixture } from "@/test/fixtures/apu";
+import { APU_1, PLANTILLA_APU_1, apuDetalleFixture } from "@/test/fixtures/apu";
+import { insumosFixture } from "@/test/fixtures/insumos";
 import {
-  CAPITULO_1,
+  CAPITULO_1_1,
   PRESUPUESTO_V2,
   RUBRO_1_1_1,
   presupuestoFixture,
@@ -44,76 +45,132 @@ describe("WorkspacePage", () => {
     expect(screen.getByRole("searchbox", { name: "Buscar en presupuesto" })).toBeInTheDocument();
   });
 
-  it("opens the add-APU source dialog with a chapter destination", async () => {
+  it("opens with the initial plantilla search, filters, detail and contextual destination", async () => {
+    let searchUrl: URL | undefined;
+    server.use(
+      http.get("*/api/v1/plantillas-apu/busqueda", ({ request }) => {
+        searchUrl = new URL(request.url);
+        return HttpResponse.json({
+          items: [
+            {
+              id: PLANTILLA_APU_1,
+              nombre: "Excavación típica",
+              descripcionRubro: "Plantilla base para excavaciones",
+              unidad: "m3",
+              tipo: "SISTEMA",
+              createdAt: "2026-07-01T00:00:00",
+              updatedAt: "2026-07-01T00:00:00",
+            },
+          ],
+          total: 1,
+          page: 0,
+          size: 20,
+          totalPaginas: 1,
+        });
+      }),
+    );
     const { user } = renderConProviders(
       <Routes>
         <Route path="/proyectos/:id/workspace" element={<WorkspacePage />} />
       </Routes>,
-      { ruta: `/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/workspace?v=${PRESUPUESTO_V2}` },
+      {
+        ruta: `/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/workspace?v=${PRESUPUESTO_V2}&rubro=${RUBRO_1_1_1}`,
+      },
     );
 
     await screen.findByText("Puente Ambato");
     await user.click(screen.getByRole("button", { name: "Agregar APU" }));
 
-    expect(screen.getByRole("dialog")).toHaveTextContent("Capítulo de destino");
-    expect(screen.getByRole("combobox", { name: "Capítulo de destino" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Usar APU existente/ })).toBeEnabled();
-    expect(screen.getByRole("button", { name: /^Crear APU/ })).toBeEnabled();
-  });
-
-  it("routes the source choice to the existing-APU dialog", async () => {
-    const { user } = renderConProviders(
-      <Routes>
-        <Route path="/proyectos/:id/workspace" element={<WorkspacePage />} />
-      </Routes>,
-      { ruta: `/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/workspace?v=${PRESUPUESTO_V2}` },
+    expect(await screen.findByRole("option", { name: /Excavación típica/ })).toBeInTheDocument();
+    expect(searchUrl?.searchParams.getAll("tipo")).toEqual(["SISTEMA", "PERSONAL"]);
+    expect(searchUrl?.searchParams.get("page")).toBe("0");
+    expect(searchUrl?.searchParams.get("size")).toBe("20");
+    expect(screen.getByRole("checkbox", { name: "Incluir plantillas del sistema" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Incluir plantillas personales" })).toBeChecked();
+    expect(screen.getByRole("combobox", { name: "Capítulo de destino" })).toHaveTextContent(
+      "1.1 · Instalación de campamento",
     );
 
-    await screen.findByText("Puente Ambato");
-    await user.click(screen.getByRole("button", { name: "Agregar APU" }));
-    await user.click(screen.getByRole("button", { name: /Usar APU existente/ }));
-
-    expect(await screen.findByText("Agregar rubro al presupuesto")).toBeInTheDocument();
-    expect(await screen.findByRole("button", { name: /APU-001/ })).toBeInTheDocument();
+    await user.click(screen.getByRole("option", { name: /Excavación típica/ }));
+    expect(await screen.findByRole("heading", { name: "Excavación típica" })).toBeInTheDocument();
+    expect(screen.queryByText("Agregar rubro al presupuesto")).not.toBeInTheDocument();
+    expect(screen.queryByText("Nuevo APU")).not.toBeInTheDocument();
   });
 
-  it("links an existing APU using the selected chapter and decimal quantity", async () => {
-    let requestBody: unknown;
-    let chapterId = "";
+  it("adds a simple active plantilla with one exact atomic POST and preserves the URL", async () => {
+    let posts = 0;
+    let body: unknown;
     server.use(
       http.post(
-        "*/api/v1/presupuestos/:presupuestoId/capitulos/:capituloId/rubros",
-        async ({ params, request }) => {
-          chapterId = String(params.capituloId);
-          requestBody = await request.json();
-          return HttpResponse.json(presupuestoFixture, { status: 201 });
+        "*/api/v1/presupuestos/:presupuestoId/rubros/desde-plantillas",
+        async ({ request }) => {
+          posts += 1;
+          body = await request.json();
+          return HttpResponse.json(
+            {
+              presupuesto: presupuestoFixture,
+              resultados: [
+                {
+                  plantillaId: PLANTILLA_APU_1,
+                  plantillaNombre: "Excavación típica",
+                  apuId: APU_1,
+                  codigo: "APU-001",
+                  advertencias: [],
+                },
+              ],
+            },
+            { status: 201 },
+          );
         },
       ),
     );
-
+    function LocationProbe() {
+      return <output aria-label="Ubicación">{useLocation().search}</output>;
+    }
+    const ruta = `/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/workspace?v=${PRESUPUESTO_V2}&rubro=${RUBRO_1_1_1}`;
     const { user } = renderConProviders(
       <Routes>
-        <Route path="/proyectos/:id/workspace" element={<WorkspacePage />} />
+        <Route
+          path="/proyectos/:id/workspace"
+          element={
+            <>
+              <WorkspacePage />
+              <LocationProbe />
+            </>
+          }
+        />
       </Routes>,
-      { ruta: `/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/workspace?v=${PRESUPUESTO_V2}` },
+      { ruta },
     );
 
     await screen.findByText("Puente Ambato");
-    await user.click(screen.getByRole("button", { name: "Agregar APU" }));
-    await user.click(screen.getByRole("button", { name: /Usar APU existente/ }));
-    await user.click(await screen.findByRole("button", { name: /APU-001/ }));
-    const quantity = screen.getByLabelText("Cantidad (m3)");
-    await user.clear(quantity);
-    await user.type(quantity, "2.000000");
-    await user.click(screen.getByRole("button", { name: /^Agregar$/ }));
+    const trigger = screen.getByRole("button", { name: "Agregar APU" });
+    await user.click(trigger);
+    await user.click(await screen.findByRole("option", { name: /Excavación típica/ }));
+    expect(
+      screen.getByRole("checkbox", { name: "Seleccionar Excavación típica" }),
+    ).not.toBeChecked();
+    await user.click(screen.getByRole("button", { name: "Agregar plantillas" }));
 
-    await waitFor(() => {
-      expect(chapterId).toBe(CAPITULO_1);
-      expect(requestBody).toEqual({ apuId: APU_1, cantidad: "2.000000" });
-    });
+    await waitFor(() => expect(posts).toBe(1));
+    expect(body).toEqual({ capituloId: CAPITULO_1_1, plantillaIds: [PLANTILLA_APU_1] });
+    expect(screen.getByLabelText("Ubicación")).toHaveTextContent(
+      `?v=${PRESUPUESTO_V2}&rubro=${RUBRO_1_1_1}`,
+    );
+    await waitFor(() => expect(trigger).toHaveFocus());
   });
 
-  it("routes the source choice to the manual-or-template APU dialog", async () => {
+  it("mounts the complete manual form and closes after creating one row", async () => {
+    let body: unknown;
+    server.use(
+      http.post("*/api/v1/presupuestos/:id/apus/completo", async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json(
+          { apu: apuDetalleFixture, presupuesto: presupuestoFixture },
+          { status: 201 },
+        );
+      }),
+    );
     const { user } = renderConProviders(
       <Routes>
         <Route path="/proyectos/:id/workspace" element={<WorkspacePage />} />
@@ -122,12 +179,58 @@ describe("WorkspacePage", () => {
     );
 
     await screen.findByText("Puente Ambato");
-    await user.click(screen.getByRole("button", { name: "Agregar APU" }));
-    await user.click(screen.getByRole("button", { name: /^Crear APU/ }));
+    const trigger = screen.getByRole("button", { name: "Agregar APU" });
+    await user.click(trigger);
+    await user.click(await screen.findByRole("button", { name: "Crear manualmente" }));
 
-    expect(await screen.findByText("Nuevo APU")).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Desde cero" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Desde plantilla" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Agregar APU" })).toBeInTheDocument();
+    expect(await screen.findByLabelText("Código")).toBeDisabled();
+    expect(screen.getAllByRole("dialog")).toHaveLength(1);
+    await user.type(screen.getByLabelText("Descripción"), "Adoquín manual");
+    await user.type(screen.getByLabelText("Unidad"), "m2");
+    const materiales = screen.getByRole("region", { name: "MATERIAL" });
+    await user.click(within(materiales).getByRole("button", { name: "Agregar insumo" }));
+    await user.click(await screen.findByRole("button", { name: /M-001 — Cemento Portland/ }));
+    await user.click(screen.getByRole("button", { name: "Crear APU" }));
+
+    await waitFor(() =>
+      expect(body).toEqual({
+        descripcion: "Adoquín manual",
+        unidad: "m2",
+        detalles: [
+          {
+            seccionTipo: "MATERIAL",
+            insumoId: insumosFixture[0].id,
+            cantidad: "1.000000",
+          },
+        ],
+      }),
+    );
+    expect(screen.queryByRole("dialog", { name: "Agregar APU" })).not.toBeInTheDocument();
+    await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
+  it("returns from manual mode and restores focus after Cancel or Escape", async () => {
+    const { user } = renderConProviders(
+      <Routes>
+        <Route path="/proyectos/:id/workspace" element={<WorkspacePage />} />
+      </Routes>,
+      { ruta: `/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/workspace?v=${PRESUPUESTO_V2}` },
+    );
+
+    await screen.findByText("Puente Ambato");
+    const trigger = screen.getByRole("button", { name: "Agregar APU" });
+    await user.click(trigger);
+    await user.click(await screen.findByRole("button", { name: "Crear manualmente" }));
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+    expect(screen.getByRole("searchbox", { name: "Buscar plantillas" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+    await waitFor(() => expect(trigger).toHaveFocus());
+
+    await user.click(trigger);
+    await screen.findByRole("searchbox", { name: "Buscar plantillas" });
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(trigger).toHaveFocus());
   });
 
   it("resolves a nested selected rubro to its APU endpoint by apuId", async () => {
