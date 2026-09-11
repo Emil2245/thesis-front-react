@@ -51,6 +51,7 @@ describe("GanttJerarquicoInteractivo", () => {
     segmento.focus();
     await user.keyboard("{ArrowRight}");
     expect(screen.getByRole("region", { name: /vista previa/i })).toBeInTheDocument();
+    expect(segmento.style.left).toBe("131px");
     await user.click(screen.getByRole("button", { name: "Confirmar mover segmento" }));
 
     await waitFor(() => {
@@ -119,10 +120,12 @@ describe("GanttJerarquicoInteractivo", () => {
     renderGantt();
     const segmento = screen.getByRole("button", { name: "Segmento 2–2 de Transporte material" });
 
+    expect(segmento.style.left).toBe("67px");
     fireEvent.pointerDown(segmento, { button: 0, pointerId: 1, clientX: 0 });
     fireEvent.pointerMove(segmento, { pointerId: 1, clientX: 64 });
     fireEvent.pointerUp(segmento, { pointerId: 1, clientX: 64 });
 
     expect(screen.getByRole("region", { name: /vista previa/i })).toHaveTextContent("3–3");
+    expect(segmento.style.left).toBe("131px");
   });
 });
