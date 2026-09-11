@@ -1,8 +1,8 @@
 # Bitácora
 
-> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). Los Planes 077–087, 090–093 están cerrados e integrados; 088 queda SUPERSEDED.
+> **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). Los Planes 077–087, 090–093 están cerrados e integrados; 058 queda BLOCKED, 072 DEFERRED y 088 SUPERSEDED.
 
-**Encargo activo: siguiente tarea pendiente, Plan 089** · **Actualizada:** 2026-09-10
+**Encargo activo: resolver el bloqueo de 058; Plan 072 diferido; Plan 089 pendiente** · **Actualizada:** 2026-09-10
 **Ronda de paridad 1** · **CERRADA**
 
 > La lleva el orquestador ([`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md)). Se escribe **en el momento** en que
@@ -35,6 +35,12 @@
 - Plan 093 queda **✅ verde / IMPLEMENTADO**: `CurvaSChart` sustituye la tabla primaria por un SVG nativo responsive de programación acumulada, con eje porcentual 0–100, puntos del servidor en orden y etiquetas ordinales M/S.
 - Se conservan todos los campos en una tabla alternativa dentro de `<details>`, con detalle sincronizado por hover/foco y navegación por teclado. No se introducen avance real, SPI, forecast ni una segunda serie.
 - Evidencia: `pnpm run verify` verde con **612/612 tests en 88 archivos**; Playwright Chromium de capturas **13/13 verde** y axe WCAG 2A/2AA en Curva S; se actualizó `screenshots/10-cronograma-curva-s.png`.
+
+## Auditoría de los Planes 058 y 072 (2026-09-10)
+
+- **Plan 058 queda BLOCKED**. La rebanada frontend de procedencia ya estaba integrada en `SelectorInsumo` y cubierta por sus pruebas: distingue `CENTRAL`/`PROYECTO`, muestra `baseNombre` cuando existe y no inventa etiqueta cuando es `null`. La auditoría del backend `thesis-back-quarkus@2803575` encontró deriva respecto del plan: `ResolverInsumoProyectoService` y la resolución de plantillas soportan PERSONAL internamente, pero `BasesPersonalesResource` no expone CRUD REST de insumos y `InsumoCatalogoService` no devuelve PERSONAL al selector. Por decisión del usuario, la búsqueda/carga de plantillas PERSONAL queda para otro plan detallado; no se inventaron endpoints ni se tocó el backend.
+- **Plan 072 queda DEFERRED** por decisión del usuario hasta la pasada final de documentación. La condición de parada se confirmó: P-21 requiere añadir filas desde `SelectorInsumo`, pero `EditorApuPage` no lo conecta y `GridSeccion` oculta secciones vacías; Plan 074 documenta que el armado de APU fue diferido. No se crearon capítulo, spec ni capturas ficticias.
+- Evidencia de worktrees integrados: `b07f20f` (auditoría 058) y `61dd17d` (diferimiento 072). El backend permaneció de solo lectura y no se hizo push.
 
 ## Corrección del listado de proyectos (2026-09-10)
 
@@ -529,7 +535,7 @@ montones según la §1 del orquestador:
 | 5 | 050 admin + S-39 | ✅ verde | — | cccb1b0 | fusionado · S-39 parcial, ver plan |
 | 5 | 051 export ET DOCX | ✅ verde | — | 065c90a | fusionado · tanda 1 |
 | 5 | 052 acciones deshabilitadas | ✅ verde | — | 21275ad | fusionado · **ola 5 cerrada** |
-| 5 | 058 **reescrito**: procedencia del insumo | ✅ verde | — | cccb1b0 | fusionado · tanda 1 cerrada |
+| 5 | 058 **reescrito**: procedencia del insumo | ✅ rebanada frontend | — | cccb1b0 | fusionada; alcance PERSONAL actual bloqueado por auditoría 2026-09-10 |
 | 6 | **063 ErrorPayload ≠ RFC 7807** | ✅ verde | — | 6ab61c8 | fusionado |
 | 6 | 060 limpieza | ✅ verde | — | a981dae | fusionado · **ola 6 cerrada** |
 | 7 | **064 capturas que no miran** | ✅ verde | — | 6962329 | fusionado |

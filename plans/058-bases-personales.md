@@ -98,6 +98,8 @@ La ruta relativa `../thesis-back-quarkus` de este worktree existe como directori
 
 Además, la rebanada de procedencia ya está implementada y cubierta: `SelectorInsumo.tsx` muestra `Central`/`Local` y `baseNombre` condicional; `SelectorInsumo.test.tsx` cubre `CENTRAL`, `PROYECTO` y `baseNombre: null`; `contract.ts` y `schemas.ts` reflejan `fuente: CENTRAL | PROYECTO` y `baseNombre: string | null`.
 
+**Decisión del usuario (2026-09-10):** se deja fuera de este plan la búsqueda/carga de plantillas y cualquier ampliación de bases PERSONAL. Se resolverá después mediante un plan backend-alineado y más detallado; este frontend no inventará endpoints ni un tercer valor de `fuente`.
+
 ## Definición de hecho
 
 - `pnpm run verify` en verde.
