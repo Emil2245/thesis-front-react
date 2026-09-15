@@ -226,8 +226,7 @@ function TimelineGrid({
       {actividad &&
         segmentos.map((segmento, index) => {
           const enVistaPrevia =
-            !!vistaPrevia &&
-            segmentosIguales(vistaPrevia, { actividadId: actividad.id, segmento });
+            !!vistaPrevia && segmentosIguales(vistaPrevia, { actividadId: actividad.id, segmento });
           const inicioMostrado = enVistaPrevia ? vistaPrevia.nuevoInicio : segmento.inicio;
           const finMostrado = enVistaPrevia ? vistaPrevia.nuevoFin : segmento.fin;
           const left = (inicioMostrado - 1) * PERIOD_WIDTH + 3;
