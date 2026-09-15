@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { crearParametrosSchema, type RangosValidacion } from "../schemas";
 import { useParametros, useActualizarParametros } from "../hooks/useParametros";
 import { useParametrosSistema } from "@/features/admin/hooks/useParametrosSistema";
-import { fraccionAPorcentaje } from "@/lib/decimal";
+import { ESCALA_PORCENTAJE, fraccionAPorcentaje, parsearEntradaNumerica } from "@/lib/decimal";
 import { CargandoTabla } from "@/components/comunes/CargandoTabla";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,16 @@ import {
 } from "@/components/ui/select";
 import { TriangleAlertIcon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+// `type="number"` delega el separador decimal al locale del NAVEGADOR: en un
+// Chrome en español el 12.5 que manda el servidor se pinta «12,5». El requisito
+// es punto siempre, así que estos campos viajan como texto y la conversión la
+// hace `parsearEntradaNumerica`, que acepta las dos formas y cuantiza una sola
+// vez (frontera de entrada, ADR 9).
+const aPorcentaje = (v: unknown) =>
+  parsearEntradaNumerica(String(v ?? ""), ESCALA_PORCENTAJE) ?? NaN;
+
+const aPorcentajeNullable = (v: unknown) => (String(v ?? "").trim() === "" ? null : aPorcentaje(v));
 
 function ParametroSwitch({
   label,
@@ -120,27 +130,28 @@ export function ParametrosPage() {
             <Field>
               <Label>{`% Herramienta menor (0–${rangos.hmMax} %)`}</Label>
               <Input
-                type="number"
-                step="0.01"
-                {...form.register("porcentajeHerramientaMenor", { valueAsNumber: true })}
+                type="text"
+                inputMode="decimal"
+                {...form.register("porcentajeHerramientaMenor", { setValueAs: aPorcentaje })}
               />
               <FieldError>{form.formState.errors.porcentajeHerramientaMenor?.message}</FieldError>
             </Field>
             <Field>
               <Label>{`% Indirectos (0–${rangos.ciMax} %)`}</Label>
               <Input
-                type="number"
-                step="0.01"
-                {...form.register("porcentajeIndirecto", {
-                  valueAsNumber: true,
-                  setValueAs: (v) => (v === "" ? null : Number(v)),
-                })}
+                type="text"
+                inputMode="decimal"
+                {...form.register("porcentajeIndirecto", { setValueAs: aPorcentajeNullable })}
               />
               <FieldError>{form.formState.errors.porcentajeIndirecto?.message}</FieldError>
             </Field>
             <Field>
               <Label>{`IVA (0–${rangos.ivaMax} %)`}</Label>
-              <Input type="number" step="0.01" {...form.register("iva", { valueAsNumber: true })} />
+              <Input
+                type="text"
+                inputMode="decimal"
+                {...form.register("iva", { setValueAs: aPorcentaje })}
+              />
               <FieldError>{form.formState.errors.iva?.message}</FieldError>
             </Field>
             <Field>

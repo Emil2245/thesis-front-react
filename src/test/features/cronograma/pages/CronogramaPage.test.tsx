@@ -175,8 +175,8 @@ describe("CronogramaPage", () => {
 
     await waitFor(() => expect(screen.getByText(/se borrarán/i)).toBeInTheDocument());
     const confirmacion = within(screen.getByRole("dialog"));
-    expect(confirmacion.getByText("25,2253 %")).toBeInTheDocument();
-    expect(confirmacion.getByText("5,4054 %")).toBeInTheDocument();
+    expect(confirmacion.getByText("25.2253 %")).toBeInTheDocument();
+    expect(confirmacion.getByText("5.4054 %")).toBeInTheDocument();
   });
 
   it("marca la distribución incompleta cuando el estado es BORRADOR", async () => {

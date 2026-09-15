@@ -73,10 +73,14 @@ export function PieTotales({ apu, onEditarPorcentajeCi, onAbrirDesglose }: PieTo
               </span>
               {editandoCi ? (
                 <div className="flex items-center gap-1">
+                  {/* Texto, no `type="number"`: ese input pinta el decimal con el
+                      separador del locale del navegador (en español, «12,5») y el
+                      requisito es punto siempre. `parsearEntradaNumerica` en
+                      `guardarCi` ya acepta las dos formas. */}
                   <Input
                     className="h-7 w-20 text-right text-xs"
-                    type="number"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     value={ciValor}
                     onChange={(e) => setCiValor(e.target.value)}
                     onKeyDown={(e) => {

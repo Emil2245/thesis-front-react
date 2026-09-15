@@ -32,19 +32,19 @@ const data: ComparacionVersionesResponse = {
 describe("ComparadorVersiones", () => {
   it("muestra los dos totales generales", () => {
     renderConProviders(<ComparadorVersiones data={data} isLoading={false} />);
-    expect(screen.getByText(/355\.603,79/)).toBeInTheDocument();
-    expect(screen.getByText(/395\.115,32/)).toBeInTheDocument();
+    expect(screen.getByText(/355,603\.79/)).toBeInTheDocument();
+    expect(screen.getByText(/395,115\.32/)).toBeInTheDocument();
   });
 
   it("no calcula la diferencia de totales en el cliente", () => {
     renderConProviders(<ComparadorVersiones data={data} isLoading={false} />);
-    expect(screen.queryByText(/39\.511,53/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/39,511\.53/)).not.toBeInTheDocument();
   });
 
   it("no calcula la diferencia por capítulo en el cliente", () => {
     renderConProviders(<ComparadorVersiones data={data} isLoading={false} />);
-    expect(screen.getByText(/120\.000,00/)).toBeInTheDocument();
-    expect(screen.getByText(/200\.000,00/)).toBeInTheDocument();
-    expect(screen.queryByText(/80\.000,00/)).not.toBeInTheDocument();
+    expect(screen.getByText(/120,000\.00/)).toBeInTheDocument();
+    expect(screen.getByText(/200,000\.00/)).toBeInTheDocument();
+    expect(screen.queryByText(/80,000\.00/)).not.toBeInTheDocument();
   });
 });

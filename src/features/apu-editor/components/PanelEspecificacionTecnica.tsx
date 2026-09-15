@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { formatearNumero } from "@/lib/decimal";
 
 const LIMITE_BYTES = 64 * 1024;
 
@@ -57,7 +58,8 @@ export function PanelEspecificacionTecnica({ texto, onGuardar }: PanelEspecifica
             <span
               className={cn("text-xs text-muted-foreground", excedeLimite && "text-destructive")}
             >
-              {bytes.toLocaleString("es-EC")} / {LIMITE_BYTES.toLocaleString("es-EC")} bytes
+              {formatearNumero(bytes, { min: 0, max: 0 })} /{" "}
+              {formatearNumero(LIMITE_BYTES, { min: 0, max: 0 })} bytes
             </span>
             <Button size="sm" onClick={guardar} disabled={excedeLimite || guardando}>
               <SaveIcon data-icon="inline-start" /> Guardar

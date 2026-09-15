@@ -16,6 +16,7 @@ import type {
 } from "@/api/contract";
 import { ApiError } from "@/api/problem";
 import { formatearPuntosPorcentaje, type Decimal } from "@/lib/decimal";
+import { cn } from "@/lib/utils";
 import { useProgramarActividad } from "../hooks/useCronograma";
 import { etiquetaPeriodo } from "./etiquetaPeriodo";
 
@@ -169,6 +170,7 @@ function TimelineGrid({
   periodos,
   segmentos = [],
   actividad,
+  vistaPrevia,
   unidadTiempo,
   onSegmentClick,
   onSegmentKeyDown,
@@ -184,6 +186,7 @@ function TimelineGrid({
   periodos: number[];
   segmentos?: SegmentoResponse[];
   actividad?: ActividadCronogramaResponse;
+  vistaPrevia?: VistaPrevia | null;
   unidadTiempo: GanttBloqueResponse["cronograma"]["unidadTiempo"];
   onSegmentClick?: (actividad: ActividadCronogramaResponse, segmento: SegmentoResponse) => void;
   onSegmentKeyDown?: (
@@ -222,8 +225,13 @@ function TimelineGrid({
       ))}
       {actividad &&
         segmentos.map((segmento, index) => {
-          const left = (segmento.inicio - 1) * PERIOD_WIDTH + 3;
-          const width = (segmento.fin - segmento.inicio + 1) * PERIOD_WIDTH - 6;
+          const enVistaPrevia =
+            !!vistaPrevia &&
+            segmentosIguales(vistaPrevia, { actividadId: actividad.id, segmento });
+          const inicioMostrado = enVistaPrevia ? vistaPrevia.nuevoInicio : segmento.inicio;
+          const finMostrado = enVistaPrevia ? vistaPrevia.nuevoFin : segmento.fin;
+          const left = (inicioMostrado - 1) * PERIOD_WIDTH + 3;
+          const width = (finMostrado - inicioMostrado + 1) * PERIOD_WIDTH - 6;
           const etiqueta = `Segmento ${nombreSegmento(segmento)} de ${actividad.descripcion}`;
           return (
             <div
@@ -232,7 +240,12 @@ function TimelineGrid({
               tabIndex={0}
               aria-label={etiqueta}
               data-testid={`segmento-${actividad.id}-${segmento.inicio}-${segmento.fin}`}
-              className="absolute top-2 z-10 flex h-8 items-center rounded bg-foreground/75 px-2 text-xs text-background shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className={cn(
+                "absolute top-2 z-10 flex h-8 items-center rounded px-2 text-xs text-background shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                enVistaPrevia
+                  ? "bg-foreground/50 outline-dashed outline-2 outline-offset-1 outline-foreground/60"
+                  : "bg-foreground/75",
+              )}
               style={{ left, width }}
               onClick={() => onSegmentClick?.(actividad, segmento)}
               onKeyDown={(event) => onSegmentKeyDown?.(event, actividad, segmento)}
@@ -881,6 +894,7 @@ export function GanttJerarquicoInteractivo({
                       periodos={periodos}
                       segmentos={actividad.segmentos}
                       actividad={actividad}
+                      vistaPrevia={vistaPrevia}
                       unidadTiempo={cronograma.unidadTiempo}
                       onSegmentClick={manejarClick}
                       onSegmentKeyDown={(event, actividadActual, segmento) => {

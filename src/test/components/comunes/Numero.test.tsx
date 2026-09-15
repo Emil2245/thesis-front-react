@@ -8,12 +8,12 @@ import { Numero } from "@/components/comunes/Numero";
 describe("Numero", () => {
   it("formatea en es-EC con la precisión por defecto (2–4 decimales)", () => {
     render(<Numero valor={asDecimal("1234.500000")} />);
-    expect(screen.getByText("1.234,50")).toHaveClass("num");
+    expect(screen.getByText("1,234.50")).toHaveClass("num");
   });
 
   it("conserva hasta 4 decimales sin redondear a 2", () => {
     render(<Numero valor={asDecimal("0.123400")} />);
-    expect(screen.getByText("0,1234")).toBeInTheDocument();
+    expect(screen.getByText("0.1234")).toBeInTheDocument();
   });
 
   it("respeta min y max explícitos", () => {

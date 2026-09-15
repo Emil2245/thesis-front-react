@@ -9,12 +9,12 @@ import { Porcentaje } from "@/components/comunes/Porcentaje";
 describe("Porcentaje", () => {
   it("pinta la fracción del backend como porcentaje, con 4 decimales", () => {
     render(<Porcentaje valor={asDecimal("0.150000")} />);
-    expect(screen.getByText(/^15,0000\s?%$/)).toHaveClass("num");
+    expect(screen.getByText(/^15\.0000\s?%$/)).toHaveClass("num");
   });
 
   it("respeta dp explícito", () => {
     render(<Porcentaje valor={asDecimal("0.150000")} dp={2} />);
-    expect(screen.getByText(/^15,00\s?%$/)).toBeInTheDocument();
+    expect(screen.getByText(/^15\.00\s?%$/)).toBeInTheDocument();
   });
 
   it("pinta guion largo ante null", () => {
