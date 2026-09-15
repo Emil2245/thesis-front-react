@@ -1,14 +1,18 @@
 # Plan 074: Que se pueda armar un APU
 
-**Estado: DIFERIDO (alcance posterior al alta)** · **Prioridad: P1** · **Reevaluado: 2026-09-10**
+**Estado: IMPLEMENTADO** · **Prioridad: P1** · **Reevaluado: 2026-09-10** · **Cerrado: 2026-09-11**
 
-> El paquete de búsquedas de plantillas 004 reactivó e integró la **creación inicial completa** de un APU dentro del workspace, incluida al menos una fila de insumo. Este plan no se considera implementado porque su objetivo restante es distinto: armar o ampliar después un APU vacío desde `EditorApuPage`, conectar allí `SelectorInsumo` y mostrar sus secciones vacías. Ese alcance posterior continúa diferido por decisión del usuario; no se deben duplicar en el editor los controles del alta ya activos.
+> El paquete de búsquedas de plantillas 004 reactivó e integró la **creación inicial completa** de un APU dentro del workspace, incluida al menos una fila de insumo. El alcance restante de 074 — armar o ampliar después un APU desde `EditorApuPage`, conectar allí `SelectorInsumo` y mostrar sus secciones vacías — queda implementado en esta pasada. El alta completa de F-004 vive en `WorkspacePage` y no se duplica aquí.
 
 ## 1. Estado inicial
 `SelectorInsumo` y `agregarFila` existen, pero `EditorApuPage` no los conecta. `GridSeccion` oculta secciones vacías y los errores de validación no llegan a la celda. Evidencia: `src/features/apu-editor/components/SelectorInsumo.tsx`, `useApuEditor.ts`, `GridSeccion.tsx`, `CeldaEditable.tsx`.
 
+**Estado tras esta pasada (corregida por verificación independiente, hallazgo restante cerrado):** `EditorApuPage` monta un único `SelectorInsumo` y le pasa `agregarFila`; el diálogo del selector se cierra tras una selección exitosa (sin dejar al usuario atrapado en el modal). `GridSeccion` siempre renderiza su tarjeta (aunque la fila esté vacía) y expone en la cabecera un botón accesible `Agregar insumo a {sección}`. `useApuEditor` propaga el mensaje del esquema (`zod issues[0].message`) y del servidor (`ApiError.problem.mensaje`) **por celda**, no por fila, a `FilaEditor.mensajesValidacion: { cantidad?, rendimiento?, precioOverride? }`; las claves internas son `${detalleId}:${campo}`. Cuando el usuario reingresa el mismo valor que ya tiene la celda (no hay PATCH), la rama de retorno limpia el error obsoleto **de esa única celda** vía `actualizarEstado(detalleId, campo, "estable")` sin tocar las vecinas. `restaurarHerencia` opera sólo sobre `precioOverride`. `CeldaEditable` mantiene montado el nodo `<output>` referenciado por `aria-describedby` y `aria-errormessage` durante la edición (WAI-ARIA), y lo pinta con `AlertCircle` + `text-destructive`.
+
 ## 2. Objetivo medible
 Un APU vacío muestra sus cuatro secciones, permite seleccionar un insumo y refleja la fila creada; un valor inválido muestra el mensaje del esquema. El delta de pruebas debe reportarse, sin umbral futuro inventado.
+
+**Evidencia de esta pasada:** delta de pruebas focal del editor APU = **+33 tests** (6 `GridSeccion` + 7 `CeldaEditable` + 14 `useApuEditor` + 6 `EditorApuPage`). Total `pnpm run verify` = **670/670 tests en 94 archivos** (baseline 637/637; +33 netos), typecheck, lint, guard:adr9, formato y build verdes; 9 warnings de lint (0 nuevos).
 
 ## 3. Dependencias
 Plan 076 (contrato y validación API) antes de ejecutar; los planes 058 y 072 son downstream y quedan desbloqueados después. Backend actual y fuentes canónicas son solo lectura.

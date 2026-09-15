@@ -12,16 +12,30 @@ import type {
   ApuDetallePatchRequest,
   ApuDetalleCrearRequest,
 } from "@/api/contract";
-import type { ApiError } from "@/api/problem";
+import { ApiError } from "@/api/problem";
 import { apuSchema, especificacionTecnicaSchema } from "@/api/schemas";
 
 export type EstadoCelda = "estable" | "pendiente" | "error";
+
+export type CampoCelda = "cantidad" | "rendimiento" | "precioOverride";
+
+/** Mensajes por celda, no por fila: la edición de cantidad no debe filtrar su
+ *  texto de error a las celdas vecinas. Se limpian individualmente en cuanto la
+ *  celda vuelve a "estable". */
+export interface MensajesValidacion {
+  cantidad?: string;
+  rendimiento?: string;
+  precioOverride?: string;
+}
 
 export interface FilaEditor {
   detalle: ApuDetalleResponse;
   protegida: boolean;
   heredado: boolean;
+  /** Estado agregado de la fila (peor celda). Se usa sólo para colorear el fondo
+   *  de la fila; los iconos y mensajes accesibles son por celda. */
   estado: EstadoCelda;
+  mensajesValidacion: MensajesValidacion;
 }
 
 export interface SeccionEditor {
@@ -78,7 +92,12 @@ const ETIQUETA: Record<SeccionTipo, string> = {
 
 export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEditor {
   const qc = useQueryClient();
+  // Cada celda tiene su propio ciclo: las claves combinan detalleId + campo,
+  // así editar cantidad no afecta a rendimiento/precioOverride de la misma fila.
+  // La fila deriva su estado agregando el peor de sus tres celdas; los iconos y
+  // mensajes accesibles viven por celda.
   const [estadoCeldas, setEstadoCeldas] = useState<Map<string, EstadoCelda>>(new Map());
+  const [mensajesValidacion, setMensajesValidacion] = useState<Map<string, string>>(new Map());
 
   const { data: apu, isPending: cargando } = useQuery({
     queryKey: qk.apu(apuId),
@@ -106,15 +125,33 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
         muestraRendimiento: tipo === "EQUIPO" || tipo === "MANO_OBRA",
         filas: (s?.detalles ?? [])
           .toSorted((a, b) => a.orden - b.orden)
-          .map((d) => ({
-            detalle: d,
-            protegida: d.esHerramientaMenor,
-            heredado: d.precioHeredado,
-            estado: estadoCeldas.get(d.id) ?? "estable",
-          })),
+          .map((d) => {
+            // Estado agregado: una sola celda en "error" basta para colorear la
+            // fila, pero los iconos y mensajes accesibles viven por celda en
+            // `mensajesValidacion` (ver `actualizarEstado`).
+            const estadosPorCelda = (
+              ["cantidad", "rendimiento", "precioOverride"] as CampoCelda[]
+            ).map((c) => estadoCeldas.get(`${d.id}:${c}`));
+            const estadoFila: EstadoCelda = estadosPorCelda.includes("pendiente")
+              ? "pendiente"
+              : estadosPorCelda.includes("error")
+                ? "error"
+                : "estable";
+            return {
+              detalle: d,
+              protegida: d.esHerramientaMenor,
+              heredado: d.precioHeredado,
+              estado: estadoFila,
+              mensajesValidacion: {
+                cantidad: mensajesValidacion.get(`${d.id}:cantidad`),
+                rendimiento: mensajesValidacion.get(`${d.id}:rendimiento`),
+                precioOverride: mensajesValidacion.get(`${d.id}:precioOverride`),
+              },
+            };
+          }),
       };
     });
-  }, [apu, estadoCeldas]);
+  }, [apu, estadoCeldas, mensajesValidacion]);
 
   const editMutation = useMutation({
     mutationFn: ({ detalleId, body }: { detalleId: string; body: ApuDetallePatchRequest }) =>
@@ -181,14 +218,29 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
     },
   });
 
-  const actualizarEstado = useCallback((detalleId: string, estado: EstadoCelda) => {
-    setEstadoCeldas((prev) => {
-      const next = new Map(prev);
-      if (estado === "estable") next.delete(detalleId);
-      else next.set(detalleId, estado);
-      return next;
-    });
-  }, []);
+  // Clave por celda, no por fila: editar cantidad no debe tocar el mensaje de
+  // rendimiento. Borrar requiere clave explícita para que "estable" en una
+  // celda no limpie otra que sigue en error.
+  const claveCelda = (detalleId: string, campo: CampoCelda) => `${detalleId}:${campo}`;
+
+  const actualizarEstado = useCallback(
+    (detalleId: string, campo: CampoCelda, estado: EstadoCelda, mensaje?: string) => {
+      const clave = claveCelda(detalleId, campo);
+      setEstadoCeldas((prev) => {
+        const next = new Map(prev);
+        if (estado === "estable") next.delete(clave);
+        else next.set(clave, estado);
+        return next;
+      });
+      setMensajesValidacion((prev) => {
+        const next = new Map(prev);
+        if (estado === "estable" || mensaje == null) next.delete(clave);
+        else next.set(clave, mensaje);
+        return next;
+      });
+    },
+    [],
+  );
 
   const editarCelda = useCallback(
     async (
@@ -205,7 +257,10 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
 
       const result = schema.safeParse(valor);
       if (!result.success) {
-        actualizarEstado(detalleId, "error");
+        // El esquema emite issues con `message` legible (ej. "Debe ser mayor que 0").
+        // Tomamos el primero: la entrada por celda es única, así que el primer
+        // issue es el que el usuario ve, no una cascada.
+        actualizarEstado(detalleId, campo, "error", result.error.issues[0]?.message);
         return;
       }
 
@@ -228,10 +283,15 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
         parsedVal === parsedCurrent ||
         (campo === "precioOverride" && valor === "" && detalle.precioHeredado)
       ) {
+        // El usuario reingresó el mismo valor que ya tenía la fila: no hay PATCH
+        // que hacer, pero si la celda quedó en error por una edición anterior
+        // inválida, ese mensaje es ahora obsoleto y debe limpiarse. Sólo esta
+        // celda — las vecinas mantienen su propio estado.
+        actualizarEstado(detalleId, campo, "estable");
         return;
       }
 
-      actualizarEstado(detalleId, "pendiente");
+      actualizarEstado(detalleId, campo, "pendiente");
 
       try {
         const body: ApuDetallePatchRequest = {};
@@ -241,9 +301,20 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
           body.precioOverride = valor === "" ? null : (parsedVal ?? null);
 
         await editMutation.mutateAsync({ detalleId, body });
-        actualizarEstado(detalleId, "estable");
-      } catch {
-        actualizarEstado(detalleId, "error");
+        actualizarEstado(detalleId, campo, "estable");
+      } catch (e) {
+        // El cliente HTTP normaliza todo error no 2xx a ApiError, que lleva el
+        // `mensaje` del backend (`ErrorPayload.mensaje`). Si por alguna razón la
+        // cadena se rompe —interceptor caído, error síncrono previo a axios— la
+        // celda sigue marcándose como errónea con un mensaje genérico para no
+        // dejar al usuario mirando un icono sin pista.
+        const mensaje =
+          e instanceof ApiError
+            ? (e.problem.mensaje ?? e.message)
+            : e instanceof Error
+              ? e.message
+              : "No se pudo guardar el cambio";
+        actualizarEstado(detalleId, campo, "error", mensaje);
       }
     },
     [apuId, qc, editMutation, actualizarEstado],
@@ -256,11 +327,20 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
           detalleId,
           body: { precioOverride: null },
         });
-      } catch {
-        // reverted by onError
+        // El PATCH afecta a la celda `precioOverride`; esa es la única cuyo
+        // mensaje y estado hay que limpiar. cantidad/rendimiento siguen vivas.
+        actualizarEstado(detalleId, "precioOverride", "estable");
+      } catch (e) {
+        const mensaje =
+          e instanceof ApiError
+            ? (e.problem.mensaje ?? e.message)
+            : e instanceof Error
+              ? e.message
+              : "No se pudo guardar el cambio";
+        actualizarEstado(detalleId, "precioOverride", "error", mensaje);
       }
     },
-    [editMutation],
+    [editMutation, actualizarEstado],
   );
 
   const reordenarFila = useCallback(
