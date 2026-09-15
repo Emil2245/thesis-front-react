@@ -39,16 +39,23 @@ pnpm run e2e:manual        # capturas de docs/manual/ (chromium)
 pnpm run dev      # http://localhost:5173
 ```
 
-Baseline actual: **612 tests unitarios en 88 archivos, todos en verde**, y `pnpm run verify` pasa
-entero —typecheck, lint, guard:adr9, format:check, test y build—. Medido el 2026-09-10 después de
-corregir la respuesta nullable de proyectos e integrar los Planes 090–093 sobre los Planes 077–087. Antes de esa rama eran 459 ✅ / **20 ❌** en 75 archivos, con `typecheck` y
-`format:check` rojos y `vite build` bloqueado; los 20 fallos eran fixtures y `server.use(...)` que
-no se actualizaron cuando el plan 076 metió validación runtime en el seam. Están en
+Baseline funcional verificado en el corte de código `be5fc776`: `pnpm run verify` pasa entero —**typecheck, lint,
+guard:adr9, format:check, test y build**— con **637/637 tests en 92 archivos** y **9 warnings
+de lint** (0 errores). Lint y guard:adr9 ya conocidos por su ruido de
+`react(incompatible-library)` heredado de react-hook-form; los reales quedan anotados en
+[`INVENTARIO-COBERTURA.md`](plans/INVENTARIO-COBERTURA.md) §7.2. **E2E, CI y CD no se
+ejecutaron en esta verificación**: el conteo de 637/637 cubre solo la unidad/componente;
+los 67 lanzamientos E2E documentados en `pnpm run e2e` mantienen su última medición
+(Capturas Chromium verdes; Firefox pendiente por binario ambiental; ver
+[`BITACORA.md`](plans/BITACORA.md)). Si tocas ese número, actualízalo aquí también: el plan 060 se encontró con el de 197/43, cinco olas caducado, y un baseline que miente no detecta nada.
+
+Trazabilidad: este baseline reemplaza al 635/635 reportado al cierre de F-004 (2026-09-11)
+tras integrar los Planes 094–096 sobre `fix/cronograma` (commits `0067df9`..`be5fc77`); antes
+de la ola admin-077–081 el repo medía 459 ✅ / **20 ❌** en 75 archivos, con `typecheck` y
+`format:check` rojos y `vite build` bloqueado. Los 20 fallos eran fixtures y `server.use(...)`
+que no se actualizaron cuando el plan 076 metió validación runtime en el seam. Están en
 [`docs/bugs.md`](docs/bugs.md) §6, con la regla que faltaba: **una fixture es una afirmación sobre
-el backend y se verifica como tal**. Los 67 lanzamientos E2E aún no tienen una
-medición completa; Chromium está instalado y las tres capturas del cronograma pasan,
-pero faltan ejecutar los demás journeys y los otros navegadores. Si cambias el baseline, actualiza este número: el plan 060 se encontró
-con el de 197/43, cinco olas caducado, y un baseline que miente no detecta nada.
+el backend y se verifica como tal**.
 
 > **Punto ciego del gate:** `verify` **no comprueba tipos en `e2e/`**.
 > `tsconfig.app.json` incluye sólo `src`, así que un error de tipos en un

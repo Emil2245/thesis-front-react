@@ -83,9 +83,26 @@ src/
 
 ## Tests
 
-- **461 unit tests** across 74 files (Vitest + RTL + MSW)
-- **20 E2E tests** (Playwright): 11 capturas de escritorio en chromium + humo y
-  accesibilidad con axe-core en chromium, firefox y mobile-chrome
+> **Estado verificado en el corte funcional (frontend `be5fc776`, backend `origin/main @ ac84c945`).**
+> `pnpm run verify` pasa entero — typecheck, lint, guard:adr9, format:check, test y build —
+> con **637/637 tests unitarios en 92 archivos** y **9 warnings de lint** (0 errores).
+>
+> **E2E, CI y CD no se volvieron a correr en esta pasada documental.** El conteo de 637/637
+> cubre solo unidad/componente. La última medición E2E conocida es del cierre de F-004
+> (Playwright Chromium **67/67**, capturas **13/13**, axe WCAG 2A/2AA verde en Chromium) y
+> queda registrada con fecha 2026-09-11 en [`plans/BITACORA.md`](plans/BITACORA.md);
+> **Firefox quedó sin ejecutar por ausencia del binario Playwright en el entorno**, no por
+> un fallo de producto. Si vuelve a medirse E2E y cambia, actualiza esa bitácora — y este
+> README, si quieres que siga siendo de un golpe de vista.
+>
+> Trazabilidad del baseline: 459 ✅ / 20 ❌ (con typecheck y format:check rojos) → 635/635 al
+> cierre de F-004 → **637/637 actual** tras integrar los Planes 094–096 sobre `fix/cronograma`
+> (commits `0067df9`..`be5fc77`). El conteo anterior (461 tests / 74 archivos) corresponde al
+> cierre de la ronda de paridad 1 y está **caducado**; no lo uses para razonar.
+
+- **637 unit tests** across 92 files (Vitest + RTL + MSW) — verified at `be5fc776`
+- **67 E2E tests** (última medición conocida, Playwright Chromium): capturas de escritorio,
+  humo y accesibilidad con axe-core; Firefox queda pendiente por ausencia del binario
 - Commands: `pnpm test`, `pnpm run test:watch`, `pnpm run test:coverage`,
   `pnpm run e2e`, `pnpm run e2e:screenshots`
 
@@ -107,18 +124,28 @@ allí sería letra muerta.
 ## Spec repository
 
 API contracts and design docs live in the companion [thesis-docs](https://github.com/anomalyco/thesis-docs) repo.
-DTOs are hand-transcribed from Apéndice B; el backend Quarkus todavía no publica OpenAPI.
+DTOs are hand-transcribed from Apéndice B; el backend Quarkus expone OpenAPI en `/q/openapi`,
+pero el frontend mantiene su costura tipada explícita hasta sustituirla por generación automática.
 
-**El backend es la fuente de verdad del contrato.** Implementa **30 recursos JAX-RS**
-(`origin/main` @ `c337950`, incluido el cronograma completo desde el 2026-09-05); el frontend tiene
-pantallas para los 44 procesos del contrato. Cuando el código y los docs discrepan, **gana el
-código** y los docs se corrigen.
+**El backend es la fuente de verdad del contrato.** Implementa **36 recursos JAX-RS**
+(`origin/main` @ `ac84c945` — incluye cronograma completo desde el 2026-09-05, los cuatro
+recursos admin de planes 077–080, y el Plan 005 de búsqueda/lote/APU manual integrado el
+2026-09-11); el frontend tiene pantallas para los 44 procesos del contrato. Cuando el código
+y los docs discrepan, **gana el código** y los docs se corrigen.
 
-Las páginas pendientes con contrato backend aprobado se degradan a un aviso explícito en vez de
-romperse. El inventario vive en `src/lib/disponibilidad.ts` y **el gate es por página, no por
-módulo**: hoy quedan fuera `admin-usuarios`, `admin-plantillas`, `admin-valores` y `admin-logs`.
-Las operaciones sin contrato consolidado —duplicar proyecto, subir logo y descuento global— se
-retiraron por completo del frontend.
+Las páginas pendientes con contrato backend aprobado se degradan a un aviso explícito en vez
+de romperse. El inventario vive en `src/lib/disponibilidad.ts` y **el gate es por página, no
+por módulo**: `MODULOS_SIN_BACKEND` queda **vacío desde el plan 081**, así que las cuatro
+páginas `/admin/*` (`/admin/usuarios`, `/admin/plantillas`, `/admin/valores`, `/admin/logs`)
+están **activas** y consumen el backend real. La búsqueda de plantillas y el alta manual
+completa de APU están integradas en el workspace (F-004 ✅ con verificación contra backend
+real `localhost:8090`). Las operaciones sin contrato consolidado —duplicar proyecto, subir
+logo y descuento global— **siguen retiradas del frontend por decisión de producto**; el uso
+de insumo (`GET /proyectos/{id}/insumos/{id}/usos`) existe como endpoint pero el backend
+devuelve `[]` (stub documentado en `docs/bugs.md`). Detalle de la cobertura y de los gaps
+funcionales abiertos (058 bases personales por contrato backend PERSONAL, 074 armado
+posterior de APU, 089 integración final) en [`plans/00.INDEX.md`](plans/00.INDEX.md) y
+[`plans/HANDOFF-ESTADO-Y-GAPS.md`](plans/HANDOFF-ESTADO-Y-GAPS.md).
 
 > **Antes de tipar un DTO, lee el record de Java** (`git show origin/main:<path>` en
 > `../thesis-back-quarkus`; no hagas checkout, el working tree está en otra rama). Ocho planes de
@@ -127,7 +154,7 @@ retiraron por completo del frontend.
 
 ## Defectos conocidos y sus patrones
 
-[`docs/bugs.md`](docs/bugs.md) documenta los **40 defectos** encontrados en el seam durante la
+[`docs/bugs.md`](docs/bugs.md) documenta los **48 defectos** encontrados en el seam durante la
 ronda de septiembre de 2026 y, más importante, **los cuatro patrones que los produjeron**. Ninguno
 fue detectado por `pnpm run verify`: la suite estuvo verde mientras seis funcionalidades no
 funcionaban en producción.

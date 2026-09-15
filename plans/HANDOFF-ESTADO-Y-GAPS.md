@@ -12,6 +12,36 @@ contexto previo. Todo lo de aquí está **verificado leyendo código**, no infer
 (roadmap completo, 44 pantallas, 92 endpoints reconciliados, tests, shadcn, responsive, lint).
 Este handoff dice *qué está roto y en qué orden*; el inventario dice *qué hay*.
 
+> ## Aviso de vigencia (pasada documental 2026-09-11)
+>
+> Este handoff conserva su **auditoría fechada** (frontend `8cc08b5`, backend `c337950`,
+> 2026-09-06) **tal como se escribió**: cambiar cada fila fechada sería reescribir historia,
+> no documentación viva. El estado verificado al cierre de la pasada documental de septiembre
+> 2026 es:
+>
+> - **Frontend baseline funcional:** `be5fc776` (corte de código; la rama de trabajo documental no forma parte del estado publicado).
+> - **Backend `origin/main` actual:** **`ac84c945`** (incluye Plan 005 de búsqueda, lote y APU
+>   manual integrado el 2026-09-11, además del cronograma completo desde `c337950` y los cuatro
+>   recursos admin de los planes 077–080).
+> - **Baseline FE verificado al cierre:** `pnpm run verify` en verde — typecheck, lint,
+>   guard:adr9, format:check, test y build — con **637/637 tests en 92 archivos** y **9
+>   warnings de lint** (0 errores). E2E, CI y CD no se ejecutaron en esta pasada: el conteo
+>   cubre solo unidad/componente; la última medición E2E conocida (Chromium 67/67, capturas
+>   13/13) está fechada 2026-09-11 en [`BITACORA.md`](BITACORA.md) bajo "Cierre de F-004".
+> - **Gaps funcionales abiertos al cierre** (no son "rotos pendientes", son trabajo a
+>   planificar): **058** bases personales (BLOCKED por deriva del contrato backend PERSONAL en
+>   `ac84c945`), **074** armado posterior de APU dentro de `EditorApuPage` (DEFERRED), **089**
+>   integración final y documentación (TODO, depende de 058/072); **056** responsive sigue en
+>   espera de decisión de producto.
+> - **Lo que cambió desde que se escribió este handoff** y que un lector nuevo podría
+>   sorprenderse: (a) el panel admin **sí** tiene backend y las cuatro páginas
+>   (`/admin/usuarios`, `/admin/plantillas`, `/admin/valores`, `/admin/logs`) **están activas**
+>   — `MODULOS_SIN_BACKEND` quedó vacío tras el Plan 081; (b) el cronograma **sí** está
+>   integrado y exporta XLSX/PDF/MSPDI; (c) la búsqueda y alta manual de APU (F-004) está
+>   integrada con verificación contra backend real `localhost:8090`. La cobertura de
+>   pantallas/endpoints/tests del momento de la auditoría se conserva en
+>   [`INVENTARIO-COBERTURA.md`](INVENTARIO-COBERTURA.md).
+
 > ## Aviso de revisión (2026-09-06, segunda pasada)
 >
 > Entre la primera y la segunda redacción de este documento, `origin/main` avanzó de `f707863`

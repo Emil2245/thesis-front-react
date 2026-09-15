@@ -23,22 +23,22 @@ Cuatro cosas, en orden, y nada más antes de empezar.
 
    ```bash
    cd ../thesis-back-quarkus && git fetch --all
-   git log --oneline c337950..origin/main          # c337950 = último commit ya analizado
-   git diff --name-only c337950..origin/main | grep '\.java$'
+   git log --oneline ac84c945..origin/main          # ac84c945 = corte funcional ya analizado
+   git diff --name-only ac84c945..origin/main | grep '\.java$'
    ```
 
-   El working tree del backend está en `test/stuff`, **que no está mergeada**. Nunca hagas
-   checkout: lee `main` con `git show origin/main:<path>` y `git ls-tree -r --name-only origin/main`.
+   El working tree del backend está en `origin/main` @ `ac84c945`. Si el working tree local difiere, nunca hagas
+   checkout: lee `origin/main` con `git show origin/main:<path>` y `git ls-tree -r --name-only origin/main`.
 
 2. **`plans/BITACORA.md`** — dice dónde te quedaste. Si la ruta que describe está cerrada, abres
    una sección nueva para esta ronda (§1). Compruébala contra `git worktree list` y `git log`
    antes de creerla.
 
 3. **`plans/HANDOFF-ESTADO-Y-GAPS.md`** y **`plans/INVENTARIO-COBERTURA.md`** — qué hay medido en
-   el front. Están escritos contra `c337950`; lo que el delta contradiga, caduca.
+   el front. Sus auditorías fechadas conservan el histórico; para el estado vivo usa sus avisos de vigencia y `plans/00.INDEX.md`.
 
 4. **`AGENTS.md`** de este repo — convenciones, y **`docs/bugs.md`** — los cuatro patrones que
-   produjeron 40 defectos reales aquí. El más repetido: *el mock era la especificación*. Un
+   produjeron 48 defectos reales aquí. El más repetido: *el mock era la especificación*. Un
    handler MSW que acepta cualquier cuerpo es un test que no prueba nada, y la suite estuvo verde
    mientras seis funcionalidades no funcionaban en producción.
 
@@ -53,7 +53,7 @@ Escribe en ella **en el momento en que algo cambia de estado**, no al final de l
 cortan a mitad, lo que no escribiste no ocurrió. Abre una sección para esta ronda con el mismo
 formato que las anteriores (tabla plan · estado · worktree · commit · nota) y **anota el SHA del
 backend contra el que estás trabajando**. Sin ese SHA la ronda siguiente no sabe dónde empezar —
-es el `c337950` de la §0.
+es el corte funcional `ac84c945` de la §0.
 
 Estados: `⏳ pendiente` · `🔄 en curso` · `🟡 vuelto, sin revisar` · `❌ rechazado, redespachado` ·
 `✅ verde`.
@@ -83,7 +83,7 @@ Inventario de recursos, cuando necesites la foto completa:
 
 ```bash
 cd ../thesis-back-quarkus
-git ls-tree -r --name-only origin/main | grep 'Resource\.java$'   # eran 31 en 5673615
+git ls-tree -r --name-only origin/main | grep 'Resource\.java$'   # eran 31 en 5673615; ahora 36 en ac84c945
 ```
 
 ### Fase 2 — Si viene documentado, ese es tu contrato
@@ -260,11 +260,12 @@ cuándo se pregunta al humano.
 
 ## 5. Qué hay en el delta ahora mismo
 
-Verificado el **2026-09-07** contra `origin/main` @ **`5673615`** ("admin panel plans", del mismo
-día). El último commit ya analizado por el front era `c337950`. **Reconfírmalo con la §0 antes de
+Verificado el **2026-09-11** contra el corte funcional `origin/main` @ **`ac84c945`** ("planes integrados", del mismo
+día). Ese corte integra el cronograma, exportación, panel admin y el paquete de búsqueda de plantillas
+(Planes 001–005). **Reconfírmalo con la §0 antes de
 mover una línea**: el backend avanza planes enteros en dos días.
 
-**Código nuevo — hay contraparte que implementar.** Exportación de cronograma, plan 031 del
+**Código integrado en el corte — la contraparte del front ya está implementada.** Exportación de cronograma, plan 031 del
 backend: 21 archivos Java, ~11k líneas, con tests de integración y perfil XSD.
 
 ```
@@ -279,17 +280,17 @@ GET /documentos/cronograma/{presupuestoId}?formato=            → xlsx | pdf | 
 - **El contrato ejecutable está en `api/bruno/11-cronograma/TC-31-*.bru`**: formato inválido → 400,
   UUID v4 → 400, presupuesto ajeno → 404, y las cabeceras exactas de cada descarga. Ahí tienes los
   casos de test del front escritos.
-- Contraparte en el front: `src/features/exportar/` — `useExportar.ts` ya tiene el patrón de
-  descarga con el helper `descargar()` de `src/api/request.ts` (lo dejó el plan 051 para la
-  especificación técnica en DOCX). `ExportPage.tsx` dice en su propio texto qué falta; ese texto
-  hay que corregirlo cuando esto entre. `"documentos"` **ya no** está en `MODULOS_SIN_BACKEND`.
+- Contraparte en el front: `src/features/exportar/` — `useExportar.ts` usa el patrón de
+  descarga con el helper `descargar()` de `src/api/request.ts`; la integración documental también está cerrada.
+   `ExportPage.tsx` ya consume esta integración; no se debe crear otro plan para el mismo delta.
+  `"documentos"` **ya no** está en `MODULOS_SIN_BACKEND`.
 
-**Solo planes, sin código — no escribas planes de frontend contra esto.** El panel admin:
+**Planes y código integrados — no escribas planes duplicados para este delta.** El panel admin:
 `plans/panel-admin/032`–`040` del backend (sincronizar contrato, log de actividad, usuarios e
 invitaciones, bases centrales, plantillas de sistema, parámetros y valores, instrumentación D13,
-piloto SUS). Es exactamente lo que sigue degradado en `src/lib/disponibilidad.ts`
-(`admin-usuarios`, `admin-plantillas`, `admin-valores`, `admin-logs`) y sigue así hasta que
-aparezca un recurso JAX-RS. Cuando aparezca, encender esas páginas es la ronda siguiente.
+piloto SUS). Los recursos JAX-RS de los planes 077–080 ya están integrados y el Plan 081 retiró los gates.
+Las páginas `admin-usuarios`, `admin-plantillas`, `admin-valores` y `admin-logs` están activas; no
+se debe crear otro plan para el mismo delta. El piloto SUS 1–2 sigue pendiente porque requiere participantes humanos.
 
 ---
 
@@ -300,9 +301,9 @@ pnpm run verify   # typecheck · lint · guard:adr9 · format:check · test · b
 pnpm run e2e      # Playwright, aparte del gate
 ```
 
-Baseline al escribir esto: **456 tests en 72 archivos**, `e2e` en verde, front `main` @ `1344113`.
+Baseline funcional del corte: **637/637 tests unitarios en 92 archivos**, `pnpm run verify` verde y 9 warnings de lint; código frontend `be5fc776`. La última medición E2E conocida es Chromium 67/67 con 13/13 capturas y Firefox pendiente por ausencia del binario. E2E, CI y CD no se ejecutaron en esta pasada documental.
 Si al arrancar no coincide, averigua por qué antes de despachar nada — un baseline que miente no
-detecta nada. Si lo cambias, actualiza el número en `AGENTS.md`.
+detecta nada — y actualiza el número en `AGENTS.md`.
 
 Cuatro cosas que el entorno no te va a confesar:
 

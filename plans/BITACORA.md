@@ -2,7 +2,28 @@
 
 > **Entrada principal:** [`00.INDEX.md`](00.INDEX.md). Auditoría vigente: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). Los Planes 077–087, 090–093 y F-004 están cerrados; 058 queda BLOCKED, 072 DEFERRED y 088 SUPERSEDED.
 
-**Encargo activo: resolver el bloqueo de 058; Plan 072 diferido; Plan 089 pendiente** · **Actualizada:** 2026-09-10
+> **Aviso de vigencia (pasada documental 2026-09-11).** Las entradas datadas de esta bitácora
+> son historia y se conservan tal cual: reescribir cada bloque fechado sería reescribir
+> memoria. Estado verificado al cierre de la pasada documental:
+>
+> - **Frontend baseline funcional:** `be5fc776` (corte de código; la rama de trabajo documental no forma parte del estado publicado).
+> - **Backend `origin/main`:** `ac84c945` (Plan 005 integrado el 2026-09-11).
+> - **Baseline FE verificado:** `pnpm run verify` verde — typecheck, lint, guard:adr9,
+>   format:check, test y build — con **637/637 tests en 92 archivos** y **9 warnings de lint**
+>   (0 errores). E2E, CI y CD **no se ejecutaron en esta pasada**: el conteo cubre solo
+>   unidad/componente. La última medición E2E conocida (Chromium 67/67, capturas 13/13,
+>   axe WCAG 2A/2AA) es del cierre de F-004 abajo.
+> - **Gaps funcionales abiertos al cierre:** **058** bases personales (BLOCKED por contrato
+>   backend PERSONAL en `ac84c945`), **074** armado posterior de APU (DEFERRED), **089**
+>   integración final y documentación (TODO, depende de 058/072); **056** responsive en espera.
+> - **Lo que un lector nuevo debe saber** y que esta bitácora no siempre recuerda mencionar:
+>   (a) el panel admin está **activo** — `MODULOS_SIN_BACKEND` quedó vacío con el Plan 081,
+>   así que `/admin/usuarios`, `/admin/plantillas`, `/admin/valores` y `/admin/logs`
+>   consumen el backend real; (b) el cronograma y la exportación documental (XLSX/PDF/MSPDI)
+>   están integrados; (c) la búsqueda y el alta manual de APU (F-004) se validaron contra
+>   backend real `localhost:8090`.
+
+**Encargo activo: resolver el bloqueo de 058; Plan 072 diferido; Plan 089 pendiente** · **Actualizada:** 2026-09-11
 **Ronda de paridad 1** · **CERRADA**
 
 > La lleva el orquestador ([`ORQUESTADOR-PARIDAD.md`](ORQUESTADOR-PARIDAD.md)). Se escribe **en el momento** en que

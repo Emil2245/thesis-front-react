@@ -9,6 +9,21 @@ Complemento de [`HANDOFF-ESTADO-Y-GAPS.md`](HANDOFF-ESTADO-Y-GAPS.md). El handof
 roto y en qué orden arreglarlo*; este documento dice *qué hay*, medido, sin interpretación.
 Todo lo de aquí sale de contar archivos y comparar listas, no de leer documentación.
 
+> **Aviso de vigencia (pasada documental 2026-09-11).** La tabla de arriba y todo el cuerpo
+> fechado **2026-09-06** son **el barrido histórico** que produjo este documento: se conservan
+> tal cual para que cualquier análisis posterior pueda comparar contra ese punto fijo. El
+> estado vivo de la cobertura no está aquí — está en el índice. Si quieres saber *qué hay
+> hoy*, lee [`00.INDEX.md`](00.INDEX.md) y [`BITACORA.md`](BITACORA.md). Resumen del
+> contraste para no perder media hora buscando: el frontend avanzó de `8cc08b5` (45/207) al
+> corte de código `be5fc776` con **`pnpm run verify` verde y 637/637 tests en 92 archivos, 9 warnings
+> de lint**; el backend `origin/main` está en **`ac84c945`** (Plan 005 integrado), y los
+> cuatro recursos admin y el cronograma/export de los que este inventario decía «sin backend»
+> ya están integrados. La fila **S-24** (descuento del rubro) sigue retirada por decisión de
+> producto y la siguen siéndolo el descuento global, la duplicación de proyecto y la subida
+> de logo. Los gaps funcionales abiertos al cierre están listados en
+> [`HANDOFF-ESTADO-Y-GAPS.md`](HANDOFF-ESTADO-Y-GAPS.md) §"Aviso de vigencia" y en
+> [`00.INDEX.md`](00.INDEX.md) §"Decisión de secuencia".
+
 > **Aviso de caducidad (2026-09-07, ronda de paridad 1).** Medido contra `origin/main` @
 > `c337950`; el backend está en **`5673615`**. Lo que caducó: **92 → 94 endpoints** (se suman el
 > preflight y la descarga de `/documentos/cronograma/{presupuestoId}`), la fila **Documentos** de

@@ -1,6 +1,15 @@
 # Frontend implementation plans — `thesis-front-react`
 
-> **Entrada principal vigente:** [`00.INDEX.md`](00.INDEX.md). Auditoría 2026-09-09: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md). La secuencia ejecutable pendiente es 075–089; no mover los planes históricos para preservar enlaces.
+> **Entrada principal vigente:** [`00.INDEX.md`](00.INDEX.md). Estado vivo de los planes y de los gaps
+> funcionales abiertos frente a backend `origin/main @ ac84c945`. Trabajo funcional pendiente
+> **actual**: **058** (bases personales, BLOCKED por deriva del contrato backend PERSONAL),
+> **074** (armado posterior de APU dentro de `EditorApuPage`, DEFERRED) y **089** (integración
+> final y documentación, TODO); **056** (responsive) sigue en espera de decisión de producto.
+> Las tablas de planes históricos se conservan intactas debajo para no romper enlaces — ver
+> `Decisión de secuencia` en [`00.INDEX.md`](00.INDEX.md) para el estado por plan. Auditoría
+> 2026-09-09: [`auditoria/2026-09-09-validacion-planes.md`](auditoria/2026-09-09-validacion-planes.md).
+
+> **Baseline funcional verificado (corte de código `be5fc776`):** `pnpm run verify` PASS — typecheck, lint, guard:adr9, format:check, test y build — con **637/637 tests en 92 archivos** y **9 warnings de lint** (0 errores). E2E, CI y CD no se ejecutaron en esta pasada: el conteo cubre solo unidad/componente. Detalle en [`00.INDEX.md`](00.INDEX.md) y [`BITACORA.md`](BITACORA.md).
 
 Self-contained implementation plans for the **Sistema APU** frontend: the React SPA of the cloud-native platform that automates SERCOP *propuestas técnico-económicas* (APU · presupuesto · cronograma) for Ecuadorian public-works bidding.
 
@@ -181,9 +190,13 @@ cada ronda está en [`BITACORA.md`](BITACORA.md)**, no aquí; esta tabla solo li
 |---|---|---|---|---|---|
 | 066 | [Exportar el cronograma en XLSX, PDF y MSPDI](066-exportar-cronograma.md) | P1 | L | — | DONE (`1fed42d`) |
 
-Ronda 1 (backend `c337950` → `5673615`): el delta traía la exportación documental del cronograma
-(código, plan 031 del backend) y el panel admin (**solo planes, sin ni un recurso JAX-RS** — las
-cuatro claves `admin-*` de `src/lib/disponibilidad.ts` siguen degradadas a propósito).
+Ronda 1 histórica (backend `c337950` → `5673615`, 2026-09-07): el delta traía la exportación
+documental del cronograma (código, plan 031 del backend) y el panel admin, que en ese momento
+**solo tenía planes, sin ni un recurso JAX-RS** — las cuatro claves `admin-*` de
+`src/lib/disponibilidad.ts` seguían degradadas a propósito. **Ese cuadro es histórico:**
+los Planes 077–081 cerraron ese delta y `MODULOS_SIN_BACKEND` quedó vacío; las cuatro
+páginas admin están activas y el cronograma/export opera contra el backend real. Estado
+vivo en [`00.INDEX.md`](00.INDEX.md) y [`BITACORA.md`](BITACORA.md).
 
 ### Manuales de usuario — desde 2026-09-07
 
@@ -210,9 +223,9 @@ casi no se pisan. Los archivos compartidos —`docs/manual/README.md`, `package.
 | 069 | [Capítulo 03 — Insumos](069-manual-cap-03-insumos.md) | P1 | M | Ola 0 | DONE (`08dcad8`) |
 | 070 | [Capítulo 08 — Navegación](070-manual-cap-08-navegacion.md) | P1 | M | Ola 0 | DONE (`8a8d182`) |
 | 071 | [Encender «Ver uso» y tres avisos que mienten](071-encender-ver-uso-y-tres-textos-que-mienten.md) | P1 | S | Ola 1 | DONE (`c3b5821`) |
-| 072 | [Capítulo 04 — El APU](072-manual-cap-04-apu.md) | P1 | L | **074** | BLOCKED — no se puede añadir un insumo a un APU |
+| 072 | [Capítulo 04 — El APU](072-manual-cap-04-apu.md) | P1 | L | **074** | DEFERRED — depende del armado posterior de APU (074), pasado documental final |
 | 073 | [Capítulo 05 — Presupuesto y versiones](073-manual-cap-05-presupuesto.md) | P1 | L | Ola 1 | DONE (`55e20cb`) |
-| 074 | [Que se pueda armar un APU](074-el-apu-no-se-puede-armar.md) | P1 | M | — | TODO |
+| 074 | [Que se pueda armar un APU](074-el-apu-no-se-puede-armar.md) | P1 | M | — | DEFERRED — armado posterior al alta activa (F-004) |
 
 ### Segunda tanda — auditoría posterior al rediseño de UI (2026-08-24)
 
