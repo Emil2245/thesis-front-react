@@ -27,10 +27,12 @@ architecture/08-codebase-design.md §9.
 - **Ids UUIDv7 en las fixtures, siempre.** Un test con `id: 1` no detecta un
   guard `id > 0`. Las únicas entidades con id numérico real son `usuario` y
   `perfil`.
-- **Toda ruta de listado se mockea con `*` al final** (`/proyectos/:id/insumos*`),
-  en MSW y en Playwright. La paginación manda `?page=0` siempre: un patrón
-  literal deja de casar, la petición cae en el catch-all que devuelve `{}` y la
-  página revienta. Es la clase de error que vuelve a colarse sola.
+- **Toda ruta de listado se intercepta con `*` al final en Playwright**
+  (`page.route(API + "/proyectos*", ...)`); en MSW no se usa porque `http.get()`
+  casa por pathname e ignora el query string. Ninguno de los 51 handlers de
+  `src/test/handlers.ts` lo lleva: añadirlo también capturaría rutas hijas
+  (por ejemplo, `${API}/admin/usuarios*` captura `/admin/usuarios/:id`). La
+  paginación añade `?page=0` y un patrón literal deja de casar en Playwright.
 - **Handlers tipados** desde `src/api/contract.ts`. Un mock que no compila es
   deriva de contrato detectada.
 - **Zod:** los tests de formulario importan el schema real del módulo. Nunca se

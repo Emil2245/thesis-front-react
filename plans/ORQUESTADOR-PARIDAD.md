@@ -334,9 +334,10 @@ y **tú eres quien las hace cumplir en revisión**.
    `as never` — el plan 060 se dedicó a retirarlos.
 3. **No borrar los módulos degradados.** Se apagan con `ModuloNoDisponible` y conservan su
    implementación real como `<Nombre>PageActiva`. El gate es **por página, no por módulo**.
-4. **Toda ruta mockeada de un endpoint de listado lleva `*` al final**, en MSW y en Playwright: la
-   paginación añade `?page=0`, un patrón literal deja de casar, cae en el catch-all y la página
-   revienta.
+4. **Toda ruta mockeada de un endpoint de listado lleva `*` al final**, en Playwright: la
+   paginación añade `?page=0` y un patrón literal deja de casar en Playwright. En MSW no se usa `*`,
+   porque `http.get()` casa por pathname e ignora el query string; añadirlo también capturaría rutas
+   hijas. La página puede fallar sin que el test lo evidencie.
 5. **Los tests se arreglan consultando por rol accesible** (en español), no cambiando el marcado
    para complacer al test.
 6. **Nada de colores crudos de Tailwind** (`bg-blue-500`). El tema es neutro; solo los tokens de

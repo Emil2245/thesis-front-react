@@ -127,6 +127,8 @@ API contracts and design docs live in the companion [thesis-docs](https://github
 DTOs are hand-transcribed from Apéndice B; el backend Quarkus expone OpenAPI en `/q/openapi`,
 pero el frontend mantiene su costura tipada explícita hasta sustituirla por generación automática.
 
+El paquete backend complementario [`plans_busquedas_plantilla`](../thesis-back-quarkus/plans/plans_busquedas_plantilla/README.md) está DONE (planes 001–005, 2026-09-10/11) y define los contratos de FTS, lote atómico y alta manual de APU consumidos por F-004.
+
 **El backend es la fuente de verdad del contrato.** Implementa **36 recursos JAX-RS**
 (`origin/main` @ `ac84c945` — incluye cronograma completo desde el 2026-09-05, los cuatro
 recursos admin de planes 077–080, y el Plan 005 de búsqueda/lote/APU manual integrado el
