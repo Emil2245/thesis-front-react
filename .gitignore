@@ -43,3 +43,7 @@ test-results
 **/.temp/
 
 .atl
+
+# Local knowledge-graph artifacts (CodeGraph daemon cache + graphify CLI output).
+/.codegraph/
+/graphify-out/
