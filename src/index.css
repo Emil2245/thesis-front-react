@@ -147,6 +147,25 @@
 }
 
 @layer utilities {
+  .scrollbar-discreet {
+    scrollbar-color: color-mix(in oklab, var(--foreground) 24%, transparent) transparent;
+    scrollbar-width: thin;
+  }
+
+  .scrollbar-discreet::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-discreet::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-discreet::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: color-mix(in oklab, var(--foreground) 24%, transparent);
+  }
+
   .num {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";

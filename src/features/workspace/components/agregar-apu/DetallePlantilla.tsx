@@ -22,7 +22,7 @@ export function DetallePlantilla({ detalle, cargando, error, hayActiva }: Detall
       aria-label="Detalle de plantilla"
       aria-live="polite"
       aria-busy={cargando}
-      className="min-h-48 overflow-y-auto rounded-lg border p-4 md:max-h-[26rem]"
+      className="min-h-0 min-w-0 overflow-y-auto rounded-lg border p-4"
     >
       {!hayActiva ? (
         <p className="grid min-h-40 place-items-center text-center text-sm text-muted-foreground">

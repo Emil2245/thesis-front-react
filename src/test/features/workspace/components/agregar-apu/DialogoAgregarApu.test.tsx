@@ -298,4 +298,59 @@ describe("DialogoAgregarApu", () => {
     expect(screen.getByRole("button", { name: "Crear APU" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Cancelar" })).toBeVisible();
   });
+
+  it("mantiene fijos los filtros y separa los scrolls de lista y detalle", async () => {
+    renderDialogo();
+
+    await screen.findByRole("button", { name: /Ver detalles de Hormigón estructural/ });
+
+    const lista = screen.getByRole("region", { name: "Plantillas disponibles" });
+    const detalle = screen.getByRole("region", { name: "Detalle de plantilla" });
+    const cuerpo = lista.parentElement?.parentElement;
+
+    expect(screen.getByRole("searchbox", { name: "Buscar plantillas" })).toBeVisible();
+    expect(screen.getByRole("combobox", { name: "Capítulo de destino" })).toBeVisible();
+    expect(cuerpo).toHaveClass("overflow-hidden");
+    expect(cuerpo).not.toHaveClass("overflow-y-auto");
+    expect(lista).toHaveClass("overflow-hidden");
+    expect(within(lista).getByRole("list")).toBeInTheDocument();
+    expect(detalle).toHaveClass("overflow-y-auto");
+  });
+
+  it("crea un capítulo desde el selector cuando el presupuesto está vacío", async () => {
+    const peticiones = espiar();
+    const nuevoCapitulo = {
+      ...presupuestoFixture.capitulos[0]!,
+      id: "0198c1a1-0000-7000-8000-000000000099",
+      item: "1",
+      descripcion: "Capítulo nuevo",
+      subcapitulos: [],
+      rubros: [],
+    };
+    server.use(
+      http.post(`${API}/presupuestos/:id/capitulos`, async ({ request, params }) => {
+        expect(params.id).toBe(PRESUPUESTO_V2);
+        expect(await request.json()).toEqual({ descripcion: "Capítulo nuevo" });
+        return HttpResponse.json({ ...presupuestoFixture, capitulos: [nuevoCapitulo] });
+      }),
+    );
+
+    const { user } = renderDialogo({ capitulos: [] });
+    await user.click(await screen.findByRole("button", { name: "Crear capítulo" }));
+
+    const dialogo = await screen.findByRole("dialog", { name: "Crear capítulo" });
+    await user.type(
+      within(dialogo).getByRole("textbox", { name: "Nombre del capítulo" }),
+      "Capítulo nuevo",
+    );
+    await user.click(within(dialogo).getByRole("button", { name: "Guardar" }));
+
+    await waitFor(() => {
+      expect(
+        ultima(peticiones, "POST", `/presupuestos/${PRESUPUESTO_V2}/capitulos`)?.cuerpo,
+      ).toEqual({ descripcion: "Capítulo nuevo" });
+      expect(screen.queryByRole("dialog", { name: "Crear capítulo" })).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole("dialog", { name: "Agregar APU" })).toBeInTheDocument();
+  });
 });

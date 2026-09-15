@@ -39,7 +39,7 @@ export function WorkspaceSplit({ left, right }: { left: ReactNode; right: ReactN
       style={{
         gridTemplateColumns: `minmax(0, ${leftPercent}fr) auto minmax(0, ${100 - leftPercent}fr)`,
       }}
-      className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-x-hidden md:grid md:gap-0"
+      className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden md:grid md:gap-0"
     >
       {/* Required keyboard navigation for the labelled workspace pane. */}
       {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
@@ -47,7 +47,7 @@ export function WorkspaceSplit({ left, right }: { left: ReactNode; right: ReactN
         role="region"
         tabIndex={0}
         aria-label="Presupuesto"
-        className="min-h-0 min-w-0 overflow-auto outline-none focus-visible:ring-2 focus-visible:ring-ring md:col-start-1 md:pr-4"
+        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-ring md:col-start-1 md:pr-4"
       >
         {left}
       </div>
@@ -78,7 +78,7 @@ export function WorkspaceSplit({ left, right }: { left: ReactNode; right: ReactN
         role="region"
         tabIndex={0}
         aria-label="Detalle del proyecto"
-        className="min-h-0 min-w-0 overflow-auto outline-none focus-visible:ring-2 focus-visible:ring-ring md:col-start-3 md:pl-4"
+        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-ring md:col-start-3 md:pl-4"
       >
         {right}
       </div>

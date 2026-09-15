@@ -10,11 +10,11 @@ export function AppShell() {
   return (
     <DisplayConfigProvider>
       <TooltipProvider>
-        <SidebarProvider>
+        <SidebarProvider className="h-svh">
           <AppSidebar />
-          <SidebarInset className="min-w-0">
+          <SidebarInset className="min-h-0 min-w-0 overflow-hidden">
             <Topbar />
-            <main className="flex flex-1 flex-col gap-5 p-6">
+            <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-6">
               <LimiteDeError>
                 <Outlet />
               </LimiteDeError>

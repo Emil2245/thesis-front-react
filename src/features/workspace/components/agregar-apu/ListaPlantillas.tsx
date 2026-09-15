@@ -58,9 +58,9 @@ export function ListaPlantillas({
   return (
     <section
       aria-label="Plantillas disponibles"
-      className="flex min-h-0 flex-col rounded-lg border"
+      className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border"
     >
-      <div aria-busy={cargando} className="relative min-h-48 flex-1 overflow-y-auto p-1">
+      <div aria-busy={cargando} className="relative min-h-0 flex-1 overflow-y-auto p-1">
         {estado ? (
           <p className="grid min-h-44 place-items-center px-4 text-center text-sm text-muted-foreground">
             {estado}

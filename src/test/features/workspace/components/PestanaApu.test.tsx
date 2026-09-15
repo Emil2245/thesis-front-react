@@ -52,7 +52,7 @@ describe("PestanaApu", () => {
   });
 
   it("renders the complete read-only fixture in server order", async () => {
-    renderApu();
+    const { user } = renderApu();
     expect(await screen.findByText("APU-001")).toBeInTheDocument();
     expect(screen.getByText("Excavación a máquina")).toBeInTheDocument();
     expect(screen.getByText("Unidad: m3")).toBeInTheDocument();
@@ -67,10 +67,17 @@ describe("PestanaApu", () => {
     expect(screen.getByText("45")).toBeInTheDocument();
     expect(screen.getByText("400")).toBeInTheDocument();
     expect(screen.getByText("Subtotal: 400")).toBeInTheDocument();
-    expect(screen.getByText("Costo directo (CD)").nextElementSibling).toHaveTextContent("800");
-    expect(screen.getByText("Costo indirecto (CI)").nextElementSibling).toHaveTextContent("120");
-    expect(screen.getByText("Costo total (CT)").nextElementSibling).toHaveTextContent("920");
-    expect(screen.getByText("CI efectivo").nextElementSibling).toHaveTextContent("0.15");
+    expect(screen.getByText("CD").closest("div")).toHaveTextContent("800");
+    expect(screen.getByText("CI").closest("div")).toHaveTextContent("120");
+    expect(screen.getByText("CT").closest("div")).toHaveTextContent("920");
+    expect(screen.getByText("CI ef.").closest("div")).toHaveTextContent("0.15");
+    expect(screen.getByText("CD").closest("dl")).toHaveClass("shrink-0", "flex-wrap");
+    await user.hover(screen.getByText("CD"));
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Costo directo");
+    expect(screen.getByText("APU-001").closest("header")?.parentElement).toHaveClass(
+      "flex-1",
+      "overflow-auto",
+    );
   });
 
   it("builds the exact editor href and has no mutation controls", async () => {
@@ -85,11 +92,15 @@ describe("PestanaApu", () => {
     );
     renderApu("/proyectos/proyecto-1/workspace?v=7&rubro=rubro-1");
     await screen.findByText("APU-001");
-    expect(screen.getByRole("link", { name: "Editar APU completo" })).toHaveAttribute(
+    const editar = screen.getByRole("link", { name: "Editar APU completo" });
+    expect(editar).toHaveAttribute(
       "href",
       `/proyectos/proyecto-1/apus/${apuDetalleFixture.id}?v=7`,
     );
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(editar.closest("header")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^(Guardar|Eliminar|Agregar|Crear)/i }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
     expect(mutation).not.toHaveBeenCalled();
   });

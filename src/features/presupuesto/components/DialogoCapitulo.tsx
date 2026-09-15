@@ -16,6 +16,7 @@ interface DialogoCapituloProps {
   onConfirm: (descripcion: string) => void;
   titulo: string;
   valorInicial?: string;
+  etiqueta?: string;
 }
 
 export function DialogoCapitulo({
@@ -24,6 +25,7 @@ export function DialogoCapitulo({
   onConfirm,
   titulo,
   valorInicial = "",
+  etiqueta = "Descripción",
 }: DialogoCapituloProps) {
   const [descripcion, setDescripcion] = useState(valorInicial);
 
@@ -35,7 +37,7 @@ export function DialogoCapitulo({
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="descripcion">Descripción</Label>
+            <Label htmlFor="descripcion">{etiqueta}</Label>
             <Input
               id="descripcion"
               value={descripcion}

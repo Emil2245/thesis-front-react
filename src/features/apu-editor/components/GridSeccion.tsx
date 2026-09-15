@@ -90,6 +90,7 @@ export function GridSeccion({
                 onRestaurarHerencia={onRestaurarHerencia}
                 onEliminarFila={onEliminarFila}
                 onReordenarFila={onReordenarFila}
+                seccionTipo={seccion.tipo}
                 indice={indice}
                 totalFilas={seccion.filas.length}
               />

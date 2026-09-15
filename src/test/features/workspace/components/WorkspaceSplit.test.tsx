@@ -18,9 +18,15 @@ describe("WorkspaceSplit", () => {
     expect(divider.parentElement).toHaveStyle(
       "grid-template-columns: minmax(0, 50fr) auto minmax(0, 50fr)",
     );
-    expect(divider.parentElement).toHaveClass("flex-col", "md:grid", "gap-4", "md:gap-0");
-    expect(left).toHaveClass("overflow-auto");
-    expect(right).toHaveClass("overflow-auto");
+    expect(divider.parentElement).toHaveClass(
+      "flex-col",
+      "md:grid",
+      "gap-4",
+      "md:gap-0",
+      "overflow-hidden",
+    );
+    expect(left).toHaveClass("flex", "flex-1", "overflow-hidden");
+    expect(right).toHaveClass("flex", "flex-1", "overflow-hidden");
     expect(divider).toHaveClass("md:col-start-2");
     expect(left).toHaveClass("md:col-start-1");
     expect(right).toHaveClass("md:col-start-3");

@@ -4,6 +4,8 @@ import { getApu } from "@/api/apus";
 import { qk } from "@/api/queryKeys";
 import { mensajeCarga } from "../error";
 import { EstadoVacio } from "@/components/comunes/EstadoVacio";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const etiquetas = {
   EQUIPO: "Equipo",
@@ -72,75 +74,125 @@ export function PestanaApu({
     version === null ? "" : `?v=${encodeURIComponent(version)}`
   }`;
   return (
-    <div className="space-y-5 p-4 text-sm">
-      <header className="space-y-1">
-        <p className="font-medium">{apu.codigo}</p>
-        <h2 className="text-lg font-semibold">{apu.descripcion}</h2>
-        <p>Unidad: {apu.unidad}</p>
-      </header>
-      <div className="space-y-4">
-        {secciones.map((seccion) => (
-          <section
-            key={`${seccion.tipo}-${seccion.orden}`}
-            aria-labelledby={`seccion-${seccion.tipo}`}
-          >
-            <div className="flex justify-between border-b pb-1 font-medium">
-              <h3 id={`seccion-${seccion.tipo}`}>{etiquetas[seccion.tipo]}</h3>
-              <span>Subtotal: {seccion.subtotal}</span>
-            </div>
-            <table className="w-full text-left text-xs">
-              <caption className="sr-only">Composición de {etiquetas[seccion.tipo]}</caption>
-              <thead>
-                <tr>
-                  <th scope="col" className="px-1 py-1 font-medium">
-                    Descripción
-                  </th>
-                  <th scope="col" className="px-1 py-1 font-medium">
-                    Unidad
-                  </th>
-                  <th scope="col" className="px-1 py-1 font-medium">
-                    Cantidad
-                  </th>
-                  <th scope="col" className="px-1 py-1 font-medium">
-                    Rendimiento
-                  </th>
-                  <th scope="col" className="px-1 py-1 font-medium">
-                    Precio
-                  </th>
-                  <th scope="col" className="px-1 py-1 font-medium">
-                    Costo
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {seccion.detalles.map((detalle) => (
-                  <tr key={detalle.id}>
-                    <td>{detalle.descripcion}</td>
-                    <td>{detalle.unidad ?? "—"}</td>
-                    <td>{detalle.cantidad ?? "—"}</td>
-                    <td>{detalle.rendimiento ?? "—"}</td>
-                    <td>{detalle.precioEfectivo}</td>
-                    <td>{detalle.costo}</td>
+    <div className="flex h-full min-h-0 flex-col text-sm">
+      <div className="scrollbar-discreet min-h-0 flex-1 space-y-5 overflow-auto p-4">
+        <header className="flex items-start justify-between gap-3">
+          <div className="min-w-0 space-y-1">
+            <p className="font-medium">{apu.codigo}</p>
+            <h2 className="text-lg font-semibold">{apu.descripcion}</h2>
+            <p>Unidad: {apu.unidad}</p>
+          </div>
+          <Button asChild size="sm" variant="outline">
+            <Link aria-label="Editar APU completo" to={editorHref}>
+              Editar APU
+            </Link>
+          </Button>
+        </header>
+        <div className="space-y-4">
+          {secciones.map((seccion) => (
+            <section
+              key={`${seccion.tipo}-${seccion.orden}`}
+              aria-labelledby={`seccion-${seccion.tipo}`}
+            >
+              <div className="flex justify-between border-b pb-1 font-medium">
+                <h3 id={`seccion-${seccion.tipo}`}>{etiquetas[seccion.tipo]}</h3>
+                <span>Subtotal: {seccion.subtotal}</span>
+              </div>
+              <table className="w-full text-left text-xs">
+                <caption className="sr-only">Composición de {etiquetas[seccion.tipo]}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col" className="px-1 py-1 font-medium">
+                      Descripción
+                    </th>
+                    <th scope="col" className="px-1 py-1 font-medium">
+                      Unidad
+                    </th>
+                    <th scope="col" className="px-1 py-1 font-medium">
+                      Cantidad
+                    </th>
+                    <th scope="col" className="px-1 py-1 font-medium">
+                      Rendimiento
+                    </th>
+                    <th scope="col" className="px-1 py-1 font-medium">
+                      Precio
+                    </th>
+                    <th scope="col" className="px-1 py-1 font-medium">
+                      Costo
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-        ))}
+                </thead>
+                <tbody>
+                  {seccion.detalles.map((detalle) => (
+                    <tr key={detalle.id}>
+                      <td>{detalle.descripcion}</td>
+                      <td>{detalle.unidad ?? "—"}</td>
+                      <td>{detalle.cantidad ?? "—"}</td>
+                      <td>{detalle.rendimiento ?? "—"}</td>
+                      <td>{detalle.precioEfectivo}</td>
+                      <td>{detalle.costo}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          ))}
+        </div>
       </div>
-      <dl className="grid grid-cols-2 gap-2 border-t pt-3">
-        <dt>Costo directo (CD)</dt>
-        <dd>{apu.costoDirecto}</dd>
-        <dt>Costo indirecto (CI)</dt>
-        <dd>{apu.costoIndirecto ?? "—"}</dd>
-        <dt>Costo total (CT)</dt>
-        <dd>{apu.costoTotal}</dd>
-        <dt>CI efectivo</dt>
-        <dd>{apu.porcentajeIndirectoEfectivo}</dd>
+      <dl className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t bg-card px-4 py-2 text-sm shadow-[0_-4px_10px_-8px_var(--foreground)]">
+        <div className="flex items-baseline gap-1">
+          <dt>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" className="cursor-help font-medium text-muted-foreground">
+                  CD
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Costo directo</TooltipContent>
+            </Tooltip>
+          </dt>
+          <dd className="num font-medium">{apu.costoDirecto}</dd>
+        </div>
+        <div className="flex items-baseline gap-1">
+          <dt>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" className="cursor-help font-medium text-muted-foreground">
+                  CI
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Costo indirecto</TooltipContent>
+            </Tooltip>
+          </dt>
+          <dd className="num font-medium">{apu.costoIndirecto ?? "—"}</dd>
+        </div>
+        <div className="flex items-baseline gap-1">
+          <dt>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" className="cursor-help font-medium text-muted-foreground">
+                  CT
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Costo total</TooltipContent>
+            </Tooltip>
+          </dt>
+          <dd className="num font-semibold">{apu.costoTotal}</dd>
+        </div>
+        <div className="flex items-baseline gap-1">
+          <dt>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" className="cursor-help font-medium text-muted-foreground">
+                  CI ef.
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Porcentaje de costo indirecto efectivo</TooltipContent>
+            </Tooltip>
+          </dt>
+          <dd className="num font-medium">{apu.porcentajeIndirectoEfectivo}</dd>
+        </div>
       </dl>
-      <Link className="underline" to={editorHref}>
-        Editar APU completo
-      </Link>
     </div>
   );
 }

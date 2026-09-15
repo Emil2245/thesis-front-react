@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SearchIcon, PlusIcon } from "lucide-react";
-import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { EstadoVacio } from "@/components/comunes/EstadoVacio";
 import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
 import { Button } from "@/components/ui/button";
@@ -63,23 +62,13 @@ export function WorkspacePage() {
   const tienePresupuesto = Boolean(activa && presupuestoQuery.data);
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 overflow-x-hidden">
-      <EncabezadoPagina
-        titulo={
-          <span className="inline-flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span>{proyecto.nombreProyecto}</span>
-            {activa ? (
-              <span className="font-mono text-sm font-normal text-muted-foreground">
-                Presupuesto {activa.presupuestoId}
-              </span>
-            ) : null}
-          </span>
-        }
-      />
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <WorkspaceSplit
         left={
           <TarjetaTabla
             titulo="Presupuesto"
+            tituloClassName="text-base font-semibold"
+            className="flex min-h-0 flex-1 flex-col"
             accion={
               <div className="flex min-w-0 items-center gap-2">
                 <div className="relative min-w-0">
@@ -135,24 +124,30 @@ export function WorkspacePage() {
           </TarjetaTabla>
         }
         right={
-          <TarjetaTabla titulo="APU">
-            <Tabs defaultValue="apu">
-              <TabsList className="mx-4 mt-3" aria-label="Contenido del APU">
+          <TarjetaTabla titulo="APU" className="flex min-h-0 flex-1 flex-col">
+            <Tabs defaultValue="apu" className="flex min-h-0 flex-1 flex-col">
+              <TabsList className="mx-4 mt-3 shrink-0" aria-label="Contenido del APU">
                 <TabsTrigger value="apu">APU</TabsTrigger>
                 <TabsTrigger value="insumos">Insumos</TabsTrigger>
                 <TabsTrigger value="especificacion">Especificación técnica</TabsTrigger>
               </TabsList>
-              <TabsContent value="apu">
+              <TabsContent value="apu" className="min-h-0 flex-1 overflow-hidden">
                 <PestanaApu
                   apuId={selectedApuId}
                   proyectoId={proyecto.id}
                   presupuestoId={activa?.presupuestoId ?? ""}
                 />
               </TabsContent>
-              <TabsContent value="insumos">
+              <TabsContent
+                value="insumos"
+                className="scrollbar-discreet min-h-0 flex-1 overflow-auto"
+              >
                 <PestanaInsumos apuId={selectedApuId} presupuestoId={activa?.presupuestoId ?? ""} />
               </TabsContent>
-              <TabsContent value="especificacion">
+              <TabsContent
+                value="especificacion"
+                className="scrollbar-discreet min-h-0 flex-1 overflow-auto"
+              >
                 <PestanaEspecificacionTecnica
                   apuId={selectedApuId}
                   presupuestoId={activa?.presupuestoId ?? ""}

@@ -15,7 +15,7 @@ import { renderConProviders } from "@/test/render";
 import { server } from "@/test/server";
 
 describe("WorkspacePage", () => {
-  it("mounts with only the project title and active budget id", async () => {
+  it("mounts without the redundant page heading", async () => {
     function LocationProbe() {
       return <output aria-label="Ubicación">{useLocation().search}</output>;
     }
@@ -35,14 +35,20 @@ describe("WorkspacePage", () => {
       { ruta: `/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/workspace?v=${PRESUPUESTO_V2}` },
     );
 
-    expect(await screen.findByText("Puente Ambato")).toBeInTheDocument();
+    await screen.findByRole("searchbox", { name: "Buscar en presupuesto" });
     expect(
-      await screen.findByText(new RegExp(`Presupuesto ${PRESUPUESTO_V2}`)),
-    ).toBeInTheDocument();
+      screen.queryByRole("heading", { name: new RegExp(`Presupuesto ${PRESUPUESTO_V2}`) }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(PRESUPUESTO_V2)).not.toBeInTheDocument();
+    expect(screen.queryByText("Puente Ambato")).not.toBeInTheDocument();
     expect(screen.queryByText("Workspace del proyecto")).not.toBeInTheDocument();
     expect(screen.queryByText(/Versión 2/)).not.toBeInTheDocument();
     expect(screen.getByLabelText("Ubicación")).toHaveTextContent(`?v=${PRESUPUESTO_V2}`);
     expect(screen.getByRole("searchbox", { name: "Buscar en presupuesto" })).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("region", { name: "Presupuesto" })).getByText("Presupuesto"),
+    ).toHaveClass("text-base", "font-semibold");
+    expect(screen.getByRole("tabpanel")).toHaveClass("min-h-0", "flex-1", "overflow-hidden");
   });
 
   it("opens with the initial plantilla search, filters, detail and contextual destination", async () => {
@@ -78,7 +84,7 @@ describe("WorkspacePage", () => {
       },
     );
 
-    await screen.findByText("Puente Ambato");
+    await screen.findByRole("searchbox", { name: "Buscar en presupuesto" });
     await user.click(screen.getByRole("button", { name: "Agregar APU" }));
 
     expect(
@@ -145,7 +151,7 @@ describe("WorkspacePage", () => {
       { ruta },
     );
 
-    await screen.findByText("Puente Ambato");
+    await screen.findByRole("searchbox", { name: "Buscar en presupuesto" });
     const trigger = screen.getByRole("button", { name: "Agregar APU" });
     await user.click(trigger);
     await user.click(
@@ -182,7 +188,7 @@ describe("WorkspacePage", () => {
       { ruta: `/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/workspace?v=${PRESUPUESTO_V2}` },
     );
 
-    await screen.findByText("Puente Ambato");
+    await screen.findByRole("searchbox", { name: "Buscar en presupuesto" });
     const trigger = screen.getByRole("button", { name: "Agregar APU" });
     await user.click(trigger);
     await user.click(await screen.findByRole("button", { name: "Crear manualmente" }));
@@ -222,7 +228,7 @@ describe("WorkspacePage", () => {
       { ruta: `/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/workspace?v=${PRESUPUESTO_V2}` },
     );
 
-    await screen.findByText("Puente Ambato");
+    await screen.findByRole("searchbox", { name: "Buscar en presupuesto" });
     const trigger = screen.getByRole("button", { name: "Agregar APU" });
     await user.click(trigger);
     await user.click(await screen.findByRole("button", { name: "Crear manualmente" }));

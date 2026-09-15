@@ -7,12 +7,14 @@ import { cn } from "@/lib/utils";
  */
 export function TarjetaTabla({
   titulo,
+  tituloClassName,
   accion,
   pie,
   className,
   children,
 }: {
   titulo?: ReactNode;
+  tituloClassName?: string;
   accion?: ReactNode;
   pie?: ReactNode;
   className?: string;
@@ -21,8 +23,12 @@ export function TarjetaTabla({
   return (
     <div className={cn("overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10", className)}>
       {titulo || accion ? (
-        <div className="flex h-11 items-center justify-between gap-3 border-b px-4">
-          {titulo ? <span className="text-sm font-medium">{titulo}</span> : <span />}
+        <div className="flex h-11 shrink-0 items-center justify-between gap-3 border-b px-4">
+          {titulo ? (
+            <span className={cn("text-sm font-medium", tituloClassName)}>{titulo}</span>
+          ) : (
+            <span />
+          )}
           {accion}
         </div>
       ) : null}

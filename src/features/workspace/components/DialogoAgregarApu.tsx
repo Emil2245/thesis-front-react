@@ -12,6 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DialogoCapitulo } from "@/features/presupuesto/components/DialogoCapitulo";
+import { useCapituloMutaciones } from "@/features/presupuesto/hooks/useCapituloMutaciones";
 import {
   usePlantillaDetalle,
   useBusquedaPlantillas,
@@ -107,6 +109,7 @@ export function DialogoAgregarApu({
   const [seleccionadas, setSeleccionadas] = useState<PlantillaApuResumenResponse[]>([]);
   const [errorAgregar, setErrorAgregar] = useState<string | null>(null);
   const [modo, setModo] = useState<"plantillas" | "manual">("plantillas");
+  const [crearCapituloAbierto, setCrearCapituloAbierto] = useState(false);
   const [paginaAnterior, setPaginaAnterior] = useState<
     Page<PlantillaApuResumenResponse> | undefined
   >(undefined);
@@ -126,6 +129,7 @@ export function DialogoAgregarApu({
   });
   const detalleQuery = usePlantillaDetalle(activa?.id ?? null);
   const agregar = useAgregarDesdePlantillas(presupuestoId);
+  const { crear: crearCapitulo } = useCapituloMutaciones(presupuestoId);
   const paginaMostrada = busquedaQuery.data ?? paginaAnterior;
   const plantillas = paginaMostrada?.contenido ?? [];
   const seleccionadasIds = useMemo(
@@ -199,6 +203,19 @@ export function DialogoAgregarApu({
     }
   };
 
+  const crearCapituloDesdeDialogo = async (descripcion: string) => {
+    try {
+      const presupuesto = await crearCapitulo.mutateAsync({ descripcion });
+      const creado = presupuesto.capitulos.find(
+        (capitulo) => capitulo.descripcion === descripcion.trim(),
+      );
+      if (creado) setCapituloId(creado.id);
+      setCrearCapituloAbierto(false);
+    } catch {
+      // La mutación ya anuncia el error mediante el toast del hook.
+    }
+  };
+
   const ocultarResultados =
     tipos.length > 0 &&
     (busqueda !== busquedaDebounced || (busquedaQuery.isFetching && !busquedaQuery.data));
@@ -244,7 +261,7 @@ export function DialogoAgregarApu({
           </div>
         ) : (
           <>
-            <div className="min-h-0 space-y-4 overflow-y-auto py-1">
+            <div className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-4 overflow-hidden py-1">
               <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(15rem,0.7fr)] md:items-end">
                 <BuscadorFiltrosPlantillas
                   busqueda={busqueda}
@@ -258,10 +275,11 @@ export function DialogoAgregarApu({
                   opciones={opcionesCapitulo}
                   value={capituloId}
                   onValueChange={setCapituloId}
+                  onCrearCapitulo={() => setCrearCapituloAbierto(true)}
                 />
               </div>
 
-              <div className="grid min-h-0 gap-4 md:grid-cols-2">
+              <div className="grid min-h-0 gap-4 overflow-hidden md:grid-cols-2">
                 <ListaPlantillas
                   plantillas={plantillas}
                   activaId={activa?.id ?? null}
@@ -333,6 +351,13 @@ export function DialogoAgregarApu({
           </>
         )}
       </DialogContent>
+      <DialogoCapitulo
+        open={crearCapituloAbierto}
+        onOpenChange={setCrearCapituloAbierto}
+        onConfirm={crearCapituloDesdeDialogo}
+        titulo="Crear capítulo"
+        etiqueta="Nombre del capítulo"
+      />
     </Dialog>
   );
 }
