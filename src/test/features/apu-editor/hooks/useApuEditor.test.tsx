@@ -270,4 +270,362 @@ describe("useApuEditor", () => {
       await result.current.editarCelda(detalleId, "cantidad", "3.0");
     });
   });
+
+  // Plan 074 §2: una edición inválida debe exponer el mensaje del esquema o
+  // del servidor en la celda. La interfaz los entrega por celda, no por fila
+  // ni por evento: la celda sigue viva aunque la edición ya haya fallado y el
+  // botón debe seguir siendo legible para assistive tech.
+  it("editarCelda con 'abc' deja en cantidad el mensaje del esquema", async () => {
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    const detalleId = apuDetalleFixture.secciones[0].detalles[0].id;
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "cantidad", "abc");
+    });
+
+    const fila = result.current.secciones[0].filas.find((f) => f.detalle.id === detalleId);
+    expect(fila?.estado).toBe("error");
+    expect(fila?.mensajesValidacion?.cantidad).toBe("Debe ser mayor que 0");
+  });
+
+  it("editarCelda con '0' deja en cantidad el mensaje del esquema (>0)", async () => {
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    const detalleId = apuDetalleFixture.secciones[0].detalles[0].id;
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "cantidad", "0");
+    });
+
+    const fila = result.current.secciones[0].filas.find((f) => f.detalle.id === detalleId);
+    expect(fila?.estado).toBe("error");
+    expect(fila?.mensajesValidacion?.cantidad).toBe("Debe ser mayor que 0");
+  });
+
+  it("editarCelda expone el mensaje del servidor en cantidad cuando devuelve 400", async () => {
+    server.use(
+      http.patch(`${API}/apus/:id/detalles/:did`, () =>
+        HttpResponse.json(
+          { codigo: "validacion", mensaje: "El rendimiento debe ser mayor que 0" },
+          { status: 400 },
+        ),
+      ),
+    );
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    const detalleId = apuDetalleFixture.secciones[0].detalles[0].id;
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "cantidad", "1.5");
+    });
+
+    const fila = result.current.secciones[0].filas.find((f) => f.detalle.id === detalleId);
+    expect(fila?.estado).toBe("error");
+    expect(fila?.mensajesValidacion?.cantidad).toBe("El rendimiento debe ser mayor que 0");
+  });
+
+  it("editarCelda con valor válido deja cantidad sin mensaje pendiente", async () => {
+    server.use(
+      http.patch(`${API}/apus/:id/detalles/:did`, () => HttpResponse.json(apuDetalleFixture)),
+    );
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    const detalleId = apuDetalleFixture.secciones[0].detalles[0].id;
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "cantidad", "2.5");
+    });
+
+    const fila = result.current.secciones[0].filas.find((f) => f.detalle.id === detalleId);
+    expect(fila?.estado).toBe("estable");
+    expect(fila?.mensajesValidacion?.cantidad).toBeUndefined();
+  });
+
+  // Triangulación: tras un fallo de esquema que dejó mensaje, una edición
+  // válida en la misma celda lo limpia. El estado de error no se queda "pegado".
+  it("editarCelda tras un error previo limpia el mensaje de la misma celda", async () => {
+    let peticion = 0;
+    server.use(
+      http.patch(`${API}/apus/:id/detalles/:did`, () => {
+        peticion += 1;
+        if (peticion === 1) {
+          return HttpResponse.json(
+            { codigo: "validacion", mensaje: "Fallo transitorio" },
+            { status: 400 },
+          );
+        }
+        return HttpResponse.json(apuDetalleFixture);
+      }),
+    );
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    const detalleId = apuDetalleFixture.secciones[0].detalles[0].id;
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "cantidad", "1.5");
+    });
+    const filaError = result.current.secciones[0].filas.find((f) => f.detalle.id === detalleId);
+    expect(filaError?.estado).toBe("error");
+    expect(filaError?.mensajesValidacion?.cantidad).toBe("Fallo transitorio");
+
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "cantidad", "2.0");
+    });
+    const filaOk = result.current.secciones[0].filas.find((f) => f.detalle.id === detalleId);
+    expect(filaOk?.estado).toBe("estable");
+    expect(filaOk?.mensajesValidacion?.cantidad).toBeUndefined();
+  });
+
+  // Triangulación: precioOverride con "0" es inválido (>0 o vacío); se usa el
+  // mensaje específico del esquema para no enseñarle al usuario el genérico
+  // de "cantidad" cuando edita otra columna.
+  it("editarCelda con precioOverride 0 deja el mensaje específico del esquema", async () => {
+    server.use(
+      http.patch(`${API}/apus/:id/detalles/:did`, () => HttpResponse.json(apuDetalleFixture)),
+    );
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    const detalleId = apuDetalleFixture.secciones[0].detalles[0].id;
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "precioOverride", "0");
+    });
+
+    const fila = result.current.secciones[0].filas.find((f) => f.detalle.id === detalleId);
+    expect(fila?.estado).toBe("error");
+    expect(fila?.mensajesValidacion?.precioOverride).toBe(
+      "Debe ser mayor que 0 o vacío para heredar",
+    );
+  });
+
+  // Verificación independiente §1: el mensaje es por celda, no por fila. Un
+  // error de cantidad no debe filtrarse a rendimiento/precioOverride.
+  it("un error de cantidad no aparece en rendimiento ni precioOverride", async () => {
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    const detalleId = apuDetalleFixture.secciones[0].detalles[0].id;
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "cantidad", "abc");
+    });
+
+    const fila = result.current.secciones
+      .flatMap((s) => s.filas)
+      .find((f) => f.detalle.id === detalleId);
+    expect(fila?.estado).toBe("error");
+    expect(fila?.mensajesValidacion?.cantidad).toBe("Debe ser mayor que 0");
+    expect(fila?.mensajesValidacion?.rendimiento).toBeUndefined();
+    expect(fila?.mensajesValidacion?.precioOverride).toBeUndefined();
+  });
+
+  it("un error de rendimiento no aparece en cantidad ni precioOverride", async () => {
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    const detalleId = apuDetalleFixture.secciones[0].detalles[0].id;
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "rendimiento", "abc");
+    });
+
+    const fila = result.current.secciones
+      .flatMap((s) => s.filas)
+      .find((f) => f.detalle.id === detalleId);
+    expect(fila?.estado).toBe("error");
+    expect(fila?.mensajesValidacion?.rendimiento).toBe("Debe ser mayor que 0");
+    expect(fila?.mensajesValidacion?.cantidad).toBeUndefined();
+    expect(fila?.mensajesValidacion?.precioOverride).toBeUndefined();
+  });
+
+  // Verificación independiente §1: dos celdas con errores distintos los
+  // mantienen independientes hasta que cada una vuelve a estado limpio.
+  it("mantiene errores independientes entre celdas hermanas", async () => {
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    const detalleId = apuDetalleFixture.secciones[0].detalles[0].id;
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "cantidad", "abc");
+      await result.current.editarCelda(detalleId, "rendimiento", "xyz");
+    });
+
+    const fila = result.current.secciones
+      .flatMap((s) => s.filas)
+      .find((f) => f.detalle.id === detalleId);
+    expect(fila?.mensajesValidacion?.cantidad).toBe("Debe ser mayor que 0");
+    expect(fila?.mensajesValidacion?.rendimiento).toBe("Debe ser mayor que 0");
+    expect(fila?.mensajesValidacion?.precioOverride).toBeUndefined();
+  });
+
+  // Verificación independiente §1: una edición válida en una celda deja la
+  // otra intacta (no propaga el borrado del mensaje a las celdas vecinas).
+  it("corregir cantidad no limpia el mensaje de rendimiento", async () => {
+    let peticiones = 0;
+    server.use(
+      http.patch(`${API}/apus/:id/detalles/:did`, () => {
+        peticiones += 1;
+        return HttpResponse.json(apuDetalleFixture);
+      }),
+    );
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    const detalleId = apuDetalleFixture.secciones[0].detalles[0].id;
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "rendimiento", "abc");
+      await result.current.editarCelda(detalleId, "cantidad", "2.5");
+    });
+
+    const fila = result.current.secciones
+      .flatMap((s) => s.filas)
+      .find((f) => f.detalle.id === detalleId);
+    expect(peticiones).toBe(1);
+    expect(fila?.mensajesValidacion?.cantidad).toBeUndefined();
+    expect(fila?.mensajesValidacion?.rendimiento).toBe("Debe ser mayor que 0");
+  });
+
+  // Verificación independiente §1: un fallo de servidor en cantidad no se
+  // refleja como mensaje en rendimiento.
+  it("un error 400 en cantidad no expone su mensaje en rendimiento", async () => {
+    server.use(
+      http.patch(`${API}/apus/:id/detalles/:did`, () =>
+        HttpResponse.json(
+          { codigo: "validacion", mensaje: "Cantidad fuera de rango" },
+          { status: 400 },
+        ),
+      ),
+    );
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    const detalleId = apuDetalleFixture.secciones[0].detalles[0].id;
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "cantidad", "1.5");
+    });
+
+    const fila = result.current.secciones
+      .flatMap((s) => s.filas)
+      .find((f) => f.detalle.id === detalleId);
+    expect(fila?.mensajesValidacion?.cantidad).toBe("Cantidad fuera de rango");
+    expect(fila?.mensajesValidacion?.rendimiento).toBeUndefined();
+  });
+
+  // Hallazgo restante de verificación: cuando una celda queda en error y el
+  // usuario re-ingresa el valor actual del servidor, no se dispara PATCH (el
+  // valor no cambió), pero la celda debe limpiar su mensaje obsoleto y volver
+  // a "estable". Sin esto, un error transitorio del esquema deja la celda
+  // marcada en rojo incluso después de que el usuario "corrige" al mismo
+  // número que ya estaba.
+  it("reingresar el valor del servidor limpia el error de esa celda sin PATCH", async () => {
+    let peticiones = 0;
+    server.use(
+      http.patch(`${API}/apus/:id/detalles/:did`, () => {
+        peticiones += 1;
+        return HttpResponse.json(apuDetalleFixture);
+      }),
+    );
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    const detalleId = apuDetalleFixture.secciones[0].detalles[0].id;
+    const valorActual = String(apuDetalleFixture.secciones[0].detalles[0].cantidad);
+    expect(valorActual).toBe("1");
+
+    // 1) Forzar un error con un valor no numérico.
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "cantidad", "abc");
+    });
+    const filaError = result.current.secciones
+      .flatMap((s) => s.filas)
+      .find((f) => f.detalle.id === detalleId);
+    expect(filaError?.estado).toBe("error");
+    expect(filaError?.mensajesValidacion?.cantidad).toBe("Debe ser mayor que 0");
+    expect(peticiones).toBe(0);
+
+    // 2) El usuario re-ingresa exactamente el mismo valor que ya tenía la fila:
+    //    el parser lo acepta (>0), pero parsedVal === parsedCurrent hace que
+    //    `editarCelda` retorne sin disparar PATCH. La celda debe quedar limpia.
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "cantidad", valorActual);
+    });
+    const filaOk = result.current.secciones
+      .flatMap((s) => s.filas)
+      .find((f) => f.detalle.id === detalleId);
+    expect(peticiones).toBe(0);
+    expect(filaOk?.estado).toBe("estable");
+    expect(filaOk?.mensajesValidacion?.cantidad).toBeUndefined();
+  });
+
+  // Triangulación del hallazgo restante: limpiar cantidad vía reingreso del
+  // valor actual NO debe tocar el mensaje de una celda hermana que sigue en
+  // error. El contrato por celda debe preservarse también en la ruta de
+  // recuperación, no sólo en la de fallo.
+  it("recuperar cantidad vía reingreso del valor actual no limpia errores de rendimiento", async () => {
+    server.use(
+      http.patch(`${API}/apus/:id/detalles/:did`, () => HttpResponse.json(apuDetalleFixture)),
+    );
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    const detalleId = apuDetalleFixture.secciones[0].detalles[0].id;
+    const valorActual = String(apuDetalleFixture.secciones[0].detalles[0].cantidad);
+
+    // Forzar error en cantidad y en rendimiento.
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "cantidad", "abc");
+      await result.current.editarCelda(detalleId, "rendimiento", "xyz");
+    });
+    const filaError = result.current.secciones
+      .flatMap((s) => s.filas)
+      .find((f) => f.detalle.id === detalleId);
+    expect(filaError?.mensajesValidacion?.cantidad).toBe("Debe ser mayor que 0");
+    expect(filaError?.mensajesValidacion?.rendimiento).toBe("Debe ser mayor que 0");
+
+    // Re-ingresar el valor actual en cantidad: limpia cantidad, deja rendimiento.
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "cantidad", valorActual);
+    });
+    const filaMezclada = result.current.secciones
+      .flatMap((s) => s.filas)
+      .find((f) => f.detalle.id === detalleId);
+    expect(filaMezclada?.mensajesValidacion?.cantidad).toBeUndefined();
+    expect(filaMezclada?.mensajesValidacion?.rendimiento).toBe("Debe ser mayor que 0");
+  });
+
+  // Cobertura adicional del hallazgo: el caso simétrico de precioOverride con
+  // valor vacío cuando el insumo ya hereda — también retorna sin PATCH y debe
+  // limpiar el mensaje obsoleto.
+  it("reingresar el valor heredado en precioOverride limpia el error sin PATCH", async () => {
+    server.use(
+      http.patch(`${API}/apus/:id/detalles/:did`, () => HttpResponse.json(apuDetalleFixture)),
+    );
+    const { wrapper } = crearConFixture();
+    const { result } = renderHook(() => useApuEditor(APU_ID, PRESUPUESTO_ID), { wrapper });
+
+    const detalleId = apuDetalleFixture.secciones[0].detalles[0].id;
+    // El fixture base tiene precioHeredado: true en sección EQUIPO.
+
+    // Forzar error de esquema con un valor no parseable.
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "precioOverride", "abc");
+    });
+    const filaError = result.current.secciones
+      .flatMap((s) => s.filas)
+      .find((f) => f.detalle.id === detalleId);
+    expect(filaError?.mensajesValidacion?.precioOverride).toBe(
+      "Debe ser mayor que 0 o vacío para heredar",
+    );
+
+    // El usuario pulsa Enter con el campo vacío, que en precioOverride significa
+    // "volver a heredar". El hook detecta que ya hereda y no hace PATCH, pero
+    // debe limpiar el error obsoleto.
+    await act(async () => {
+      await result.current.editarCelda(detalleId, "precioOverride", "");
+    });
+    const filaOk = result.current.secciones
+      .flatMap((s) => s.filas)
+      .find((f) => f.detalle.id === detalleId);
+    expect(filaOk?.mensajesValidacion?.precioOverride).toBeUndefined();
+    expect(filaOk?.estado).toBe("estable");
+  });
 });

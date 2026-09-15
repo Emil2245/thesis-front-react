@@ -230,6 +230,7 @@ export function FilaDetalle({
           value={detalle.cantidad != null ? String(detalle.cantidad) : null}
           onCommit={(v) => onEditarCelda(detalle.id, "cantidad", v)}
           editable={!protegida}
+          mensajeError={fila.mensajesValidacion.cantidad}
         />
       </td>
       {muestraRendimiento && (
@@ -238,6 +239,7 @@ export function FilaDetalle({
             value={detalle.rendimiento != null ? String(detalle.rendimiento) : null}
             onCommit={(v) => onEditarCelda(detalle.id, "rendimiento", v)}
             editable={!protegida}
+            mensajeError={fila.mensajesValidacion.rendimiento}
           />
         </td>
       )}
@@ -253,6 +255,7 @@ export function FilaDetalle({
               value={String(detalle.precioEfectivo)}
               onCommit={(v) => onEditarCelda(detalle.id, "precioOverride", v)}
               editable={!protegida}
+              mensajeError={fila.mensajesValidacion.precioOverride}
             />
             <BadgeHerencia
               heredero={heredado}

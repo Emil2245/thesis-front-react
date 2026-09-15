@@ -20,6 +20,7 @@ function renderFilas(onReordenarFila = vi.fn(async () => {})) {
               protegida: false,
               heredado: detalle.precioHeredado,
               estado: "estable",
+              mensajesValidacion: {},
             }}
             muestraRendimiento
             onEditarCelda={vi.fn(async () => {})}

@@ -1,20 +1,23 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useApuEditor } from "../hooks/useApuEditor";
-import { useVersionActiva } from "@/shell/contexto";
+import { useProyectoActivoId, useVersionActiva } from "@/shell/contexto";
 import { EncabezadoApu } from "../components/EncabezadoApu";
 import { GridSeccion } from "../components/GridSeccion";
+import { SelectorInsumo } from "../components/SelectorInsumo";
 import { PieTotales } from "../components/PieTotales";
 import { DialogoGuardarPlantilla } from "../components/DialogoGuardarPlantilla";
 import { PopoverDesglose } from "../components/PopoverDesglose";
 import { PanelEspecificacionTecnica } from "../components/PanelEspecificacionTecnica";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import type { SeccionTipo } from "@/api/contract";
 import { SaveIcon } from "lucide-react";
 
 export function EditorApuPage() {
   // La versión la manda el selector de la barra superior; `:apuId` sí es de ruta.
   const { apuId } = useParams<{ apuId: string }>();
+  const proyectoId = useProyectoActivoId() ?? "";
   const { presupuestoId: versionActiva } = useVersionActiva();
   const presupuestoId = versionActiva ?? "";
   const parsedApuId = apuId ?? "";
@@ -24,6 +27,7 @@ export function EditorApuPage() {
     especificacionTecnica,
     secciones,
     cargando,
+    agregarFila,
     editarCelda,
     restaurarHerencia,
     reordenarFila,
@@ -35,6 +39,11 @@ export function EditorApuPage() {
 
   const [guardarPlantillaDialogAbierto, setGuardarPlantillaDialogAbierto] = useState(false);
   const [desgloseAbierto, setDesgloseAbierto] = useState(false);
+  // Plan 074 §2: una sola instancia de `SelectorInsumo` sirve a las cuatro
+  // secciones; guardamos el tipo activo y lo cambiamos al pulsar "Agregar insumo"
+  // en cualquier grid. `null` significa diálogo cerrado. Mantener un único
+  // diálogo evita apilar cuatro montajes separados y revalidaciones duplicadas.
+  const [selectorTipo, setSelectorTipo] = useState<SeccionTipo | null>(null);
 
   if (cargando) {
     return (
@@ -76,6 +85,7 @@ export function EditorApuPage() {
               onRestaurarHerencia={restaurarHerencia}
               onEliminarFila={eliminarFila}
               onReordenarFila={reordenarFila}
+              onAgregarInsumo={setSelectorTipo}
             />
           ))}
 
@@ -103,6 +113,16 @@ export function EditorApuPage() {
           />
         </div>
       </div>
+
+      {selectorTipo !== null && (
+        <SelectorInsumo
+          abierto
+          onClose={() => setSelectorTipo(null)}
+          proyectoId={proyectoId}
+          tipo={selectorTipo}
+          onSeleccionar={agregarFila}
+        />
+      )}
 
       <DialogoGuardarPlantilla
         abierto={guardarPlantillaDialogAbierto}
