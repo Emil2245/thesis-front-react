@@ -11,14 +11,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useVersiones, useComparacion } from "../hooks/usePresupuesto";
+import { useVersiones } from "../hooks/usePresupuesto";
 import { useVersionMutaciones } from "../hooks/useVersionMutaciones";
 import { DialogoNuevaVersion } from "../components/DialogoNuevaVersion";
-import { ComparadorVersiones } from "../components/ComparadorVersiones";
+import { DialogoCompararVersiones } from "../components/DialogoCompararVersiones";
 import { ConfirmarDestructivo } from "@/components/comunes/ConfirmarDestructivo";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
 import { formatearMoneda } from "@/lib/decimal";
+import { toast } from "sonner";
 
 export function VersionesPage() {
   const { id: proyectoId } = useParams<{ id: string }>();
@@ -29,12 +30,21 @@ export function VersionesPage() {
 
   const [nuevaDialog, setNuevaDialog] = useState(false);
   const [compararId, setCompararId] = useState<string | null>(null);
+  const [compararAbierto, setCompararAbierto] = useState(false);
   const [versionAEliminar, setVersionAEliminar] = useState<string | null>(null);
 
-  const vigente = versiones?.find((v) => v.esVigente);
-  const { data: comparacion, isLoading: compLoading } = useComparacion(
-    vigente?.presupuestoId ?? "",
-    compararId ?? undefined,
+  // Con una sola versión no hay segundo lado posible: abrir el diálogo sólo
+  // enseñaría un formulario que nunca puede ser válido.
+  const handleComparar = useCallback(
+    (versionId: string) => {
+      if ((versiones?.length ?? 0) < 2) {
+        toast.info("Este proyecto sólo tiene una versión: no hay con qué compararla.");
+        return;
+      }
+      setCompararId(versionId);
+      setCompararAbierto(true);
+    },
+    [versiones],
   );
 
   const handleMarcarVigente = useCallback(
@@ -110,7 +120,7 @@ export function VersionesPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCompararId(v.presupuestoId)}
+                        onClick={() => handleComparar(v.presupuestoId)}
                       >
                         Comparar
                       </Button>
@@ -132,7 +142,13 @@ export function VersionesPage() {
         </TarjetaTabla>
       )}
 
-      <ComparadorVersiones data={comparacion} isLoading={compLoading} />
+      <DialogoCompararVersiones
+        key={`${compararId}-${compararAbierto}`}
+        abierto={compararAbierto}
+        onOpenChange={setCompararAbierto}
+        versiones={versiones ?? []}
+        versionInicialId={compararId}
+      />
 
       <DialogoNuevaVersion
         open={nuevaDialog}

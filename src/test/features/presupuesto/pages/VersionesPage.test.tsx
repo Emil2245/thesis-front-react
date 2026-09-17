@@ -103,4 +103,44 @@ describe("VersionesPage", () => {
     // El motivo del backend llega al usuario en vez del genérico de antes.
     expect(await screen.findByText(/No se puede eliminar la versión vigente/i)).toBeInTheDocument();
   });
+
+  // Los dos casos del botón «Comparar», que antes no hacía nada visible: fijaba
+  // el lado A en la vigente y mandaba un 400 «consigo misma» que nadie leía.
+  it("con una sola versión avisa y no abre el diálogo", async () => {
+    server.use(
+      http.get(`${API}/proyectos/:id/presupuestos`, () =>
+        HttpResponse.json([
+          {
+            presupuestoId: PRESUPUESTO_V2,
+            version: 2,
+            esVigente: true,
+            notas: "Única versión",
+            totalGeneral: "1200.000000",
+            fechaCreacion: "2026-03-01T00:00:00",
+          },
+        ]),
+      ),
+    );
+    const { user } = await montar();
+
+    await user.click(within(filaDe("v2")).getByRole("button", { name: /comparar/i }));
+
+    expect(await screen.findByText(/sólo tiene una versión/i)).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("con dos versiones compara las dos que elige el usuario, nunca una consigo misma", async () => {
+    const peticiones = espiar();
+    const { user } = await montar();
+
+    await user.click(within(filaDe("v1")).getByRole("button", { name: /comparar/i }));
+
+    expect(await screen.findByRole("dialog", { name: /comparar versiones/i })).toBeInTheDocument();
+
+    await waitFor(() => {
+      const p = ultima(peticiones, "GET", `/presupuestos/${PRESUPUESTO_V1}/comparar`);
+      expect(p).toBeDefined();
+      expect(p?.url.searchParams.get("con")).toBe(PRESUPUESTO_V2);
+    });
+  });
 });
