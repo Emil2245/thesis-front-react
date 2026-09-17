@@ -49,7 +49,10 @@ export function DialogoCompararVersiones({
 
   // Comparar una versión consigo misma es un 400 `validacion` del backend, así
   // que es un estado inválido del formulario y la query se queda en reposo.
-  const distintas = !!ladoA && !!ladoB && ladoA !== ladoB;
+  // `abierto` entra en la condición porque al cerrar, el `key` del padre remonta
+  // este diálogo con los dos lados ya rellenos: sin él saldría una petición cuyo
+  // resultado no va a mirar nadie.
+  const distintas = abierto && !!ladoA && !!ladoB && ladoA !== ladoB;
   const { data, isLoading, isError, error } = useComparacion(
     distintas ? ladoA : "",
     distintas ? ladoB : undefined,
