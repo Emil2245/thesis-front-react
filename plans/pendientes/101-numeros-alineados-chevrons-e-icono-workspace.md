@@ -13,22 +13,35 @@
 > los fragmentos de "Estado actual" contra el código real antes de continuar;
 > si no coinciden, trátalo como condición STOP.
 
+> **CORREGIDO EL 2026-09-17 — lee esto antes que nada.** La primera versión de
+> este plan traía un **paso C** que pedía formatear los números crudos
+> (`77.000000`) de la tabla del workspace. **Ese paso ya está hecho** en la base
+> de esta rama: `PresupuestoCompacto.tsx` ya usa `formatearNumero` y `Moneda`, y
+> sus tres cabeceras numéricas ya llevan `text-right`. El paso C se ha retirado.
+> El motivo del error: los fragmentos originales se leyeron de la rama
+> `fix/cronograma`, que va 19 commits por detrás de `origin/main`, y ese archivo
+> cambió 389 líneas entre las dos. De ese archivo sólo queda por tocar el
+> chevron, que ahora es el **paso C**.
+> Si al mirar el archivo ves números sin formatear, **para y repórtalo**: estás
+> en una base distinta de la que asume este plan.
+
 ## Estado
 
 - **Prioridad**: P2 — estético, sin impacto funcional
 - **Esfuerzo**: S
 - **Riesgo**: LOW — tres archivos, cambios de presentación. Ninguna petición,
   ningún cálculo, ningún contrato.
-- **Depende de**: ninguno. Puede ejecutarse en paralelo con 097–100, pero el
-  paso C toca `PresupuestoCompacto.tsx`, que **no** toca ningún otro plan de esta
-  tanda; no hay conflicto.
+- **Depende de**: el plan `098`, ya integrado en esta rama (commit `d0e9b63`),
+  porque el paso D toca el diálogo que creó. Los pasos A, B y C son
+  independientes entre sí.
 - **Categoría**: UX / consistencia visual
 - **Planificado en**: commit `d0094f3`, 2026-09-16
 
 ## Por qué importa
 
-Cuatro defectos visuales independientes, agrupados en un plan porque son de una
-línea cada uno y viven en tres archivos distintos que nadie más está tocando.
+Tres defectos visuales independientes —más una petición desperdiciada que se
+coló en el paso D—, agrupados en un plan porque son de una línea cada uno y
+viven en archivos distintos que nadie más está tocando.
 
 **A. El sidebar usa el mismo icono para "Resumen" y para "Workspace".** Dos
 entradas contiguas con el mismo dibujo son dos entradas que el ojo no
@@ -39,14 +52,13 @@ los de la franja de totales, ni la columna "Subtotal" de la tabla de Capítulos.
 En el resto del software todos los números se alinean a la derecha; es lo que
 hace la utilidad `.num` del tema, y aquí está explícitamente anulada.
 
-**C. En el workspace, la tabla del presupuesto pinta los números en crudo**:
-`77.000000`, `2363.900000`, sin separador de miles, sin símbolo de moneda y
-alineados a la izquierda. Es el único sitio de la aplicación que imprime el
-`Decimal` del transporte tal cual llega del servidor.
+**C. En la tabla del workspace, los desplegables de capítulo usan los
+caracteres de texto `▾` / `▸` / `•`** en vez de los iconos de lucide que usa el
+resto de la aplicación. Cambian de forma y de tamaño según la fuente del
+sistema.
 
-**D. En esa misma tabla, los desplegables de capítulo usan los caracteres de
-texto `▾` / `▸` / `•`** en vez de los iconos de lucide que usa el resto de la
-aplicación. Cambian de forma y de tamaño según la fuente del sistema.
+*(El antiguo punto C —números sin formatear— se retiró: ya está arreglado en
+esta base. Ver la nota del encabezado.)*
 
 ## Estado actual
 
@@ -127,7 +139,7 @@ que tiene que llevar la alineación es el `<TableCell>`. Compara con la columna
                       <TableCell className="num text-muted-foreground">
 ```
 
-### C y D — `src/features/workspace/components/PresupuestoCompacto.tsx`
+### C — `src/features/workspace/components/PresupuestoCompacto.tsx`
 
 El botón del desplegable:
 
@@ -138,30 +150,11 @@ El botón del desplegable:
             </button>
 ```
 
-Las celdas de la fila de rubro:
+Está sobre la línea 268. Es **lo único** que queda por cambiar en este archivo.
 
-```tsx
-                <td className="px-2 py-1.5">{rubro.item}</td>
-                <td className="px-2 py-1.5">{rubro.descripcion}</td>
-                <td className="px-2 py-1.5">{rubro.unidad}</td>
-                <td className="px-2 py-1.5">{rubro.cantidad}</td>
-                <td className="px-2 py-1.5">{rubro.precioUnitario}</td>
-                <td className="px-2 py-1.5">{rubro.precioTotal}</td>
-```
-
-`rubro.cantidad`, `rubro.precioUnitario` y `rubro.precioTotal` son `Decimal`, o
-sea cadenas a escala 6. Se pintan sin formatear.
-
-El ejemplar a imitar es `src/features/presupuesto/components/FilaRubro.tsx`, que
-resuelve exactamente lo mismo en la otra pantalla:
-
-```tsx
-      <span className="w-28 text-right font-mono tabular-nums text-xs text-muted-foreground">
-        {formatearMoneda(rubro.precioUnitario)}
-      </span>
-```
-
-y `src/features/presupuesto/components/FilaCapitulo.tsx` para los chevrons:
+El ejemplar a imitar es
+`src/features/presupuesto/components/FilaCapitulo.tsx`, que resuelve lo mismo en
+la otra pantalla:
 
 ```tsx
         {tieneHijos ? (
@@ -177,7 +170,8 @@ y `src/features/presupuesto/components/FilaCapitulo.tsx` para los chevrons:
 
 ## Qué hay que hacer
 
-Los cuatro pasos son independientes. Hazlos en orden y verifica cada uno.
+Los pasos A, B y C son independientes entre sí; el D es aparte y lleva su
+propio commit. Hazlos en orden y verifica cada uno.
 
 ### Paso A — Icono propio para Workspace
 
@@ -241,57 +235,12 @@ Verificación:
 pnpm run typecheck && pnpm run lint
 ```
 
-### Paso C — Formatear y alinear los números del workspace
+### Paso C — Chevrons de lucide en el workspace
 
 En `src/features/workspace/components/PresupuestoCompacto.tsx`:
 
-1. Importa los formateadores:
-
-```tsx
-import { formatearMoneda, formatearNumero } from "@/lib/decimal";
-```
-
-2. Sustituye las tres celdas numéricas de la fila de rubro:
-
-```tsx
-                <td className="px-2 py-1.5">{rubro.item}</td>
-                <td className="px-2 py-1.5">{rubro.descripcion}</td>
-                <td className="px-2 py-1.5">{rubro.unidad}</td>
-                <td className="num px-2 py-1.5">{formatearNumero(rubro.cantidad)}</td>
-                <td className="num px-2 py-1.5">{formatearMoneda(rubro.precioUnitario)}</td>
-                <td className="num px-2 py-1.5">{formatearMoneda(rubro.precioTotal)}</td>
-```
-
-   `cantidad` es una cantidad de obra, no dinero: va con `formatearNumero`, sin
-   símbolo de moneda. `precioUnitario` y `precioTotal` sí son dinero.
-
-3. Alinea también las tres cabeceras correspondientes:
-
-```tsx
-            <th className="px-2 py-1.5">Ítem</th>
-            <th className="px-2 py-1.5">Descripción</th>
-            <th className="px-2 py-1.5">Und.</th>
-            <th className="px-2 py-1.5 text-right">Cantidad</th>
-            <th className="px-2 py-1.5 text-right">P.U.</th>
-            <th className="px-2 py-1.5 text-right">Parcial</th>
-```
-
-**No metas aritmética de dinero aquí.** `formatearMoneda` y `formatearNumero`
-son formateadores puros de `src/lib/decimal.ts`, el único sitio del repo donde
-se permite `toFixed`/`parseFloat` (ADR 9, y lo vigila `pnpm run guard:adr9`
-dentro de `verify`). No sumes, no restes, no calcules porcentajes.
-
-Verificación:
-
-```bash
-pnpm run typecheck && pnpm run guard:adr9
-```
-
-### Paso D — Chevrons de lucide en el workspace
-
-En el mismo archivo:
-
-1. Importa `import { ChevronDown, ChevronRight, Dot } from "lucide-react";`
+1. Añade `ChevronDown`, `ChevronRight` y `Dot` al import de `lucide-react` que
+   ya existe en el archivo (no crees un import nuevo).
 2. Sustituye el `<span aria-hidden>` del botón:
 
 ```tsx
@@ -310,10 +259,52 @@ En el mismo archivo:
 que el desplegable sea navegable y lo que consultan los tests; los iconos son
 decorativos y por eso llevan `aria-hidden`.
 
+**No toques nada más de este archivo.** En particular, ni `moverCapituloRelativo`,
+ni `moverCapituloArrastrado`, ni `renderChapters`, ni el formateo numérico que
+ya está bien.
+
 Verificación:
 
 ```bash
-pnpm run typecheck && pnpm run lint && pnpm run format:check
+pnpm run typecheck && pnpm run lint
+```
+
+### Paso D — Una petición desperdiciada al cerrar el comparador de versiones
+
+Esto **no** es estético y **no** venía en la versión original del plan. Se
+detectó revisando el plan 098, que ya está en esta rama (commit `d0e9b63`), y se
+mete aquí porque es una línea y ningún otro plan toca ese archivo.
+
+`src/features/presupuesto/pages/VersionesPage.tsx` remonta el diálogo con
+`key={`${compararId}-${compararAbierto}`}`. Al **cerrarlo**, la key cambia, el
+diálogo se remonta con los dos lados ya rellenos, `distintas` vale `true` y
+`useComparacion` dispara una petición que nadie va a mirar.
+
+Arréglalo en `src/features/presupuesto/components/DialogoCompararVersiones.tsx`
+haciendo que la query dependa también de que el diálogo esté abierto:
+
+```tsx
+  const distintas = abierto && !!ladoA && !!ladoB && ladoA !== ladoB;
+```
+
+Comprueba que los dos tests de `VersionesPage.test.tsx` siguen verdes. Si alguno
+se pone rojo, para y repórtalo: significa que el diálogo dependía de ese fetch
+en un momento en el que no debería.
+
+**Este paso va en su propio commit**, separado del de los estéticos. Mensaje:
+
+```
+fix(versiones): no pedir la comparación con el diálogo cerrado
+
+Al cerrarlo, el `key` del padre remonta el diálogo con los dos lados ya
+rellenos, así que la query salía igual y se gastaba una petición cuyo
+resultado nadie mira.
+```
+
+Verificación:
+
+```bash
+pnpm exec vitest run src/test/features/presupuesto
 ```
 
 ## Condiciones STOP
@@ -337,6 +328,10 @@ pnpm run typecheck && pnpm run lint && pnpm run format:check
 - La jerarquía y el orden del árbol del workspace — eso es el plan `100`.
 - `src/index.css` y los tokens del tema. `.num` ya hace lo correcto; el problema
   era que se anulaba.
+- **Todo lo demás de `PresupuestoCompacto.tsx`**: el formateo numérico (ya
+  correcto), `moverCapituloRelativo`, `moverCapituloArrastrado` y
+  `renderChapters`. Esos tres últimos los cubre el plan `100` con un test; aquí
+  no se tocan.
 - `src/components/comunes/Moneda.tsx`.
 - Convertir `PresupuestoCompacto` en un componente de tabla compartido con
   `ArbolPresupuesto`. Son dos pantallas con interacciones distintas y
@@ -358,7 +353,6 @@ Y estos `grep`, todos sin coincidencias:
 ```bash
 grep -n 'text-left' src/features/proyectos/pages/ResumenProyectoPage.tsx
 grep -n '▾\|▸' src/features/workspace/components/PresupuestoCompacto.tsx
-grep -n '{rubro.precioTotal}' src/features/workspace/components/PresupuestoCompacto.tsx
 ```
 
 Y uno que sí debe tener exactamente una coincidencia:
@@ -378,10 +372,9 @@ grep -c 'Grid3x3Icon' src/shell/Sidebar.tsx   # 2 (el import y el uso)
    `Mano de obra · %`, `Materiales · %` y `Transporte · %` están alineados a la
    derecha dentro de su tarjeta; la columna `Subtotal` de la tabla "Capítulos"
    también.
-3. **Workspace**: los capítulos usan chevrons de lucide; las columnas
-   `Cantidad`, `P.U.` y `Parcial` salen formateadas (`77,00`, `$ 30,70`,
-   `$ 2.363,90` — con el separador que corresponda al locale del formateador) y
-   alineadas a la derecha, **no** `77.000000`.
+3. **Workspace**: los capítulos usan chevrons de lucide en vez de `▾`/`▸`.
+4. **Versiones**: abre el comparador, ciérralo, y comprueba en la pestaña Red
+   que al cerrarlo **no** sale ninguna petición nueva a `/comparar`.
 
 Si el navegador sigue mostrando lo viejo, reinicia el dev server:
 `reuseExistingServer` en `playwright.config.ts` hace que un `vite` de antes
