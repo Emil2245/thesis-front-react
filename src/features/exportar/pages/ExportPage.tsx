@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FileDown, AlertTriangle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -15,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { useValidacionExport, useExportar, usePreflightCronograma } from "../hooks/useExportar";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
+import { useVersionActiva } from "@/shell/contexto";
 import type { FormatoExportCronograma, RubroRefResponse } from "@/api/contract";
 
 function ListaRubros({ items, titulo }: { items: RubroRefResponse[]; titulo: string }) {
@@ -54,8 +54,8 @@ const FORMATOS: { valor: FormatoExportCronograma; etiqueta: string }[] = [
  * cuanto el backend añada un código.
  */
 export function ExportPage() {
-  const [searchParams] = useSearchParams();
-  const versionId = searchParams.get("v") ?? "";
+  const { presupuestoId, activa, isPending: versionPendiente } = useVersionActiva();
+  const versionId = presupuestoId ?? "";
 
   const { data: validacion, isLoading: valLoading } = useValidacionExport(versionId);
   const { descargarEspecificacionesTecnicas, descargarCronograma } = useExportar();
@@ -67,6 +67,11 @@ export function ExportPage() {
     formato,
   );
   const [descargandoCronograma, setDescargandoCronograma] = useState(false);
+
+  // Con la query deshabilitada por falta de id, `validacion` y `preflight` son
+  // `undefined` y sus guardas evalúan a «habilitado». Lo que tiene que bloquear
+  // el botón es la ausencia del id, no el resultado de una query que no corrió.
+  const sinVersion = !versionId;
 
   const handleExport = async () => {
     setDescargando(true);
@@ -82,7 +87,27 @@ export function ExportPage() {
 
   return (
     <>
-      <EncabezadoPagina titulo="Exportar" descripcion="Descargue documentos del presupuesto" />
+      <EncabezadoPagina
+        titulo="Exportar"
+        descripcion={
+          activa
+            ? `Descargue documentos de la versión ${activa.version}${
+                activa.esVigente ? " (vigente)" : ""
+              }`
+            : "Descargue documentos del presupuesto"
+        }
+      />
+
+      {!versionPendiente && sinVersion && (
+        <Alert>
+          <AlertTriangle className="size-4" />
+          <AlertTitle>Sin versión de presupuesto</AlertTitle>
+          <AlertDescription>
+            Este proyecto todavía no tiene ninguna versión de presupuesto, así que no hay nada que
+            exportar.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {valLoading && (
         <div className="flex justify-center py-8">
@@ -123,7 +148,9 @@ export function ExportPage() {
             <Button
               size="sm"
               onClick={handleExport}
-              disabled={descargando || (!validacion?.exportable && validacion !== undefined)}
+              disabled={
+                sinVersion || descargando || (!validacion?.exportable && validacion !== undefined)
+              }
             >
               {descargando ? (
                 <Loader2 className="size-3.5 animate-spin mr-1" />
@@ -202,7 +229,10 @@ export function ExportPage() {
               size="sm"
               onClick={handleExportCronograma}
               disabled={
-                descargandoCronograma || preflightLoading || preflight?.exportable === false
+                sinVersion ||
+                descargandoCronograma ||
+                preflightLoading ||
+                preflight?.exportable === false
               }
             >
               {descargandoCronograma ? (
