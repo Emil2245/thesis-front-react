@@ -1,6 +1,6 @@
 import { useMemo, useState, type DragEvent, type KeyboardEvent, type ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
-import { GripVerticalIcon } from "lucide-react";
+import { ChevronDown, ChevronRight, Dot, GripVerticalIcon } from "lucide-react";
 import type { CapituloResponse, PresupuestoResponse, RubroResponse } from "@/api/contract";
 import { ConfirmarDestructivo } from "@/components/comunes/ConfirmarDestructivo";
 import {
@@ -265,7 +265,15 @@ export function PresupuestoCompacto({
                     onClick={() => toggle(chapter.id)}
                     className="inline-flex size-5 shrink-0 items-center justify-center rounded hover:bg-muted disabled:cursor-default disabled:opacity-40"
                   >
-                    <span aria-hidden>{hasChildren ? (isExpanded ? "▾" : "▸") : "•"}</span>
+                    {hasChildren ? (
+                      isExpanded ? (
+                        <ChevronDown className="size-4" aria-hidden />
+                      ) : (
+                        <ChevronRight className="size-4" aria-hidden />
+                      )
+                    ) : (
+                      <Dot className="size-4 text-muted-foreground" aria-hidden />
+                    )}
                   </button>
                   <button
                     type="button"

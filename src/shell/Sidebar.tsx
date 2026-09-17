@@ -39,6 +39,7 @@ import {
   DownloadIcon,
   SettingsIcon,
   GitBranchIcon,
+  Grid3x3Icon,
   LayoutDashboardIcon,
   LogOutIcon,
   PackageIcon,
@@ -73,7 +74,7 @@ const RUTAS_PROYECTO: {
   modulo?: ModuloSinBackend;
 }[] = [
   { sufijo: "", icono: LayoutDashboardIcon, etiqueta: "Resumen" },
-  { sufijo: "/workspace", icono: LayoutDashboardIcon, etiqueta: "Workspace" },
+  { sufijo: "/workspace", icono: Grid3x3Icon, etiqueta: "Workspace" },
   { sufijo: "/insumos", icono: PackageIcon, etiqueta: "Insumos" },
   { sufijo: "/apus", icono: FileTextIcon, etiqueta: "APUs" },
   { sufijo: "/presupuesto", icono: BarChart3Icon, etiqueta: "Presupuesto" },
