@@ -189,3 +189,41 @@ export const comparacionFixture: ComparacionVersionesResponse = {
     },
   ],
 };
+
+// Un capítulo raíz con doce subcapítulos, devueltos como los devuelve el
+// backend hoy: ordenados por `item` comparado como cadena
+// (`PresupuestoMapper`), así que "1.10" sale antes que "1.2". Con menos de diez
+// hermanos el defecto no se ve, y por eso sobrevivió.
+//
+// El `orden` de cada subcapítulo es el último segmento de su `item`: es la
+// equivalencia que garantiza `CapituloService.asignarNivel` en el backend
+// (`c.orden = posicion` e `item = itemPadre + "." + posicion`) y sobre la que
+// descansa el cuerpo que `PresupuestoCompacto` manda a `…/mover`.
+export const CAPITULO_DOCE = "0198c1a1-0000-7000-8000-0000000000d0";
+
+export const subcapituloDoce = (n: number) => `0198c1a1-0000-7000-8000-0000000000${20 + n}`;
+
+const ORDEN_LEXICOGRAFICO = [1, 10, 11, 12, 2, 3, 4, 5, 6, 7, 8, 9];
+
+export const presupuestoDoceSubcapitulosFixture: PresupuestoResponse = {
+  ...presupuestoFixture,
+  capitulos: [
+    {
+      id: CAPITULO_DOCE,
+      item: "1",
+      descripcion: "Estructura",
+      orden: 1,
+      total: asDecimal("1200.000000"),
+      rubros: [],
+      subcapitulos: ORDEN_LEXICOGRAFICO.map((n) => ({
+        id: subcapituloDoce(n),
+        item: `1.${n}`,
+        descripcion: `Tramo ${n}`,
+        orden: n,
+        total: asDecimal("100.000000"),
+        subcapitulos: [],
+        rubros: [],
+      })),
+    },
+  ],
+};
