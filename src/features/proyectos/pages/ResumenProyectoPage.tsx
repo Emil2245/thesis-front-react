@@ -176,7 +176,7 @@ export function ResumenProyectoPage() {
                       <TableCell className="num text-muted-foreground">
                         {c.rubros.length + c.subcapitulos.length}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="num">
                         <Moneda valor={c.total} />
                       </TableCell>
                     </TableRow>
@@ -284,8 +284,8 @@ function FranjaTotales({
     <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl bg-border ring-1 ring-foreground/10 sm:grid-cols-2 lg:grid-cols-5">
       <div className="flex flex-col gap-1 bg-muted/60 p-4">
         <span className="text-xs font-medium">Total general</span>
-        <span className="num text-left text-xl font-semibold tracking-tight">
-          <Moneda valor={total} className="text-left" />
+        <span className="num text-xl font-semibold tracking-tight">
+          <Moneda valor={total} />
         </span>
       </div>
       {componentes.length === 0 ? (
@@ -298,8 +298,8 @@ function FranjaTotales({
             <span className="text-xs text-muted-foreground">
               {c.etiqueta} · {formatearPorcentaje(c.porcentaje)}
             </span>
-            <span className="text-lg font-medium tracking-tight">
-              <Moneda valor={c.total} className="text-left" />
+            <span className="num text-lg font-medium tracking-tight">
+              <Moneda valor={c.total} />
             </span>
           </div>
         ))

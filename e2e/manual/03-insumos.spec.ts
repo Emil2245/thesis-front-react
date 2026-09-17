@@ -224,7 +224,7 @@ test("09-uso-insumo", async ({ page }, testInfo) => {
   await fila.getByRole("button").click();
   await page.getByRole("menuitem", { name: "Ver uso" }).click();
   const dialogo = page.getByRole("dialog");
-  await expect(dialogo.getByRole("heading", { name: "Insumo en uso" })).toBeVisible();
+  await expect(dialogo.getByRole("heading", { name: "Uso del insumo" })).toBeVisible();
   await expect(dialogo.getByText("APU-001")).toBeVisible();
   await capturar(dialogo, "09-uso-insumo", testInfo);
 });

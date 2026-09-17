@@ -32,7 +32,11 @@ export function DialogoUsoInsumo({
   // Los usos se piden siempre a `GET /insumos/{id}/usos`. No venían nunca
   // "precargados" en el error de borrado: `ErrorPayload` son dos strings y no
   // puede transportar la lista.
-  const { data: usos, isPending } = useInsumoUsos(proyectoId, insumoId, {
+  const {
+    data: usos,
+    isPending,
+    isError,
+  } = useInsumoUsos(proyectoId, insumoId, {
     habilitado: abierto,
   });
 
@@ -40,14 +44,21 @@ export function DialogoUsoInsumo({
     <Dialog open={abierto} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Insumo en uso</DialogTitle>
-          <DialogDescription>
-            Este insumo está siendo usado y no puede eliminarse.
-          </DialogDescription>
+          <DialogTitle>Uso del insumo</DialogTitle>
+          <DialogDescription>APUs de este proyecto que referencian el insumo.</DialogDescription>
         </DialogHeader>
 
         {isPending ? (
           <CargandoTabla filas={3} />
+        ) : isError ? (
+          <p role="alert" className="py-6 text-center text-sm text-muted-foreground">
+            No se pudo consultar el uso de este insumo.
+          </p>
+        ) : !usos?.length ? (
+          // Una tabla con cabeceras y cero filas es indistinguible de un fallo.
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            Este insumo no aparece en ningún APU de este proyecto.
+          </p>
         ) : (
           <Table>
             <TableHeader>
@@ -55,11 +66,11 @@ export function DialogoUsoInsumo({
                 <TableHead>Código</TableHead>
                 <TableHead>Descripción</TableHead>
                 <TableHead>Bloque</TableHead>
-                <TableHead>Precio</TableHead>
+                <TableHead>Origen del precio</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {usos?.map((u) => (
+              {usos.map((u) => (
                 <TableRow key={u.apuId}>
                   <TableCell className="font-mono text-xs">{u.codigo}</TableCell>
                   <TableCell>{u.descripcion}</TableCell>

@@ -7,7 +7,7 @@ import { espiar, ultima } from "@/test/espia";
 import { Route, Routes } from "react-router-dom";
 import { useSesionStore } from "@/features/auth/sesion";
 import { usuarioFixture } from "@/test/fixtures/auth";
-import { validacionFixture } from "@/test/fixtures/presupuesto";
+import { PRESUPUESTO_V2, validacionFixture } from "@/test/fixtures/presupuesto";
 import { preflightBloqueadoFixture, preflightConWarningFixture } from "@/test/fixtures/cronograma";
 import type { CronogramaExportPreflightResponse } from "@/api/contract";
 import { ExportPage } from "@/features/exportar/pages/ExportPage";
@@ -112,6 +112,44 @@ describe("ExportPage", () => {
         ultima(peticiones, "GET", `/documentos/especificaciones-tecnicas/${PRESUPUESTO}`),
       ).toBeDefined(),
     );
+  });
+
+  // Desde el sidebar se llega sin `?v=` —nadie lo pone— y hasta el plan 097 la
+  // página sacaba el id de `searchParams`, así que pedía la ET con el segmento
+  // vacío y el backend devolvía 404. La versión la resuelve `useVersionActiva()`:
+  // «versión (default vigente)» de S-35.
+  it("descarga con el presupuesto de la versión vigente cuando la URL no trae ?v=", async () => {
+    const peticiones = espiar();
+    server.use(
+      http.get(`${API}/presupuestos/:id/validacion`, () =>
+        HttpResponse.json({
+          ...validacionFixture,
+          exportable: true,
+          itemsPuCero: [],
+          itemsCantidadCero: [],
+          itemsSinActividad: [],
+        }),
+      ),
+    );
+    const { user } = renderConProviders(
+      <Routes>
+        <Route path="/proyectos/:id/documentos" element={<ExportPage />} />
+      </Routes>,
+      { ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/documentos" },
+    );
+
+    const boton = await screen.findByRole("button", { name: /^descargar$/i });
+    await waitFor(() => expect(boton).toBeEnabled());
+    await user.click(boton);
+
+    // `PRESUPUESTO_V2` es la única versión con `esVigente: true` del handler de
+    // `/proyectos/:id/presupuestos`.
+    await waitFor(() =>
+      expect(
+        ultima(peticiones, "GET", `/documentos/especificaciones-tecnicas/${PRESUPUESTO_V2}`),
+      ).toBeDefined(),
+    );
+    expect(ultima(peticiones, "GET", "/documentos/especificaciones-tecnicas/")).toBeUndefined();
   });
 });
 

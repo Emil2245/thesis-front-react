@@ -3,13 +3,17 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { useSearchParams } from "react-router-dom";
 import { PresupuestoCompacto } from "@/features/workspace/components/PresupuestoCompacto";
+import { usePresupuesto } from "@/features/presupuesto/hooks/usePresupuesto";
 import {
   CAPITULO_1_1,
   CAPITULO_2,
+  CAPITULO_DOCE,
   PRESUPUESTO_V2,
+  presupuestoDoceSubcapitulosFixture,
   presupuestoFixture,
   RUBRO_1_1_1,
   RUBRO_1_2_1,
+  subcapituloDoce,
 } from "@/test/fixtures/presupuesto";
 import { espiar, ultima } from "@/test/espia";
 import { renderConProviders } from "@/test/render";
@@ -243,5 +247,57 @@ describe("PresupuestoCompacto", () => {
       <PresupuestoCompacto presupuesto={{ ...presupuestoFixture, capitulos: [] }} />,
     );
     expect(screen.getByRole("status")).toHaveTextContent("Este presupuesto no contiene rubros.");
+  });
+
+  it("ordena doce subcapítulos y manda a mover la posición natural, no la lexicográfica", async () => {
+    // El backend ordena por `item` como cadena, así que con diez o más hermanos
+    // el array llega barajado y `index + 1` deja de coincidir con `orden`. Con
+    // doce subcapítulos "1.2" cae en el índice 4 del array lexicográfico y
+    // "Mover abajo" mandaba 6 en vez de 3.
+    const peticiones = espiar();
+    server.use(
+      http.get(`${API}/presupuestos/${PRESUPUESTO_V2}`, () =>
+        HttpResponse.json(presupuestoDoceSubcapitulosFixture),
+      ),
+    );
+    function CompactoDesdeLaQuery() {
+      const { data } = usePresupuesto(PRESUPUESTO_V2);
+      return data ? <PresupuestoCompacto presupuesto={data} /> : null;
+    }
+    const { user } = renderConProviders(<CompactoDesdeLaQuery />);
+
+    await screen.findByRole("row", { name: /1\.12 · Tramo 12/ });
+    const items = screen
+      .getAllByRole("row")
+      .map((fila) => /(\d+\.\d+) · /.exec(fila.textContent ?? "")?.[1])
+      .filter((item): item is string => item !== undefined);
+    expect(items).toEqual([
+      "1.1",
+      "1.2",
+      "1.3",
+      "1.4",
+      "1.5",
+      "1.6",
+      "1.7",
+      "1.8",
+      "1.9",
+      "1.10",
+      "1.11",
+      "1.12",
+    ]);
+
+    fireEvent.contextMenu(screen.getByRole("row", { name: /1\.2 · Tramo 2/ }));
+    await user.hover(await screen.findByRole("menuitem", { name: "Mover" }));
+    fireEvent.click(await screen.findByRole("menuitem", { name: /Mover abajo/ }));
+
+    await waitFor(() => {
+      expect(
+        ultima(
+          peticiones,
+          "PATCH",
+          `/presupuestos/${PRESUPUESTO_V2}/capitulos/${subcapituloDoce(2)}/mover`,
+        )?.cuerpo,
+      ).toEqual({ parentId: CAPITULO_DOCE, orden: 3 });
+    });
   });
 });
