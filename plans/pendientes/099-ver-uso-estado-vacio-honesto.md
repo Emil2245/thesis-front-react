@@ -252,7 +252,7 @@ Esperado: sin coincidencias.
 ## Verificación manual
 
 Backend en `localhost:8080`, `pnpm run dev`, sesión
-`john.doe@uce.edu.ec` / `Clave1234`.
+`john@uce.edu.ec` / `User123123`.
 
 1. `/proyectos/{uuid}/insumos` → menú `[…]` de cualquier fila → **Ver uso**.
 2. Mientras el backend siga con el stub, debe verse el texto «Este insumo no

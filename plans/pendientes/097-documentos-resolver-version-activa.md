@@ -393,7 +393,7 @@ Esperado: sin coincidencias.
 
 Con el backend en `localhost:8080` y `pnpm run dev`:
 
-1. Entra con `john.doe@uce.edu.ec` / `Clave1234`.
+1. Entra con `john@uce.edu.ec` / `User123123`.
 2. Abre un proyecto y ve a **Documentos** desde el sidebar (sin tocar la URL).
 3. La descripción del encabezado debe nombrar la versión vigente.
 4. Pulsa **Descargar**: en la pestaña Red del navegador la petición debe ser

@@ -381,7 +381,7 @@ grep -n "useComparacion" src/features/presupuesto/components/DialogoCompararVers
 ## Verificación manual
 
 Backend en `localhost:8080`, `pnpm run dev`, sesión
-`john.doe@uce.edu.ec` / `Clave1234`.
+`john@uce.edu.ec` / `User123123`.
 
 1. Proyecto con **una** versión → **Versiones** → **Comparar**: sale el aviso
    «sólo tiene una versión», no se abre nada.

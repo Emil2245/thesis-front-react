@@ -34,7 +34,7 @@
 
 Abre
 `http://localhost:5173/proyectos/0192f6c4-7c8a-7abc-8000-000000001103/workspace`
-(usuario `john.doe@uce.edu.ec`, clave `Clave1234`). El árbol del presupuesto
+(usuario `john@uce.edu.ec`, clave `User123123`). El árbol del presupuesto
 del proyecto "Cetro Médico Tulcán" sale así:
 
 ```
@@ -436,7 +436,7 @@ pnpm run verify
 ## Verificación manual
 
 Backend en `localhost:8080`, `pnpm run dev`, sesión
-`john.doe@uce.edu.ec` / `Clave1234`.
+`john@uce.edu.ec` / `User123123`.
 
 1. `/proyectos/0192f6c4-7c8a-7abc-8000-000000001103/workspace`: los
    subcapítulos del capítulo 1 deben salir `1.1, 1.2, 1.3, … 1.9, 1.10, 1.11,

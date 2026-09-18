@@ -363,7 +363,7 @@ grep -c 'Grid3x3Icon' src/shell/Sidebar.tsx   # 2 (el import y el uso)
 
 ## Verificación manual
 
-`pnpm run dev`, sesión `john.doe@uce.edu.ec` / `Clave1234`, proyecto
+`pnpm run dev`, sesión `john@uce.edu.ec` / `User123123`, proyecto
 `0192f6c4-7c8a-7abc-8000-000000001103`.
 
 1. Sidebar: "Resumen" y "Workspace" tienen iconos distintos; el de Workspace es
