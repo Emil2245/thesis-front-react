@@ -182,6 +182,18 @@ export const baseCentralSchema = z
   })
   .strict();
 
+/** `GET /bases-personales` — lista pelada de las bases PERSONALES del caller. */
+export const basePersonalSchema = z
+  .object({
+    id: z.string(),
+    nombre: z.string(),
+    archivada: z.boolean(),
+    totalInsumos: z.number(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })
+  .strict();
+
 export const apuResumenSchema = z
   .object({
     id: z.string(),
@@ -237,6 +249,16 @@ export const plantillaApuAdminSchema = z
     tipo: z.literal("SISTEMA"),
     usuarioId: z.number().nullable(),
     descripcionRubro: z.string().nullable(),
+    fechaCreacion: z.string(),
+  })
+  .strict();
+
+export const plantillaProyectoAdminSchema = z
+  .object({
+    id: z.string(),
+    nombre: z.string(),
+    tipo: z.literal("SISTEMA"),
+    descripcion: z.string().nullable(),
     fechaCreacion: z.string(),
   })
   .strict();
@@ -500,6 +522,7 @@ export const plantillaProyectoSchema = z
   .object({
     id: z.string(),
     nombre: z.string(),
+    tipo: z.enum(["SISTEMA", "PERSONAL"]),
     descripcion: z.string().optional(),
     snapshotEstructura: z.unknown(),
     fechaCreacion: z.string(),

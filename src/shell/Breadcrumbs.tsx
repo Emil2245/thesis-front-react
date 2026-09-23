@@ -19,6 +19,8 @@ const NOMBRES: Record<string, string> = {
   "plantillas-proyecto": "Plantillas de proyecto",
   parametros: "Parámetros",
   insumos: "Insumos",
+  sistema: "Sistema",
+  personales: "Personales",
   versiones: "Versiones",
   apus: "APUs",
   presupuesto: "Presupuesto",
@@ -33,6 +35,8 @@ const NOMBRES: Record<string, string> = {
 };
 
 const esNumerico = (s: string) => /^\d+$/.test(s);
+const esUuid = (s: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
 export function Breadcrumbs() {
   const { pathname } = useLocation();
@@ -44,9 +48,11 @@ export function Breadcrumbs() {
 
   const dentroDeProyecto = segmentos[0] === "proyectos" && proyectoId != null;
 
-  // Los ids sueltos (`/apus/12`) no dicen nada al usuario: el encabezado de la
+  // Los ids sueltos (`/apus/12`, o un UUIDv7) no dicen nada al usuario: el encabezado de la
   // página ya identifica el registro por su código.
-  const resto = (dentroDeProyecto ? segmentos.slice(2) : segmentos).filter((s) => !esNumerico(s));
+  const resto = (dentroDeProyecto ? segmentos.slice(2) : segmentos).filter(
+    (s) => !esNumerico(s) && !esUuid(s),
+  );
 
   const partes = resto.map((seg, i) => {
     const prefijo = dentroDeProyecto ? `/proyectos/${proyectoId}` : "";

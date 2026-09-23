@@ -28,7 +28,8 @@ describe("usePlantillasProyecto", () => {
     const { result } = renderHook(() => usePlantillasProyecto(), { wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toHaveLength(1);
+    // Plan 044 del backend: SISTEMA + PERSONALES del caller en la misma lista.
+    expect(result.current.data?.map((p) => p.tipo)).toEqual(["SISTEMA", "PERSONAL"]);
     expect(ultima(peticiones, "GET", "/plantillas-proyecto")).toBeDefined();
   });
 

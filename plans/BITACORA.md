@@ -843,6 +843,33 @@ docs `411242f`. Si no coincide, averígualo antes de despachar.
 - 2026-09-06 — Responsive: escritorio y móvil, tres fases, prioridad baja, arranque a petición.
 - 2026-09-06 — `test/stuff` no se mergea: esperar a main.
 
+## bugs-pendientes §5 y §6 — insumos globales y plantillas SISTEMA (2026-09-23)
+
+Backend: plan `044` de `thesis-back-quarkus` (V013 + endpoints). Frontend:
+
+- **§5.** `/proyectos/:id/insumos` ya no tiene la pestaña «Bases centrales»; «Copiar base»
+  (que ya vivía en la tabla) ofrece bases de sistema **y personales** (`fuenteTipo: PERSONAL`).
+  Nueva sección global `/insumos` en el grupo General del sidebar: pestañas Sistema (solo
+  lectura, `GET /bases-centrales/{id}/insumos`) y Personales (crear/borrar base y CRUD + CSV de
+  insumos en `/bases-personales/{id}/insumos`). `TablaInsumos` recibe un `DestinoInsumos` con
+  `rutaLista`/`claveLista`/`invalidar`; `AdminBaseDetallePage` (S-39) deja de decir que no hay
+  listado y usa la misma tabla.
+- **§6.** `/plantillas` y `/plantillas-proyecto` separan Personales/Sistema con insignia
+  (`InsigniaOrigen`, CENTRAL se rotula «Sistema»); las de sistema no ofrecen renombrar ni
+  borrar. Vista previa APU = `DetallePlantilla` (estructura M/N/O/P, sin precios: el snapshot es
+  price-free). Vista previa de proyecto = cabecera + parámetros + árbol de capítulos/rubros,
+  leído del `snapshotEstructura` con un esquema Zod tolerante. Admin:
+  `/admin/plantillas-proyecto` (alta desde un proyecto, edición de metadatos, borrado).
+- **Decisiones tomadas en las preguntas abiertas:** la copia central/personal → proyecto se hace
+  desde la base del proyecto; la sección global sí crea bases personales; el preview APU muestra
+  estructura, no precios; el preview de proyecto incluye cabecera y parámetros, no cronograma
+  (el snapshot no lo trae); no se añade seed de plantillas de proyecto SISTEMA (§3).
+- **Verificación:** vitest 707/708 — el único rojo es `AsistenteImportCsv` «plantilla
+  descargable», un `` del checkout con `autocrlf` en `public/`, ajeno a este cambio. Lint
+  0 errores / 9 warnings (baseline), ADR-9 limpio, build verde. Probado en navegador (Orca)
+  contra el backend real con BD aislada: base personal → insumo → copia al proyecto; base de
+  sistema en solo lectura; previews de plantillas APU y de proyecto SISTEMA.
+
 ## Bloqueado esperando al humano
 
 - Entrevista **N05** (cronograma): **6** preguntas sin responder — la 7ª («¿estructura del

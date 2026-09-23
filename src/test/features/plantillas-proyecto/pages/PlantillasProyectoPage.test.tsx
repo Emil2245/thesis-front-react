@@ -116,4 +116,25 @@ describe("PlantillasProyectoPage", () => {
       expect(screen.queryByText("Eliminar plantilla")).not.toBeInTheDocument();
     });
   });
+
+  // bugs-pendientes §6: las de sistema se ven y se usan, no se borran (404).
+  it("la pestaña Sistema permite ver y usar pero no eliminar", async () => {
+    const { user } = renderConProviders(<PlantillasProyectoPage />);
+
+    await user.click(await screen.findByRole("tab", { name: "Sistema" }));
+    expect(await screen.findByText("Edificio tipo")).toBeInTheDocument();
+    expect(screen.getByTitle("Crear proyecto desde esta plantilla")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Eliminar plantilla" })).not.toBeInTheDocument();
+  });
+
+  it("la vista previa dibuja el árbol del snapshot", async () => {
+    const { user } = renderConProviders(<PlantillasProyectoPage />);
+
+    await user.click(await screen.findByRole("tab", { name: "Sistema" }));
+    await user.click(await screen.findByRole("button", { name: "Ver plantilla" }));
+
+    expect(await screen.findByText("Obras preliminares")).toBeInTheDocument();
+    expect(screen.getByText("Replanteo y nivelación")).toBeInTheDocument();
+    expect(screen.getByText(/1 capítulos · 1 rubros/)).toBeInTheDocument();
+  });
 });

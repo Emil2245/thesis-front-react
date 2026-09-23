@@ -5,6 +5,7 @@ import type {
   PlantillaApuAdminResponse,
   ValorReferenciaResponse,
   LogActividadResponse,
+  PlantillaProyectoAdminResponse,
 } from "@/api/contract";
 
 // Los `as never` se fueron con la política de dinero: el backend serializa
@@ -176,5 +177,17 @@ export const logsActividadFixture: LogActividadResponse[] = [
     entidadId: "018f8a30-0000-7000-8000-000000000099",
     detalle: { origen: "plantilla" },
     fecha: "2026-09-09T12:00:00.000000Z",
+  },
+];
+
+// `PlantillaProyectoAdminResponse` (plan 044 del backend): sin snapshot y con
+// `descripcion` explícita (el record no lleva `@JsonInclude(NON_NULL)`).
+export const plantillasProyectoAdminFixture: PlantillaProyectoAdminResponse[] = [
+  {
+    id: "0192f6c4-7c8a-7abc-8000-000000003001",
+    nombre: "Edificio tipo",
+    tipo: "SISTEMA",
+    descripcion: "Estructura base de edificación",
+    fechaCreacion: "2026-08-10T00:00:00Z",
   },
 ];

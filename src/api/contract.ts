@@ -130,9 +130,14 @@ export interface ProyectoEditarRequest {
   subdireccionInstitucional?: string;
 }
 
+export type TipoPlantilla = "SISTEMA" | "PERSONAL";
+
 export interface PlantillaProyectoResponse {
   id: string;
   nombre: string;
+  // Plan 044 del backend (V013): SISTEMA la gestiona SUPER_ADMIN y el usuario
+  // sólo la lee y la aplica; PERSONAL es del dueño.
+  tipo: TipoPlantilla;
   descripcion?: string;
   // JsonNode opaco: el backend no fija su forma, así que aquí es `unknown` y lo
   // estrecha quien lo consuma. Inventarle una interfaz sería un contrato imaginario.
@@ -273,7 +278,9 @@ export interface ImportResultadoResponse {
 }
 
 export interface CopiarBaseRequest {
-  fuenteTipo: "CENTRAL" | "PROYECTO";
+  // `PERSONAL` desde el plan 044 del backend: base personal del caller,
+  // owner-scoped (ajena → 404).
+  fuenteTipo: "CENTRAL" | "PERSONAL" | "PROYECTO";
   baseId: string;
 }
 
@@ -292,6 +299,20 @@ export interface BaseInsumosResponse {
 
 export interface BaseInsumosCrearRequest {
   nombre: string;
+}
+
+/**
+ * `GET/POST /bases-personales` (`BasePersonalResponse`). Sin `tipo`: el recurso
+ * sólo devuelve PERSONALES del caller. Sus insumos viven en
+ * `/bases-personales/{id}/insumos` (plan 044 del backend).
+ */
+export interface BasePersonalResponse {
+  id: string;
+  nombre: string;
+  archivada: boolean;
+  totalInsumos: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ————— APU y plantillas (§11) —————
@@ -554,6 +575,30 @@ export interface PlantillaApuAdminResponse {
 export interface PlantillaApuAdminEditarRequest {
   nombre?: string;
   descripcionRubro?: string;
+}
+
+/**
+ * `/admin/plantillas-proyecto` (plan 044 del backend). Mismo molde que
+ * `/admin/plantillas-apu`, con `desdeProyectoId` y `descripcion`. La respuesta
+ * no trae snapshot: el detalle sale de `GET /plantillas-proyecto/{id}`.
+ */
+export interface PlantillaProyectoSistemaCrearRequest {
+  desdeProyectoId: string;
+  nombre: string;
+  descripcion?: string;
+}
+
+export interface PlantillaProyectoAdminResponse {
+  id: string;
+  nombre: string;
+  tipo: "SISTEMA";
+  descripcion: string | null;
+  fechaCreacion: string;
+}
+
+export interface PlantillaProyectoAdminEditarRequest {
+  nombre?: string;
+  descripcion?: string;
 }
 
 // ————— Presupuesto y versiones (§11) —————

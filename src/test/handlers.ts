@@ -24,6 +24,7 @@ import {
   copiaBaseResultadoFixture,
   importResultadoFixture,
   insumoUsoFixture,
+  basesPersonalesFixture,
 } from "./fixtures/insumos";
 import {
   apuResumenFixture,
@@ -52,6 +53,7 @@ import {
 import {
   parametrosSistemaFixture,
   basesCentralesFixtureAdmin,
+  plantillasProyectoAdminFixture,
   usuariosAdminFixture,
   plantillasAdminFixture,
   valoresReferenciaFixture,
@@ -394,9 +396,38 @@ export const handlers = [
   // lo que necesita el preview del snapshot (S-36/S-40).
   http.get(`${API}/plantillas-proyecto`, () =>
     HttpResponse.json<PlantillaProyectoResponse[]>([
+      // Plan 044 del backend: el listado trae SISTEMA + PERSONALES del caller.
+      {
+        id: "018f8a60-0000-7000-8000-000000000003",
+        nombre: "Edificio tipo",
+        tipo: "SISTEMA",
+        descripcion: "Plantilla del sistema",
+        snapshotEstructura: {
+          cabecera: { codigo: "ED-01", plazoEjecucion: 6, plazoUnidad: "MES" },
+          parametros: { porcentajeIndirecto: 0.18, iva: 0.15, moneda: "USD" },
+          capitulos: [
+            {
+              item: "1",
+              descripcion: "Obras preliminares",
+              hijos: [],
+              rubros: [
+                {
+                  item: "1.1",
+                  codigo: "R-001",
+                  descripcion: "Replanteo y nivelación",
+                  unidad: "m2",
+                  apu: { codigo: "R-001", filas: [{ seccionTipo: "MANO_OBRA" }] },
+                },
+              ],
+            },
+          ],
+        },
+        fechaCreacion: "2026-01-01T00:00:00Z",
+      },
       {
         id: "018f8a60-0000-7000-8000-000000000001",
         nombre: "Plantilla proyecto",
+        tipo: "PERSONAL",
         descripcion: "Plantilla de prueba",
         snapshotEstructura: { capitulos: [{ item: "1", descripcion: "Preliminares" }] },
         fechaCreacion: "2026-01-01T00:00:00Z",
@@ -413,6 +444,7 @@ export const handlers = [
         {
           id: "018f8a60-0000-7000-8000-000000000002",
           nombre: "Nueva plantilla",
+          tipo: "PERSONAL",
           snapshotEstructura: { capitulos: [] },
           fechaCreacion: "2026-01-02T00:00:00Z",
         } satisfies PlantillaProyectoResponse,
@@ -574,6 +606,39 @@ export const handlers = [
     HttpResponse.json(pagina(insumosBusquedaFixture)),
   ),
   http.get(`${API}/bases-centrales`, () => HttpResponse.json(basesCentralesFixture)),
+  // Plan 044 del backend: lectura de una base central para cualquier usuario.
+  http.get(`${API}/bases-centrales/:id/insumos`, () => HttpResponse.json(pagina(insumosFixture))),
+
+  // ———— Bases personales (plan 044 del backend) ————
+  // `BasesPersonalesResource`: la base y, desde el plan 044, sus insumos con el
+  // mismo CRUD que la base del proyecto. `/importar`, como el proyecto.
+  http.get(`${API}/bases-personales`, () => HttpResponse.json(basesPersonalesFixture)),
+  http.post(
+    `${API}/bases-personales`,
+    async ({ request }) =>
+      (await soloCampos(request, "nombre")) ??
+      HttpResponse.json(basesPersonalesFixture[0], { status: 201 }),
+  ),
+  http.delete(`${API}/bases-personales/:id`, () => HttpResponse.json(null, { status: 204 })),
+  http.get(`${API}/bases-personales/:id/insumos`, () => HttpResponse.json(pagina(insumosFixture))),
+  http.post(
+    `${API}/bases-personales/:id/insumos`,
+    async ({ request }) =>
+      (await soloCampos(request, "codigo", "tipo", "descripcion", "unidad", "precioUnitario")) ??
+      HttpResponse.json(insumosFixture[0], { status: 201 }),
+  ),
+  http.put(
+    `${API}/bases-personales/:id/insumos/:iid`,
+    async ({ request }) =>
+      (await soloCampos(request, "descripcion", "unidad", "precioUnitario")) ??
+      HttpResponse.json(insumosFixture[0]),
+  ),
+  http.delete(`${API}/bases-personales/:id/insumos/:iid`, () =>
+    HttpResponse.json(null, { status: 204 }),
+  ),
+  http.post(`${API}/bases-personales/:id/insumos/importar`, () =>
+    HttpResponse.json(importResultadoFixture),
+  ),
 
   // ———— APU editor (Plan 009) ————
   http.post(
@@ -1265,6 +1330,47 @@ export const handlers = [
     });
   }),
   http.delete(`${API}/admin/plantillas-apu/:id`, () => HttpResponse.json(null, { status: 204 })),
+
+  // ———— Admin: plantillas de proyecto de sistema (plan 044 del backend) ————
+  http.get(`${API}/admin/plantillas-proyecto`, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const q = params.get("q")?.toLowerCase();
+    const page = Number(params.get("page") ?? 0);
+    const size = Number(params.get("size") ?? 25);
+    let items = plantillasProyectoAdminFixture;
+    if (q) items = items.filter((p) => p.nombre.toLowerCase().includes(q));
+    return HttpResponse.json({
+      items: items.slice(page * size, (page + 1) * size),
+      total: items.length,
+      page,
+      size,
+      totalPaginas: items.length === 0 ? 0 : Math.ceil(items.length / size),
+    });
+  }),
+  http.post(
+    `${API}/admin/plantillas-proyecto`,
+    async ({ request }) =>
+      (await soloCampos(request, "desdeProyectoId", "nombre", "descripcion")) ??
+      HttpResponse.json(
+        { ...plantillasProyectoAdminFixture[0], id: "0192f6c4-7c8a-7abc-8000-000000003099" },
+        { status: 201 },
+      ),
+  ),
+  http.put(`${API}/admin/plantillas-proyecto/:id`, async ({ request, params }) => {
+    const cuerpo = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    const sobran = Object.keys(cuerpo).filter((k) => !["nombre", "descripcion"].includes(k));
+    if (sobran.length > 0) {
+      return problema(400, "campo-desconocido", `El backend no acepta: ${sobran.join(", ")}`);
+    }
+    return HttpResponse.json({
+      ...plantillasProyectoAdminFixture[0],
+      id: String(params.id),
+      ...cuerpo,
+    });
+  }),
+  http.delete(`${API}/admin/plantillas-proyecto/:id`, () =>
+    HttpResponse.json(null, { status: 204 }),
+  ),
 
   // ———— Admin: valores de referencia (Plan 079) ————
   // `ValorReferenciaAdminResource`. El gate `admin-valores` sigue cerrado

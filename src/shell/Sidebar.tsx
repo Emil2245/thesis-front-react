@@ -85,7 +85,7 @@ const RUTAS_PROYECTO: {
 ];
 
 // El gate de admin es por página (plan 050) y desde el plan 081 no queda
-// ninguna clave en MODULOS_SIN_BACKEND: las seis rutas tienen backend real,
+// ninguna clave en MODULOS_SIN_BACKEND: todas las rutas tienen backend real,
 // así que ninguna entrada lleva `modulo` y ninguna pinta la insignia «pronto».
 const RUTAS_ADMIN: {
   ruta: string;
@@ -96,6 +96,11 @@ const RUTAS_ADMIN: {
   { ruta: "/admin/usuarios", icono: UsersIcon, etiqueta: "Usuarios" },
   { ruta: "/admin/bases", icono: DatabaseIcon, etiqueta: "Bases" },
   { ruta: "/admin/plantillas", icono: BookTemplateIcon, etiqueta: "Plantillas" },
+  {
+    ruta: "/admin/plantillas-proyecto",
+    icono: LayoutTemplateIcon,
+    etiqueta: "Plantillas proyecto",
+  },
   { ruta: "/admin/parametros", icono: SettingsIcon, etiqueta: "Parámetros" },
   { ruta: "/admin/valores", icono: ScrollTextIcon, etiqueta: "Valores ref." },
   { ruta: "/admin/logs", icono: ActivityIcon, etiqueta: "Logs" },
@@ -146,6 +151,18 @@ export function AppSidebar() {
                   <Link to="/proyectos">
                     <FolderIcon />
                     <span>Proyectos</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={estaActivo(pathname, "/insumos")}
+                  tooltip="Insumos"
+                >
+                  <Link to="/insumos">
+                    <PackageIcon />
+                    <span>Insumos</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

@@ -1,36 +1,55 @@
 import { qk } from "@/api/queryKeys";
 
 /**
- * A dónde escribe el CRUD de insumos. El catálogo de un proyecto y una base
- * central comparten DTOs, validación y servicios en el backend —
- * `AdminBaseCentralResource` reusa `InsumoCrudService` e
- * `ImportacionInsumoService` — así que en el frontend comparten también los
- * componentes: `DialogoInsumo` y `AsistenteImportCsv` reciben un destino en vez
- * de un `proyectoId`, y no se duplican.
+ * Sobre qué base trabaja el CRUD de insumos. El catálogo de un proyecto, una
+ * base personal y una base central comparten DTOs, validación y servicios en el
+ * backend —`BasesPersonalesResource` y `AdminBaseCentralResource` reusan
+ * `InsumoCrudService` e `ImportacionInsumoService`— así que en el frontend
+ * comparten también los componentes: `TablaInsumos`, `DialogoInsumo` y
+ * `AsistenteImportCsv` reciben un destino en vez de un `proyectoId`, y no se
+ * duplican.
  *
- * `import` va aparte a propósito: la ruta del proyecto termina en `/importar`
- * y la de admin en `/import`. Derivarla de un prefijo común mandaría la
- * importación de admin a un 404.
+ * `rutaImport` va aparte a propósito: la ruta del proyecto y la personal
+ * terminan en `/importar` y la de admin en `/import`. Derivarla de un prefijo
+ * común mandaría la importación de admin a un 404. `rutaLista` también: la
+ * lectura de una base central es `/bases-centrales/{id}/insumos` (cualquier
+ * usuario) y la escritura `/admin/bases-centrales/{id}/insumos` (SUPER_ADMIN).
  */
 export type DestinoInsumos = {
   /** Colección de insumos: alta en POST, `{ruta}/{id}` en PUT y DELETE. */
   ruta: string;
   /** Endpoint de importación CSV multipart. */
   rutaImport: string;
-  /** Query key a invalidar cuando el destino cambia. */
-  clave: readonly unknown[];
+  /** `GET` paginado con los filtros `tipo`, `q`, `desactualizados` y `page`. */
+  rutaLista: string;
+  /** Query key del listado para unos filtros dados. */
+  claveLista: (filtros?: Record<string, unknown>) => readonly unknown[];
+  /** Query keys a invalidar cuando el destino cambia (listado y contadores). */
+  invalidar: readonly (readonly unknown[])[];
 };
 
 export const destinoProyecto = (proyectoId: string): DestinoInsumos => ({
   ruta: `/proyectos/${proyectoId}/insumos`,
   rutaImport: `/proyectos/${proyectoId}/insumos/importar`,
-  clave: qk.insumos(proyectoId),
+  rutaLista: `/proyectos/${proyectoId}/insumos`,
+  claveLista: (filtros) => qk.insumos(proyectoId, filtros),
+  invalidar: [qk.insumos(proyectoId)],
+});
+
+export const destinoBasePersonal = (baseId: string): DestinoInsumos => ({
+  ruta: `/bases-personales/${baseId}/insumos`,
+  rutaImport: `/bases-personales/${baseId}/insumos/importar`,
+  rutaLista: `/bases-personales/${baseId}/insumos`,
+  claveLista: (filtros) => qk.insumosBasePersonal(baseId, filtros),
+  // `totalInsumos` del listado de bases también cambia.
+  invalidar: [qk.insumosBasePersonal(baseId), qk.basesPersonales()],
 });
 
 export const destinoBaseCentral = (baseId: string): DestinoInsumos => ({
   ruta: `/admin/bases-centrales/${baseId}/insumos`,
   rutaImport: `/admin/bases-centrales/${baseId}/insumos/import`,
-  // No hay listado de insumos de una base central que invalidar; lo que sí
-  // cambia es el `totalInsumos` del listado de bases.
-  clave: qk.adminBasesFamilia(),
+  rutaLista: `/bases-centrales/${baseId}/insumos`,
+  claveLista: (filtros) => qk.insumosBaseCentral(baseId, filtros),
+  // Además del listado cambia el `totalInsumos` de los dos listados de bases.
+  invalidar: [qk.insumosBaseCentral(baseId), qk.adminBasesFamilia(), qk.basesCentrales()],
 });

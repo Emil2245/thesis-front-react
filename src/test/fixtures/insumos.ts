@@ -5,6 +5,7 @@ import type {
   CopiaBaseResultadoResponse,
   ImportResultadoResponse,
   InsumoUsoResponse,
+  BasePersonalResponse,
 } from "@/api/contract";
 
 export const insumosFixture: InsumoResponse[] = [
@@ -187,5 +188,17 @@ export const insumoUsoFixture: InsumoUsoResponse[] = [
     descripcion: "Relleno compactado",
     bloque: "O",
     override: false,
+  },
+];
+
+// `BasePersonalResponse` (BasesPersonalesResource): sin `tipo`, con fechas.
+export const basesPersonalesFixture: BasePersonalResponse[] = [
+  {
+    id: "018f8a31-0000-7000-8000-000000000001",
+    nombre: "Mis precios Quito",
+    archivada: false,
+    totalInsumos: 12,
+    createdAt: "2026-08-01T00:00:00Z",
+    updatedAt: "2026-08-01T00:00:00Z",
   },
 ];

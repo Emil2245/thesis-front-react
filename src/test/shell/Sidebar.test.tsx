@@ -57,6 +57,7 @@ describe("AppSidebar", () => {
       "Bases",
       "Usuarios",
       "Plantillas",
+      "Plantillas proyecto",
       "Parámetros",
       "Valores ref.",
       "Logs",
@@ -105,9 +106,15 @@ describe("AppSidebar", () => {
     const filaCronograma = cronograma.closest("a")!;
     expect(within(filaCronograma).queryByText("pronto")).not.toBeInTheDocument();
 
-    const insumos = await screen.findByText("Insumos");
-    const filaInsumos = insumos.closest("a")!;
-    expect(within(filaInsumos).queryByText("pronto")).not.toBeInTheDocument();
+    // Dos entradas «Insumos»: la sección global (General) y la del proyecto.
+    const insumos = await screen.findAllByText("Insumos");
+    expect(insumos.map((e) => e.closest("a")!.getAttribute("href"))).toEqual([
+      "/insumos",
+      "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/insumos",
+    ]);
+    for (const e of insumos) {
+      expect(within(e.closest("a")!).queryByText("pronto")).not.toBeInTheDocument();
+    }
 
     // Plan 051: el backend genera la especificación técnica, así que el módulo
     // deja de estar pendiente aunque solo cubra uno de los cinco entregables.

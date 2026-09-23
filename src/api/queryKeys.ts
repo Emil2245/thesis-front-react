@@ -14,6 +14,11 @@ export const qk = {
   insumoUso: (proyectoId: string, insumoId: string) =>
     ["proyecto", proyectoId, "insumos", insumoId, "uso"] as const,
   basesCentrales: () => ["bases-centrales"] as const,
+  insumosBaseCentral: (baseId: string, filtros?: Record<string, unknown>) =>
+    ["bases-centrales", baseId, "insumos", filtros ?? {}] as const,
+  basesPersonales: () => ["bases-personales"] as const,
+  insumosBasePersonal: (baseId: string, filtros?: Record<string, unknown>) =>
+    ["bases-personales", baseId, "insumos", filtros ?? {}] as const,
   adminBasesFamilia: () => ["admin", "bases-centrales"] as const,
 
   apus: (presupuestoId: string, filtros?: Record<string, unknown>) =>
@@ -59,6 +64,11 @@ export const qk = {
   adminPlantillas: (f?: Record<string, unknown>) =>
     [...qk.adminPlantillasFamilia(), f ?? {}] as const,
   adminPlantilla: (id: string) => [...qk.adminPlantillasFamilia(), id] as const,
+
+  // Plantillas de proyecto de sistema (plan 044 del backend).
+  adminPlantillasProyectoFamilia: () => ["admin", "plantillas-proyecto"] as const,
+  adminPlantillasProyecto: (f?: Record<string, unknown>) =>
+    [...qk.adminPlantillasProyectoFamilia(), f ?? {}] as const,
 
   // Valores de referencia (plan 079): mismo molde que plantillas. Sin `q`: el
   // recurso sólo admite `page`/`size`.

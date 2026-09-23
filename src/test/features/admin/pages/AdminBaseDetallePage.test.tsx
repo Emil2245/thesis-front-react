@@ -6,6 +6,7 @@ import { Route, Routes } from "react-router-dom";
 import { espiar, ultima } from "@/test/espia";
 import { AdminBaseDetallePage } from "@/features/admin/pages/AdminBaseDetallePage";
 import { basesCentralesFixtureAdmin } from "@/test/fixtures/admin";
+import { insumosFixture } from "@/test/fixtures/insumos";
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
@@ -23,10 +24,9 @@ function montar() {
   );
 }
 
-// S-39 — detalle de base central. Los cuatro endpoints de insumos de
-// `AdminBaseCentralResource` son de escritura; el listado de los insumos de una
-// base no existe en el backend (ver el aviso de la pantalla), así que aquí se
-// prueba lo que sí se puede hacer: alta e importación contra la ruta de admin.
+// S-39 — detalle de base central. La escritura va contra los endpoints de
+// `AdminBaseCentralResource`; la lectura, contra `GET /bases-centrales/{id}/insumos`
+// (plan 044 del backend). Las dos rutas viven en `destinoBaseCentral`.
 describe("AdminBaseDetallePage", () => {
   it("muestra el nombre de la base", async () => {
     montar();
@@ -41,7 +41,8 @@ describe("AdminBaseDetallePage", () => {
     const peticiones = espiar();
     montar();
 
-    await user.click(await screen.findByRole("button", { name: /Nuevo insumo/i }));
+    await screen.findByText(insumosFixture[0].descripcion);
+    await user.click(screen.getByRole("button", { name: "Nuevo" }));
     await screen.findByText("Nuevo insumo", { selector: "h2, [data-slot='dialog-title']" });
 
     await user.type(screen.getByLabelText(/Código/i), "M-9");
@@ -78,11 +79,13 @@ describe("AdminBaseDetallePage", () => {
     });
   });
 
-  // La honestidad de la pantalla: el backend no tiene lectura de los insumos de
-  // una base central, así que no se finge una tabla vacía.
-  it("avisa de que el backend no permite listar los insumos de la base", async () => {
+  it("lista los insumos de la base con GET /bases-centrales/{id}/insumos", async () => {
+    const peticiones = espiar();
     montar();
 
-    expect(await screen.findByText(/no expone.*listado/i)).toBeInTheDocument();
+    expect(await screen.findByText(insumosFixture[0].descripcion)).toBeInTheDocument();
+    expect(ultima(peticiones, "GET", `/bases-centrales/${base.id}/insumos`)?.ruta).toBe(
+      `/api/v1/bases-centrales/${base.id}/insumos`,
+    );
   });
 });

@@ -8,9 +8,9 @@ import {
   type SortingState,
   type RowData,
 } from "@tanstack/react-table";
-import { useInsumos } from "../hooks/useInsumos";
+import { useInsumosDeDestino } from "../hooks/useInsumos";
 import { useEliminarInsumo } from "../hooks/useInsumoMutaciones";
-import { destinoProyecto } from "../destino";
+import { destinoProyecto, type DestinoInsumos } from "../destino";
 import { BadgeDesactualizado } from "./BadgeDesactualizado";
 import { DialogoInsumo } from "./DialogoInsumo";
 import { DialogoUsoInsumo } from "./DialogoUsoInsumo";
@@ -78,10 +78,23 @@ const TIPO_TABS = [
 
 const columnHelper = createColumnHelper<InsumoResponse>();
 
-export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
-  // El catálogo de esta tabla es siempre el del proyecto; la base central usa
-  // los mismos diálogos con otro destino (S-39).
-  const destino = destinoProyecto(proyectoId);
+/**
+ * Tabla de insumos de cualquier base. Con `proyectoId` es el catálogo del
+ * proyecto y añade lo que sólo existe ahí: «Ver uso» (usos en sus APUs) y
+ * «Copiar base». Con `destino` trabaja sobre una base personal o central;
+ * `soloLectura` quita alta, importación, edición y borrado (bases de sistema
+ * vistas por un usuario).
+ */
+export function TablaInsumos({
+  proyectoId,
+  destino: destinoExplicito,
+  soloLectura = false,
+}: {
+  proyectoId?: string;
+  destino?: DestinoInsumos;
+  soloLectura?: boolean;
+}) {
+  const destino = destinoExplicito ?? destinoProyecto(proyectoId ?? "");
   const [tipo, setTipo] = useState("");
   const [q, setQ] = useState("");
   const [soloDesactualizados, setSoloDesactualizados] = useState(false);
@@ -106,11 +119,11 @@ export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
     return f;
   }, [tipo, q, soloDesactualizados, page]);
 
-  const { data, isPending } = useInsumos(proyectoId, filtros);
+  const { data, isPending } = useInsumosDeDestino(destino, filtros);
   const eliminar = useEliminarInsumo(destino);
 
-  const columns = useMemo(
-    () => [
+  const columns = useMemo(() => {
+    const base = [
       columnHelper.accessor("codigo", {
         header: "Código",
         cell: (info) => <span className="font-mono text-xs">{info.getValue()}</span>,
@@ -136,6 +149,10 @@ export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
       }),
       // Sin columna "Fuente": InsumoResponse no trae `fuente`; es de
       // InsumoBusquedaResponse, el DTO del selector. Pintaba siempre "Local".
+    ];
+    if (soloLectura) return base;
+    return [
+      ...base,
       columnHelper.display({
         id: "acciones",
         header: "",
@@ -157,16 +174,18 @@ export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
                 >
                   <EditIcon /> Editar
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    setUsoDialogo({
-                      abierto: true,
-                      insumoId: insumo.id,
-                    })
-                  }
-                >
-                  <EyeIcon /> Ver uso
-                </DropdownMenuItem>
+                {proyectoId && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      setUsoDialogo({
+                        abierto: true,
+                        insumoId: insumo.id,
+                      })
+                    }
+                  >
+                    <EyeIcon /> Ver uso
+                  </DropdownMenuItem>
+                )}
                 <ConfirmarDestructivo
                   titulo="Eliminar insumo"
                   descripcion={`¿Eliminar "${insumo.codigo}"?`}
@@ -197,9 +216,8 @@ export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
           );
         },
       }),
-    ],
-    [eliminar],
-  );
+    ];
+  }, [eliminar, proyectoId, soloLectura]);
 
   const table = useReactTable({
     data: data?.contenido ?? [],
@@ -238,17 +256,21 @@ export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
             ))}
           </TabsList>
 
-          <div className="flex items-center gap-2">
-            <Button size="sm" onClick={handleNuevo}>
-              <PlusIcon /> Nuevo
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setImportAbierto(true)}>
-              <FileUpIcon /> Importar CSV
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setCopiarAbierto(true)}>
-              <CopyIcon /> Copiar base
-            </Button>
-          </div>
+          {!soloLectura && (
+            <div className="flex items-center gap-2">
+              <Button size="sm" onClick={handleNuevo}>
+                <PlusIcon /> Nuevo
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setImportAbierto(true)}>
+                <FileUpIcon /> Importar CSV
+              </Button>
+              {proyectoId && (
+                <Button size="sm" variant="outline" onClick={() => setCopiarAbierto(true)}>
+                  <CopyIcon /> Copiar base
+                </Button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-4">
@@ -288,10 +310,12 @@ export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
               descripcion={
                 q
                   ? "No se encontraron insumos con esos filtros."
-                  : "Agrega tu primer insumo para empezar."
+                  : soloLectura
+                    ? "Esta base todavía no tiene insumos."
+                    : "Agrega tu primer insumo para empezar."
               }
               accion={
-                !q ? (
+                !q && !soloLectura ? (
                   <Button onClick={handleNuevo}>
                     <PlusIcon /> Nuevo insumo
                   </Button>
@@ -390,12 +414,14 @@ export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
         insumo={insumoEditar}
       />
 
-      <DialogoUsoInsumo
-        abierto={usoDialogo.abierto}
-        onClose={() => setUsoDialogo({ abierto: false, insumoId: "" })}
-        proyectoId={proyectoId}
-        insumoId={usoDialogo.insumoId}
-      />
+      {proyectoId && (
+        <DialogoUsoInsumo
+          abierto={usoDialogo.abierto}
+          onClose={() => setUsoDialogo({ abierto: false, insumoId: "" })}
+          proyectoId={proyectoId}
+          insumoId={usoDialogo.insumoId}
+        />
+      )}
 
       <AsistenteImportCsv
         abierto={importAbierto}
@@ -403,11 +429,13 @@ export function TablaInsumos({ proyectoId }: { proyectoId: string }) {
         destino={destino}
       />
 
-      <DialogoCopiarBase
-        abierto={copiarAbierto}
-        onClose={() => setCopiarAbierto(false)}
-        proyectoId={proyectoId}
-      />
+      {proyectoId && (
+        <DialogoCopiarBase
+          abierto={copiarAbierto}
+          onClose={() => setCopiarAbierto(false)}
+          proyectoId={proyectoId}
+        />
+      )}
     </div>
   );
 }

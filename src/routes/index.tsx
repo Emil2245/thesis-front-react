@@ -81,6 +81,31 @@ export const router = createBrowserRouter([
                 ),
               },
               {
+                path: "/insumos",
+                lazy: lazyPage(
+                  () => import("@/features/insumos/pages/BasesInsumosPage"),
+                  "BasesInsumosPage",
+                ),
+              },
+              {
+                path: "/insumos/sistema/:baseId",
+                lazy: lazyPage(
+                  () => import("@/features/insumos/pages/BaseInsumosPage"),
+                  "BaseSistemaPage",
+                ),
+              },
+              {
+                path: "/insumos/personales/:baseId",
+                lazy: lazyPage(
+                  () => import("@/features/insumos/pages/BaseInsumosPage"),
+                  "BasePersonalPage",
+                ),
+              },
+              // Las migas enlazan cada segmento: sin estas dos, «Sistema» y
+              // «Personales» serían enlaces rotos.
+              { path: "/insumos/sistema", element: <Navigate to="/insumos" replace /> },
+              { path: "/insumos/personales", element: <Navigate to="/insumos" replace /> },
+              {
                 path: "/proyectos/:id",
                 lazy: lazyPage(
                   () => import("@/features/proyectos/pages/ResumenProyectoPage"),
@@ -182,6 +207,13 @@ export const router = createBrowserRouter([
                 lazy: lazyPage(
                   () => import("@/features/admin/pages/AdminPlantillasPage"),
                   "AdminPlantillasPage",
+                ),
+              },
+              {
+                path: "/admin/plantillas-proyecto",
+                lazy: lazyPage(
+                  () => import("@/features/admin/pages/AdminPlantillasProyectoPage"),
+                  "AdminPlantillasProyectoPage",
                 ),
               },
               {

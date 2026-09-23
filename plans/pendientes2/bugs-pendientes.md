@@ -35,6 +35,7 @@ Lista simple de cosas que faltan o fallan. Por ítem: qué falla, en qué page/s
 - **Preguntas abiertas:** ¿default = todo el peso en periodo 1 o reparto uniforme en el plazo? ¿Dividir con punto de corte elegido por click ("cuchilla") o mitad automática? ¿Eliminar el único segmento deja la fila en `{}` (borrador)?
 
 ## 5. Insumos: quitar tab de Bases centrales y nueva sección global en sidebar
+- **Estado:** HECHO (2026-09-23) — ver `plans/BITACORA.md` y el plan 044 del backend.
 - **Page/sección:** `/proyectos/:id/insumos` (tabs) y sidebar grupo "General".
 - **Fallo / faltantes:**
   - Quitar el tab "Bases centrales" de `InsumosPage.tsx` (hoy `Insumos del proyecto` + `Bases centrales` vía `VistaBasesCentrales`): esa pantalla debe mostrar solo insumos del proyecto. Las centrales se verán en otro lado.
@@ -44,6 +45,7 @@ Lista simple de cosas que faltan o fallan. Por ítem: qué falla, en qué page/s
 - **Preguntas abiertas:** ¿dónde copia el usuario una central a su proyecto (desde la nueva sección global o desde la base del proyecto)? ¿La sección global de insumos también permite crear bases personales?
 
 ## 6. Plantillas sin distinción sistema/personal ni previsualización útil
+- **Estado:** HECHO (2026-09-23) — ver `plans/BITACORA.md` y el plan 044 del backend.
 - **Page/sección:** sidebar General → `/plantillas` (Mis plantillas) y `/plantillas-proyecto`.
 - **Fallo / faltantes:**
   - `/plantillas` solo lista las PERSONALES (`usePlantillas("PERSONAL")`); las SISTEMA no se ven en ningún lado para el usuario normal (solo en el panel admin). Pedido: diferenciar tabs o badges sistema vs. personal, con las de sistema en solo lectura.

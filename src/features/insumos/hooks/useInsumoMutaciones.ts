@@ -10,7 +10,7 @@ export function useCrearInsumo(destino: DestinoInsumos) {
   return useMutation({
     mutationFn: (body: InsumoCrearRequest) => postValidado(destino.ruta, insumoSchema, body),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: destino.clave });
+      destino.invalidar.forEach((queryKey) => qc.invalidateQueries({ queryKey }));
     },
   });
 }
@@ -21,7 +21,7 @@ export function useEditarInsumo(destino: DestinoInsumos) {
     mutationFn: ({ id, body }: { id: string; body: InsumoEditarRequest }) =>
       putValidado(`${destino.ruta}/${id}`, insumoSchema, body),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: destino.clave });
+      destino.invalidar.forEach((queryKey) => qc.invalidateQueries({ queryKey }));
     },
   });
 }
@@ -31,7 +31,7 @@ export function useEliminarInsumo(destino: DestinoInsumos) {
   return useMutation({
     mutationFn: (id: string) => del(`${destino.ruta}/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: destino.clave });
+      destino.invalidar.forEach((queryKey) => qc.invalidateQueries({ queryKey }));
     },
   });
 }

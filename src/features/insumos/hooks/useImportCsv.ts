@@ -9,7 +9,7 @@ export function useImportarCsv(destino: DestinoInsumos) {
     mutationFn: ({ formData }: { formData: FormData }) =>
       postValidado(destino.rutaImport, importResultadoSchema, formData),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: destino.clave });
+      destino.invalidar.forEach((queryKey) => qc.invalidateQueries({ queryKey }));
     },
   });
 }

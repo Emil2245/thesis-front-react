@@ -65,4 +65,26 @@ describe("MisPlantillasPage", () => {
       expect(ultima(peticiones, "DELETE", `/plantillas-apu/${PLANTILLA_PERSONAL}`)).toBeDefined();
     });
   });
+
+  // bugs-pendientes §6: las SISTEMA se ven, en solo lectura. El backend
+  // responde 404 a editarlas o borrarlas desde /plantillas-apu.
+  it("la pestaña Sistema lista las del sistema sin renombrar ni eliminar", async () => {
+    const { user } = renderConProviders(<MisPlantillasPage />);
+
+    await user.click(await screen.findByRole("tab", { name: "Sistema" }));
+    expect(
+      await screen.findByText("Sistema", { selector: "[data-slot='badge']" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ver plantilla" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Renombrar plantilla" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Eliminar plantilla" })).not.toBeInTheDocument();
+  });
+
+  it("la vista previa muestra la estructura del snapshot", async () => {
+    const { user } = renderConProviders(<MisPlantillasPage />);
+
+    await user.click(await screen.findByRole("button", { name: "Ver plantilla" }));
+    expect(await screen.findByText("Materiales (O)")).toBeInTheDocument();
+    expect(screen.getByText("MAT-001")).toBeInTheDocument();
+  });
 });
