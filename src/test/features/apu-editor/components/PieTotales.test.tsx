@@ -44,6 +44,7 @@ describe("PieTotales", () => {
         apu={apuConPorcentajePropio()}
         onEditarPorcentajeCi={() => Promise.resolve()}
         onAbrirDesglose={() => {}}
+        ciIndividualHabilitado
       />,
     );
     expect(screen.getByText("Valor propio")).toBeInTheDocument();
@@ -78,11 +79,30 @@ describe("PieTotales", () => {
         apu={{ ...apuDetalleFixture, porcentajeIndirecto: 0.22 }}
         onEditarPorcentajeCi={() => Promise.resolve()}
         onAbrirDesglose={() => {}}
+        ciIndividualHabilitado
       />,
     );
 
     expect(screen.getByText("Valor propio")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /usar valor del proyecto/i })).toBeInTheDocument();
+  });
+
+  it("mantiene CI efectivo en solo lectura cuando CI individual está deshabilitado", () => {
+    renderConProviders(
+      <PieTotales
+        apu={apuConPorcentajePropio()}
+        onEditarPorcentajeCi={() => Promise.resolve()}
+        onAbrirDesglose={() => {}}
+        ciIndividualHabilitado={false}
+      />,
+    );
+    expect(screen.getByText("Valor propio")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /editar porcentaje de indirectos/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /usar valor del proyecto/i }),
+    ).not.toBeInTheDocument();
   });
 
   // El descuento de rubro no está pendiente: fue retirado (plan backend 015 y

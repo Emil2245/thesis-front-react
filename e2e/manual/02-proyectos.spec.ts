@@ -64,6 +64,16 @@ async function baseAutenticado(page: import("@playwright/test").Page) {
   await page.route(`${API}/proyectos/${PROYECTO_1}/parametros`, (route) =>
     route.fulfill(json(parametrosFixture)),
   );
+  await page.route(`${API}/proyectos/${PROYECTO_1}/ci`, (route) =>
+    route.fulfill(
+      json({
+        proyectoId: PROYECTO_1,
+        porcentajeIndirecto: 0.15,
+        ciIndividualHabilitado: false,
+        cantidadOverrides: 0,
+      }),
+    ),
+  );
   await page.route(`${API}/proyectos/${PROYECTO_1}/firmantes*`, (route) =>
     route.fulfill(json(firmantesFixture)),
   );
@@ -173,6 +183,62 @@ test("08-parametros", async ({ page }, testInfo) => {
   await expect(page.getByRole("heading", { name: "Parámetros del proyecto" })).toBeVisible();
   await expect(page.getByText("Cálculo")).toBeVisible();
   await capturar(page, "08-parametros", testInfo, true);
+});
+
+test("CI guarda la tasa solo tras confirmar el restablecimiento de overrides", async ({ page }) => {
+  await baseAutenticado(page);
+  const endpoint = `${API}/proyectos/${PROYECTO_1}/ci`;
+  let putCount = 0;
+  let sentBody: unknown;
+  await page.route(endpoint, async (route) => {
+    if (route.request().method() === "GET") {
+      await route.fulfill(
+        json({
+          proyectoId: PROYECTO_1,
+          porcentajeIndirecto: 0.15,
+          ciIndividualHabilitado: true,
+          cantidadOverrides: 3,
+        }),
+      );
+      return;
+    }
+    if (route.request().method() === "PUT") {
+      putCount += 1;
+      sentBody = route.request().postDataJSON();
+      await route.fulfill(
+        json({
+          proyectoId: PROYECTO_1,
+          porcentajeIndirecto: 0.175,
+          ciIndividualHabilitado: true,
+          cantidadOverrides: 0,
+        }),
+      );
+      return;
+    }
+    await route.continue();
+  });
+
+  await page.goto(`/proyectos/${PROYECTO_1}/parametros`, {
+    waitUntil: "networkidle",
+    timeout: 30000,
+  });
+  const rate = page.locator("#proyecto-ci-porcentaje");
+  await expect(rate).toHaveValue("15");
+  await rate.fill("17.5");
+  await page.getByRole("button", { name: "Guardar CI" }).click();
+
+  const confirmation = page.getByRole("dialog");
+  await expect(confirmation.getByText("Hay 3 APU con un CI propio.")).toBeVisible();
+  expect(putCount).toBe(0);
+  await confirmation.getByRole("button", { name: "Restablecer todos los CI propios" }).click();
+
+  await expect.poll(() => putCount).toBe(1);
+  expect(sentBody).toEqual({
+    porcentajeIndirecto: 0.175,
+    ciIndividualHabilitado: true,
+    politicaOverrides: "RESTABLECER",
+  });
+  await expect(page.getByText("CI actualizado y valores propios restablecidos")).toBeVisible();
 });
 
 test("09-eliminar", async ({ page }, testInfo) => {

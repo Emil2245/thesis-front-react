@@ -16,6 +16,7 @@ interface PieTotalesProps {
   apu: ApuResponse;
   onEditarPorcentajeCi: (valor: string | null) => Promise<void>;
   onAbrirDesglose: () => void;
+  ciIndividualHabilitado?: boolean;
 }
 
 function Linea({ etiqueta, valor }: { etiqueta: string; valor: string }) {
@@ -27,9 +28,15 @@ function Linea({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   );
 }
 
-export function PieTotales({ apu, onEditarPorcentajeCi, onAbrirDesglose }: PieTotalesProps) {
+export function PieTotales({
+  apu,
+  onEditarPorcentajeCi,
+  onAbrirDesglose,
+  ciIndividualHabilitado = false,
+}: PieTotalesProps) {
   const [editandoCi, setEditandoCi] = useState(false);
   const [ciValor, setCiValor] = useState("");
+  const editando = ciIndividualHabilitado && editandoCi;
 
   const iniciarEdicionCi = () => {
     setCiValor(apu.porcentajeIndirecto != null ? String(apu.porcentajeIndirecto) : "");
@@ -62,16 +69,18 @@ export function PieTotales({ apu, onEditarPorcentajeCi, onAbrirDesglose }: PieTo
             <div className="flex items-center justify-between gap-3">
               <span className="flex items-center gap-1 text-muted-foreground">
                 % CI
-                <button
-                  type="button"
-                  aria-label="Editar porcentaje de indirectos"
-                  onClick={iniciarEdicionCi}
-                  className="text-primary hover:underline"
-                >
-                  <Edit2Icon className="size-3" />
-                </button>
+                {ciIndividualHabilitado && (
+                  <button
+                    type="button"
+                    aria-label="Editar porcentaje de indirectos"
+                    onClick={iniciarEdicionCi}
+                    className="text-primary hover:underline"
+                  >
+                    <Edit2Icon className="size-3" />
+                  </button>
+                )}
               </span>
-              {editandoCi ? (
+              {editando ? (
                 <div className="flex items-center gap-1">
                   {/* Texto, no `type="number"`: ese input pinta el decimal con el
                       separador del locale del navegador (en español, «12,5») y el
@@ -108,7 +117,7 @@ export function PieTotales({ apu, onEditarPorcentajeCi, onAbrirDesglose }: PieTo
                 </span>
               )}
             </div>
-            {!editandoCi && apu.porcentajeIndirecto != null && (
+            {ciIndividualHabilitado && !editando && apu.porcentajeIndirecto != null && (
               <Button
                 variant="ghost"
                 size="xs"

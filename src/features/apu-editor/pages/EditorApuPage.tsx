@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useApuEditor } from "../hooks/useApuEditor";
 import { useProyectoActivoId, useVersionActiva } from "@/shell/contexto";
+import { useParametrosCi } from "@/features/proyectos/hooks/useParametros";
 import { EncabezadoApu } from "../components/EncabezadoApu";
 import { GridSeccion } from "../components/GridSeccion";
 import { SelectorInsumo } from "../components/SelectorInsumo";
@@ -18,6 +19,7 @@ export function EditorApuPage() {
   // La versión la manda el selector de la barra superior; `:apuId` sí es de ruta.
   const { apuId } = useParams<{ apuId: string }>();
   const proyectoId = useProyectoActivoId() ?? "";
+  const ciProyecto = useParametrosCi(proyectoId || null);
   const { presupuestoId: versionActiva } = useVersionActiva();
   const presupuestoId = versionActiva ?? "";
   const parsedApuId = apuId ?? "";
@@ -110,6 +112,11 @@ export function EditorApuPage() {
             apu={apu}
             onEditarPorcentajeCi={editarPorcentajeCi}
             onAbrirDesglose={() => setDesgloseAbierto(true)}
+            ciIndividualHabilitado={
+              !ciProyecto.isFetching &&
+              !ciProyecto.isError &&
+              ciProyecto.data?.ciIndividualHabilitado === true
+            }
           />
         </div>
       </div>

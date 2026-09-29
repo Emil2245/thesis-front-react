@@ -15,6 +15,7 @@ import {
   proyectosFixture,
   proyectoDetalleFixture,
   parametrosFixture,
+  parametrosCiFixture,
   firmantesFixture,
 } from "./fixtures/proyectos";
 import {
@@ -486,6 +487,43 @@ export const handlers = [
     HttpResponse.json(null, { status: 204 }),
   ),
 
+  http.get(`${API}/proyectos/:id/ci`, () => HttpResponse.json(parametrosCiFixture)),
+  http.put(`${API}/proyectos/:id/ci`, async ({ request, params }) => {
+    const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
+    if (
+      !body ||
+      !camposExactos(body, [
+        "porcentajeIndirecto",
+        "ciIndividualHabilitado",
+        "politicaOverrides",
+      ]) ||
+      !(
+        body.porcentajeIndirecto === null ||
+        (typeof body.porcentajeIndirecto === "number" &&
+          Number.isFinite(body.porcentajeIndirecto) &&
+          body.porcentajeIndirecto >= 0 &&
+          body.porcentajeIndirecto <= 1)
+      ) ||
+      typeof body.ciIndividualHabilitado !== "boolean" ||
+      (body.politicaOverrides !== undefined &&
+        body.politicaOverrides !== "PRESERVAR" &&
+        body.politicaOverrides !== "RESTABLECER")
+    ) {
+      return problema(400, "validacion", "El cuerpo no cumple ParametrosProyectoCiRequest");
+    }
+    if (parametrosCiFixture.cantidadOverrides > 0 && body.politicaOverrides === undefined) {
+      return problema(400, "validacion", "politicaOverrides es obligatoria si hay overrides");
+    }
+    return HttpResponse.json({
+      proyectoId: String(params.id),
+      porcentajeIndirecto: body.porcentajeIndirecto,
+      ciIndividualHabilitado: body.ciIndividualHabilitado,
+      cantidadOverrides:
+        body.ciIndividualHabilitado === false || body.politicaOverrides === "RESTABLECER"
+          ? 0
+          : parametrosCiFixture.cantidadOverrides,
+    });
+  }),
   http.get(`${API}/proyectos/:id/parametros`, () => HttpResponse.json(parametrosFixture)),
   http.put(
     `${API}/proyectos/:id/parametros`,

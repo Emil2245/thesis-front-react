@@ -26,11 +26,11 @@ describe("ParametrosPage", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/% Herramienta menor/i)).toBeInTheDocument();
-      expect(screen.getByText(/% Indirectos/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/CI del proyecto/i)).toBeInTheDocument();
     });
   });
 
-  it("muestra la alerta de recálculo", async () => {
+  it("explica que el CI se administra por separado", async () => {
     renderConProviders(
       <Routes>
         <Route path="/proyectos/:id/parametros" element={<ParametrosPage />} />
@@ -39,7 +39,7 @@ describe("ParametrosPage", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/recalculará/i)).toBeInTheDocument();
+      expect(screen.getByText(/se administran por separado/i)).toBeInTheDocument();
     });
   });
 
@@ -77,7 +77,10 @@ describe("ParametrosPage", () => {
     await user.click(screen.getByRole("button", { name: /guardar parámetros/i }));
 
     await waitFor(() => {
-      expect(sentBody).toMatchObject({ porcentajeHerramientaMenor: 0.07 });
+      expect(sentBody).toMatchObject({
+        porcentajeHerramientaMenor: 0.07,
+        porcentajeIndirecto: parametrosFixture.porcentajeIndirecto,
+      });
     });
   });
 
@@ -86,6 +89,52 @@ describe("ParametrosPage", () => {
   // pinta «7,5» donde el requisito es punto. jsdom no reproduce esa
   // localización, así que lo que se fija aquí es lo que sí depende de nosotros:
   // el campo acepta el punto y manda la fracción correcta.
+  it("requiere una decisión explícita antes de cambiar CI cuando existen overrides", async () => {
+    let sentBody: unknown;
+    server.use(
+      http.get(`${API}/proyectos/:id/ci`, () =>
+        HttpResponse.json({
+          proyectoId: "01927f4e-1a2b-7c3d-8e4f-000000000001",
+          porcentajeIndirecto: 0.15,
+          ciIndividualHabilitado: true,
+          cantidadOverrides: 3,
+        }),
+      ),
+      http.put(`${API}/proyectos/:id/ci`, async ({ request }) => {
+        sentBody = await request.json();
+        return HttpResponse.json({
+          proyectoId: "01927f4e-1a2b-7c3d-8e4f-000000000001",
+          porcentajeIndirecto: 0.2,
+          ciIndividualHabilitado: true,
+          cantidadOverrides: 0,
+        });
+      }),
+    );
+    const { user } = renderConProviders(
+      <Routes>
+        <Route path="/proyectos/:id/parametros" element={<ParametrosPage />} />
+      </Routes>,
+      { ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/parametros" },
+    );
+
+    const ci = await screen.findByLabelText(/CI del proyecto/i);
+    await user.clear(ci);
+    await user.type(ci, "20");
+    await user.click(screen.getByRole("button", { name: /guardar CI/i }));
+
+    expect(await screen.findByRole("dialog")).toHaveTextContent("3 APU");
+    expect(sentBody).toBeUndefined();
+    await user.click(screen.getByRole("button", { name: /restablecer todos/i }));
+
+    await waitFor(() =>
+      expect(sentBody).toEqual({
+        porcentajeIndirecto: 0.2,
+        ciIndividualHabilitado: true,
+        politicaOverrides: "RESTABLECER",
+      }),
+    );
+  });
+
   it.each([
     ["7.5", 0.075],
     ["7,5", 0.075],

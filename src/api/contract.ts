@@ -201,6 +201,21 @@ export interface ParametrosProyectoEditarRequest {
   moneda?: string;
 }
 
+export type PoliticaOverridesCi = "PRESERVAR" | "RESTABLECER";
+
+export interface ParametrosProyectoCiResponse {
+  proyectoId: string;
+  porcentajeIndirecto: number | null;
+  ciIndividualHabilitado: boolean;
+  cantidadOverrides: number;
+}
+
+export interface ParametrosProyectoCiRequest {
+  porcentajeIndirecto: number | null;
+  ciIndividualHabilitado: boolean;
+  politicaOverrides?: PoliticaOverridesCi;
+}
+
 // ————— Insumos y bases (§11) —————
 export type TipoInsumo = "EQUIPO" | "MANO_OBRA" | "MATERIAL" | "TRANSPORTE";
 

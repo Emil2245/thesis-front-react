@@ -299,6 +299,15 @@ export const logActividadSchema = z
   })
   .strict();
 
+export const parametrosProyectoCiSchema = z
+  .object({
+    proyectoId: z.string(),
+    porcentajeIndirecto: z.number().nullable(),
+    ciIndividualHabilitado: z.boolean(),
+    cantidadOverrides: z.number().int().nonnegative(),
+  })
+  .strict();
+
 export const parametrosProyectoSchema = z
   .object({
     proyectoId: z.string(),
