@@ -10,6 +10,7 @@ import {
   ESCALA_PORCENTAJE,
   parsearEntradaNumerica,
   porcentajeAFraccionDecimal,
+  fraccionAPorcentaje,
 } from "@/lib/decimal";
 
 interface PieTotalesProps {
@@ -39,7 +40,9 @@ export function PieTotales({
   const editando = ciIndividualHabilitado && editandoCi;
 
   const iniciarEdicionCi = () => {
-    setCiValor(apu.porcentajeIndirecto != null ? String(apu.porcentajeIndirecto) : "");
+    setCiValor(
+      apu.porcentajeIndirecto != null ? String(fraccionAPorcentaje(apu.porcentajeIndirecto)) : "",
+    );
     setEditandoCi(true);
   };
 
