@@ -23,6 +23,7 @@ import { formatearMoneda } from "@/lib/decimal";
 interface SelectorInsumoProps {
   abierto: boolean;
   onClose: () => void;
+  onRestaurarFoco?: () => void;
   proyectoId: string;
   tipo: SeccionTipo;
   onSeleccionar: (sel: { seccionTipo: SeccionTipo; insumoId: string }) => void;
@@ -31,6 +32,7 @@ interface SelectorInsumoProps {
 export function SelectorInsumo({
   abierto,
   onClose,
+  onRestaurarFoco,
   proyectoId,
   tipo,
   onSeleccionar,
@@ -47,7 +49,15 @@ export function SelectorInsumo({
 
   return (
     <Dialog open={abierto} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent
+        onCloseAutoFocus={(event) => {
+          if (onRestaurarFoco) {
+            event.preventDefault();
+            onRestaurarFoco();
+          }
+        }}
+        className="sm:max-w-lg"
+      >
         <DialogHeader>
           <DialogTitle>Seleccionar insumo</DialogTitle>
         </DialogHeader>

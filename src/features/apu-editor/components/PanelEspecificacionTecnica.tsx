@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDownIcon, SaveIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,12 +10,22 @@ const LIMITE_BYTES = 64 * 1024;
 
 interface PanelEspecificacionTecnicaProps {
   texto: string | null | undefined;
+  onBorradorChange?: (borrador: boolean) => void;
   onGuardar: (texto: string) => Promise<void>;
 }
 
-export function PanelEspecificacionTecnica({ texto, onGuardar }: PanelEspecificacionTecnicaProps) {
+export function PanelEspecificacionTecnica({
+  texto,
+  onGuardar,
+  onBorradorChange,
+}: PanelEspecificacionTecnicaProps) {
   const [abierto, setAbierto] = useState(() => !!texto);
-  const [valor, setValor] = useState(texto ?? "");
+  const [borrador, setBorrador] = useState<string | undefined>();
+  const valor = borrador ?? texto ?? "";
+  const [error, setError] = useState(false);
+  useEffect(() => {
+    onBorradorChange?.(borrador !== undefined && borrador !== (texto ?? ""));
+  }, [onBorradorChange, borrador, texto]);
   const [guardando, setGuardando] = useState(false);
 
   const bytes = new TextEncoder().encode(valor).length;
@@ -24,7 +34,11 @@ export function PanelEspecificacionTecnica({ texto, onGuardar }: PanelEspecifica
   const guardar = async () => {
     setGuardando(true);
     try {
+      setError(false);
       await onGuardar(valor);
+      setBorrador(undefined);
+    } catch {
+      setError(true);
     } finally {
       setGuardando(false);
     }
@@ -49,11 +63,14 @@ export function PanelEspecificacionTecnica({ texto, onGuardar }: PanelEspecifica
       {abierto && (
         <CardContent className="flex flex-col gap-2">
           <Textarea
+            disabled={guardando}
+            aria-label="Especificación técnica"
             value={valor}
-            onChange={(e) => setValor(e.target.value)}
+            onChange={(e) => setBorrador(e.target.value)}
             rows={6}
             placeholder="Especificación técnica del APU..."
           />
+          {error && <p role="alert">No se pudo guardar la especificación técnica</p>}
           <div className="flex items-center justify-between">
             <span
               className={cn("text-xs text-muted-foreground", excedeLimite && "text-destructive")}

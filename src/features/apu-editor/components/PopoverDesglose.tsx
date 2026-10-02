@@ -12,6 +12,7 @@ import {
 interface PopoverDesgloseProps {
   abierto: boolean;
   onClose: () => void;
+  onRestaurarFoco?: () => void;
   apuId: string;
 }
 
@@ -29,12 +30,25 @@ const ETIQUETA: Record<SeccionTipo, string> = {
   TRANSPORTE: "Transporte",
 };
 
-export function PopoverDesglose({ abierto, onClose, apuId }: PopoverDesgloseProps) {
+export function PopoverDesglose({
+  abierto,
+  onClose,
+  apuId,
+  onRestaurarFoco,
+}: PopoverDesgloseProps) {
   const { data, isPending } = useApuCalculo(apuId, abierto);
 
   return (
     <Dialog open={abierto} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent
+        onCloseAutoFocus={(event) => {
+          if (onRestaurarFoco) {
+            event.preventDefault();
+            onRestaurarFoco();
+          }
+        }}
+        className="sm:max-w-lg"
+      >
         <DialogHeader>
           <DialogTitle>Desglose de cálculo</DialogTitle>
           <DialogDescription>

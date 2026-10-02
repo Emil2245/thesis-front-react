@@ -17,10 +17,16 @@ import { Field, FieldError } from "@/components/ui/field";
 interface DialogoGuardarPlantillaProps {
   abierto: boolean;
   onClose: () => void;
+  onRestaurarFoco?: () => void;
   apuId: string;
 }
 
-export function DialogoGuardarPlantilla({ abierto, onClose, apuId }: DialogoGuardarPlantillaProps) {
+export function DialogoGuardarPlantilla({
+  abierto,
+  onClose,
+  apuId,
+  onRestaurarFoco,
+}: DialogoGuardarPlantillaProps) {
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +56,15 @@ export function DialogoGuardarPlantilla({ abierto, onClose, apuId }: DialogoGuar
 
   return (
     <Dialog open={abierto} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent
+        onCloseAutoFocus={(event) => {
+          if (onRestaurarFoco) {
+            event.preventDefault();
+            onRestaurarFoco();
+          }
+        }}
+        className="sm:max-w-sm"
+      >
         <DialogHeader>
           <DialogTitle>Guardar como plantilla</DialogTitle>
           <DialogDescription>
