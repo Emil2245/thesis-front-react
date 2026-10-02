@@ -1,10 +1,12 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
 import type { SeccionTipo } from "@/api/contract";
 import { FormularioApuManualCompleto } from "@/features/workspace/components/agregar-apu/FormularioApuManualCompleto";
-import { renderConProviders } from "@/test/render";
+import { crearQueryClient, renderConProviders } from "@/test/render";
+import { qk } from "@/api/queryKeys";
 import { server } from "@/test/server";
 import { parametrosFixture } from "@/test/fixtures/proyectos";
 import { apuDetalleFixture } from "@/test/fixtures/apu";
@@ -109,6 +111,62 @@ describe("FormularioApuManualCompleto", () => {
     await waitFor(() => expect(screen.getByLabelText("Código")).toHaveFocus());
   });
 
+  it("bloquea override y submit si falla el refetch con un opt-in habilitado en caché", async () => {
+    const client = crearQueryClient();
+    client.setQueryData(qk.parametrosProyectoCi(PROYECTO), {
+      proyectoId: PROYECTO,
+      porcentajeIndirecto: 0.15,
+      ciIndividualHabilitado: true,
+      cantidadOverrides: 1,
+    });
+    let comenzar!: () => void;
+    const requestIniciada = new Promise<void>((resolve) => {
+      comenzar = resolve;
+    });
+    let liberar!: () => void;
+    const respuesta = new Promise<void>((resolve) => {
+      liberar = resolve;
+    });
+    server.use(
+      http.get(`${API}/proyectos/:id/ci`, async () => {
+        comenzar();
+        await respuesta;
+        return HttpResponse.json({ codigo: "fallo", mensaje: "No disponible" }, { status: 500 });
+      }),
+    );
+    render(
+      <QueryClientProvider client={client}>
+        <FormularioApuManualCompleto
+          presupuestoId={PRESUPUESTO}
+          proyectoId={PROYECTO}
+          onCreado={vi.fn()}
+          onCancelar={vi.fn()}
+        />
+      </QueryClientProvider>,
+    );
+
+    await requestIniciada;
+    expect(screen.queryByLabelText("Porcentaje indirecto (%)")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Crear APU" })).toBeDisabled();
+    liberar();
+    await waitFor(() =>
+      expect(client.getQueryState(qk.parametrosProyectoCi(PROYECTO))?.status).toBe("error"),
+    );
+    expect(screen.queryByLabelText("Porcentaje indirecto (%)")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Crear APU" })).toBeDisabled();
+  });
+
+  it("oculta la entrada de CI cuando el opt-in del proyecto está apagado", async () => {
+    const { user } = renderFormulario();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Crear APU" })).toBeEnabled());
+    expect(screen.queryByLabelText("Porcentaje indirecto (%)")).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText("Descripción"), "APU heredado");
+    await user.type(screen.getByLabelText("Unidad"), "u");
+    await agregar(user, "MATERIAL");
+    await user.click(screen.getByRole("button", { name: "Crear APU" }));
+    expect(screen.queryByLabelText("Porcentaje indirecto (%)")).not.toBeInTheDocument();
+  });
+
   it("valida cantidades y rendimientos positivos en las secciones aplicables", async () => {
     const { user } = renderFormulario();
     await agregar(user, "EQUIPO");
@@ -135,6 +193,14 @@ describe("FormularioApuManualCompleto", () => {
     server.use(
       http.get(`${API}/proyectos/:id/parametros`, () =>
         HttpResponse.json({ ...parametrosFixture, modoCodigoRubro: "MANUAL" }),
+      ),
+      http.get(`${API}/proyectos/:id/ci`, () =>
+        HttpResponse.json({
+          proyectoId: PROYECTO,
+          porcentajeIndirecto: 0.15,
+          ciIndividualHabilitado: true,
+          cantidadOverrides: 0,
+        }),
       ),
     );
     let body: unknown;

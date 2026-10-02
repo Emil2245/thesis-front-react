@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { Route, Routes } from "react-router-dom";
 import { PestanaApu } from "@/features/workspace/components/PestanaApu";
@@ -13,7 +13,13 @@ const renderApu = (ruta = "/proyectos/proyecto-1/workspace") =>
     <Routes>
       <Route
         path="/proyectos/:id/workspace"
-        element={<PestanaApu apuId={apuDetalleFixture.id} proyectoId="proyecto-1" />}
+        element={
+          <PestanaApu
+            apuId={apuDetalleFixture.id}
+            proyectoId="proyecto-1"
+            presupuestoId="presupuesto-1"
+          />
+        }
       />
     </Routes>,
     { ruta },
@@ -80,36 +86,125 @@ describe("PestanaApu", () => {
     );
   });
 
-  it("builds the exact editor href and has no mutation controls", async () => {
-    const mutation = vi.fn();
+  it("opens the shared editor without navigation and refreshes the workspace header", async () => {
+    let stored = apuDetalleFixture;
+    const patch = vi.fn();
+    const cellPatch = vi.fn();
+    let releaseSave!: () => void;
+    const saving = new Promise<void>((resolve) => {
+      releaseSave = resolve;
+    });
     server.use(
-      ...(["post", "patch", "put", "delete"] as const).map((method) =>
-        http[method](apuUrl, () => {
-          mutation();
-          return HttpResponse.json({});
-        }),
-      ),
+      http.get(apuUrl, () => HttpResponse.json(stored)),
+      http.patch(apuUrl, async ({ request }) => {
+        const body = await request.json();
+        expect(body).toEqual({ codigo: "APU-001", descripcion: "Updated APU", unidad: "m3" });
+        patch(body);
+        stored = { ...stored, descripcion: "Updated APU" };
+        return HttpResponse.json(stored);
+      }),
+      http.patch("*/api/v1/apus/:id/detalles/:detalleId", async ({ request, params }) => {
+        expect(params.detalleId).toBe(stored.secciones[0].detalles[0].id);
+        const body = await request.json();
+        expect(body).toEqual({ cantidad: "3" });
+        cellPatch(body);
+        await saving;
+        stored = {
+          ...stored,
+          secciones: stored.secciones.map((section, index) =>
+            index === 0
+              ? {
+                  ...section,
+                  detalles: section.detalles.map((detail, detailIndex) =>
+                    detailIndex === 0 ? { ...detail, cantidad: 3, costo: 987.654321 } : detail,
+                  ),
+                }
+              : section,
+          ),
+        };
+        return HttpResponse.json(stored);
+      }),
     );
-    renderApu("/proyectos/proyecto-1/workspace?v=7&rubro=rubro-1");
-    await screen.findByText("APU-001");
-    const editar = screen.getByRole("link", { name: "Editar APU completo" });
-    expect(editar).toHaveAttribute(
-      "href",
-      `/proyectos/proyecto-1/apus/${apuDetalleFixture.id}?v=7`,
+    const { user } = renderApu("/proyectos/proyecto-1/workspace?v=7&rubro=rubro-1");
+    await user.click(await screen.findByRole("button", { name: "Editar APU completo" }));
+    const dialog = await screen.findByRole("dialog", { name: "Editar APU" });
+    await user.click(await within(dialog).findByRole("button", { name: "Editar encabezado" }));
+    const description = within(dialog).getByLabelText("Descripción");
+    await user.clear(description);
+    await user.type(description, "Updated APU");
+    await user.click(within(dialog).getByRole("button", { name: "Guardar" }));
+    await waitFor(() => expect(patch).toHaveBeenCalledOnce());
+    expect(screen.getByRole("dialog", { name: "Editar APU" })).toBe(dialog);
+    const row = within(dialog).getByRole("row", { name: /Retroexcavadora/ });
+    await user.click(within(row).getByRole("button", { name: "Editar valor 1" }));
+    const quantity = within(row).getByRole("textbox");
+    await user.clear(quantity);
+    await user.type(quantity, "3{Enter}");
+    await waitFor(() => expect(cellPatch).toHaveBeenCalledOnce());
+    expect(within(dialog).getByRole("button", { name: "Cerrar" })).toBeDisabled();
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("dialog", { name: "Editar APU" })).toBe(dialog);
+    releaseSave();
+    await waitFor(() =>
+      expect(within(dialog).getByRole("button", { name: "Cerrar" })).toBeEnabled(),
     );
-    expect(editar.closest("header")).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /^(Guardar|Eliminar|Agregar|Crear)/i }),
-    ).not.toBeInTheDocument();
-    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
-    expect(mutation).not.toHaveBeenCalled();
+    await user.click(within(dialog).getByRole("button", { name: "Cerrar" }));
+    expect(await screen.findByText("Updated APU")).toBeInTheDocument();
+    expect(await screen.findByText("987.654321")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("omits an empty v query", async () => {
-    renderApu("/proyectos/proyecto-1/workspace?rubro=rubro-1");
-    await expect(
-      screen.findByRole("link", { name: "Editar APU completo" }),
-    ).resolves.toHaveAttribute("href", `/proyectos/proyecto-1/apus/${apuDetalleFixture.id}`);
+  it("protects an unsaved header draft on close", async () => {
+    const { user } = renderApu();
+    await user.click(await screen.findByRole("button", { name: "Editar APU completo" }));
+    const dialog = await screen.findByRole("dialog", { name: "Editar APU" });
+    await user.click(await within(dialog).findByRole("button", { name: "Editar encabezado" }));
+    await user.type(within(dialog).getByLabelText("Descripción"), " draft");
+    await user.keyboard("{Escape}");
+    expect(await screen.findByRole("alertdialog")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Seguir editando" }));
+    expect(within(dialog).getByLabelText("Descripción")).toHaveValue("Excavación a máquina draft");
+  });
+
+  it("loads the server specification and protects its draft", async () => {
+    server.use(
+      http.get("*/api/v1/apus/:id/especificacion-tecnica", () =>
+        HttpResponse.json({ apuId: apuDetalleFixture.id, contenido: "Existing specification" }),
+      ),
+    );
+    const { user } = renderApu();
+    await user.click(await screen.findByRole("button", { name: "Editar APU completo" }));
+    const dialog = await screen.findByRole("dialog", { name: "Editar APU" });
+    const toggle = await within(dialog).findByRole("button", { name: "Especificación técnica" });
+    if (!within(dialog).queryByRole("textbox", { name: "Especificación técnica" })) {
+      await user.click(toggle);
+    }
+    const specification = within(dialog).getByRole("textbox", { name: "Especificación técnica" });
+    await waitFor(() => expect(specification).toHaveValue("Existing specification"));
+    await user.type(specification, " draft");
+    await user.click(within(dialog).getByRole("button", { name: "Cerrar" }));
+    expect(await screen.findByRole("alertdialog")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Seguir editando" }));
+    expect(specification).toHaveValue("Existing specification draft");
+  });
+
+  it.each([
+    ["Agregar insumo a Equipo", "Seleccionar insumo"],
+    ["Guardar como plantilla", "Guardar como plantilla"],
+    ["Desglose", "Desglose de cálculo"],
+  ])("restores keyboard focus after closing nested %s", async (triggerName, dialogName) => {
+    const { user } = renderApu();
+    await user.click(await screen.findByRole("button", { name: "Editar APU completo" }));
+    const editor = await screen.findByRole("dialog", { name: "Editar APU" });
+    const trigger = await within(editor).findByRole("button", { name: triggerName });
+    await user.click(trigger);
+    expect(await screen.findByRole("dialog", { name: dialogName })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: dialogName })).not.toBeInTheDocument(),
+    );
+    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(screen.getByRole("dialog", { name: "Editar APU" })).toBe(editor);
   });
 
   it("shows an empty state for an APU without sections", async () => {

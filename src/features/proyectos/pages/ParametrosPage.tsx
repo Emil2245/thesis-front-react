@@ -1,12 +1,22 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { crearParametrosSchema, type RangosValidacion } from "../schemas";
-import { useParametros, useActualizarParametros } from "../hooks/useParametros";
+import {
+  useParametros,
+  useActualizarParametros,
+  useParametrosCi,
+  useGuardarParametrosCi,
+} from "../hooks/useParametros";
 import { useParametrosSistema } from "@/features/admin/hooks/useParametrosSistema";
-import { ESCALA_PORCENTAJE, fraccionAPorcentaje, parsearEntradaNumerica } from "@/lib/decimal";
+import {
+  ESCALA_PORCENTAJE,
+  fraccionAPorcentaje,
+  parsearEntradaNumerica,
+  porcentajeAFraccion,
+} from "@/lib/decimal";
 import { CargandoTabla } from "@/components/comunes/CargandoTabla";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { Button } from "@/components/ui/button";
@@ -14,6 +24,14 @@ import { Input } from "@/components/ui/input";
 import { Field, FieldError } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -24,6 +42,7 @@ import {
 } from "@/components/ui/select";
 import { TriangleAlertIcon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import type { ParametrosProyectoCiRequest } from "@/api/contract";
 
 // `type="number"` delega el separador decimal al locale del NAVEGADOR: en un
 // Chrome en español el 12.5 que manda el servidor se pinta «12,5». El requisito
@@ -59,6 +78,23 @@ export function ParametrosPage() {
   const { data: params, isPending } = useParametros(proyectoId);
   const { data: sistema } = useParametrosSistema();
   const actualizar = useActualizarParametros(proyectoId);
+  const ciQuery = useParametrosCi(proyectoId);
+  const guardarCi = useGuardarParametrosCi(proyectoId);
+  const [ciValor, setCiValor] = useState("");
+  const [ciIndividual, setCiIndividual] = useState(false);
+  const [ciError, setCiError] = useState("");
+  const [confirmacion, setConfirmacion] = useState<ParametrosProyectoCiRequest | null>(null);
+
+  useEffect(() => {
+    if (ciQuery.data) {
+      setCiValor(
+        ciQuery.data.porcentajeIndirecto == null
+          ? ""
+          : String(fraccionAPorcentaje(ciQuery.data.porcentajeIndirecto)),
+      );
+      setCiIndividual(ciQuery.data.ciIndividualHabilitado);
+    }
+  }, [ciQuery.data]);
 
   const rangos = useMemo<RangosValidacion>(
     () => ({
@@ -116,8 +152,8 @@ export function ParametrosPage() {
       <Alert>
         <TriangleAlertIcon />
         <AlertDescription>
-          Guardar los parámetros recalculará el porcentaje de herramienta menor en todos los APUs y
-          propagará el % de indirectos a los APUs sin valor personalizado.
+          Configure aquí los parámetros generales del proyecto. El CI del proyecto y los CI propios
+          se administran por separado en la tarjeta siguiente.
         </AlertDescription>
       </Alert>
 
@@ -135,15 +171,6 @@ export function ParametrosPage() {
                 {...form.register("porcentajeHerramientaMenor", { setValueAs: aPorcentaje })}
               />
               <FieldError>{form.formState.errors.porcentajeHerramientaMenor?.message}</FieldError>
-            </Field>
-            <Field>
-              <Label>{`% Indirectos (0–${rangos.ciMax} %)`}</Label>
-              <Input
-                type="text"
-                inputMode="decimal"
-                {...form.register("porcentajeIndirecto", { setValueAs: aPorcentajeNullable })}
-              />
-              <FieldError>{form.formState.errors.porcentajeIndirecto?.message}</FieldError>
             </Field>
             <Field>
               <Label>{`IVA (0–${rangos.ivaMax} %)`}</Label>
@@ -170,6 +197,172 @@ export function ParametrosPage() {
             </Field>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Costos indirectos del proyecto</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {ciQuery.isPending ? (
+              <p className="text-sm text-muted-foreground">Cargando configuración de CI…</p>
+            ) : ciQuery.isError || !ciQuery.data ? (
+              <p role="alert" className="text-sm text-destructive">
+                No se pudo cargar la configuración de CI. Recargue la página para editarla.
+              </p>
+            ) : (
+              <>
+                <Field>
+                  <Label htmlFor="proyecto-ci-porcentaje">
+                    % CI del proyecto (0–{rangos.ciMax} %)
+                  </Label>
+                  <Input
+                    id="proyecto-ci-porcentaje"
+                    type="text"
+                    inputMode="decimal"
+                    value={ciValor}
+                    aria-invalid={!!ciError}
+                    onChange={(event) => {
+                      setCiValor(event.target.value);
+                      setCiError("");
+                    }}
+                  />
+                  <FieldError>{ciError}</FieldError>
+                </Field>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="ci-individual-habilitado"
+                    aria-label="Habilitar CI individual por APU"
+                    checked={ciIndividual}
+                    onCheckedChange={setCiIndividual}
+                    disabled={guardarCi.isPending}
+                  />
+                  <Label htmlFor="ci-individual-habilitado">Permitir CI individual por APU</Label>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {ciQuery.data.cantidadOverrides} APU con CI propio. Deshabilitar esta opción
+                  restablece sus valores al CI del proyecto.
+                </p>
+                {guardarCi.isError && (
+                  <p role="alert" className="text-sm text-destructive">
+                    No se pudo guardar el CI del proyecto. Revise el valor e intente nuevamente.
+                  </p>
+                )}
+                <Button
+                  type="button"
+                  disabled={guardarCi.isPending}
+                  onClick={async () => {
+                    const porcentaje = aPorcentajeNullable(ciValor);
+                    if (Number.isNaN(porcentaje)) {
+                      setCiError("Ingrese un porcentaje válido.");
+                      return;
+                    }
+                    if (
+                      porcentaje != null &&
+                      (porcentaje < (sistema?.rangoCiMin ?? 0) * 100 || porcentaje > rangos.ciMax)
+                    ) {
+                      setCiError(
+                        `El CI debe estar entre ${fraccionAPorcentaje(sistema?.rangoCiMin ?? 0)} y ${rangos.ciMax} %.`,
+                      );
+                      return;
+                    }
+                    const solicitud: ParametrosProyectoCiRequest = {
+                      porcentajeIndirecto:
+                        porcentaje == null ? null : porcentajeAFraccion(porcentaje),
+                      ciIndividualHabilitado: ciIndividual,
+                    };
+                    const cambioCi =
+                      ciQuery.data.porcentajeIndirecto == null
+                        ? solicitud.porcentajeIndirecto != null
+                        : solicitud.porcentajeIndirecto == null ||
+                          ciQuery.data.porcentajeIndirecto !== solicitud.porcentajeIndirecto;
+                    const requiereDecision =
+                      ciQuery.data.cantidadOverrides > 0 &&
+                      (cambioCi || (ciQuery.data.ciIndividualHabilitado && !ciIndividual));
+                    if (requiereDecision) {
+                      setConfirmacion(solicitud);
+                      return;
+                    }
+                    try {
+                      await guardarCi.mutateAsync({ ...solicitud, politicaOverrides: "PRESERVAR" });
+                      toast.success("CI del proyecto actualizado");
+                    } catch {
+                      // The inline alert exposes the failed save without losing the input.
+                    }
+                  }}
+                >
+                  {guardarCi.isPending ? "Guardando CI…" : "Guardar CI"}
+                </Button>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        <Dialog
+          open={confirmacion !== null}
+          onOpenChange={(open) => !open && setConfirmacion(null)}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>¿Qué hacer con los CI propios?</DialogTitle>
+              <DialogDescription>
+                Hay {ciQuery.data?.cantidadOverrides ?? 0} APU con un CI propio. Elija cómo
+                continuar; no se cambiará nada hasta confirmar.
+              </DialogDescription>
+            </DialogHeader>
+            {guardarCi.isError && (
+              <p role="alert" className="text-sm text-destructive">
+                No se pudo guardar el CI. Sus valores no se han cambiado; intente nuevamente.
+              </p>
+            )}
+            <DialogFooter className="flex-col sm:flex-col sm:items-stretch">
+              {confirmacion?.ciIndividualHabilitado && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={guardarCi.isPending}
+                  onClick={async () => {
+                    if (!confirmacion) return;
+                    try {
+                      await guardarCi.mutateAsync({
+                        ...confirmacion,
+                        politicaOverrides: "PRESERVAR",
+                      });
+                      setConfirmacion(null);
+                      toast.success("CI del proyecto actualizado; se conservaron los CI propios");
+                    } catch {
+                      // Keep the explicit choice open so the user can retry.
+                    }
+                  }}
+                >
+                  Conservar los CI propios
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={guardarCi.isPending}
+                onClick={async () => {
+                  if (!confirmacion) return;
+                  try {
+                    await guardarCi.mutateAsync({
+                      ...confirmacion,
+                      politicaOverrides: "RESTABLECER",
+                    });
+                    setConfirmacion(null);
+                    toast.success("CI actualizado y valores propios restablecidos");
+                  } catch {
+                    // Keep the explicit choice open so the user can retry.
+                  }
+                }}
+              >
+                Restablecer todos los CI propios
+              </Button>
+              <Button type="button" variant="ghost" onClick={() => setConfirmacion(null)}>
+                Cancelar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Card>
           <CardHeader>

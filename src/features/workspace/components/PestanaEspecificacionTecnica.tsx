@@ -32,7 +32,7 @@ export function PestanaEspecificacionTecnica({
   if (query.isFetching) return <output aria-busy="true">Cargando especificación técnica…</output>;
   if (query.isError) {
     return (
-      <div className="space-y-2 p-4">
+      <div className="space-y-2 p-3">
         <p role="alert">{mensajeCarga(query.error, "la especificación técnica")}</p>
         <button type="button" onClick={() => query.refetch()} className="underline">
           Reintentar
@@ -59,10 +59,10 @@ export function PestanaEspecificacionTecnica({
 
   return (
     <div
-      className="space-y-3 p-4"
+      className="space-y-2 p-3"
       aria-busy={mutationBelongsToApu && mutation.isPending ? true : undefined}
     >
-      <output className="text-sm text-muted-foreground" aria-live="polite">
+      <output className="text-xs text-muted-foreground" aria-live="polite">
         {contenido === null || contenido === ""
           ? "Sin especificación técnica"
           : "Especificación técnica disponible para edición."}

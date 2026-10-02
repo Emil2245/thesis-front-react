@@ -195,6 +195,7 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
       qc.setQueryData(qk.apu(apuId), response);
       if (presupuestoId) {
         qc.invalidateQueries({ queryKey: qk.apus(presupuestoId) });
+        qc.invalidateQueries({ queryKey: qk.apuWorkspace(presupuestoId, apuId), exact: true });
       }
     },
   });
@@ -388,11 +389,7 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
 
   const editarEncabezado = useCallback(
     async (patchReq: ApuPatchRequest) => {
-      try {
-        await encabezadoMutation.mutateAsync(patchReq);
-      } catch {
-        // handled by react-query
-      }
+      await encabezadoMutation.mutateAsync(patchReq);
     },
     [encabezadoMutation],
   );
@@ -404,16 +401,24 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
     [porcentajeCiMutation],
   );
 
-  const guardarEspecificacionTecnica = useCallback(
-    async (texto: string) => {
-      const response = await putValidado(`/apus/${apuId}/especificacion-tecnica`, apuSchema, {
-        texto,
-      });
+  const especificacionMutation = useMutation({
+    mutationFn: (texto: string) =>
+      putValidado(`/apus/${apuId}/especificacion-tecnica`, apuSchema, { texto }),
+    onSuccess: (response, texto) => {
       qc.setQueryData(qk.apu(apuId), response);
+      qc.setQueryData(qk.apuEspecificacion(apuId), { apuId, contenido: texto });
       qc.invalidateQueries({ queryKey: qk.apuEspecificacion(apuId) });
+      if (presupuestoId) {
+        qc.invalidateQueries({
+          queryKey: qk.apuEspecificacionWorkspace(presupuestoId, apuId),
+          exact: true,
+        });
+      }
     },
-    [apuId, qc],
-  );
+  });
+  const guardarEspecificacionTecnica = async (texto: string) => {
+    await especificacionMutation.mutateAsync(texto);
+  };
 
   return {
     apu,
@@ -425,12 +430,14 @@ export function useApuEditor(apuId: string, presupuestoId?: string): UseApuEdito
       agregarMutation.isPending ||
       eliminarMutation.isPending ||
       encabezadoMutation.isPending ||
-      porcentajeCiMutation.isPending,
+      porcentajeCiMutation.isPending ||
+      especificacionMutation.isPending,
     error: (editMutation.error ??
       agregarMutation.error ??
       eliminarMutation.error ??
       encabezadoMutation.error ??
-      porcentajeCiMutation.error) as ApiError | null,
+      porcentajeCiMutation.error ??
+      especificacionMutation.error) as ApiError | null,
     editarCelda,
     restaurarHerencia,
     reordenarFila,

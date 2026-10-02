@@ -126,7 +126,7 @@ export function WorkspacePage() {
         right={
           <TarjetaTabla titulo="APU" className="flex min-h-0 flex-1 flex-col">
             <Tabs defaultValue="apu" className="flex min-h-0 flex-1 flex-col">
-              <TabsList className="mx-4 mt-3 shrink-0" aria-label="Contenido del APU">
+              <TabsList className="mx-3 mt-2 shrink-0" aria-label="Contenido del APU">
                 <TabsTrigger value="apu">APU</TabsTrigger>
                 <TabsTrigger value="insumos">Insumos</TabsTrigger>
                 <TabsTrigger value="especificacion">Especificación técnica</TabsTrigger>

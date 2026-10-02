@@ -14,7 +14,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { SelectorInsumo } from "@/features/apu-editor/components/SelectorInsumo";
 import { useCrearApuCompleto } from "@/features/apu-editor/hooks/useApus";
 import { useInsumos } from "@/features/insumos/hooks/useInsumos";
-import { useParametros } from "@/features/proyectos/hooks/useParametros";
+import { useParametros, useParametrosCi } from "@/features/proyectos/hooks/useParametros";
 import {
   asDecimal,
   ESCALA_PORCENTAJE,
@@ -70,6 +70,11 @@ export function FormularioApuManualCompleto({
 }: FormularioApuManualCompletoProps) {
   const crear = useCrearApuCompleto(presupuestoId);
   const parametros = useParametros(proyectoId);
+  const parametrosCi = useParametrosCi(proyectoId);
+  const ciIndividualHabilitado =
+    !parametrosCi.isFetching &&
+    !parametrosCi.isError &&
+    parametrosCi.data?.ciIndividualHabilitado === true;
   const insumos = useInsumos(proyectoId, { size: 200 });
   const siguienteId = useRef(1);
   const enviandoRef = useRef(false);
@@ -186,7 +191,7 @@ export function FormularioApuManualCompleto({
       registrar("unidad", "La unidad admite máximo 10 caracteres", "apu-manual-unidad");
 
     let porcentaje: number | undefined;
-    if (porcentajeIndirecto.trim()) {
+    if (ciIndividualHabilitado && porcentajeIndirecto.trim()) {
       const puntos = parsearEntradaNumerica(porcentajeIndirecto, ESCALA_PORCENTAJE);
       if (puntos == null || puntos < 0 || puntos > 100) {
         registrar(
@@ -241,7 +246,9 @@ export function FormularioApuManualCompleto({
         ...(!modoAutogenerado ? { codigo: codigo.trim() } : {}),
         descripcion: descripcion.trim(),
         unidad: unidad.trim(),
-        ...(porcentaje !== undefined ? { porcentajeIndirecto: porcentaje } : {}),
+        ...(ciIndividualHabilitado && porcentaje !== undefined
+          ? { porcentajeIndirecto: porcentaje }
+          : {}),
         ...(capituloId ? { capituloId } : {}),
         detalles: detalles.map((detalle) => ({
           ...detalle,
@@ -347,29 +354,31 @@ export function FormularioApuManualCompleto({
             </p>
           )}
         </div>
-        <div className="space-y-1">
-          <Label htmlFor="apu-manual-porcentaje">Porcentaje indirecto (%)</Label>
-          <Input
-            id="apu-manual-porcentaje"
-            type="text"
-            inputMode="decimal"
-            value={porcentajeIndirecto}
-            placeholder="Heredar del proyecto"
-            aria-invalid={!!errores.porcentajeIndirecto}
-            aria-describedby={
-              errores.porcentajeIndirecto ? "apu-manual-porcentaje-error" : undefined
-            }
-            onChange={(event) => {
-              setPorcentajeIndirecto(event.target.value);
-              limpiarError("porcentajeIndirecto");
-            }}
-          />
-          {errores.porcentajeIndirecto && (
-            <p id="apu-manual-porcentaje-error" className="text-xs text-destructive">
-              {errores.porcentajeIndirecto}
-            </p>
-          )}
-        </div>
+        {ciIndividualHabilitado && (
+          <div className="space-y-1">
+            <Label htmlFor="apu-manual-porcentaje">Porcentaje indirecto (%)</Label>
+            <Input
+              id="apu-manual-porcentaje"
+              type="text"
+              inputMode="decimal"
+              value={porcentajeIndirecto}
+              placeholder="Heredar del proyecto"
+              aria-invalid={!!errores.porcentajeIndirecto}
+              aria-describedby={
+                errores.porcentajeIndirecto ? "apu-manual-porcentaje-error" : undefined
+              }
+              onChange={(event) => {
+                setPorcentajeIndirecto(event.target.value);
+                limpiarError("porcentajeIndirecto");
+              }}
+            />
+            {errores.porcentajeIndirecto && (
+              <p id="apu-manual-porcentaje-error" className="text-xs text-destructive">
+                {errores.porcentajeIndirecto}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -525,7 +534,17 @@ export function FormularioApuManualCompleto({
         <Button type="button" variant="outline" disabled={enviando} onClick={onCancelar}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={enviando || parametros.isPending}>
+        <Button
+          type="submit"
+          disabled={
+            enviando ||
+            parametros.isPending ||
+            parametrosCi.isPending ||
+            parametrosCi.isFetching ||
+            parametrosCi.isError ||
+            !parametrosCi.data
+          }
+        >
           {enviando && <Spinner />}
           Crear APU
         </Button>

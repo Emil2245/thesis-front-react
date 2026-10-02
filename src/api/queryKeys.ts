@@ -7,6 +7,7 @@ export const qk = {
   proyecto: (id: string) => ["proyecto", id] as const,
   plantillasProyecto: () => ["plantillas-proyecto"] as const,
   parametrosProyecto: (id: string) => ["proyecto", id, "parametros"] as const,
+  parametrosProyectoCi: (id: string) => ["proyecto", id, "ci"] as const,
   firmantes: (id: string) => ["proyecto", id, "firmantes"] as const,
 
   insumos: (proyectoId: string, filtros?: Record<string, unknown>) =>

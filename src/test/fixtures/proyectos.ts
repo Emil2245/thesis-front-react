@@ -1,6 +1,7 @@
 import type {
   ProyectoResponse,
   ParametrosProyectoResponse,
+  ParametrosProyectoCiResponse,
   FirmanteResponse,
 } from "@/api/contract";
 
@@ -71,6 +72,13 @@ export const proyectoDetalleFixture: ProyectoResponse = {
   plazoUnidad: "MES",
   tieneLogo: false,
   updatedAt: "2026-01-15T00:00:00Z",
+};
+
+export const parametrosCiFixture: ParametrosProyectoCiResponse = {
+  proyectoId: PROYECTO_1,
+  porcentajeIndirecto: 0.15,
+  ciIndividualHabilitado: false,
+  cantidadOverrides: 0,
 };
 
 export const parametrosFixture: ParametrosProyectoResponse = {

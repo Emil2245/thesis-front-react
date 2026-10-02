@@ -42,7 +42,7 @@ export function PestanaInsumos({
   }
   if (query.isPending) {
     return (
-      <output aria-busy="true" className="block p-4">
+      <output aria-busy="true" className="block p-3">
         Cargando insumos…
       </output>
     );
@@ -50,7 +50,7 @@ export function PestanaInsumos({
   if (query.isFetching) return <output aria-busy="true">Cargando insumos…</output>;
   if (query.isError) {
     return (
-      <div className="space-y-2 p-4">
+      <div className="space-y-2 p-3">
         <p role="alert">{mensajeCarga(query.error, "los insumos")}</p>
         <button type="button" onClick={() => query.refetch()} className="underline">
           Reintentar
@@ -91,8 +91,8 @@ export function PestanaInsumos({
   }
 
   return (
-    <div className="min-w-0 overflow-x-auto p-4 text-sm">
-      <table className="w-full min-w-[520px] text-left text-xs">
+    <div className="min-w-0 overflow-x-auto p-3 text-sm">
+      <table className="w-full table-auto text-left text-xs">
         <caption className="sr-only">Insumos asociados al APU {query.data.codigo}</caption>
         <thead>
           <tr className="border-b">
@@ -113,10 +113,14 @@ export function PestanaInsumos({
         <tbody>
           {filas.map(({ detalle, seccion }) => (
             <tr key={detalle.id} className="border-b last:border-b-0">
-              <td className="px-1 py-1">{seccion}</td>
-              <td className="px-1 py-1">{detalle.descripcion}</td>
-              <td className="px-1 py-1">{detalle.unidad ?? "—"}</td>
-              <td className="px-1 py-1">{detalle.cantidad ?? "—"}</td>
+              <td className="w-px px-1 py-1 align-top">{seccion}</td>
+              <td className="px-1 py-1 align-top wrap-anywhere">{detalle.descripcion}</td>
+              <td className="w-px px-1 py-1 align-top whitespace-nowrap">
+                {detalle.unidad ?? "—"}
+              </td>
+              <td className="num w-px px-1 py-1 text-right align-top whitespace-nowrap">
+                {detalle.cantidad ?? "—"}
+              </td>
             </tr>
           ))}
         </tbody>
