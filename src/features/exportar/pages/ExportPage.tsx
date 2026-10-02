@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FileDown, AlertTriangle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -14,7 +15,9 @@ import {
 } from "@/components/ui/select";
 import { useValidacionExport, useExportar, usePreflightCronograma } from "../hooks/useExportar";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
-import { useVersionActiva } from "@/shell/contexto";
+import { useProyectoActivoId, useVersionActiva } from "@/shell/contexto";
+import { useCronograma } from "@/features/cronograma/hooks/useCronograma";
+import { BloqueosCronograma } from "@/features/cronograma/components/BloqueosCronograma";
 import type { FormatoExportCronograma, RubroRefResponse } from "@/api/contract";
 
 function ListaRubros({ items, titulo }: { items: RubroRefResponse[]; titulo: string }) {
@@ -67,6 +70,10 @@ export function ExportPage() {
     formato,
   );
   const [descargandoCronograma, setDescargandoCronograma] = useState(false);
+  // Sólo para poner nombre a las actividades que el preflight señala por id.
+  const { data: cronograma } = useCronograma(versionId);
+  const proyectoId = useProyectoActivoId();
+  const { search } = useLocation();
 
   // Con la query deshabilitada por falta de id, `validacion` y `preflight` son
   // `undefined` y sus guardas evalúan a «habilitado». Lo que tiene que bloquear
@@ -193,12 +200,19 @@ export function ExportPage() {
             <Alert variant="destructive">
               <AlertTriangle className="size-4" />
               <AlertTitle>El cronograma no puede exportarse en este formato</AlertTitle>
-              <AlertDescription className="mt-2">
-                <ul className="list-disc list-inside">
-                  {preflight.bloqueos.map((b) => (
-                    <li key={`${b.codigo}-${b.actividadId ?? ""}`}>{b.detalle}</li>
-                  ))}
-                </ul>
+              <AlertDescription className="mt-2 space-y-2">
+                <BloqueosCronograma
+                  bloqueos={preflight.bloqueos}
+                  actividades={cronograma?.actividades ?? []}
+                />
+                {proyectoId && (
+                  <Link
+                    to={`/proyectos/${proyectoId}/cronograma${search}`}
+                    className="inline-block font-medium underline underline-offset-2"
+                  >
+                    Abrir el cronograma
+                  </Link>
+                )}
               </AlertDescription>
             </Alert>
           )}

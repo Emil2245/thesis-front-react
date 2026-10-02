@@ -7,7 +7,6 @@ import {
   useCronograma,
   useCrearCronograma,
   useConfigurarCronograma,
-  useProgramarActividad,
   useRevisarCronograma,
 } from "../hooks/useCronograma";
 import { useCronogramaVistas } from "../hooks/useCronogramaVistas";
@@ -17,13 +16,10 @@ import { CurvaSChart } from "../components/CurvaSChart";
 import { BadgeDesactualizado } from "../components/BadgeDesactualizado";
 import { DialogoConfigurarCronograma } from "../components/DialogoConfigurarCronograma";
 import { DialogoConfirmarReduccion } from "../components/DialogoConfirmarReduccion";
-import { DialogoEditarActividad } from "../components/DialogoEditarActividad";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
-  ActividadCronogramaResponse,
-  ActividadProgramarRequest,
   CronogramaConfigurarRequest,
   PerdidaAvanceResponse,
   UnidadTiempo,
@@ -50,7 +46,6 @@ export function CronogramaPage() {
   const vistaParam = searchParams.get("vista");
   const vistaActiva: VistaCronograma = esVistaCronograma(vistaParam) ? vistaParam : "gantt";
   const [configDialog, setConfigDialog] = useState(false);
-  const [actividadEdit, setActividadEdit] = useState<ActividadCronogramaResponse | null>(null);
   const [reduccion, setReduccion] = useState<{
     body: CronogramaConfigurarRequest;
     perdidas: PerdidaAvanceResponse[];
@@ -62,7 +57,6 @@ export function CronogramaPage() {
   const configCrono = useConfigurarCronograma(cronogramaId, versionId, (perdidas) => {
     if (ultimaConfig) setReduccion({ body: ultimaConfig, perdidas });
   });
-  const { mutate: programar } = useProgramarActividad(cronogramaId, versionId);
   const { mutate: revisar } = useRevisarCronograma(cronogramaId, versionId);
 
   useEffect(() => {
@@ -79,14 +73,14 @@ export function CronogramaPage() {
 
   const handleCambiarVista = useCallback(
     (valor: string) => {
-      if (!esVistaCronograma(valor) || actividadEdit) return;
+      if (!esVistaCronograma(valor)) return;
       setSearchParams((actuales) => {
         const siguientes = new URLSearchParams(actuales);
         siguientes.set("vista", valor);
         return siguientes;
       });
     },
-    [actividadEdit, setSearchParams],
+    [setSearchParams],
   );
 
   const handleConfigurar = useCallback(
@@ -101,15 +95,6 @@ export function CronogramaPage() {
       setConfigDialog(false);
     },
     [cronograma, configCrono, crearCrono],
-  );
-
-  const handleProgramar = useCallback(
-    (body: ActividadProgramarRequest) => {
-      if (!actividadEdit) return;
-      programar({ actividadId: actividadEdit.id, body });
-      setActividadEdit(null);
-    },
-    [actividadEdit, programar],
   );
 
   if (isLoading) {
@@ -183,17 +168,11 @@ export function CronogramaPage() {
           </section>
 
           <Tabs value={vistaActiva} onValueChange={handleCambiarVista} className="min-w-0">
-            <div className="overflow-x-auto border-b">
+            <div className="border-b">
               <TabsList variant="line" aria-label="Vistas del cronograma" className="min-w-max">
-                <TabsTrigger value="gantt" disabled={actividadEdit !== null}>
-                  Gantt
-                </TabsTrigger>
-                <TabsTrigger value="valorizado" disabled={actividadEdit !== null}>
-                  Cronograma valorizado
-                </TabsTrigger>
-                <TabsTrigger value="curva-s" disabled={actividadEdit !== null}>
-                  Curva S
-                </TabsTrigger>
+                <TabsTrigger value="gantt">Gantt</TabsTrigger>
+                <TabsTrigger value="valorizado">Cronograma valorizado</TabsTrigger>
+                <TabsTrigger value="curva-s">Curva S</TabsTrigger>
               </TabsList>
             </div>
 
@@ -203,7 +182,6 @@ export function CronogramaPage() {
                   gantt={vistas.data.gantt}
                   cronogramaId={cronograma.id}
                   presupuestoId={versionId}
-                  onClickActividad={setActividadEdit}
                 />
               )}
             </TabsContent>
@@ -226,18 +204,6 @@ export function CronogramaPage() {
               )}
             </TabsContent>
           </Tabs>
-
-          {actividadEdit && (
-            <DialogoEditarActividad
-              open
-              onOpenChange={(open) => {
-                if (!open) setActividadEdit(null);
-              }}
-              onConfirm={handleProgramar}
-              actividad={actividadEdit}
-              numeroPeriodos={cronograma.numeroPeriodos}
-            />
-          )}
 
           <DialogoConfirmarReduccion
             open={!!reduccion}

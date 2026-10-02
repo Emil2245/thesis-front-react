@@ -22,8 +22,8 @@ describe("CurvaSChart", () => {
     ).toBeInTheDocument();
     expect(screen.getAllByTestId(/curva-s-punto-/)).toHaveLength(4);
     expect(screen.getByText("Tabla accesible de datos de Curva S")).toBeInTheDocument();
-    expect(screen.getAllByText("30.6307").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("100.0000").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("30.63 %").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("100.00 %").length).toBeGreaterThan(0);
     expect(screen.getAllByText("18500.000000").length).toBeGreaterThan(0);
     expect(screen.getAllByText("M1").length).toBeGreaterThan(0);
     expect(screen.getAllByText("M4").length).toBeGreaterThan(0);
@@ -49,7 +49,7 @@ describe("CurvaSChart", () => {
     ).toHaveTextContent("69.3693");
     expect(
       screen.getByRole("region", { name: "Detalle del punto seleccionado" }),
-    ).toHaveTextContent("12833.320500");
+    ).toHaveTextContent("$12,833.32");
   });
 
   it("uses weekly ordinal labels and handles a single point", () => {

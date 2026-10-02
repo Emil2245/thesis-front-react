@@ -101,8 +101,13 @@ export function useProgramarActividad(cronogramaId: string, presupuestoId: strin
       ),
     onSuccess: (data) => {
       qc.setQueryData(qk.cronograma(presupuestoId), data);
+      // Sin toast de éxito: el Gantt guarda solo en cada gesto y enseña su
+      // propio «Guardando… / Cambios guardados»; un toast por arrastre es ruido.
       void qc.invalidateQueries({ queryKey: qk.cronogramaVistas(cronogramaId) });
-      toast.success("Actividad programada");
+      // Lo que falta por asignar para exportar cambia con cada gesto.
+      void qc.invalidateQueries({
+        queryKey: qk.cronogramaExportPreflight(presupuestoId, "").slice(0, 3),
+      });
     },
     onError: (err) => {
       toast.error(

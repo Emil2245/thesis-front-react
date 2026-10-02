@@ -166,12 +166,19 @@ describe("ExportPage — cronograma valorizado", () => {
     expect(screen.getByRole("option", { name: /\.xml/i })).toBeInTheDocument();
   });
 
-  it("muestra el detalle de cada bloqueo y deshabilita la descarga", async () => {
+  // El `cronograma-desviacion` viene por actividad con un `detalle` genérico:
+  // repetido no dice cuál falta, así que se nombra la actividad por su id.
+  it("muestra cada bloqueo, nombra la actividad sin asignar y deshabilita la descarga", async () => {
     await setup({ preflight: preflightBloqueadoFixture });
 
-    for (const b of preflightBloqueadoFixture.bloqueos) {
-      expect(await screen.findByText(b.detalle)).toBeInTheDocument();
-    }
+    expect(
+      await screen.findByText("Existen rubros con precio unitario cero (P-32)"),
+    ).toBeInTheDocument();
+    expect(await screen.findByText("Excavación a máquina")).toBeInTheDocument();
+    expect(screen.getByText(/falta asignar en el cronograma 1 actividad/i)).toBeInTheDocument();
+    expect(
+      screen.queryByText("La actividad tiene desviación distinta de 0.0000"),
+    ).not.toBeInTheDocument();
     await waitFor(() =>
       expect(screen.getByRole("button", { name: /descargar cronograma/i })).toBeDisabled(),
     );

@@ -3,7 +3,6 @@ import { screen } from "@testing-library/react";
 import { renderConProviders } from "@/test/render";
 import { DialogoConfigurarCronograma } from "@/features/cronograma/components/DialogoConfigurarCronograma";
 import { DialogoConfirmarReduccion } from "@/features/cronograma/components/DialogoConfirmarReduccion";
-import { DialogoEditarActividad } from "@/features/cronograma/components/DialogoEditarActividad";
 import { TablaActividades } from "@/features/cronograma/components/TablaActividades";
 import { actividadesFixture, cronogramaFixture, perdidasFixture } from "@/test/fixtures/cronograma";
 
@@ -93,73 +92,6 @@ describe("DialogoConfigurarCronograma", () => {
     await user.click(screen.getByRole("button", { name: /reconfigurar/i }));
 
     expect(onConfirm).toHaveBeenCalledWith("MES", 4);
-  });
-});
-
-describe("DialogoEditarActividad", () => {
-  const editar = (onConfirm = vi.fn()) => ({
-    onConfirm,
-    ...renderConProviders(
-      <DialogoEditarActividad
-        open
-        onOpenChange={vi.fn()}
-        onConfirm={onConfirm}
-        actividad={HORMIGON}
-        numeroPeriodos={cronogramaFixture.numeroPeriodos}
-      />,
-    ),
-  });
-
-  // `"Valor de avance debe ser un decimal string"`: el parser rechaza el
-  // número JSON, así que los avances salen como string de 4 decimales.
-  it("emite REEMPLAZAR_AVANCES con los valores como decimal string", async () => {
-    const { user, onConfirm } = editar();
-
-    await user.click(screen.getByRole("button", { name: /^guardar$/i }));
-
-    expect(onConfirm).toHaveBeenCalledWith({
-      operacion: "REEMPLAZAR_AVANCES",
-      avancePorPeriodo: { "2": "25.2252", "3": "25.2252", "4": "25.2253" },
-    });
-  });
-
-  // El mapa es disperso: un período en cero no se manda como `"0.0000"`, se
-  // omite, porque una clave presente cuenta como período activo.
-  it("omite los períodos vacíos en vez de mandarlos en cero", async () => {
-    const { user, onConfirm } = editar();
-
-    await user.clear(screen.getByLabelText("Período 4"));
-    await user.click(screen.getByRole("button", { name: /^guardar$/i }));
-
-    expect(onConfirm).toHaveBeenCalledWith({
-      operacion: "REEMPLAZAR_AVANCES",
-      avancePorPeriodo: { "2": "25.2252", "3": "25.2252" },
-    });
-  });
-
-  it("muestra la desviación en vivo contra el peso ponderado", async () => {
-    const { user } = editar();
-
-    await user.clear(screen.getByLabelText("Período 4"));
-
-    // 75,6757 − (25,2252 + 25,2252) = 25,2253 sin repartir.
-    expect(screen.getByText(/25\.2253 %/)).toBeInTheDocument();
-  });
-
-  // El backend ya sabe repartir el peso de la actividad entre los períodos que
-  // se le den; sin este botón el usuario teclea a mano lo que el servidor
-  // calcula mejor.
-  it("distribuye uniforme sobre los períodos seleccionados", async () => {
-    const { user, onConfirm } = editar();
-
-    await user.click(screen.getByRole("checkbox", { name: /seleccionar período 1/i }));
-    await user.click(screen.getByRole("checkbox", { name: /seleccionar período 2/i }));
-    await user.click(screen.getByRole("button", { name: /distribuir uniforme/i }));
-
-    expect(onConfirm).toHaveBeenCalledWith({
-      operacion: "DISTRIBUIR_UNIFORME",
-      periodos: [1, 2],
-    });
   });
 });
 

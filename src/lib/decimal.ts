@@ -117,3 +117,26 @@ export function esCero(valor: Decimal | number | null | undefined): boolean {
   if (typeof valor === "number") return valor === 0;
   return /^-?0+(\.0+)?$/.test(valor.trim());
 }
+
+/**
+ * Porcentaje escala 4 en unidades enteras de 0,0001: `"25.2252"` → 252252.
+ * Repartir en enteros (como `AvancePatchCalculos` del backend) garantiza que
+ * la suma cuadre exacta con el peso; en float64 se escaparía una diezmilésima.
+ */
+export function aUnidadesPorcentaje(valor: Decimal | string | null | undefined): number {
+  if (valor == null) return 0;
+  const [entero = "0", fraccion = ""] = valor.trim().split(".");
+  const negativo = entero.startsWith("-");
+  const cuatro = (fraccion + "0000").slice(0, ESCALA_PORCENTAJE);
+  const unidades = Math.abs(Number(entero)) * 10 ** ESCALA_PORCENTAJE + Number(cuatro);
+  return negativo ? -unidades : unidades;
+}
+
+/** 252252 → `"25.2252"`, el decimal string que exige `REEMPLAZAR_AVANCES`. */
+export function deUnidadesPorcentaje(unidades: number): Decimal {
+  const signo = unidades < 0 ? "-" : "";
+  const abs = Math.abs(Math.trunc(unidades));
+  const escala = 10 ** ESCALA_PORCENTAJE;
+  const fraccion = String(abs % escala).padStart(ESCALA_PORCENTAJE, "0");
+  return asDecimal(`${signo}${Math.floor(abs / escala)}.${fraccion}`);
+}

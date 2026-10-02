@@ -124,18 +124,6 @@ describe("CronogramaPage", () => {
     expect(screen.queryByText("Desactualizado")).not.toBeInTheDocument();
   });
 
-  it("abre diálogo de editar actividad al hacer click en una fila", async () => {
-    const { user } = await setupCronogramaPage();
-    await waitFor(() => {
-      expect(screen.getAllByText("Excavación a máquina").length).toBeGreaterThan(0);
-    });
-    await user.click(screen.getAllByRole("button", { name: "Excavación a máquina" })[0]);
-    await waitFor(() => {
-      expect(screen.getByRole("dialog")).toBeInTheDocument();
-    });
-    screen.getAllByRole("tab", { hidden: true }).forEach((tab) => expect(tab).toBeDisabled());
-  });
-
   it("muestra 'Crear cronograma' cuando no existe uno", async () => {
     renderConProviders(
       <Routes>
@@ -233,8 +221,12 @@ describe("CronogramaPage", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByRole("figure", { name: "Curva S" })).not.toBeInTheDocument();
     expect(screen.getByText("Sin actividad")).toBeInTheDocument();
-    expect(screen.getByText("2–2")).toBeInTheDocument();
-    expect(screen.getByText("4–4")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Segmento 2–2 de Transporte material" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Segmento 4–4 de Transporte material" }),
+    ).toBeInTheDocument();
   });
 
   it("cambia de vista sin perder la versión de la URL", async () => {
