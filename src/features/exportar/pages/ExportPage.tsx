@@ -13,12 +13,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useValidacionExport, useExportar, usePreflightCronograma } from "../hooks/useExportar";
+import {
+  useValidacionExport,
+  useExportar,
+  usePreflightCronograma,
+  usePreflightDocumento,
+  type ContextoPreflightDocumento,
+} from "../hooks/useExportar";
+import { DocumentoPreflightError } from "@/api/client";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { useProyectoActivoId, useVersionActiva } from "@/shell/contexto";
 import { useCronograma } from "@/features/cronograma/hooks/useCronograma";
 import { BloqueosCronograma } from "@/features/cronograma/components/BloqueosCronograma";
-import type { FormatoExportCronograma, RubroRefResponse } from "@/api/contract";
+import type {
+  DocumentoPreflightResponse,
+  FormatoExportCronograma,
+  RubroRefResponse,
+} from "@/api/contract";
 
 function ListaRubros({ items, titulo }: { items: RubroRefResponse[]; titulo: string }) {
   if (!items.length) return null;
@@ -45,23 +56,234 @@ const FORMATOS: { valor: FormatoExportCronograma; etiqueta: string }[] = [
   { valor: "mspdi", etiqueta: "MS Project (.xml)" },
 ];
 
-/**
- * El backend genera dos documentos: la especificación técnica en DOCX (plan
- * 051) y el cronograma valorizado en tres formatos (plan 031 del backend, @
- * `5673615`). El presupuesto y los APUs —los otros dos entregables de P-37— no
- * existen en ninguna ruta: se anuncian con un aviso honesto en vez de botones
- * deshabilitados, que prometerían que llegan pronto.
- *
- * De los bloqueos del preflight se muestra el `detalle`, que el servidor ya
- * redacta en español: una tabla de traducción de códigos se quedaría corta en
- * cuanto el backend añada un código.
- */
+/** Feedback local identificado por el mismo contexto efectivo que el preflight. */
+function DocumentoPresupuestario({
+  documento,
+  versionId,
+  exportar,
+}: {
+  documento: "presupuesto" | "apus";
+  versionId: string;
+  exportar: ReturnType<typeof useExportar>;
+}) {
+  const [formato, setFormato] = useState<"xlsx" | "pdf">("xlsx");
+  const [orientacion, setOrientacion] = useState<"vertical" | "horizontal">("vertical");
+  const [layout, setLayout] = useState<"pestanas" | "apilado">("pestanas");
+  const contexto: ContextoPreflightDocumento =
+    documento === "presupuesto"
+      ? {
+          presupuestoId: versionId,
+          documento,
+          opciones: formato === "pdf" ? { formato, orientacion } : { formato },
+        }
+      : {
+          presupuestoId: versionId,
+          documento,
+          opciones: formato === "xlsx" ? { formato, layout } : { formato },
+        };
+  const consulta = usePreflightDocumento(contexto);
+  const identidad = JSON.stringify([versionId, documento, contexto.opciones]);
+  const [feedback, setFeedback] = useState<{
+    identidad: string;
+    mensaje?: string;
+    preflight?: DocumentoPreflightResponse;
+    actualizado?: number;
+  }>();
+  const actual = feedback?.identidad === identidad ? feedback : undefined;
+  const directo =
+    actual?.preflight &&
+    (consulta.isFetching || consulta.isError || consulta.dataUpdatedAt <= (actual.actualizado ?? 0))
+      ? actual.preflight
+      : undefined;
+  const preflight = directo ?? consulta.data;
+  const habilitado =
+    consulta.isSuccess &&
+    !consulta.isFetching &&
+    consulta.data?.exportable === true &&
+    preflight?.exportable === true &&
+    !exportar.descargando;
+  const nombre = documento === "presupuesto" ? "presupuesto" : "APUs";
+
+  const descargar = async () => {
+    if (!habilitado) return;
+    // El render del clic captura UUID, opciones y la invalidación lexical exacta.
+    const invalidar = consulta.invalidar;
+    const actualizado = consulta.dataUpdatedAt;
+    setFeedback(undefined);
+    try {
+      if (contexto.documento === "presupuesto") {
+        await exportar.descargarPresupuesto(versionId, contexto.opciones);
+      } else {
+        await exportar.descargarApus(versionId, contexto.opciones);
+      }
+    } catch (error) {
+      if (error instanceof DocumentoPreflightError) {
+        const recibido = error.preflight;
+        const opcionesEsperadas = contexto.opciones;
+        const coincide =
+          recibido.presupuestoId === versionId &&
+          recibido.documento === documento &&
+          recibido.formato === formato &&
+          JSON.stringify(recibido.opciones) ===
+            JSON.stringify(
+              documento === "presupuesto" && opcionesEsperadas.formato === "pdf"
+                ? { orientacion: opcionesEsperadas.orientacion }
+                : documento === "apus" && opcionesEsperadas.formato === "xlsx"
+                  ? { layout: opcionesEsperadas.layout }
+                  : {},
+            );
+        // Bloquear antes de refrescar: un éxito antiguo en caché no autoriza otro clic.
+        setFeedback({
+          identidad,
+          actualizado,
+          ...(coincide
+            ? { preflight: recibido }
+            : { mensaje: "No se pudo descargar el documento. Intente nuevamente." }),
+        });
+        await invalidar();
+      } else {
+        setFeedback({
+          identidad,
+          mensaje: "No se pudo descargar el documento. Intente nuevamente.",
+        });
+      }
+    }
+  };
+
+  return (
+    <Card className="shrink-0 min-w-0 break-words">
+      <CardHeader>
+        <CardTitle>{documento === "presupuesto" ? "Presupuesto" : "APUs referenciados"}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2 max-w-xs">
+          <Label htmlFor={`formato-${documento}`}>Formato de {nombre}</Label>
+          <Select
+            value={formato}
+            onValueChange={(valor: "xlsx" | "pdf") => {
+              setFormato(valor);
+              setOrientacion("vertical");
+              setLayout("pestanas");
+              setFeedback(undefined);
+            }}
+          >
+            <SelectTrigger id={`formato-${documento}`} aria-label={`Formato de ${nombre}`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="xlsx">Excel (.xlsx)</SelectItem>
+                <SelectItem value="pdf">PDF (.pdf)</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+        {documento === "presupuesto" && formato === "pdf" && (
+          <div className="space-y-2 max-w-xs">
+            <Label htmlFor="orientacion-presupuesto">Orientación del PDF A4</Label>
+            <Select
+              value={orientacion}
+              onValueChange={(valor: "vertical" | "horizontal") => setOrientacion(valor)}
+            >
+              <SelectTrigger id="orientacion-presupuesto" aria-label="Orientación del PDF A4">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="vertical">Vertical</SelectItem>
+                  <SelectItem value="horizontal">Horizontal</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        {documento === "apus" && formato === "xlsx" && (
+          <div className="space-y-2 max-w-xs">
+            <Label htmlFor="layout-apus">Organización de APUs</Label>
+            <Select
+              value={layout}
+              onValueChange={(valor: "pestanas" | "apilado") => setLayout(valor)}
+            >
+              <SelectTrigger id="layout-apus" aria-label="Organización de APUs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="pestanas">Pestañas</SelectItem>
+                  <SelectItem value="apilado">Apilado</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        {preflight?.bloqueos.length ? (
+          <Alert variant="destructive">
+            <AlertTriangle className="size-4" />
+            <AlertTitle className="min-w-0 [overflow-wrap:anywhere]">
+              No se puede descargar {nombre}
+            </AlertTitle>
+            <AlertDescription className="min-w-0 [overflow-wrap:anywhere] space-y-2 mt-2">
+              {preflight.bloqueos.map((bloqueo) => (
+                <div key={bloqueo.codigo}>
+                  <p>{bloqueo.mensaje}</p>
+                  <ListaRubros items={bloqueo.rubros} titulo="Rubros afectados" />
+                </div>
+              ))}
+            </AlertDescription>
+          </Alert>
+        ) : null}
+        {preflight?.warnings.length ? (
+          <Alert className="bg-advertencia/15 text-advertencia-texto border-advertencia/30">
+            <AlertTriangle className="size-4" />
+            <AlertTitle className="min-w-0 [overflow-wrap:anywhere]">Avisos de {nombre}</AlertTitle>
+            <AlertDescription className="min-w-0 [overflow-wrap:anywhere] mt-2 text-advertencia-texto">
+              {preflight.warnings.map((warning) => (
+                <div key={warning.codigo}>
+                  <p>{warning.mensaje}</p>
+                  <ul className="list-disc list-inside">
+                    {warning.rubros.map((rubro) => (
+                      <li key={rubro.id}>
+                        {rubro.item} — {rubro.descripcion}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </AlertDescription>
+          </Alert>
+        ) : null}
+        {(consulta.isError || actual?.mensaje) && (
+          <Alert variant="destructive">
+            <AlertTriangle className="size-4" />
+            <AlertTitle className="min-w-0 [overflow-wrap:anywhere]">
+              Error al exportar {nombre}
+            </AlertTitle>
+            <AlertDescription className="min-w-0 [overflow-wrap:anywhere]">
+              {actual?.mensaje ?? "No se pudo comprobar la exportación. Intente nuevamente."}
+            </AlertDescription>
+          </Alert>
+        )}
+        <Button size="sm" onClick={descargar} disabled={!habilitado}>
+          {exportar.descargando ? (
+            <Loader2 className="size-3.5 animate-spin mr-1" />
+          ) : (
+            <FileDown className="size-3.5 mr-1" />
+          )}
+          Descargar {nombre}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Los documentos conservan sus gates independientes y la versión seleccionada. */
 export function ExportPage() {
   const { presupuestoId, activa, isPending: versionPendiente } = useVersionActiva();
   const versionId = presupuestoId ?? "";
 
   const { data: validacion, isLoading: valLoading } = useValidacionExport(versionId);
-  const { descargarEspecificacionesTecnicas, descargarCronograma } = useExportar();
+  const exportar = useExportar();
+  const { descargarEspecificacionesTecnicas, descargarCronograma } = exportar;
   const [descargando, setDescargando] = useState(false);
 
   const [formato, setFormato] = useState<FormatoExportCronograma>("xlsx");
@@ -167,11 +389,11 @@ export function ExportPage() {
               Descargar
             </Button>
           </div>
-          <p className="text-sm text-muted-foreground border-t pt-4">
-            La exportación del presupuesto y de los APUs todavía no existe en el servidor.
-          </p>
         </CardContent>
       </Card>
+
+      <DocumentoPresupuestario documento="presupuesto" versionId={versionId} exportar={exportar} />
+      <DocumentoPresupuestario documento="apus" versionId={versionId} exportar={exportar} />
 
       <Card>
         <CardHeader>
