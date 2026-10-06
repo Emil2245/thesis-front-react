@@ -287,6 +287,7 @@ export function ExportPage() {
   const [descargando, setDescargando] = useState(false);
 
   const [formato, setFormato] = useState<FormatoExportCronograma>("xlsx");
+  const [papel, setPapel] = useState<"a4" | "a3">("a4");
   const { data: preflight, isLoading: preflightLoading } = usePreflightCronograma(
     versionId,
     formato,
@@ -310,7 +311,7 @@ export function ExportPage() {
 
   const handleExportCronograma = async () => {
     setDescargandoCronograma(true);
-    await descargarCronograma(versionId, formato);
+    await descargarCronograma(versionId, formato, formato === "pdf" ? papel : undefined);
     setDescargandoCronograma(false);
   };
 
@@ -359,12 +360,12 @@ export function ExportPage() {
         </Alert>
       )}
 
-      <Card>
+      <Card className="shrink-0 min-w-0">
         <CardHeader>
           <CardTitle>Documentos disponibles</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div className="flex items-center gap-2">
               <FileDown className="size-4 text-muted-foreground" />
               <div>
@@ -395,14 +396,20 @@ export function ExportPage() {
       <DocumentoPresupuestario documento="presupuesto" versionId={versionId} exportar={exportar} />
       <DocumentoPresupuestario documento="apus" versionId={versionId} exportar={exportar} />
 
-      <Card>
+      <Card className="shrink-0 min-w-0">
         <CardHeader>
           <CardTitle>Cronograma valorizado</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2 max-w-xs">
             <Label htmlFor="formato-cronograma">Formato</Label>
-            <Select value={formato} onValueChange={(v: FormatoExportCronograma) => setFormato(v)}>
+            <Select
+              value={formato}
+              onValueChange={(v: FormatoExportCronograma) => {
+                setFormato(v);
+                setPapel("a4");
+              }}
+            >
               <SelectTrigger id="formato-cronograma" aria-label="Formato">
                 <SelectValue />
               </SelectTrigger>
@@ -417,6 +424,23 @@ export function ExportPage() {
               </SelectContent>
             </Select>
           </div>
+
+          {formato === "pdf" && (
+            <div className="space-y-2 max-w-xs">
+              <Label htmlFor="papel-cronograma">Papel del PDF de cronograma</Label>
+              <Select value={papel} onValueChange={(valor: "a4" | "a3") => setPapel(valor)}>
+                <SelectTrigger id="papel-cronograma" aria-label="Papel del PDF de cronograma">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="a4">A4 horizontal</SelectItem>
+                    <SelectItem value="a3">A3 horizontal</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {preflight && !preflight.exportable && (
             <Alert variant="destructive">
@@ -454,7 +478,7 @@ export function ExportPage() {
             </Alert>
           )}
 
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div className="flex items-center gap-2">
               <FileDown className="size-4 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">

@@ -89,6 +89,54 @@ describe("useValidacionExport — contrato de salida", () => {
 // Plan 051: el backend expone UN endpoint de export, la especificación técnica
 // en DOCX. Las cuatro opciones que ofrecía la UI (presupuesto PDF/Excel, APUs,
 // cronograma) apuntaban a rutas inventadas y se borraron: no existen en main.
+describe("useExportar — papel PDF cronograma", () => {
+  it("envía papel explícito solo PDF y conserva A4 por ausencia en llamadas antiguas", async () => {
+    const consultas: Array<Array<[string, string]>> = [];
+    server.use(
+      http.get(`${API}/documentos/cronograma/${PRESUPUESTO_V1}`, ({ request }) => {
+        expect(request.method).toBe("GET");
+        consultas.push([...new URL(request.url).searchParams.entries()].sort());
+        return HttpResponse.arrayBuffer(new ArrayBuffer(8), {
+          headers: { "Content-Type": "application/octet-stream" },
+        });
+      }),
+    );
+    const { result } = renderHook(() => useExportar(), { wrapper });
+    await result.current.descargarCronograma(PRESUPUESTO_V1, "pdf", "a3");
+    expect(consultas).toEqual([
+      [
+        ["formato", "pdf"],
+        ["papel", "a3"],
+      ],
+    ]);
+    await result.current.descargarCronograma(PRESUPUESTO_V1, "pdf");
+    await result.current.descargarCronograma(PRESUPUESTO_V1, "pdf", "a4");
+    await result.current.descargarCronograma(PRESUPUESTO_V1, "xlsx", "a3");
+    await result.current.descargarCronograma(PRESUPUESTO_V1, "mspdi", "a3");
+    expect(consultas).toEqual([
+      [
+        ["formato", "pdf"],
+        ["papel", "a3"],
+      ],
+      [["formato", "pdf"]],
+      [
+        ["formato", "pdf"],
+        ["papel", "a4"],
+      ],
+      [["formato", "xlsx"]],
+      [["formato", "mspdi"]],
+    ]);
+    expect(clicks.map((click) => click.download)).toEqual([
+      "cronograma.pdf",
+      "cronograma.pdf",
+      "cronograma.pdf",
+      "cronograma.xlsx",
+      "cronograma.xml",
+    ]);
+    expect(revocadas).toHaveLength(5);
+  });
+});
+
 describe("useExportar — especificaciones técnicas", () => {
   it("pide el único endpoint que existe, sin inventar `formato` ni títulos vacíos", async () => {
     const peticiones = espiar();

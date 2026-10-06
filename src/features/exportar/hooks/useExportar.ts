@@ -218,10 +218,12 @@ export function useExportar() {
   }, []);
 
   const descargarCronograma = useCallback(
-    async (presupuestoId: string, formato: FormatoExportCronograma) => {
+    async (presupuestoId: string, formato: FormatoExportCronograma, papel?: "a4" | "a3") => {
       try {
         const { blob, nombreArchivo } = await descargar(`/documentos/cronograma/${presupuestoId}`, {
           formato,
+          // Ausencia conserva A4 backend para los callers existentes; solo PDF admite papel.
+          ...(formato === "pdf" && papel !== undefined ? { papel } : {}),
         });
         guardar(blob, nombreArchivo ?? `cronograma.${extensionDe(formato)}`);
       } catch (e) {

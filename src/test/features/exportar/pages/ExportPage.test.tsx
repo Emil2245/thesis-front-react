@@ -393,6 +393,83 @@ describe("ExportPage — presupuesto/APUs", () => {
 // Plan 031 del backend: el preflight decide si la descarga va a salir, y con
 // qué bloqueos si no. La pantalla enseña el `detalle` que el servidor redacta.
 describe("ExportPage — cronograma valorizado", () => {
+  it("ofrece papel solo PDF, descarga A3 histórica y limpia la opción al cambiar formato", async () => {
+    const consultas: Array<Array<[string, string]>> = [];
+    server.use(
+      http.get(`${API}/documentos/cronograma/${PRESUPUESTO_V1}`, ({ request }) => {
+        consultas.push([...new URL(request.url).searchParams.entries()].sort());
+        return HttpResponse.arrayBuffer(new ArrayBuffer(8), {
+          headers: { "Content-Type": "application/octet-stream" },
+        });
+      }),
+    );
+    const { user } = await setup({
+      presupuestoId: PRESUPUESTO_V1,
+      preflight: preflightConWarningFixture,
+    });
+    expect(
+      screen.queryByRole("combobox", { name: "Papel del PDF de cronograma" }),
+    ).not.toBeInTheDocument();
+    await seleccionar(user, "Formato", "PDF (.pdf)");
+    const papel = screen.getByRole("combobox", { name: "Papel del PDF de cronograma" });
+    expect(papel).toHaveTextContent("A4");
+    await seleccionar(user, "Papel del PDF de cronograma", "A3 horizontal");
+    expect(
+      await screen.findByText(preflightConWarningFixture.warnings[0].detalle),
+    ).toBeInTheDocument();
+    const boton = screen.getByRole("button", { name: "Descargar cronograma" });
+    await waitFor(() => expect(boton).toBeEnabled());
+    await user.click(boton);
+    await waitFor(() =>
+      expect(consultas).toEqual([
+        [
+          ["formato", "pdf"],
+          ["papel", "a3"],
+        ],
+      ]),
+    );
+    await seleccionar(user, "Formato", "MS Project (.xml)");
+    expect(
+      screen.queryByRole("combobox", { name: "Papel del PDF de cronograma" }),
+    ).not.toBeInTheDocument();
+    await waitFor(() => expect(boton).toBeEnabled());
+    await user.click(boton);
+    await waitFor(() => expect(consultas[1]).toEqual([["formato", "mspdi"]]));
+    await seleccionar(user, "Formato", "Excel (.xlsx)");
+    expect(
+      screen.queryByRole("combobox", { name: "Papel del PDF de cronograma" }),
+    ).not.toBeInTheDocument();
+    await waitFor(() => expect(boton).toBeEnabled());
+    await user.click(boton);
+    await waitFor(() => expect(consultas[2]).toEqual([["formato", "xlsx"]]));
+    await seleccionar(user, "Formato", "PDF (.pdf)");
+    expect(screen.getByRole("combobox", { name: "Papel del PDF de cronograma" })).toHaveTextContent(
+      "A4",
+    );
+    await waitFor(() => expect(boton).toBeEnabled());
+    await user.click(boton);
+    await waitFor(() =>
+      expect(consultas[3]).toEqual([
+        ["formato", "pdf"],
+        ["papel", "a4"],
+      ]),
+    );
+  });
+
+  it("elegir A3 no elimina los bloqueos del cronograma", async () => {
+    const peticiones = espiar();
+    const { user } = await setup({ preflight: preflightBloqueadoFixture });
+    await seleccionar(user, "Formato", "PDF (.pdf)");
+    await seleccionar(user, "Papel del PDF de cronograma", "A3 horizontal");
+    expect(
+      await screen.findByText("Existen rubros con precio unitario cero (P-32)"),
+    ).toBeInTheDocument();
+    const boton = screen.getByRole("button", { name: "Descargar cronograma" });
+    await waitFor(() => expect(boton).toBeDisabled());
+    await user.click(boton);
+    expect(ultima(peticiones, "GET", `/documentos/cronograma/${PRESUPUESTO}`)).toBeUndefined();
+  });
+
   it("ofrece los tres formatos que el backend genera", async () => {
     const { user } = await setup();
 

@@ -32,9 +32,9 @@ Productor de preflight y query keys entregado localmente: F04-02b CERRADO en
 (`feat(exportar): isolate document preflight by selected context`), cinco archivos,
 462 inserciones/11 eliminaciones: 473 líneas authored. Frontend limpio tras commit;
 44/44 pruebas y checks funcionales independientes PASS, AST PASS según registro.
-F04-03 EN CURSO: F04-03a UI presupuesto/APUs escrita; gate independiente funcional
-PASS, pero navegador detectó clipping bloqueante. Corrección local de layout y
-nuevo gate independiente pendientes; sin commit. F04-03b cronograma A3 pendiente.
+F04-03 EN CURSO: F04-03a CERRADO en
+`5103a2b64f748cff2ccd15cdde813b49cacbbfbc`; F04-03b cronograma A3 ACTIVO.
+Los registros históricos inferiores describen etapas anteriores, no el estado actual.
 El índice de código no acreditaba las nuevas rutas backend y no se usará como contrato.
 El estado antiguo «bloqueado» de plan04 corresponde a su redacción anterior;
 los gates backend y la nueva autorización habilitan esta implementación.
@@ -52,11 +52,33 @@ el permiso de commits locales de unidades verificadas. Slices propuestos:
 3. Preflight/query keys: `b9a850e` (tercera unidad, F04-02b cerrado).
 4. UI posterior: unidades acotadas verificadas, aún sin identidades de commit.
 La rama feature tracker destino de la cadena no está creada; no hay refs de PR.
-Acumulado authored entregado: 389 + 361 + 473 = 1 223 líneas en tres commits.
+Acumulado authored entregado: 389 + 361 + 473 + 765 = 1 988 líneas en cuatro commits.
+Slice F04-03a: `5103a2b64f748cff2ccd15cdde813b49cacbbfbc`, tres archivos,
++712/-53 (765 líneas), frontend limpio confirmado antes de F04-03b.
+Gate independiente `mux2tuoh-b-1vae`: 60/60 en seis archivos, typecheck,
+lint (9 warnings ajenos), Prettier y diff PASS. Chromium local 1440/390:
+token de 204 caracteres, cero overflow, anchos Card/Alert iguales, botones
+alcanzables y teclado PDF histórica V1 PASS. Solapamiento baseline de breadcrumb/
+versión queda fuera. AST: 22 604 nodos, 56 806 enlaces, 844 comunidades,
+2 033 manifest, cero duplicados/colgantes; 64 sin nodos, 109 SQL sin parser,
+aviso 843 labels/844 comunidades. Sin backend vivo/otros browsers/build/global.
 La tercera unidad ocupa 473 líneas/5 archivos; el conteo histórico de 443 era
 anterior a metadata final. El umbral 400 es heurística advisory de revisión,
 no tope obligatorio ni motivo para code golf. Esta actualización documental queda
 para la próxima unidad verificada; no amend ni commit en este paso.
+
+### F04-03b — alcance y forecast antes de fuente
+
+Ruta `/proyectos/:id/documentos?v=<UUID>`; A3 únicamente PDF de cronograma.
+Callback compatible con dos argumentos: ausencia de papel conserva A4 backend;
+tercer argumento opcional A4/A3 solo se transmite para PDF. Control PDF-only,
+reset A4 al cambiar formato, UUID histórico y gates actuales intactos.
+HTTP actual usa `papel`, no `paper`: CronogramaDocumentoResource:93–122,145–156.
+Superficie exacta: hook exportar, pantalla, sus dos tests y este documento.
+Forecast: 40–60 líneas producción + 80–120 tests + metadata; unidad cohesiva.
+RED de assertions antes de producción; GREEN focalizado, typecheck/lint/Prettier/
+diff; independiente navegador/AST/commit pendientes. F04-04/05 pendientes.
+Rollback: únicamente opción de papel, control y pruebas añadidas; conservar 03a.
 
 ## Contrato y límites
 
@@ -446,10 +468,9 @@ Cwd explícito de todos los comandos: frontend absoluto indicado en F04-02b.
   dos instancias/imports, pruebas nuevas y metadata de esta unidad; conservar las
   secciones ET/cronograma, hooks previos y metadata preexistente. Sin reset.
 
-- [ ] **F04-03 — EN CURSO:** F04-03a escrita con GREEN del writer, aún requiere
-      checks independientes, comprobación navegador aplicable y commit del padre.
-      F04-03b cronograma A3 PENDIENTE: papel=a4|a3 solo PDF; necesita autorización
-      acotada del hook, no solo controles UI. F04-04/05 siguen pendientes.
+- [ ] **F04-03 — EN CURSO:** F04-03a CERRADO en `5103a2b`.
+      F04-03b escrita con GREEN del writer; gate independiente, navegador,
+      AST y commit del padre PENDIENTES. F04-04/05 siguen pendientes.
       ASSESS unassessable/RDD off; no aprobación nativa, stage/commit/push/PR/merge.
 - [ ] **F04-04 — PENDIENTE:** verificación independiente focalizada, regresión,
       typecheck/lint/build y comprobación funcional en navegador cuando disponible.
@@ -460,6 +481,78 @@ Las pruebas deben seguir la política mínima de AGENTS: RED/GREEN observado par
 riesgos críticos reproducibles; copy/layout/cableado simple se valida mediante
 checks y navegador, sin fabricar RED ni duplicar exhaustivamente contratos.
 Ninguna tarea se marca cerrada con fallos, checks pendientes o entrega incompleta.
+
+### F04-03b — evidencia del writer, sin cierre
+
+Hook: tercer argumento `papel?: "a4" | "a3"`; solo PDF lo transmite, ausencia
+mantiene default A4 backend. UI PDF-only A4/A3 horizontal, reset A4 al cambiar
+formato. Preflight crono sigue por formato (backend evalúa lo mismo para ambos
+papeles), sin query key/schema nuevos. ET y DocumentoPresupuestario intactos.
+HTTP authority: Resource y CronogramaExportResourceIT:268–350 leídos; `papel`
+es el nombre real. No pruebas backend ejecutadas ni API viva.
+Cwd de todos los checks: `/home/kaandradec/Documents/workspace/uce/proyecto-grado/thesis-front-react`.
+- RED `pnpm exec vitest run src/test/features/exportar/pages/ExportPage.test.tsx src/test/features/exportar/hooks/useExportar.contrato.test.tsx -t 'papel|elegir A3'`: 3 FAIL/37 skipped, query falta papel=a3 y control PDF ausente; colección/import PASS. Reflect sobre callback existente permitió RED antes de ampliar tipo; GREEN refactor usa calls tipadas directas.
+- GREEN mismo comando: 3 PASS/37 skipped. Triangulación: V1 histórica, pares exactos con duplicados conservados, PDF explícito A4/default ausente, XLSX/MSPDI sin papel, reset y bloqueos/stale existentes intactos.
+- `pnpm exec vitest run src/test/features/exportar/pages/ExportPage.test.tsx src/test/features/exportar/hooks/useDocumentoPreflight.test.tsx src/test/features/exportar/hooks/useExportar.contrato.test.tsx src/test/features/exportar/hooks/useExportar.test.tsx src/test/features/exportar/documento-preflight-error.test.ts src/test/api/client.test.ts`: 63/63 PASS en seis archivos, repetido después de corregir fixture.
+- `pnpm run typecheck`: primer FAIL TS2353 por presupuestoId extra en fixture de preflight crono; eliminado solo el campo no canónico, repetición PASS.
+- `pnpm run lint`: PASS, nueve warnings ajenos. Warning Vite __dirname y ocho avisos jsdom navigation no bloquean.
+- `pnpm exec prettier --check src/features/exportar/hooks/useExportar.ts src/features/exportar/pages/ExportPage.tsx src/test/features/exportar/hooks/useExportar.contrato.test.tsx src/test/features/exportar/pages/ExportPage.test.tsx`: PASS; --write previo limitado a esos cuatro paths (solo tests cambiaron formato).
+- `git diff --check`: PASS antes de metadata, repetido al finalizar. No tests DescargaCronograma encontrados en búsqueda acotada; no suite crono amplia ejecutada.
+- SHA-256 protegido before/after idéntico: API client/request/contract/schemas/queryKeys, package/lock/tsconfigs/vite/vitest, DescargaCronograma, Card/Alert/AppShell. Diff fuente únicamente hook crono y controles/handler de pantalla crono; ET y componente presupuestario no cambian.
+- Diff final +203/-11 = 214 líneas authored, cinco archivos, debajo de 400 advisory. Rollback: quitar tercer argumento/query/control y tres pruebas nuevas; conservar 03a, preflight y gates crono anteriores.
+- Solo fuente: captura al clic conserva UUID/formato/papel; no prueba diferida nueva ni matriz de errores A3 independiente. Browser/geometría/teclado nuevo, AST, gate independiente y commit PENDIENTES; no build/global/live backend/publicación. F04-03b no DONE.
+
+### F04-03b — corrección local de layout, EN CURSO
+
+Gate independiente `mux3wijl`: 63/63 y typecheck/lint (9 warnings)/formato/diff
+PASS; teclado y queries históricas PASS, visual mobile FAIL. El padre inspeccionó
+ET recortada y cronograma con controles fuera de Card; causalidad frente a baseline
+no demostrada. Corregir solo sizing/wrapping local de ET y cronograma en pantalla;
+Card/AppShell/Alert, handlers, gates, textos, tests y A3 permanecen protegidos.
+Verificar las cuatro cards en Chromium 1440×1000/390×844 con fixtures interceptadas,
+sin API/DB viva. Capturas nombradas y cache Vite runtime autorizados; no harness escrito.
+F04-03b EN CURSO; cierre pendiente de navegador, gate independiente, AST y commit
+del padre. F04-04/05 pendientes. Umbral 400 advisory; sin stage/commit/push.
+
+### F04-03b — layout verificado por writer, cierre pendiente
+
+Cuatro líneas presentacionales: ET/cronograma Card `shrink-0 min-w-0`; filas de
+copy/descarga apiladas en móvil y horizontales desde sm. Texto completo conservado;
+handlers ET/crono y componente presupuestario SHA-256 idénticos antes/después.
+Agregado de todos los tracked salvo pantalla/tarea idéntico (`fcc73c12…`): incluye
+hook/tests/API/shared UI/deps/config/DescargaCronograma. Sin nuevas pruebas ni formato.
+
+Chromium 151.0.7922.34, inline Node/Playwright instalado, login UI y fixtures
+canónicas interceptadas (incluido config/display); salidas externas bloqueadas.
+Vite programático con config en memoria, puerto libre propio y cwd frontend absoluto;
+perfil/temporales en cache runtime autorizada. Todas las instancias cerradas y puertos
+liberados comprobados. Cero rutas desconocidas/pageerrors en ejecución final exit 0.
+A 1440×1000 y 390×844, las cuatro cards tienen clientWidth=scrollWidth 1136/342;
+documento 1440/1440 y 390/390. Cero overflow anidado, fragmentos de texto o controles
+fuera de Card; botones alcanzables por scroll, habilitados con hit-test real.
+Alturas ET/presupuesto/APUs/crono: warnings PDF A3 desktop 110/368/438/322,
+móvil 154/648/718/398; bloqueos desktop 110/604/674/344, móvil 154/1164/1234/460.
+Mensajes/rubros largos y token de 230 caracteres en documentos nuevos conservados.
+ET completa; crono warning normal y bloqueos canónicos dentro de bounds, sin shared fix.
+
+Teclado: foco real, Enter abre, Home/ArrowDown con espera de foco y Enter confirma
+PDF (.pdf)/A3. Descargas histórica V1 `0198c1a0-0000-7000-8000-000000000010`:
+pares exactos PDF papel=a3, XLSX/MSPDI sin papel, volver a PDF reset A4 y papel=a4.
+Las cinco capturas autorizadas before/after abiertas como imágenes. Fullpage móvil
+390×2156 con viewport expandido solo para captura del scroller; tamaños de las cuatro
+cards idénticos antes/después de expandir y restaurar 390×844. No confundir contenido
+fuera del viewport con clipping. Header baseline solapado permanece fuera de alcance.
+
+Checks frescos: mismo comando focalizado de seis archivos arriba, exit 0 63/63;
+`pnpm run typecheck`, `pnpm run lint`, Prettier de los cuatro paths F04-03b y
+`git diff --check`: exit 0. Lint conserva nueve warnings ajenos; Vitest aviso Vite
+__dirname y ocho navigation jsdom; navegador HydrateFallback no bloqueante.
+Intentos fallidos de harness: config/display ausente; etiqueta PDF incorrecta;
+locator main ambiguo para captura. Corregidos inline, no defectos ni RED de producto.
+Diff al cerrar metadata +259/-15 =274 líneas authored/5 archivos; 400 advisory.
+Writer validado, F04-03b EN CURSO hasta gate independiente/AST/commit del padre;
+F04-04/05 pendientes. Sin build/suite global/otros browsers/backend vivo/DB/publicación.
+FULL mirror 1899 actualizado por patch preservador y readback; no raw HTTP.
 
 ## Evidencia y pendientes
 
