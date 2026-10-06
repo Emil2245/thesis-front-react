@@ -1,5 +1,12 @@
 # Plan04 — selección y descarga de documentos
 
+Locator: `thesis-front-react/odd/tasks/frontend-document-export.md`
+(frontend: `odd/tasks/frontend-document-export.md`).
+
+FULL mirror #1899, revisión 54, PENDIENTE: el intento de insertar el cierre
+falló con `replacement result exceeds maximum observation length`; límite exacto
+no conocido. Objetivo editorial ≤42 000 caracteres Unicode, no límite confirmado.
+
 ## Autorización y estado
 
 El usuario autorizó continuar con plan04 después del commit del backend.
@@ -32,8 +39,13 @@ Productor de preflight y query keys entregado localmente: F04-02b CERRADO en
 (`feat(exportar): isolate document preflight by selected context`), cinco archivos,
 462 inserciones/11 eliminaciones: 473 líneas authored. Frontend limpio tras commit;
 44/44 pruebas y checks funcionales independientes PASS, AST PASS según registro.
-F04-03 EN CURSO: F04-03a CERRADO en
-`5103a2b64f748cff2ccd15cdde813b49cacbbfbc`; F04-03b cronograma A3 ACTIVO.
+F04-03 CERRADO: F04-03a CERRADO en
+`5103a2b64f748cff2ccd15cdde813b49cacbbfbc`; F04-03b CERRADO en
+`4254f441167f88909e55f27322fb2cdfb88e7a85`. F04-04 EN CURSO;
+F04-05 PENDIENTE. Checks globales ejecutados por `mux9b08j-3-dukq`:
+build PASS, suite y formato FAIL; F04-04 EN CURSO con cierre bloqueado,
+no DONE ni PASS global. Diagnóstico read-only `mux9imby-6-0b8q` terminado:
+timeouts en archivos distintos, causalidad desconocida; formato ajeno baseline.
 Los registros históricos inferiores describen etapas anteriores, no el estado actual.
 El índice de código no acreditaba las nuevas rutas backend y no se usará como contrato.
 El estado antiguo «bloqueado» de plan04 corresponde a su redacción anterior;
@@ -47,25 +59,27 @@ Decisión explícita del usuario para futuras entregas plan04: conservar
 `delivery_strategy=auto-chain`, `chain_strategy=feature-branch-chain`.
 Es estrategia de revisión, no autoridad de publicación; sigue vigente únicamente
 el permiso de commits locales de unidades verificadas. Slices propuestos:
+
 1. Decoder: `f39da75` (primera unidad).
 2. Callbacks: `36665d8` (segunda unidad).
 3. Preflight/query keys: `b9a850e` (tercera unidad, F04-02b cerrado).
-4. UI posterior: unidades acotadas verificadas, aún sin identidades de commit.
-La rama feature tracker destino de la cadena no está creada; no hay refs de PR.
-Acumulado authored entregado: 389 + 361 + 473 + 765 = 1 988 líneas en cuatro commits.
-Slice F04-03a: `5103a2b64f748cff2ccd15cdde813b49cacbbfbc`, tres archivos,
-+712/-53 (765 líneas), frontend limpio confirmado antes de F04-03b.
-Gate independiente `mux2tuoh-b-1vae`: 60/60 en seis archivos, typecheck,
-lint (9 warnings ajenos), Prettier y diff PASS. Chromium local 1440/390:
-token de 204 caracteres, cero overflow, anchos Card/Alert iguales, botones
-alcanzables y teclado PDF histórica V1 PASS. Solapamiento baseline de breadcrumb/
-versión queda fuera. AST: 22 604 nodos, 56 806 enlaces, 844 comunidades,
-2 033 manifest, cero duplicados/colgantes; 64 sin nodos, 109 SQL sin parser,
-aviso 843 labels/844 comunidades. Sin backend vivo/otros browsers/build/global.
-La tercera unidad ocupa 473 líneas/5 archivos; el conteo histórico de 443 era
-anterior a metadata final. El umbral 400 es heurística advisory de revisión,
-no tope obligatorio ni motivo para code golf. Esta actualización documental queda
-para la próxima unidad verificada; no amend ni commit en este paso.
+4. UI presupuesto/APUs: `5103a2b` (F04-03a).
+5. Cronograma PDF A3 y layout local: `4254f44` (F04-03b).
+   La rama feature tracker destino de la cadena no está creada; no hay refs de PR.
+   Acumulado authored entregado: 389 + 361 + 473 + 765 + 274 = 2 262 líneas en cinco commits.
+   Slice F04-03a: `5103a2b64f748cff2ccd15cdde813b49cacbbfbc`, tres archivos,
+   +712/-53 (765 líneas), frontend limpio confirmado antes de F04-03b.
+   Gate independiente `mux2tuoh-b-1vae`: 60/60 en seis archivos, typecheck,
+   lint (9 warnings ajenos), Prettier y diff PASS. Chromium local 1440/390:
+   token de 204 caracteres, cero overflow, anchos Card/Alert iguales, botones
+   alcanzables y teclado PDF histórica V1 PASS. Solapamiento baseline de breadcrumb/
+   versión queda fuera. AST: 22 604 nodos, 56 806 enlaces, 844 comunidades,
+   2 033 manifest, cero duplicados/colgantes; 64 sin nodos, 109 SQL sin parser,
+   aviso 843 labels/844 comunidades. Sin backend vivo/otros browsers/build/global.
+   La tercera unidad ocupa 473 líneas/5 archivos; el conteo histórico de 443 era
+   anterior a metadata final. El umbral 400 es heurística advisory de revisión,
+   no tope obligatorio ni motivo para code golf. Esta actualización documental queda
+   para la próxima unidad verificada; no amend ni commit en este paso.
 
 ### F04-03b — alcance y forecast antes de fuente
 
@@ -241,7 +255,7 @@ compartidos permisivos ni expansión de superficie por conveniencia.
       request antiguo; conserva queries exactas/defaults, assertions y ambos HTTP.
       `UuidV7.java` leído: versión 7/variante 8,9,a,b; helper local compartido sólo
       para preflight documento y callbacks presupuesto/APUs. ET/crono intactos.
-      Cwd de todos los comandos: `/home/kaandradec/Documents/workspace/uce/proyecto-grado/thesis-front-react`.
+      Cwd canónico de todos los comandos: `/home/kaandradec/Documents/workspace/uce/proyecto-grado/thesis-front-react`.
       RED `pnpm exec vitest run src/test/features/exportar/hooks/useDocumentoPreflight.test.tsx src/test/features/exportar/hooks/useExportar.contrato.test.tsx -t '01900000|rechaza UUID no v7'`: 3 FAIL por assertions (fetching≠idle dos veces; 4 HTTP≠0), 31 skipped.
       GREEN `pnpm exec vitest run src/test/features/exportar/hooks/useDocumentoPreflight.test.tsx src/test/features/exportar/hooks/useExportar.contrato.test.tsx src/test/features/exportar/hooks/useExportar.test.tsx src/test/features/exportar/documento-preflight-error.test.ts src/test/api/client.test.ts`: 44/44 PASS, cinco archivos.
       `pnpm run typecheck`: PASS. `pnpm run lint`: PASS, 9 warnings ajenos.
@@ -285,6 +299,7 @@ compartidos permisivos ni expansión de superficie por conveniencia.
       5 archivos, +462/-11, 473 líneas authored; frontend limpio postcommit.
       Evidencia independiente funcional (44/44 y checks) y AST anterior conservada;
       no se repitieron tests ni AST para esta metadata. Sin PR/push/merge ni tracker.
+
 ### Unidad F04-03a — alcance autorizado antes de fuente
 
 Presupuesto/APUs: controles accesibles, opciones compatibles, UUID seleccionado
@@ -323,7 +338,7 @@ pueden partirse dentro de las cards nuevas. Ningún handler/opción/gate fue edi
 Checks postcorrección desde cwd frontend absoluto: comando focalizado de seis
 archivos registrado abajo PASS 60/60; `pnpm run typecheck` PASS;
 `pnpm run lint` PASS con nueve warnings heredados;
-`pnpm exec prettier --check src/features/exportar/pages/ExportPage.tsx src/test/features/exportar/pages/ExportPage.test.tsx` PASS;
+**P2** (`pnpm exec prettier --check src/features/exportar/pages/ExportPage.tsx src/test/features/exportar/pages/ExportPage.test.tsx`) PASS;
 `git diff --check` PASS. Sin formato aplicado ni pruebas nuevas/modificadas.
 Hashes protegidos antes/después idénticos: test pantalla
 `2b7edc674e570694e0fa2b1284b9801d3f35e5fdd85d7c74cd11d431991a4dd0`,
@@ -367,7 +382,7 @@ conserva texto completo y reduce min-content, heredado por mensajes/listas/rubro
 Card `shrink-0 min-w-0 break-words` intacto; sin elipsis, overflow mask ni shared edit.
 
 Chromium 151.0.7922.34 / Playwright instalado 1.62.1, `node <<'NODE'` efímero,
-cwd absoluto `/home/kaandradec/Documents/workspace/uce/proyecto-grado/thesis-front-react`.
+cwd canónico (F04-02b).
 Cada ejecución lanzó `node node_modules/vite/bin/vite.js --host 127.0.0.1
 --port <puerto libre obtenido con net.listen(0)> --strictPort` desde ese cwd,
 login UI y context nuevo; interceptó exclusivamente `/api/v1/**` con fixtures
@@ -408,21 +423,22 @@ correcto era ancestro, no overlay; GREEN corregido exit 0, cero rutas sin fixtur
 Diagnóstico final bubble/warnings-only exit 0. Sin atribuir esos errores a producto.
 
 Checks frescos (mismo cwd absoluto; invocaciones sin suite amplia):
-- `pnpm exec vitest run src/test/features/exportar/pages/ExportPage.test.tsx src/test/features/exportar/hooks/useDocumentoPreflight.test.tsx src/test/features/exportar/hooks/useExportar.contrato.test.tsx src/test/features/exportar/hooks/useExportar.test.tsx src/test/features/exportar/documento-preflight-error.test.ts src/test/api/client.test.ts`: exit 0, 60/60 en 6 archivos; warning Vite __dirname y cuatro avisos jsdom navigation.
+
+- **V6** (`pnpm exec vitest run src/test/features/exportar/pages/ExportPage.test.tsx src/test/features/exportar/hooks/useDocumentoPreflight.test.tsx src/test/features/exportar/hooks/useExportar.contrato.test.tsx src/test/features/exportar/hooks/useExportar.test.tsx src/test/features/exportar/documento-preflight-error.test.ts src/test/api/client.test.ts`): exit 0, 60/60 en 6 archivos; warning Vite __dirname y cuatro avisos jsdom navigation.
 - `pnpm run typecheck`: exit 0.
 - `pnpm run lint`: exit 0, nueve warnings heredados, cero errores.
-- `pnpm exec prettier --check src/features/exportar/pages/ExportPage.tsx src/test/features/exportar/pages/ExportPage.test.tsx`: primer exit 1 solo formato de título Avisos; colapsado con edit local, repetición exit 0. Test intacto.
+- **P2** (comando canónico en corrección visual): primer exit 1 solo formato de título Avisos; colapsado con edit local, repetición exit 0. Test intacto.
 - `git diff --check`: exit 0 tras formato, se repite después de metadata.
-SHA-256 pantalla final `4f1bd79baaabbe09a6d44275a29939c06881461884f1b219389bbf3d4bec6e1f`;
-test `2b7edc674e570694e0fa2b1284b9801d3f35e5fdd85d7c74cd11d431991a4dd0` intacto.
-Hashes before/after idénticos para hook/API/Alert/Card/AppShell/DescargaCronograma;
-ET/crono no editados en este writer, diff de fuente limitado a seis hijos Alert.
-F04-03a EN CURSO: gate independiente y commit del padre pendientes; F04-03b/F04-04/05
-siguen pendientes. Sin RDD approval, AST/build/global E2E, stage/commit/push.
-Diff completo vs HEAD: +712/-53 = 765 líneas authored, incluida metadata y cambios
-preexistentes de pantalla/test/tarea. 400 es advisory: preservar evidencia y unidad
-cohesiva, sin code golf ni expansión de superficie. FULL taskdoc/mirror 1899 y
-readback finales obligatorios, conservando historia.
+  SHA-256 pantalla final `4f1bd79baaabbe09a6d44275a29939c06881461884f1b219389bbf3d4bec6e1f`;
+  test `2b7edc674e570694e0fa2b1284b9801d3f35e5fdd85d7c74cd11d431991a4dd0` intacto.
+  Hashes before/after idénticos para hook/API/Alert/Card/AppShell/DescargaCronograma;
+  ET/crono no editados en este writer, diff de fuente limitado a seis hijos Alert.
+  F04-03a EN CURSO: gate independiente y commit del padre pendientes; F04-03b/F04-04/05
+  siguen pendientes. Sin RDD approval, AST/build/global E2E, stage/commit/push.
+  Diff completo vs HEAD: +712/-53 = 765 líneas authored, incluida metadata y cambios
+  preexistentes de pantalla/test/tarea. 400 es advisory: preservar evidencia y unidad
+  cohesiva, sin code golf ni expansión de superficie. FULL taskdoc/mirror 1899 y
+  readback finales obligatorios, conservando historia.
 
 ### F04-03a — evidencia del writer, sin cierre
 
@@ -445,12 +461,12 @@ Cwd explícito de todos los comandos: frontend absoluto indicado en F04-02b.
 - TRIANGULATE: gate pendiente/respuesta de otro UUID, rubros bloqueantes vs stale,
   descarga histórica V1 y limpieza XLSX→PDF→XLSX, 409 actual durante refresh
   diferido y 409 tardío tras cambiar formato con invalidación exacta antigua.
-- `pnpm exec vitest run src/test/features/exportar/pages/ExportPage.test.tsx src/test/features/exportar/hooks/useDocumentoPreflight.test.tsx src/test/features/exportar/hooks/useExportar.contrato.test.tsx src/test/features/exportar/hooks/useExportar.test.tsx src/test/features/exportar/documento-preflight-error.test.ts src/test/api/client.test.ts`:
+- **V6** (comando canónico en wrapping):
   60/60 PASS, seis archivos (16 pantalla + 44 regresiones), repetido tras formato.
 - `pnpm run typecheck`: primer FAIL TS2769 por `exact` no admitido en ByRoleOptions;
   corregido solo en test, segundo PASS. Strings de nombre siguen siendo exactos.
 - `pnpm run lint`: PASS, nueve warnings heredados fuera de superficie.
-- `pnpm exec prettier --check src/features/exportar/pages/ExportPage.tsx src/test/features/exportar/pages/ExportPage.test.tsx`: PASS;
+- **P2** (comando canónico en corrección visual): PASS;
   formato aplicado únicamente a los dos archivos autorizados.
 - `git diff --check`: PASS. Warning Vite `__dirname` y navegación jsdom no bloquean.
 - Fingerprints SHA-256 protegidos idénticos antes/después: hook `880b8468`, client
@@ -468,12 +484,18 @@ Cwd explícito de todos los comandos: frontend absoluto indicado en F04-02b.
   dos instancias/imports, pruebas nuevas y metadata de esta unidad; conservar las
   secciones ET/cronograma, hooks previos y metadata preexistente. Sin reset.
 
-- [ ] **F04-03 — EN CURSO:** F04-03a CERRADO en `5103a2b`.
-      F04-03b escrita con GREEN del writer; gate independiente, navegador,
-      AST y commit del padre PENDIENTES. F04-04/05 siguen pendientes.
-      ASSESS unassessable/RDD off; no aprobación nativa, stage/commit/push/PR/merge.
-- [ ] **F04-04 — PENDIENTE:** verificación independiente focalizada, regresión,
-      typecheck/lint/build y comprobación funcional en navegador cuando disponible.
+- [x] **F04-03 — CERRADO:** F04-03a en `5103a2b`; F04-03b en
+      `4254f441167f88909e55f27322fb2cdfb88e7a85`, gate independiente y AST
+      registrados abajo. Cierre de unidad aceptado por el padre, no PASS global.
+      ASSESS unassessable/RDD off; sin aprobación nativa ni push/PR/merge.
+- [ ] **F04-04 — EN CURSO, CIERRE BLOQUEADO:** checks globales ejecutados;
+      resultados y diagnóstico terminado registrados en la sección F04-04.
+      Leer `docs/bugs.md` y baselines antes de atribuir causalidad;
+      aislamiento offline, sin DB ni backend vivo. Checks de navegador de unidad ya completados,
+      no equivalen a E2E completo. No fixes de producto sin decisión acotada del padre.
+      Runtime limitado a las cinco capturas before/after, `.vite/**` y dos salidas
+      `.tmp/tsbuildinfo` autorizadas; `dist` ignorado es salida inherente del build,
+      no fuente authored. Suite global FAIL y build PASS; no cierre global.
 - [ ] **F04-05 — PENDIENTE:** reconciliar evidencia, documentación y estado final;
       cerrar unidades verificadas mediante commits locales autorizados, sin publicación.
 
@@ -490,10 +512,11 @@ formato. Preflight crono sigue por formato (backend evalúa lo mismo para ambos
 papeles), sin query key/schema nuevos. ET y DocumentoPresupuestario intactos.
 HTTP authority: Resource y CronogramaExportResourceIT:268–350 leídos; `papel`
 es el nombre real. No pruebas backend ejecutadas ni API viva.
-Cwd de todos los checks: `/home/kaandradec/Documents/workspace/uce/proyecto-grado/thesis-front-react`.
+Cwd canónico (F04-02b).
+
 - RED `pnpm exec vitest run src/test/features/exportar/pages/ExportPage.test.tsx src/test/features/exportar/hooks/useExportar.contrato.test.tsx -t 'papel|elegir A3'`: 3 FAIL/37 skipped, query falta papel=a3 y control PDF ausente; colección/import PASS. Reflect sobre callback existente permitió RED antes de ampliar tipo; GREEN refactor usa calls tipadas directas.
 - GREEN mismo comando: 3 PASS/37 skipped. Triangulación: V1 histórica, pares exactos con duplicados conservados, PDF explícito A4/default ausente, XLSX/MSPDI sin papel, reset y bloqueos/stale existentes intactos.
-- `pnpm exec vitest run src/test/features/exportar/pages/ExportPage.test.tsx src/test/features/exportar/hooks/useDocumentoPreflight.test.tsx src/test/features/exportar/hooks/useExportar.contrato.test.tsx src/test/features/exportar/hooks/useExportar.test.tsx src/test/features/exportar/documento-preflight-error.test.ts src/test/api/client.test.ts`: 63/63 PASS en seis archivos, repetido después de corregir fixture.
+- **V6** (comando canónico en wrapping): 63/63 PASS en seis archivos, repetido después de corregir fixture.
 - `pnpm run typecheck`: primer FAIL TS2353 por presupuestoId extra en fixture de preflight crono; eliminado solo el campo no canónico, repetición PASS.
 - `pnpm run lint`: PASS, nueve warnings ajenos. Warning Vite __dirname y ocho avisos jsdom navigation no bloquean.
 - `pnpm exec prettier --check src/features/exportar/hooks/useExportar.ts src/features/exportar/pages/ExportPage.tsx src/test/features/exportar/hooks/useExportar.contrato.test.tsx src/test/features/exportar/pages/ExportPage.test.tsx`: PASS; --write previo limitado a esos cuatro paths (solo tests cambiaron formato).
@@ -553,6 +576,81 @@ Diff al cerrar metadata +259/-15 =274 líneas authored/5 archivos; 400 advisory.
 Writer validado, F04-03b EN CURSO hasta gate independiente/AST/commit del padre;
 F04-04/05 pendientes. Sin build/suite global/otros browsers/backend vivo/DB/publicación.
 FULL mirror 1899 actualizado por patch preservador y readback; no raw HTTP.
+
+### F04-03b — cierre local y gate independiente aceptado
+
+Commit `4254f441167f88909e55f27322fb2cdfb88e7a85`,
+`feat(exportar): add A3 paper selection for schedule PDF`: cinco archivos,
++259/-15, 274 líneas authored. El padre comprobó allowlist staged exacta,
+identidades/hash de índice y HEAD; frontend limpio tras commit, sin push.
+Las dos eliminaciones Compunex backend se conservan, excluidas.
+
+Verificador independiente fresco `mux7zv55-1-v564`: comando Vitest focalizado
+de seis archivos registrado en F04-03b, exit 0, 63/63; `pnpm run typecheck`
+exit 0; `pnpm run lint` exit 0, nueve warnings ajenos; Prettier de los cuatro
+paths F04-03b exit 0; `git diff --check` exit 0. No repetidos por esta metadata.
+Chromium real: cuatro cards a 1440×1000 y 390×844, warnings y bloqueos,
+anchos 1136/342, cero violaciones de bounds anidados/texto/controles;
+botones alcanzables y gates conservados. El intento combinado agotó tiempo
+por su foco de teclado DESPUÉS de las assertions geométricas. El harness de
+captura falló después de escribir imágenes: no fue una ejecución browser única
+limpia. No se observó fallo de producto. Ejecución separada de teclado exit 0:
+V1 histórica `0198c1a0-0000-7000-8000-000000000010`, PDF `papel=a3`,
+XLSX/MSPDI sin `papel`, regreso PDF reset `papel=a4`. Sin API desconocida,
+salidas externas ni pageerrors. Capturas after desktop/mobile/fullpage autorizadas
+inspeccionadas por verificador; padre inspeccionó fullpage móvil. Solapamiento
+breadcrumb/versión baseline fuera de alcance. Checks separados observados más
+pruebas/estáticos bastan para la unidad aceptada; no inventar rerun ni E2E global.
+Intento cancelado anterior `mux594mz-h-682h` NO es PASS.
+
+AST `graphify update .` una vez, exit 0: 22 608 nodos, 56 810 enlaces,
+843 comunidades, 2 033 manifest; cero duplicados/colgantes. Persisten 64 fuentes
+sin nodos, 109 SQL sin `tree_sitter_sql`, semántica stale 844 guardadas frente a
+843 comunidades y 241 hubs renombrados. Backup `graphify-out/2026-10-06`
+conservado; candidato/protegidos/fuentes frontend y backend estables.
+RDD off; ASSESS nativo unassessable por `ingepresupuestos` anidado, sin aprobación
+nativa. F04-03b/F04-03 cerrados; F04-04 EN CURSO y F04-05 PENDIENTE.
+Esta reconciliación no ejecuta checks, staging ni commits; el padre verificará
+metadata y decidirá su work-unit commit local posterior.
+
+### F04-04 — checks globales ejecutados, cierre bloqueado
+
+Verificador independiente fresco `mux9b08j-3-dukq`, resultados suministrados
+por el padre: typecheck exit 0; lint exit 0, nueve warnings ajenos;
+`guard:adr9` PASS; build de producción PASS; diff-check PASS.
+`pnpm run format:check` FAIL únicamente en
+`odd/tasks/frontend-document-export.md` y `odd/tasks/workspace-compact-layout.md`.
+`pnpm run test` FAIL: 746/747 PASS; `AdminPlantillasProyectoPage.test.tsx:20`
+agotó timeout de 5 segundos. Causalidad DESCONOCIDA: no atribuir a baseline.
+F04-04 EN CURSO con cierre bloqueado, no DONE; F04-05 PENDIENTE.
+
+Diagnóstico read-only `mux9imby-6-0b8q` terminado, sin cambiar configuración:
+
+- Global original exit 1: 746/747 pruebas, 100/101 archivos PASS; timeout admin
+  en `src/test/features/admin/pages/AdminPlantillasProyectoPage.test.tsx:20:3`,
+  5 424 ms observados, duración global 84,20 s.
+- Aislado `pnpm exec vitest run src/test/features/admin/pages/AdminPlantillasProyectoPage.test.tsx`:
+  exit 0, 2/2 pruebas, un archivo, 4,40 s; no borra el fallo global.
+- Una nueva suite `pnpm run test`: exit 1, 746/747 pruebas, 100/101 archivos PASS;
+  timeout distinto en `src/test/features/workspace/components/PestanaApu.test.tsx:89:3`,
+  5 221 ms observados, duración 80,95 s. Sin skips; no más reruns.
+- Causalidad DESCONOCIDA; `docs/bugs.md` no identifica baseline del timeout.
+  No aumentar timeout ni cambiar paralelismo/retries, fuentes o tests.
+- Este taskdoc: Prettier focalizado y diff-check PASS tras formato autorizado.
+  Formato ajeno baseline probado: mismo blob `09a66c847ea86908414a5097732d116b6ec0c8cf`
+  en `5304979` y HEAD; ambos checks stdin exit 1, mismo hash de salida formateada
+  `9d0d50d03ce29084f2665c65a25289b073963fd92fff5ee83b9046acdc35e9ce`.
+  Documento ajeno intacto; formato global no repetido.
+- Build exit 0: `tsc -b && vite build`, Vite 8.2.2, 3 177 módulos, 2,45 s.
+- Agregado SHA-256 de 574 tracked excluyendo este taskdoc estable antes/después:
+  `1b410244e8ab8c90f5de35d97e369e691e73e03bd94ebbd0794bd1bb917b449b`.
+
+No PASS global ni causalidad baseline de tests inferida. F04-04 sigue bloqueado;
+F04-05 pendiente. Siguiente paso: diagnóstico específico de timeouts con alcance
+acordado, no repetir suites hasta obtener verde. Sin cambios de producto/fuente;
+las dos Compunex D backend se conservan. FULL mirror #1899 revisión 54 PENDIENTE,
+capacidad exacta desconocida; sin retry ni compresión adicional. El padre verifica
+esta metadata y registra su snapshot local sin declarar cierre del plan.
 
 ## Evidencia y pendientes
 
