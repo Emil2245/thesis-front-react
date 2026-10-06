@@ -1,7 +1,20 @@
 import axios, { AxiosError } from "axios";
 import { API_BASE_URL } from "@/lib/env";
 import { ApiError, problemDesconocido, type Problem } from "./problem";
-import { errorPayloadSchema } from "./schemas";
+import { documentoPreflightSchema, errorPayloadSchema } from "./schemas";
+import type { DocumentoPreflightResponse } from "./contract";
+
+/** El 409 directo no tiene codigo/mensaje de Problem: conserva su DTO validado. */
+export class DocumentoPreflightError extends Error {
+  readonly status = 409;
+  readonly preflight: DocumentoPreflightResponse;
+
+  constructor(preflight: DocumentoPreflightResponse) {
+    super(preflight.bloqueos.map((bloqueo) => bloqueo.mensaje).join("\n"));
+    this.preflight = preflight;
+    this.name = "DocumentoPreflightError";
+  }
+}
 
 // Sin `Content-Type` por defecto a propósito: axios lo pone solo (JSON para
 // objetos planos, multipart con boundary para FormData). Fijarlo aquí hacía que
@@ -73,6 +86,22 @@ http.interceptors.response.use(
         // Un Blob de bytes binarios (un PDF a medias, un proxy que devuelve
         // HTML) no es JSON: ahí el fallback sintético es lo correcto.
         datos = undefined;
+      }
+    }
+
+    // Sólo las descargas de presupuesto/APUs devuelven este DTO directo.
+    const documentoRuta = original?.url?.match(
+      /^\/documentos\/(presupuesto|apus)\/([^/?]+)(?:\?.*)?$/,
+    );
+    if (status === 409 && original?.method?.toLowerCase() === "get" && documentoRuta) {
+      const preflight = documentoPreflightSchema.safeParse(datos);
+      if (
+        preflight.success &&
+        !preflight.data.exportable &&
+        preflight.data.documento === documentoRuta[1] &&
+        preflight.data.presupuestoId === documentoRuta[2]
+      ) {
+        throw new DocumentoPreflightError(preflight.data);
       }
     }
 

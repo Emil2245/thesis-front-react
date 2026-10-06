@@ -7,6 +7,7 @@ import type {
   CopiaBaseResultadoResponse,
   ComparacionVersionesResponse,
   CronogramaResponse,
+  DocumentoPreflightResponse,
   CronogramaVistasResponse,
   CapituloCronogramaResponse,
   RubroCronogramaResponse,
@@ -794,6 +795,60 @@ export const cronogramaVistasSchema: z.ZodType<CronogramaVistasResponse, z.ZodTy
     curvaS: z.object({ puntos: z.array(puntoCurvaSSchema) }).strict(),
   })
   .strict();
+
+const documentoRubroRefSchema = z
+  .object({ id: z.string().uuid(), item: z.string(), codigo: z.string(), descripcion: z.string() })
+  .strict();
+const documentoDetalleSchema = z
+  .object({ codigo: z.string(), mensaje: z.string(), rubros: z.array(documentoRubroRefSchema) })
+  .strict();
+const documentoPreflightCampos = {
+  presupuestoId: z.string().uuid(),
+  version: z.number().int(),
+  exportable: z.boolean(),
+  bloqueos: z.array(documentoDetalleSchema),
+  warnings: z.array(documentoDetalleSchema),
+};
+
+/** Opciones cerradas de OpcionesDocumento, sin coerción ni pérdida de detalles. */
+export const documentoPreflightSchema: z.ZodType<
+  DocumentoPreflightResponse,
+  z.ZodTypeDef,
+  unknown
+> = z.union([
+  z
+    .object({
+      ...documentoPreflightCampos,
+      documento: z.literal("presupuesto"),
+      formato: z.literal("pdf"),
+      opciones: z.object({ orientacion: z.enum(["vertical", "horizontal"]) }).strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...documentoPreflightCampos,
+      documento: z.literal("apus"),
+      formato: z.literal("xlsx"),
+      opciones: z.object({ layout: z.enum(["pestanas", "apilado"]) }).strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...documentoPreflightCampos,
+      documento: z.literal("presupuesto"),
+      formato: z.literal("xlsx"),
+      opciones: z.object({}).strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...documentoPreflightCampos,
+      documento: z.literal("apus"),
+      formato: z.literal("pdf"),
+      opciones: z.object({}).strict(),
+    })
+    .strict(),
+]);
 
 export const errorPayloadSchema = z
   .object({

@@ -893,6 +893,31 @@ export interface ConflictoCronograma {
   perdidas?: PerdidaAvanceResponse[];
 }
 
+// ————— Documentos: presupuesto y APUs —————
+export interface DocumentoPreflightDetalle {
+  codigo: string;
+  mensaje: string;
+  rubros: RubroRefResponse[];
+}
+
+/** PreflightDocumento: respuesta 200 y cuerpo directo del 409 de descarga. */
+export type DocumentoPreflightResponse = {
+  presupuestoId: string;
+  version: number;
+  exportable: boolean;
+  bloqueos: DocumentoPreflightDetalle[];
+  warnings: DocumentoPreflightDetalle[];
+} & (
+  | {
+      documento: "presupuesto";
+      formato: "pdf";
+      opciones: { orientacion: "vertical" | "horizontal" };
+    }
+  | { documento: "apus"; formato: "xlsx"; opciones: { layout: "pestanas" | "apilado" } }
+  | { documento: "presupuesto"; formato: "xlsx"; opciones: Record<string, never> }
+  | { documento: "apus"; formato: "pdf"; opciones: Record<string, never> }
+);
+
 // ————— Documentos: exportación del cronograma (§11) —————
 /**
  * Transcritos de `ec.uce.propuestas.cronograma.dto` en `origin/main @ 5673615`
