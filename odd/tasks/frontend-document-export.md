@@ -15,13 +15,17 @@ Frontend partió limpio de `main`, `5304979`. Rama de trabajo:
 independiente: 28 pruebas/4 archivos, typecheck, Prettier y diff-check PASS.
 Los fallos previos TS1294/formato quedaron resueltos sin cambiar tsconfig.
 El usuario autorizó commits locales por unidades verificadas de plan04
-(`approve_frontend04_work_unit_commits`). Primera unidad lista para commit. El mapa actual confirma rutas
+(`approve_frontend04_work_unit_commits`). Primera unidad entregada localmente en
+`f39da75a99a64da3261f1219d9c208799cf3b527`, cinco archivos/388 inserciones/1 eliminación;
+frontend limpio tras el commit, sin push. El mapa actual confirma rutas
 y opciones backend. Se añadió únicamente la prueba
 `src/test/features/exportar/documento-preflight-error.test.ts`; RED confirmado
 por verificación independiente: una prueba falla por pérdida del preflight 409.
 El usuario aprobó el ajuste mínimo de `client.ts` mediante la opción
 `approve_client_direct409`; corrección acotada con GREEN independiente
-confirmado. Hooks/preflight keys y controles nuevos todavía no implementados. El índice de
+confirmado. Callbacks de descarga de presupuesto/APUs verificados (30 pruebas,
+typecheck/lint/Prettier/diff PASS); commit de esta unidad aún pendiente.
+Preflight keys y controles nuevos todavía no implementados. El índice de
 código no acreditaba las nuevas rutas backend y no se usará como contrato.
 El estado antiguo «bloqueado» de plan04 corresponde a su redacción anterior;
 los gates backend y la nueva autorización habilitan esta implementación.
@@ -69,15 +73,89 @@ compartidos permisivos ni expansión de superficie por conveniencia.
 
 ## Tareas recuperables
 
-- [ ] **F04-01 — VERIFICADO, CIERRE PENDIENTE:** mapa del contrato real, selección de versión y
+- [x] **F04-01 — CERRADO:** mapa del contrato real, selección de versión y
       pruebas existentes completado. Validar mediante prueba focalizada la pérdida
       del preflight directo en el interceptor Blob antes de solicitar ampliación
       mínima de superficie a `src/api/client.ts`. RED observado y ajuste aprobado.
       GREEN funcional independiente: 28/28 pruebas en cuatro archivos.
       B04-01 resuelto: typecheck/formato/diff PASS en candidato corregido.
-      Sin cambios de tsconfig ni relajación de pruebas. Commit autorizado, en preparación.
-- [ ] **F04-02 — PENDIENTE:** integrar contratos/hooks/preflight con pruebas
-      primero para riesgos críticos: versión equivocada, 409 y errores como Blob.
+      Sin cambios de tsconfig ni relajación de pruebas. Commit: `f39da75`.
+- [ ] **F04-02a — EN CURSO:** integrar callbacks de descarga de presupuesto/APUs
+      con contexto de UUID capturado y opciones compatibles. Unidad separada de
+      preflight/query keys para mantener revisable el diff.
+      Worker escribió dos pruebas (~120 líneas) solo en
+      `src/test/features/exportar/hooks/useExportar.contrato.test.tsx`.
+      API propuesta: `descargarPresupuesto(UUID, {formato, orientacion?})` y
+      `descargarApus(UUID, {formato, layout?})`. Matriz de opciones cerradas y
+      captura de selección histórica durante solicitud diferida; helper real,
+      Blob/MIME/nombre backend/revocación. Esta evidencia corresponde a la fase
+      de prueba antes de los cambios de producto descritos abajo.
+      Verificador `muw4rq0l-1m-3m20`: 21 pruebas/2 archivos, 19 PASS y dos nuevas
+      FAIL por `descargarPresupuesto` ausente (guards en líneas 202/256).
+      RED real de capacidad no implementada, no import/runner. No se invocaron
+      callbacks: rutas/query/auth/Blob/MIME/nombre/revocación/contexto pendientes.
+      Primer intento en cwd raíz no encontró Vitest y no cuenta como RED;
+      ejecución correcta desde frontend sí obtuvo los dos fallos descritos.
+      Test/hook/request hashes sin cambios por verificación. Corregir fragilidad
+      de orden en queries (líneas 210/240), manteniendo comparación exacta de
+      pares clave/valor y duplicados.
+      Worker `muw4wiip-1n-4z6o` implementó callbacks y tipos discriminados, copia
+      de opciones al invocar, UUID explícito, guard síncrono de duplicados y
+      estado compartido solo para callbacks nuevos; `finally` libera carga.
+      MIME admite formato solicitado u octet-stream, rechaza JSON/HTML/vacío;
+      errores se propagan sin guardar archivos. Query tests comparan entries
+      ordenadas sin perder duplicados. Hook +94/-11; test acumulado +155/-1.
+      Fallback independiente confirmó 30/30 pruebas en cuatro archivos: seis
+      casos HTTP y selección diferida V1→V2 ejecutados con ruta/query/auth,
+      bytes/MIME/nombre/revocación correctos. Lint PASS (9 warnings ajenos),
+      Prettier focalizado y diff-check PASS. Typecheck FAIL TS2345 en test:243:38
+      por unión de callbacks al seleccionar método dinámicamente.
+      **B04-02 — CORRECCIÓN ESCRITA:** invocación de matriz ahora usa rama por
+      `caso.metodo` y callback concreto presupuesto/APUs. Se conserva guard
+      Reflect/typeof y todas las opciones/aserciones; sin casts ni cambio de
+      tipos de producto/config. Verificador separado `muwsqeh0-2-a1ht` repetirá
+      30 pruebas, typecheck, lint, Prettier y diff: todos PASS.
+      Se ejecutaron seis casos y V1→V2; 9 warnings de lint ajenos y warning Vite
+      de config no bloqueante. Hook hash `6c4f74da…`, test corregido `6c21fcb9…`,
+      request/client/queryKeys sin cambios antes/después. No build/suite global/
+      navegador/live backend. Gate funcional y estructural listo para commit;
+      cierre F04-02a y B04-02 requiere registrar ese commit.
+      Guard UUID/opciones, duplicados, cleanup en error y MIME/fallback nuevos
+      solo inspeccionados en fuente: no atribuirlos a pruebas separadas.
+      El handoff dijo TDD no activo; esa etiqueta no es evidencia: existe RED
+      independiente previo (dos fallos) y GREEN funcional observado (30 PASS).
+      Intentos de verificación `muw4yxna-1o-2hfs` y actualización AST
+      `muw4zr4c-1p-tfqv` fallaron con `assistant reported an error`, sin handoff
+      utilizable; no inferir resultado de comandos ni grafo actualizado.
+      Recuperación: Git confirmó rama/HEAD `f39da75` y únicamente tres archivos
+      M (hook, test, tarea); backend conserva solo Compunex D. La proyección
+      todo se restaurará desde este documento porque retornó al estado antiguo.
+      Roles read-only configurados en `openai-codex/gpt-6-luna`; fallo exacto de
+      proveedor no disponible. No modificar configuración global. Fallback
+      `muwsg0ww-1-bfzi`: sesión separada del agente con Bash disponible, limitada
+      a verificación sin ediciones de fuente. Ejecutó los checks descritos arriba.
+      AST `graphify update .` agotó 120 s tras extracción 521/521; 64 fuentes sin
+      nodos, 109 SQL omitidos por `tree_sitter_sql` ausente, aviso de comunidades
+      824 labels/863 comunidades (224 renombradas). Sin exit code ni proceso
+      restante; no confirmar grafo actualizado. No instalar parsers ni regenerar
+      con LLM. Mantenimiento separado `muwsrpsq-3-i776`: mismo comando AST una
+      vez con límite 360 s, validar JSON/counts/hashes/status, sin tocar fuentes,
+      configuración o dependencias. Completado exit 0: “Code graph updated”,
+      modo “no LLM needed”. Graph/manifest/report/html/labels actualizados;
+      backup CLI de cinco artefactos conservado. JSON: 22 582 nodos/56 754 edges,
+      cero IDs duplicados y edges colgantes; manifest 2 032 entries, 859 comunidades.
+      `.graph.tmp.json`/`.rebuild.lock` del intento parcial desaparecieron por CLI.
+      Hash agregado de 344 fuentes frontend/490 backend y Git sin cambios.
+      Persisten 64 fuentes sin nodos, 109 SQL sin parser y labels semánticos
+      desactualizados (224 nombres de hubs); no instalar ni usar LLM. Mantenimiento
+      completado; graph `69b85fad…`, manifest `0a387c17…`. Listo para commit de
+      producto; ningún artefacto graphify-out se incluye en el commit frontend.
+      Hook/test hashes antes/después iguales; helper/backend hashes solo abarcan
+      AST (capturados después de checks funcionales). Backend/frontend status
+      sin cambios incidentales. No build/global/browser/live-backend en este paso.
+- [ ] **F04-02b — PENDIENTE:** integrar preflight validado y query keys por
+      UUID/documento/formato/opciones, guards y refresh exacto tras 409;
+      pruebas críticas de aislamiento antes de integrar la pantalla.
 - [ ] **F04-03 — PENDIENTE:** integrar controles/feedback de descarga, limpieza de
       opciones, selección histórica y cronograma A3, conservando ET y accesibilidad.
 - [ ] **F04-04 — PENDIENTE:** verificación independiente focalizada, regresión,
@@ -117,13 +195,13 @@ Ninguna tarea se marca cerrada con fallos, checks pendientes o entrega incomplet
   con guard GET/409/ruta/UUID/documento/no-exportable. Mantiene la prueba RED y
   agrega controles `export-inconsistente` y opciones malformadas. Cambios de
   producto en `client.ts`, `contract.ts`, `schemas.ts`: 104 inserciones/1 eliminación
-  según handoff del worker, aún sin verificación independiente.
+  según handoff original; verificación y corrección posteriores detalladas abajo.
 - Verificación independiente `muw48x49-1i-7kry`: cuatro archivos Vitest,
   28 pruebas PASS (incluye nuevo decoder y controles, client y hooks existentes).
   Contrato confirmado contra recursos/DTO backend, rutas relativas GET y orden
   auth/Blob. `git diff --check` PASS; hashes fuente/prueba/request.ts idénticos
   antes/después. Sin edits del verificador; las dos Compunex D siguen excluidas.
-- [ ] **B04-01 — VERIFICADO, CIERRE PENDIENTE:** corrección acotada de bloqueadores.
+- [x] **B04-01 — CERRADO:** corrección acotada de bloqueadores.
       Gate anterior: `pnpm run typecheck` falló TS1294 en
       `src/api/client.ts:11`: constructor parameter property incompatible con
       `erasableSyntaxOnly`. Prettier focalizado falla únicamente en `contract.ts`.
@@ -137,7 +215,7 @@ Ninguna tarea se marca cerrada con fallos, checks pendientes o entrega incomplet
       Prettier focalizado PASS; `git diff --check` PASS. Hash de prueba idéntico
       (`c6da294b…`); schemas/request.ts sin cambios ni modificaciones incidentales.
       Backend sigue con las dos Compunex D esperadas, excluidas. Commits locales
-      autorizados explícitamente; registrar identidad tras el commit de esta unidad.
+      autorizados explícitamente; commit de la unidad: `f39da75`.
 - `request.ts` no editado; sin controles UI/hooks nuevos. Commit local autorizado;
   no build, suite global ni verificación navegador en este paso.
 - ASSESS: riesgo `unassessable`, RDD off por `ingepresupuestos` anidado no tracked

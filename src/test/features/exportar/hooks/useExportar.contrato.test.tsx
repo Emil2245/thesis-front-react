@@ -7,7 +7,8 @@ import type { ReactNode } from "react";
 import { crearQueryClient } from "@/test/render";
 import { server } from "@/test/server";
 import { espiar, ultima } from "@/test/espia";
-import { PRESUPUESTO_V2 } from "@/test/fixtures/presupuesto";
+import { PRESUPUESTO_V1, PRESUPUESTO_V2 } from "@/test/fixtures/presupuesto";
+import { getAccessToken, setAccessToken } from "@/api/client";
 import { PRESUPUESTO_BLOQUEADO } from "@/test/handlers";
 import { descargar } from "@/api/request";
 import type { ApiError } from "@/api/problem";
@@ -164,6 +165,163 @@ describe("useExportar — especificaciones técnicas", () => {
   it("el backend rechaza con 400 cualquier formato que no sea docx", async () => {
     await expect(descargar(ET, { formato: "pdf" })).rejects.toMatchObject({ status: 400 });
     await expect(descargar(ET, { formato: "docx" })).resolves.toBeDefined();
+  });
+});
+
+// F04-02: extensión mínima del objeto real de useExportar, sin exports ficticios.
+// Reflect permite observar RED por capacidad ausente antes de invocar el método.
+describe("useExportar — presupuesto/APUs de la versión seleccionada", () => {
+  let tokenAnterior: string | null;
+  beforeEach(() => {
+    tokenAnterior = getAccessToken();
+    setAccessToken("documentos-test");
+  });
+  afterEach(() => setAccessToken(tokenAnterior));
+
+  const casos = [
+    { documento: "presupuesto", metodo: "descargarPresupuesto", opciones: { formato: "xlsx" } },
+    { documento: "presupuesto", metodo: "descargarPresupuesto", opciones: { formato: "pdf" } },
+    {
+      documento: "presupuesto",
+      metodo: "descargarPresupuesto",
+      opciones: { formato: "pdf", orientacion: "horizontal" },
+    },
+    { documento: "apus", metodo: "descargarApus", opciones: { formato: "xlsx" } },
+    {
+      documento: "apus",
+      metodo: "descargarApus",
+      opciones: { formato: "xlsx", layout: "apilado" },
+    },
+    { documento: "apus", metodo: "descargarApus", opciones: { formato: "pdf" } },
+  ] as const;
+  const mime = (formato: string) =>
+    formato === "pdf"
+      ? "application/pdf"
+      : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  const contenido = (blob: Blob) =>
+    new Promise<string>((resolve, reject) => {
+      const lector = new FileReader();
+      lector.onload = () => resolve(String(lector.result));
+      lector.onerror = () => reject(lector.error);
+      lector.readAsText(blob);
+    });
+
+  it("descarga sólo las combinaciones cerradas con UUID no vigente, bytes y nombre del servidor", async () => {
+    const { result } = renderHook(() => useExportar(), { wrapper });
+    for (const [indice, caso] of casos.entries()) {
+      expect(result.current).toHaveProperty(caso.metodo, expect.any(Function));
+      const peticiones: string[] = [];
+      const nombre = `${caso.documento}-Selected-${PRESUPUESTO_V1}-v1.${caso.opciones.formato}`;
+      const cuerpo = `${PRESUPUESTO_V1}:v1:${JSON.stringify(caso.opciones)}`;
+      const query = [...new URLSearchParams(caso.opciones).entries()].sort();
+      server.use(
+        http.get(`${API}/documentos/${caso.documento}/:id`, ({ request, params }) => {
+          const url = new URL(request.url);
+          peticiones.push(url.pathname);
+          if (
+            params.id !== PRESUPUESTO_V1 ||
+            JSON.stringify([...url.searchParams.entries()].sort()) !== JSON.stringify(query)
+          ) {
+            return HttpResponse.json(
+              { codigo: "validacion", mensaje: "Opciones inválidas" },
+              { status: 400 },
+            );
+          }
+          if (request.headers.get("Authorization") !== "Bearer documentos-test") {
+            return new HttpResponse(null, { status: 401 });
+          }
+          return HttpResponse.arrayBuffer(new TextEncoder().encode(cuerpo).buffer, {
+            headers: {
+              "Content-Type": mime(caso.opciones.formato),
+              "Content-Disposition": `attachment; filename="${nombre}"`,
+            },
+          });
+        }),
+      );
+      const callback = Reflect.get(result.current, caso.metodo);
+      expect(typeof callback).toBe("function");
+      if (caso.metodo === "descargarPresupuesto") {
+        await result.current.descargarPresupuesto(PRESUPUESTO_V1, caso.opciones);
+      } else {
+        await result.current.descargarApus(PRESUPUESTO_V1, caso.opciones);
+      }
+      expect(peticiones).toEqual([`${RUTA}/documentos/${caso.documento}/${PRESUPUESTO_V1}`]);
+      expect(clicks[indice]?.download).toBe(nombre);
+      expect(blobs[indice]?.type).toBe(mime(caso.opciones.formato));
+      expect(await contenido(blobs[indice])).toBe(cuerpo);
+    }
+    expect(clicks).toHaveLength(casos.length);
+    expect(revocadas).toEqual(clicks.map((click) => click.href));
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it("conserva UUID y opciones capturados mientras cambia la selección con HTTP pendiente", async () => {
+    let liberar: () => void = () => {};
+    const pendiente = new Promise<void>((resolve) => {
+      liberar = resolve;
+    });
+    const peticiones: string[] = [];
+    const nombre = `presupuesto-Selected-${PRESUPUESTO_V1}-v1.pdf`;
+    server.use(
+      http.get(`${API}/documentos/presupuesto/:id`, async ({ request, params }) => {
+        const url = new URL(request.url);
+        if (
+          params.id !== PRESUPUESTO_V1 ||
+          JSON.stringify([...url.searchParams.entries()].sort()) !==
+            JSON.stringify(
+              [
+                ["formato", "pdf"],
+                ["orientacion", "horizontal"],
+              ].sort(),
+            )
+        ) {
+          return HttpResponse.json(
+            { codigo: "validacion", mensaje: "Contexto incorrecto" },
+            { status: 400 },
+          );
+        }
+        if (request.headers.get("Authorization") !== "Bearer documentos-test") {
+          return new HttpResponse(null, { status: 401 });
+        }
+        peticiones.push(url.pathname);
+        await pendiente;
+        return HttpResponse.arrayBuffer(
+          new TextEncoder().encode(`${params.id}:v1:horizontal`).buffer,
+          {
+            headers: {
+              "Content-Type": "application/pdf",
+              "Content-Disposition": `attachment; filename="${nombre}"`,
+            },
+          },
+        );
+      }),
+    );
+    const { result, rerender } = renderHook(
+      ({ presupuestoId }) => ({ hook: useExportar(), presupuestoId }),
+      { wrapper, initialProps: { presupuestoId: PRESUPUESTO_V1 } },
+    );
+    expect(result.current.hook).toHaveProperty("descargarPresupuesto", expect.any(Function));
+    const callback = Reflect.get(result.current.hook, "descargarPresupuesto");
+    expect(typeof callback).toBe("function");
+    const descarga = callback(result.current.presupuestoId, {
+      formato: "pdf",
+      orientacion: "horizontal",
+    });
+    try {
+      await waitFor(() => expect(peticiones).toHaveLength(1));
+      rerender({ presupuestoId: PRESUPUESTO_V2 });
+      expect(result.current.presupuestoId).toBe(PRESUPUESTO_V2);
+      expect(clicks).toHaveLength(0);
+    } finally {
+      liberar();
+      await descarga;
+    }
+    expect(peticiones).toEqual([`${RUTA}/documentos/presupuesto/${PRESUPUESTO_V1}`]);
+    expect(clicks).toEqual([{ href: "blob:apu/1", download: nombre }]);
+    expect(blobs[0].type).toBe("application/pdf");
+    expect(await contenido(blobs[0])).toBe(`${PRESUPUESTO_V1}:v1:horizontal`);
+    expect(revocadas).toEqual(["blob:apu/1"]);
+    expect(toast.error).not.toHaveBeenCalled();
   });
 });
 

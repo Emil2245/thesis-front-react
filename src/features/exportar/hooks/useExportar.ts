@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { descargar, getValidado } from "@/api/request";
 import { qk } from "@/api/queryKeys";
@@ -51,15 +51,40 @@ const guardar = (blob: Blob, nombreArchivo: string) => {
 /** MSPDI viaja como XML: `.mspdi` no lo produce ningún camino del backend. */
 const extensionDe = (formato: FormatoExportCronograma) => (formato === "mspdi" ? "xml" : formato);
 
-/**
- * El backend expone dos documentos: la especificación técnica en DOCX (plan
- * 051) y el cronograma valorizado en XLSX, PDF y MSPDI (plan 031 del backend).
- * El presupuesto y los APUs siguen sin existir en ninguna ruta, así que no hay
- * botón para ellos: uno apagado prometería que llega pronto.
- *
- * `formato` de la ET es opcional y su único valor válido es `docx`, así que no
- * se manda. El del cronograma es obligatorio y uno de tres.
- */
+export type OpcionesPresupuesto =
+  | { formato: "xlsx"; orientacion?: never; layout?: never }
+  | { formato: "pdf"; orientacion?: "vertical" | "horizontal"; layout?: never };
+
+export type OpcionesApus =
+  | { formato: "xlsx"; layout?: "pestanas" | "apilado"; orientacion?: never }
+  | { formato: "pdf"; layout?: never; orientacion?: never };
+
+/** Copia las opciones compatibles antes del primer await; no inserta defaults. */
+const parametrosDocumento = (
+  documento: "presupuesto" | "apus",
+  opciones: OpcionesPresupuesto | OpcionesApus,
+): Record<string, string> => {
+  if (!opciones || (opciones.formato !== "xlsx" && opciones.formato !== "pdf")) {
+    throw new TypeError("Formato de documento inválido");
+  }
+  const opcion =
+    documento === "presupuesto" && opciones.formato === "pdf"
+      ? "orientacion"
+      : documento === "apus" && opciones.formato === "xlsx"
+        ? "layout"
+        : undefined;
+  if (Object.keys(opciones).some((key) => key !== "formato" && key !== opcion)) {
+    throw new TypeError("Opción incompatible con el documento y formato");
+  }
+  const params: Record<string, string> = { formato: opciones.formato };
+  const valor = opcion === "orientacion" ? opciones.orientacion : opciones.layout;
+  if (opcion && valor !== undefined) {
+    const valores = opcion === "orientacion" ? ["vertical", "horizontal"] : ["pestanas", "apilado"];
+    if (!valores.includes(valor)) throw new TypeError("Opción de documento inválida");
+    params[opcion] = valor;
+  }
+  return params;
+};
 /**
  * ¿Es un error que **el backend** describió, o uno que se inventó el cliente?
  * Cuando el cuerpo no era `{codigo, mensaje}`, `client.ts` sintetiza un
@@ -73,6 +98,58 @@ const esErrorDeContrato = (e: unknown): e is ApiError =>
 
 export function useExportar() {
   const cliente = useQueryClient();
+  const [descargando, setDescargando] = useState(false);
+  const descargaEnCurso = useRef(false);
+
+  // Guarda sólo la forma del UUID público: la autorización y el dominio son del servidor.
+  const descargarDocumento = useCallback(
+    async (
+      documento: "presupuesto" | "apus",
+      presupuestoId: string,
+      opciones: OpcionesPresupuesto | OpcionesApus,
+    ) => {
+      if (
+        typeof presupuestoId !== "string" ||
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(presupuestoId)
+      ) {
+        return;
+      }
+      const params = parametrosDocumento(documento, opciones);
+      if (descargaEnCurso.current) return;
+      descargaEnCurso.current = true;
+      setDescargando(true);
+      try {
+        const { blob, nombreArchivo } = await descargar(
+          `/documentos/${documento}/${presupuestoId}`,
+          params,
+        );
+        const esperado =
+          params.formato === "pdf"
+            ? "application/pdf"
+            : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        const mime = blob.type.split(";")[0].trim().toLowerCase();
+        if (mime !== esperado && mime !== "application/octet-stream") {
+          throw new TypeError("La respuesta no es un archivo del formato solicitado");
+        }
+        guardar(blob, nombreArchivo ?? `${documento}.${params.formato}`);
+      } finally {
+        descargaEnCurso.current = false;
+        setDescargando(false);
+      }
+    },
+    [],
+  );
+
+  const descargarPresupuesto = useCallback(
+    (presupuestoId: string, opciones: OpcionesPresupuesto) =>
+      descargarDocumento("presupuesto", presupuestoId, opciones),
+    [descargarDocumento],
+  );
+  const descargarApus = useCallback(
+    (presupuestoId: string, opciones: OpcionesApus) =>
+      descargarDocumento("apus", presupuestoId, opciones),
+    [descargarDocumento],
+  );
 
   const descargarEspecificacionesTecnicas = useCallback(async (presupuestoId: string) => {
     try {
@@ -112,5 +189,11 @@ export function useExportar() {
     [cliente],
   );
 
-  return { descargarEspecificacionesTecnicas, descargarCronograma };
+  return {
+    descargarEspecificacionesTecnicas,
+    descargarCronograma,
+    descargarPresupuesto,
+    descargarApus,
+    descargando,
+  };
 }
