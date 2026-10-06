@@ -255,6 +255,30 @@ describe("useExportar — presupuesto/APUs de la versión seleccionada", () => {
     expect(toast.error).not.toHaveBeenCalled();
   });
 
+  it("rechaza UUID no v7 o variante inválida sin HTTP ni guardar archivo", async () => {
+    const peticiones = espiar();
+    server.use(
+      http.get(`${API}/documentos/:documento/:id`, () =>
+        HttpResponse.arrayBuffer(new ArrayBuffer(8), {
+          headers: { "Content-Type": "application/pdf" },
+        }),
+      ),
+    );
+    const { result } = renderHook(() => useExportar(), { wrapper });
+    for (const id of [
+      "01900000-0000-4000-8000-000000000001",
+      "01900000-0000-7000-c000-000000000001",
+    ]) {
+      await result.current.descargarPresupuesto(id, { formato: "pdf" });
+      await result.current.descargarApus(id, { formato: "pdf" });
+    }
+    expect(peticiones).toHaveLength(0);
+    expect(clicks).toHaveLength(0);
+    expect(blobs).toHaveLength(0);
+    expect(revocadas).toHaveLength(0);
+    expect(toast.success).not.toHaveBeenCalled();
+  });
+
   it("conserva UUID y opciones capturados mientras cambia la selección con HTTP pendiente", async () => {
     let liberar: () => void = () => {};
     const pendiente = new Promise<void>((resolve) => {

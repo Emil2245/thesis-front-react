@@ -3,7 +3,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { descargar, getValidado } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import type { FormatoExportCronograma } from "@/api/contract";
-import { cronogramaExportPreflightSchema, validacionPresupuestoSchema } from "@/api/schemas";
+import {
+  cronogramaExportPreflightSchema,
+  documentoPreflightSchema,
+  validacionPresupuestoSchema,
+} from "@/api/schemas";
 import { ApiError } from "@/api/problem";
 import { toast } from "sonner";
 
@@ -85,6 +89,55 @@ const parametrosDocumento = (
   }
   return params;
 };
+/** Contrato público UuidV7.parse: versión 7 y variante RFC 4122, sin validar dominio. */
+const esUuidV7 = (id: unknown): id is string =>
+  typeof id === "string" &&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+
+export type ContextoPreflightDocumento = { presupuestoId?: string | null } & (
+  | { documento: "presupuesto"; opciones: OpcionesPresupuesto }
+  | { documento: "apus"; opciones: OpcionesApus }
+);
+
+/** Cada render conserva su contexto, incluso si la descarga termina tras cambiar selección. */
+export function usePreflightDocumento(contexto: ContextoPreflightDocumento) {
+  const cliente = useQueryClient();
+  const { presupuestoId, documento } = contexto;
+  const { formato: formatoParam, ...opciones } = parametrosDocumento(documento, contexto.opciones);
+  const formato = formatoParam === "pdf" ? "pdf" : "xlsx";
+  const queryKey = qk.documentos.preflight(presupuestoId, documento, formato, opciones);
+  const efectivas = queryKey[5];
+  const params = Object.freeze({ formato, ...efectivas });
+  const valido = esUuidV7(presupuestoId);
+  const query = useQuery({
+    queryKey,
+    enabled: valido,
+    placeholderData: undefined,
+    queryFn: async () => {
+      // También protege llamadas manuales a refetch sobre un contexto deshabilitado.
+      if (!valido) throw new TypeError("UUID de presupuesto inválido");
+      const respuesta = await getValidado(
+        `/documentos/${documento}/${presupuestoId}/preflight`,
+        documentoPreflightSchema,
+        params,
+      );
+      if (
+        respuesta.presupuestoId !== presupuestoId ||
+        respuesta.documento !== documento ||
+        respuesta.formato !== formato ||
+        Object.keys(respuesta.opciones).length !== Object.keys(efectivas).length ||
+        Object.entries(respuesta.opciones).some(([key, value]) => efectivas[key] !== value)
+      ) {
+        throw new TypeError("El preflight no corresponde al contexto solicitado");
+      }
+      return respuesta;
+    },
+  });
+  // No observer.refetch: ese observer puede estar siguiendo otra selección al resolver el 409.
+  const invalidar = (): Promise<void> => cliente.invalidateQueries({ queryKey, exact: true });
+  return { ...query, data: valido ? query.data : undefined, invalidar };
+}
+
 /**
  * ¿Es un error que **el backend** describió, o uno que se inventó el cliente?
  * Cuando el cuerpo no era `{codigo, mensaje}`, `client.ts` sintetiza un
@@ -101,17 +154,14 @@ export function useExportar() {
   const [descargando, setDescargando] = useState(false);
   const descargaEnCurso = useRef(false);
 
-  // Guarda sólo la forma del UUID público: la autorización y el dominio son del servidor.
+  // Guarda el UUIDv7 público: la autorización y el dominio son del servidor.
   const descargarDocumento = useCallback(
     async (
       documento: "presupuesto" | "apus",
       presupuestoId: string,
       opciones: OpcionesPresupuesto | OpcionesApus,
     ) => {
-      if (
-        typeof presupuestoId !== "string" ||
-        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(presupuestoId)
-      ) {
+      if (!esUuidV7(presupuestoId)) {
         return;
       }
       const params = parametrosDocumento(documento, opciones);

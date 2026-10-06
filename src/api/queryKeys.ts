@@ -49,6 +49,40 @@ export const qk = {
   cronogramaExportPreflight: (presupuestoId: string, formato: string) =>
     ["presupuesto", presupuestoId, "export-cronograma", formato] as const,
 
+  documentos: {
+    preflight: (
+      id: string | null | undefined,
+      documento: "presupuesto" | "apus",
+      formato: "pdf" | "xlsx",
+      opciones: Readonly<Record<string, string>>,
+    ) => {
+      const opcion =
+        documento === "presupuesto" && formato === "pdf"
+          ? "orientacion"
+          : documento === "apus" && formato === "xlsx"
+            ? "layout"
+            : undefined;
+      if (Object.keys(opciones).some((key) => key !== opcion)) {
+        throw new TypeError("Opción incompatible con el documento y formato");
+      }
+      const valor = opcion
+        ? (opciones[opcion] ?? (opcion === "layout" ? "pestanas" : "vertical"))
+        : undefined;
+      if (
+        valor !== undefined &&
+        !(opcion === "layout" ? ["pestanas", "apilado"] : ["vertical", "horizontal"]).includes(
+          valor,
+        )
+      ) {
+        throw new TypeError("Opción de documento inválida");
+      }
+      const efectivas: Readonly<Record<string, string>> = Object.freeze(
+        opcion && valor !== undefined ? { [opcion]: valor } : {},
+      );
+      return ["presupuesto", id ?? null, "documentos", documento, formato, efectivas] as const;
+    },
+  },
+
   // Usuarios (077), plantillas de sistema (078), valores de referencia (079)
   // y logs de actividad (080) ya tienen backend real; sus gates siguen
   // cerrados en `MODULOS_SIN_BACKEND` hasta el 081.

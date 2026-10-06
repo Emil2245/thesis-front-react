@@ -24,8 +24,12 @@ por verificación independiente: una prueba falla por pérdida del preflight 409
 El usuario aprobó el ajuste mínimo de `client.ts` mediante la opción
 `approve_client_direct409`; corrección acotada con GREEN independiente
 confirmado. Callbacks de descarga de presupuesto/APUs verificados (30 pruebas,
-typecheck/lint/Prettier/diff PASS); commit de esta unidad aún pendiente.
-Preflight keys y controles nuevos todavía no implementados. El índice de
+typecheck/lint/Prettier/diff PASS). Unidad entregada localmente en
+`36665d85829decf1941cae0fdc7f567b957763ec`, tres archivos/340 inserciones/21 eliminaciones;
+frontend limpio tras el commit, sin push.
+Productor de preflight y query keys verificado independientemente; F04-02b listo
+para commit local autorizado, aún EN CURSO hasta registrar ese commit.
+Controles de pantalla pendientes. El índice de
 código no acreditaba las nuevas rutas backend y no se usará como contrato.
 El estado antiguo «bloqueado» de plan04 corresponde a su redacción anterior;
 los gates backend y la nueva autorización habilitan esta implementación.
@@ -33,6 +37,19 @@ los gates backend y la nueva autorización habilitan esta implementación.
 Commits locales frontend autorizados por unidades verificadas en esta rama.
 No push, PR, merge, despliegue ni cambios de DB. No se declarará entrega completa
 mientras falten verificaciones o tareas funcionales del plan.
+
+Decisión explícita del usuario para futuras entregas plan04: conservar
+`delivery_strategy=auto-chain`, `chain_strategy=feature-branch-chain`.
+Es estrategia de revisión, no autoridad de publicación; sigue vigente únicamente
+el permiso de commits locales de unidades verificadas. Slices propuestos:
+1. Decoder: `f39da75` (primera unidad).
+2. Callbacks: `36665d8` (segunda unidad).
+3. Preflight/query keys: candidato actual F04-02b (tercera, commit pendiente).
+4. UI posterior: unidades acotadas verificadas, aún sin identidades de commit.
+La rama feature tracker destino de la cadena no está creada; no hay refs de PR.
+Acumulado authored entregado: 389 + 361 = 750 líneas; candidato antes de esta
+actualización documental: 443. Contar nuevamente tras metadata. El umbral 400
+es heurística advisory de revisión, no tope obligatorio ni motivo para code golf.
 
 ## Contrato y límites
 
@@ -80,7 +97,7 @@ compartidos permisivos ni expansión de superficie por conveniencia.
       GREEN funcional independiente: 28/28 pruebas en cuatro archivos.
       B04-01 resuelto: typecheck/formato/diff PASS en candidato corregido.
       Sin cambios de tsconfig ni relajación de pruebas. Commit: `f39da75`.
-- [ ] **F04-02a — EN CURSO:** integrar callbacks de descarga de presupuesto/APUs
+- [x] **F04-02a — CERRADO:** integrar callbacks de descarga de presupuesto/APUs
       con contexto de UUID capturado y opciones compatibles. Unidad separada de
       preflight/query keys para mantener revisable el diff.
       Worker escribió dos pruebas (~120 líneas) solo en
@@ -119,7 +136,7 @@ compartidos permisivos ni expansión de superficie por conveniencia.
       de config no bloqueante. Hook hash `6c4f74da…`, test corregido `6c21fcb9…`,
       request/client/queryKeys sin cambios antes/después. No build/suite global/
       navegador/live backend. Gate funcional y estructural listo para commit;
-      cierre F04-02a y B04-02 requiere registrar ese commit.
+      F04-02a y B04-02 cerrados con commit `36665d8`.
       Guard UUID/opciones, duplicados, cleanup en error y MIME/fallback nuevos
       solo inspeccionados en fuente: no atribuirlos a pruebas separadas.
       El handoff dijo TDD no activo; esa etiqueta no es evidencia: existe RED
@@ -153,9 +170,85 @@ compartidos permisivos ni expansión de superficie por conveniencia.
       Hook/test hashes antes/después iguales; helper/backend hashes solo abarcan
       AST (capturados después de checks funcionales). Backend/frontend status
       sin cambios incidentales. No build/global/browser/live-backend en este paso.
-- [ ] **F04-02b — PENDIENTE:** integrar preflight validado y query keys por
+- [ ] **F04-02b — EN CURSO:** integrar preflight validado y query keys por
       UUID/documento/formato/opciones, guards y refresh exacto tras 409;
       pruebas críticas de aislamiento antes de integrar la pantalla.
+      Nuevo test `src/test/features/exportar/hooks/useDocumentoPreflight.test.tsx`:
+      246 líneas formateadas/11 casos escritos, sin ejecutar. API propuesta
+      `usePreflightDocumento(contexto)` devuelve query + `invalidar()` que captura
+      key exacta de ese render; no usar observer.refetch mutable para errores 409
+      anteriores. Ejes de contexto, respuesta tardía, guards UUID, defaults
+      canónicos e invalidación capturada aún no verificados. Sin producción nueva.
+      Verificador fallback read-only `muwtfk9p-5-zogk`: RED real, exit 1,
+      11/11 pruebas fallan en beforeEach:27 por export `usePreflightDocumento`
+      ausente, colección/import correctos. Los cuerpos no se ejecutaron; ninguna
+      solicitud/cache/default/guard/invalidation quedó probada todavía.
+      Hashes test `05f8e24b…`, hook `6c4f74da…`, queryKeys `c007fcf2…`, request
+      `bed9fbc1…` antes/después iguales; Git sin cambios. P-32/preflight directo
+      fuente backend confirmados. Otros combos válidos usan opciones vacías;
+      combinaciones incompatibles se rechazan, nunca se convierten en defaults.
+      Forecast: 246 líneas test +10 cambios de tarea =256 antes de este registro;
+      producción estimada 100–130 deja margen estrecho. El forecast original
+      trató 400 como tope del diff total, incluidos nuevos archivos/metadata;
+      esa instrucción queda sustituida por la heurística advisory: contar el
+      authored completo, intentar slices coherentes y explicar el sobrepaso,
+      sin quitar casos ni debilitar aserciones. Productor `muwtpzme-6-rd5f` implementó hook/keys:
+      contexto discriminado copiado, opciones efectivas congeladas, identidad de
+      respuesta validada y invalidación lexical exacta; callbacks/test intactos.
+      Diff declarado 361 líneas (246 test +29 tarea +86 producción), antes de
+      este registro; verificar conteo real. ASSESS sigue unassessable por repo
+      anidado `ingepresupuestos`, RDD off: tratar como alto riesgo, sin aprobación
+      nativa ni cambio de ignores. Verificador read-only `muwtxw1v-7-f2f0` ejecuta
+      11 casos nuevos, 30 regresiones, typecheck/lint/formato/diff e integridad.
+      Verificador `muwzer1y-1-vrh0`: comando focalizado de cinco archivos,
+      41 casos: 38 PASS/3 FAIL (respuestas tardías formato/orientación/layout).
+      Typecheck, lint (9 warnings ajenos), Prettier y diff-check PASS;
+      hashes estables, 369 líneas authored. Sin AST/commit/build/navegador/suite global.
+      Corrección delegada por múltiples archivos no triviales y checks: reparar
+      routing MSW sin relajar aserciones y reproducir RED de UUID no v7 antes
+      de ajustar exclusivamente guards nuevos. 400 líneas es advisory, no hardcap;
+      conservar pruebas/comentarios y explicar el menor sobrepaso coherente.
+      Corrección del writer: registrar handler nuevo sólo después de observar
+      request antiguo; conserva queries exactas/defaults, assertions y ambos HTTP.
+      `UuidV7.java` leído: versión 7/variante 8,9,a,b; helper local compartido sólo
+      para preflight documento y callbacks presupuesto/APUs. ET/crono intactos.
+      Cwd de todos los comandos: `/home/kaandradec/Documents/workspace/uce/proyecto-grado/thesis-front-react`.
+      RED `pnpm exec vitest run src/test/features/exportar/hooks/useDocumentoPreflight.test.tsx src/test/features/exportar/hooks/useExportar.contrato.test.tsx -t '01900000|rechaza UUID no v7'`: 3 FAIL por assertions (fetching≠idle dos veces; 4 HTTP≠0), 31 skipped.
+      GREEN `pnpm exec vitest run src/test/features/exportar/hooks/useDocumentoPreflight.test.tsx src/test/features/exportar/hooks/useExportar.contrato.test.tsx src/test/features/exportar/hooks/useExportar.test.tsx src/test/features/exportar/documento-preflight-error.test.ts src/test/api/client.test.ts`: 44/44 PASS, cinco archivos.
+      `pnpm run typecheck`: PASS. `pnpm run lint`: PASS, 9 warnings ajenos.
+      `pnpm exec prettier --check src/features/exportar/hooks/useExportar.ts src/test/features/exportar/hooks/useDocumentoPreflight.test.tsx src/test/features/exportar/hooks/useExportar.contrato.test.tsx src/api/queryKeys.ts`: PASS tras formato del test preflight únicamente; primer check FAIL de formato.
+      `git diff --check`: PASS. Routing es corrección de harness, no RED behavioral.
+      Runtime MSW prueba aislamiento tardío, defaults, invalidación capturada,
+      UUIDv4/variante c sin HTTP ni guardado y regresiones; no prueba live backend.
+      Fuente confirma regex case-insensitive y refetch guard; sin tests separados
+      de todas las variantes válidas, duplicados/cleanup/MIME/fallback.
+      Hashes protegidos antes/después idénticos (SHA-256 prefijos): client
+      `0c24df14`, request `bed9fbc1`, queryKeys `ad711b65`, package `55eb002c`,
+      lockfile `aed1b255`, tsconfig app/root/node `4ff34df3`/`1f10234e`/`d366cc08`,
+      vite/vitest `161c6a77`/`d8ecc2a2`. Inspección inicial de hashes salió 1 por
+      glob eslint.config inexistente; no representa fallo de validación ni RED.
+      Conteo final authored: 443 líneas (250 test nuevo +73 tarea +34 keys
+      +62 hook +24 callback test), incluidas adiciones/eliminaciones; +43 sobre
+      advisory 400. Exceso mínimo
+      coherente: conservar 11 casos existentes + dos controles UUID + guard callback
+      y evidencia, sin eliminar tests/comentarios para alcanzar 400 líneas.
+      GREEN del writer observado; el gate independiente y AST posteriores se
+      completaron según la evidencia final siguiente. Commit aún pendiente.
+      **Verificación final independiente `muwzsvab-3-2o46`:** 44/44 pruebas en
+      cinco archivos PASS; typecheck, lint (9 warnings ajenos), Prettier y
+      diff-check PASS. Warning Vite `__dirname` no bloqueante. Se conserva el
+      RED del writer de tres assertions descrito arriba; routing MSW no es RED
+      behavioral. Runtime MSW cubre contextos tardíos, defaults/cache, invalidación
+      de key antigua capturada y guard UUID; no acredita matriz completa de
+      variantes, live backend, navegador, build ni suite global.
+      AST `graphify update .`: exit 0, límite 360 s, sin LLM; 22 594 nodos,
+      56 786 edges, 833 comunidades, 2 033 entradas manifest, cero IDs duplicados
+      o edges colgantes. Backup de cinco artefactos conservado. Persisten 64
+      fuentes sin nodos, 109 SQL sin parser y 198 nombres de hubs obsoletos.
+      Hashes fuente/protegidos y status frontend/backend sin cambios por AST.
+      ASSESS nativo sigue unassessable por `ingepresupuestos` anidado; RDD off,
+      sin aprobación nativa. F04-02b listo para commit local autorizado, pero
+      EN CURSO hasta commit; F04-03/04/05 permanecen pendientes. Sin PR/push.
 - [ ] **F04-03 — PENDIENTE:** integrar controles/feedback de descarga, limpieza de
       opciones, selección histórica y cronograma A3, conservando ET y accesibilidad.
 - [ ] **F04-04 — PENDIENTE:** verificación independiente focalizada, regresión,
