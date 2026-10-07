@@ -41,19 +41,22 @@ Productor de preflight y query keys entregado localmente: F04-02b CERRADO en
 44/44 pruebas y checks funcionales independientes PASS, AST PASS según registro.
 F04-03 CERRADO: F04-03a CERRADO en
 `5103a2b64f748cff2ccd15cdde813b49cacbbfbc`; F04-03b CERRADO en
-`4254f441167f88909e55f27322fb2cdfb88e7a85`. F04-04 EN CURSO;
-F04-05 PENDIENTE. Checks globales ejecutados por `mux9b08j-3-dukq`:
-build PASS, suite y formato FAIL; F04-04 EN CURSO con cierre bloqueado,
-no DONE ni PASS global. Diagnóstico read-only `mux9imby-6-0b8q` terminado:
+`4254f441167f88909e55f27322fb2cdfb88e7a85`. Implementación y alcance funcional
+CERRADOS por decisión del usuario; F04-05 cierra únicamente el estado del plan.
+F04-04: regresión global DIFERIDA fuera de este cierre, no aprobada ni corregida.
+Se conservan los resultados existentes: build PASS, suite y formato global FAIL;
 timeouts en archivos distintos, causalidad desconocida; formato ajeno baseline.
+No se añade informe de validación final. La validación exhaustiva con un proyecto
+real pertenece a futuros procesos independientes, no al alcance de este plan.
 Los registros históricos inferiores describen etapas anteriores, no el estado actual.
 El índice de código no acreditaba las nuevas rutas backend y no se usará como contrato.
 El estado antiguo «bloqueado» de plan04 corresponde a su redacción anterior;
 los gates backend y la nueva autorización habilitan esta implementación.
 
 Commits locales frontend autorizados por unidades verificadas en esta rama.
-No push, PR, merge, despliegue ni cambios de DB. No se declarará entrega completa
-mientras falten verificaciones o tareas funcionales del plan.
+No push, PR, merge, despliegue ni cambios de DB. Cierre funcional aceptado por
+el usuario, sin implementación pendiente identificada en el alcance aprobado;
+no equivale a una suite global verde ni a validar exhaustivamente los contenidos.
 
 Decisión explícita del usuario para futuras entregas plan04: conservar
 `delivery_strategy=auto-chain`, `chain_strategy=feature-branch-chain`.
@@ -488,16 +491,23 @@ Cwd explícito de todos los comandos: frontend absoluto indicado en F04-02b.
       `4254f441167f88909e55f27322fb2cdfb88e7a85`, gate independiente y AST
       registrados abajo. Cierre de unidad aceptado por el padre, no PASS global.
       ASSESS unassessable/RDD off; sin aprobación nativa ni push/PR/merge.
-- [ ] **F04-04 — EN CURSO, CIERRE BLOQUEADO:** checks globales ejecutados;
-      resultados y diagnóstico terminado registrados en la sección F04-04.
-      Leer `docs/bugs.md` y baselines antes de atribuir causalidad;
-      aislamiento offline, sin DB ni backend vivo. Checks de navegador de unidad ya completados,
-      no equivalen a E2E completo. No fixes de producto sin decisión acotada del padre.
+- [ ] **F04-04 — REGRESIÓN GLOBAL DIFERIDA FUERA DEL CIERRE FUNCIONAL:**
+      checks ejecutados y resultados históricos conservados; suite global FAIL,
+      build PASS. No se marca aprobada ni se atribuye causalidad a baseline.
+      Implementación y aceptación funcional concluidas por decisión del usuario;
+      sin más reruns, fixes ni investigación en este plan.
+      Registro histórico conservado: checks globales `mux9b08j-3-dukq`;
+      diagnóstico read-only `mux9imby-6-0b8q` terminado. Leer `docs/bugs.md`
+      y baselines antes de atribuir causalidad; aislamiento offline, sin DB
+      ni backend vivo. Los checks de navegador de unidad no equivalen a E2E
+      completo. No fixes de producto sin decisión acotada del padre.
       Runtime limitado a las cinco capturas before/after, `.vite/**` y dos salidas
       `.tmp/tsbuildinfo` autorizadas; `dist` ignorado es salida inherente del build,
-      no fuente authored. Suite global FAIL y build PASS; no cierre global.
-- [ ] **F04-05 — PENDIENTE:** reconciliar evidencia, documentación y estado final;
-      cerrar unidades verificadas mediante commits locales autorizados, sin publicación.
+      no fuente authored. Estos límites describen las ejecuciones anteriores,
+      no nuevas tareas de validación.
+- [x] **F04-05 — CERRADO:** estado reconciliado con el cierre funcional solicitado;
+      sin informe adicional de validación final ni publicación. FULL mirror
+      pendiente por capacidad; el documento local conserva el historial completo.
 
 Las pruebas deben seguir la política mínima de AGENTS: RED/GREEN observado para
 riesgos críticos reproducibles; copy/layout/cableado simple se valida mediante
