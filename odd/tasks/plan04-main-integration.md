@@ -26,9 +26,11 @@ Do not reset or rewrite that commit. Both merge forecasts are conflict-free.
       `0757d9acd1adc6f60127466070f5a2bdc714ec76`, identical source tree
       `6032417c6e8b5740a2c573be03f719de40b65fdd`. The authorized Compunex
       deletions are included; clean worktree, no conflicts or push.
-- [ ] M04-03 — IN PROGRESS: independently check final branches, ancestry, tree
-      identities, clean worktrees, unchanged remote refs, and metadata format.
-      Record final commit identities and leave both repositories on `main`.
+- [x] M04-03 — DONE: independent source/tree, ancestry, remote-ref and metadata
+      checks passed. Both `main` worktrees were clean at frontend checkpoint
+      `feb75f5e0c5a64ea3f89414c0f602192f9a2b99e` and backend `0757d9a`.
+      Closure metadata is committed on the feature branch, then fast-forwarded
+      into frontend `main`; both repositories remain on `main`. No push.
 
 ## Checks and limits
 
