@@ -18,12 +18,15 @@ Do not reset or rewrite that commit. Both merge forecasts are conflict-free.
 
 ## Recoverable tasks
 
-- [ ] M04-01 — IN PROGRESS: integrate frontend into local `main` using only
-      fast-forward merges of the authorized snapshots and tracking metadata.
-      Preserve commit history; stop on unexpected identity, dirt, or conflicts.
-- [ ] M04-02 — PENDING: integrate backend into local `main`, including the
-      explicitly authorized Compunex deletion commit; no unrelated changes.
-- [ ] M04-03 — PENDING: independently check final branches, ancestry, tree
+- [x] M04-01 — DONE: frontend integrated by fast-forward at
+      `11acd3223904ecb84ae43625e0becc1922224564`. Product snapshot
+      `320ea0373f756024958961c93c126757c61cfb05` unchanged; clean worktree,
+      preserved ancestry, no conflicts or push. Only tracking metadata added.
+- [x] M04-02 — DONE: backend integrated by fast-forward at
+      `0757d9acd1adc6f60127466070f5a2bdc714ec76`, identical source tree
+      `6032417c6e8b5740a2c573be03f719de40b65fdd`. The authorized Compunex
+      deletions are included; clean worktree, no conflicts or push.
+- [ ] M04-03 — IN PROGRESS: independently check final branches, ancestry, tree
       identities, clean worktrees, unchanged remote refs, and metadata format.
       Record final commit identities and leave both repositories on `main`.
 
