@@ -163,3 +163,19 @@ funcionaban en producción.
 
 Léelo antes de dar por bueno un verde. El más repetido: **el mock era la especificación** — un
 handler que acepta cualquier cuerpo es un test que no prueba nada.
+
+## Contenedor y CI
+
+[![CI](https://github.com/emil2245/thesis-front-react/actions/workflows/ci.yml/badge.svg)](https://github.com/emil2245/thesis-front-react/actions/workflows/ci.yml)
+
+Imagen OCI con nginx no-root (uid 101) que sirve el SPA con fallback a `index.html`.
+
+```bash
+podman build -t propuestas-web:dev .
+podman run -d --rm -p 8089:8080 --read-only --tmpfs /tmp --tmpfs /var/cache/nginx --tmpfs /var/run propuestas-web:dev
+```
+
+- Puerto `8080`; salud en `GET /healthz` (responde `ok`); log de acceso JSON a stdout.
+- El bundle se compila con la base de API relativa `/api/v1` (mismo origen: el Ingress enruta `/api` al backend), así que no hace falta recompilar por entorno ni hay CORS.
+- Para despliegues sin Ingress común: `podman build --build-arg VITE_API_BASE_URL=https://api.ejemplo/api/v1 -t propuestas-web:dev .`
+- CI (`.github/workflows/ci.yml`): `pnpm run verify` y build de imagen con trivy (solo reporte). E2E no corre en CI (requiere backend).

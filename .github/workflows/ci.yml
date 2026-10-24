@@ -1,0 +1,31 @@
+name: CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+# E2E (Playwright) NO se ejecuta en CI: requiere el backend en ejecucion.
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.8.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run verify
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t propuestas-web:ci .
+      - uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: propuestas-web:ci
+          severity: CRITICAL
+          exit-code: "0"

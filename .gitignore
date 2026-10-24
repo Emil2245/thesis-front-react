@@ -28,9 +28,6 @@ coverage
 playwright-report
 test-results
 
-# GitHub Actions (no workflow token)
-.github/
-
 # Environment
 .env.local
 .env.*.local
