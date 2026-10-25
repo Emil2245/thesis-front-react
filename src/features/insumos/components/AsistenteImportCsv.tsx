@@ -21,6 +21,19 @@ import type { DestinoInsumos } from "../destino";
 
 const PASOS = ["Seleccionar archivo", "Importar"];
 
+/** Mismas equivalencias que `CsvInsumoParser` del backend. Celda vacía = Material. */
+export function tipoDetectado(raw: string | undefined): string {
+  const t = (raw ?? "").trim().toUpperCase().replace(/_/g, " ");
+  if (t === "") return "Material";
+  if (["MATERIAL", "MAT"].includes(t)) return "Material";
+  if (["MANO OBRA", "MANO DE OBRA", "MO"].includes(t)) return "Mano de obra";
+  if (["EQUIPO", "EQ"].includes(t)) return "Equipo";
+  if (["TRANSPORTE", "TR"].includes(t)) return "Transporte";
+  return "No reconocido";
+}
+
+const VISTA_PREVIA = 5;
+
 export function AsistenteImportCsv({
   abierto,
   onClose,
@@ -58,7 +71,7 @@ export function AsistenteImportCsv({
     try {
       const res = await importar.mutateAsync({ formData });
       toast.success(
-        `${res.creados} creados, ${res.actualizados} actualizados${res.errores.length ? `, ${res.errores.length} errores` : ""}`,
+        `${res.creados} creados, ${res.actualizados} actualizados, ${res.sinCambios} sin cambios${res.errores.length ? `, ${res.errores.length} errores` : ""}`,
       );
       if (res.errores.length > 0) {
         setResultado(res);
@@ -89,12 +102,13 @@ export function AsistenteImportCsv({
             {/* Plan 067: las columnas son las del parser del backend
                 (CsvInsumoParser), no las que el texto anterior inventaba. */}
             <p className="text-sm text-muted-foreground">
-              Selecciona un archivo CSV con estas cuatro columnas, en este orden: codigo,
-              descripcion, unidad, precio.
+              Selecciona un archivo CSV con las columnas codigo, descripcion, precio, tipo y unidad,
+              en cualquier orden. Solo tipo y unidad son opcionales.
             </p>
             <p className="text-sm text-muted-foreground">
-              Todo lo que importes se crea como insumo de tipo Material. Los equipos y la mano de
-              obra se añaden a mano.
+              El tipo puede ser MATERIAL, MANO_OBRA, EQUIPO o TRANSPORTE; si falta, el insumo se
+              crea como Material. La mano de obra y el equipo usan siempre la unidad h. Si el código
+              ya existe en la base, se actualizan su descripción, unidad y precio.
             </p>
             <Field>
               <Label htmlFor="csv-archivo">Archivo CSV</Label>
@@ -109,6 +123,26 @@ export function AsistenteImportCsv({
             {archivo && (
               <p className="text-sm text-muted-foreground">{filas.length} filas detectadas</p>
             )}
+            {archivo && filas.length > 0 && (
+              <table className="w-full text-sm" aria-label="Vista previa">
+                <thead>
+                  <tr className="text-left text-muted-foreground">
+                    <th>Código</th>
+                    <th>Descripción</th>
+                    <th>Tipo detectado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filas.slice(0, VISTA_PREVIA).map((f, i) => (
+                    <tr key={i}>
+                      <td>{f.codigo}</td>
+                      <td>{f.descripcion}</td>
+                      <td>{tipoDetectado(f.tipo)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
             <Button variant="outline" size="sm" asChild>
               <a href="/plantillas/insumos-template.csv" download>
                 <DownloadIcon /> Descargar plantilla
@@ -121,7 +155,8 @@ export function AsistenteImportCsv({
           <div className="space-y-4">
             <p className="text-sm">
               Se importaron {resultado.creados} nuevos y se actualizaron {resultado.actualizados}{" "}
-              existentes, con {resultado.errores.length} errores.
+              existentes ({resultado.sinCambios} sin cambios), con {resultado.errores.length}{" "}
+              errores.
             </p>
             <div className="max-h-48 overflow-y-auto">
               {resultado.errores.map((e) => (

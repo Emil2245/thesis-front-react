@@ -289,6 +289,7 @@ export interface InsumoBusquedaResponse {
 export interface ImportResultadoResponse {
   creados: number;
   actualizados: number;
+  sinCambios: number;
   errores: Array<{ fila: number; campo?: string; mensaje: string }>;
 }
 

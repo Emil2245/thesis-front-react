@@ -162,12 +162,14 @@ export const copiaBaseResultadoFixture: CopiaBaseResultadoResponse = {
 export const importResultadoFixture: ImportResultadoResponse = {
   creados: 8,
   actualizados: 2,
+  sinCambios: 3,
   errores: [],
 };
 
 export const importResultadoConErroresFixture: ImportResultadoResponse = {
   creados: 5,
   actualizados: 1,
+  sinCambios: 0,
   errores: [
     { fila: 3, mensaje: "El precio debe ser mayor que 0" },
     { fila: 7, mensaje: "Código duplicado: M-001" },

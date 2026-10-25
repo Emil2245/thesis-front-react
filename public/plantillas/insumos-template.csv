@@ -1,3 +1,6 @@
-codigo,descripcion,unidad,precio
-M-001,Cemento Portland Tipo I,kg,12.50
-M-002,Arena fina,m3,18.00
+codigo,tipo,descripcion,unidad,precio
+M-001,MATERIAL,Cemento Portland Tipo I,kg,12.50
+M-002,MATERIAL,Arena fina,m3,18.00
+MO-001,MANO_OBRA,Peón,h,3.20
+EQ-001,EQUIPO,Mezcladora,h,5.00
+TR-001,TRANSPORTE,Volqueta 8 m3,m3,0.80
