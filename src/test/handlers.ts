@@ -390,7 +390,7 @@ export const handlers = [
     async ({ request }) =>
       (await soloCampos(request, ...CAMPOS_PROYECTO)) ?? HttpResponse.json(proyectoDetalleFixture),
   ),
-  http.delete(`${API}/proyectos/:id`, () => HttpResponse.json(null, { status: 204 })),
+  http.delete(`${API}/proyectos/:id`, () => new HttpResponse(null, { status: 204 })),
 
   // ———— Plantillas de proyecto (plan 049) ————
   // `snapshotEstructura` es un JsonNode opaco y va en la respuesta de main; es
@@ -452,7 +452,7 @@ export const handlers = [
         { status: 201 },
       ),
   ),
-  http.delete(`${API}/plantillas-proyecto/:id`, () => HttpResponse.json(null, { status: 204 })),
+  http.delete(`${API}/plantillas-proyecto/:id`, () => new HttpResponse(null, { status: 204 })),
   // 201 sin advertencias / 200 con ellas, y siempre el envoltorio
   // `ProyectoDesdePlantillaResponse{proyecto, advertencias?}`, no el proyecto a secas.
   http.post(
@@ -483,9 +483,7 @@ export const handlers = [
     async ({ request }) =>
       (await soloCampos(request, ...CAMPOS_FIRMANTE)) ?? HttpResponse.json(firmantesFixture[0]),
   ),
-  http.delete(`${API}/proyectos/:id/firmantes/:fid`, () =>
-    HttpResponse.json(null, { status: 204 }),
-  ),
+  http.delete(`${API}/proyectos/:id/firmantes/:fid`, () => new HttpResponse(null, { status: 204 })),
 
   http.get(`${API}/proyectos/:id/ci`, () => HttpResponse.json(parametrosCiFixture)),
   http.put(`${API}/proyectos/:id/ci`, async ({ request, params }) => {
@@ -564,7 +562,7 @@ export const handlers = [
   http.post(
     `${API}/auth/verificar-email`,
     async ({ request }) =>
-      (await soloCampos(request, "token")) ?? HttpResponse.json(null, { status: 204 }),
+      (await soloCampos(request, "token")) ?? new HttpResponse(null, { status: 204 }),
   ),
   http.post(
     `${API}/auth/reenviar-verificacion`,
@@ -580,12 +578,12 @@ export const handlers = [
     `${API}/auth/restablecer`,
     async ({ request }) =>
       (await soloCampos(request, "token", "password", "passwordConfirmacion")) ??
-      HttpResponse.json(null, { status: 204 }),
+      new HttpResponse(null, { status: 204 }),
   ),
   http.post(
     `${API}/auth/logout`,
     async ({ request }) =>
-      (await soloCampos(request, "refreshToken")) ?? HttpResponse.json(null, { status: 204 }),
+      (await soloCampos(request, "refreshToken")) ?? new HttpResponse(null, { status: 204 }),
   ),
   http.get(`${API}/perfil`, () => HttpResponse.json(perfilFixture)),
   http.put(
@@ -597,7 +595,7 @@ export const handlers = [
     `${API}/perfil/password`,
     async ({ request }) =>
       (await soloCampos(request, "passwordActual", "passwordNueva", "passwordConfirmacion")) ??
-      HttpResponse.json(null, { status: 204 }),
+      new HttpResponse(null, { status: 204 }),
   ),
 
   // ———— Insumos (Plan 008) ————
@@ -627,7 +625,7 @@ export const handlers = [
         "No se puede eliminar el insumo: está referenciado en 2 parte(s) de APU",
       );
     }
-    return HttpResponse.json(null, { status: 204 });
+    return new HttpResponse(null, { status: 204 });
   }),
   // La ruta del backend es `/usos` en plural; el frontend pedía `/uso`.
   http.get(`${API}/proyectos/:id/insumos/:iid/usos`, () => HttpResponse.json(insumoUsoFixture)),
@@ -657,7 +655,7 @@ export const handlers = [
       (await soloCampos(request, "nombre")) ??
       HttpResponse.json(basesPersonalesFixture[0], { status: 201 }),
   ),
-  http.delete(`${API}/bases-personales/:id`, () => HttpResponse.json(null, { status: 204 })),
+  http.delete(`${API}/bases-personales/:id`, () => new HttpResponse(null, { status: 204 })),
   http.get(`${API}/bases-personales/:id/insumos`, () => HttpResponse.json(pagina(insumosFixture))),
   http.post(
     `${API}/bases-personales/:id/insumos`,
@@ -671,8 +669,9 @@ export const handlers = [
       (await soloCampos(request, "descripcion", "unidad", "precioUnitario")) ??
       HttpResponse.json(insumosFixture[0]),
   ),
-  http.delete(`${API}/bases-personales/:id/insumos/:iid`, () =>
-    HttpResponse.json(null, { status: 204 }),
+  http.delete(
+    `${API}/bases-personales/:id/insumos/:iid`,
+    () => new HttpResponse(null, { status: 204 }),
   ),
   http.post(`${API}/bases-personales/:id/insumos/importar`, () =>
     HttpResponse.json(importResultadoFixture),
@@ -716,7 +715,7 @@ export const handlers = [
     if (params.id === APU_REFERENCIADO) {
       return problema(409, "apu-referenciado", "El APU está referenciado por otros elementos");
     }
-    return HttpResponse.json(null, { status: 204 });
+    return new HttpResponse(null, { status: 204 });
   }),
   http.post(
     `${API}/apus/:id/duplicar`,
@@ -895,7 +894,7 @@ export const handlers = [
         updatedAt: "2026-07-20T00:00:00",
       }),
   ),
-  http.delete(`${API}/plantillas-apu/:id`, () => HttpResponse.json(null, { status: 204 })),
+  http.delete(`${API}/plantillas-apu/:id`, () => new HttpResponse(null, { status: 204 })),
 
   // ———— Presupuesto (Plan 011) ————
   http.post(
@@ -930,7 +929,7 @@ export const handlers = [
     if (params.id === PRESUPUESTO_V2) {
       return problema(409, "version-vigente-protegida", "No se puede eliminar la versión vigente");
     }
-    return HttpResponse.json(null, { status: 204 });
+    return new HttpResponse(null, { status: 204 });
   }),
   http.get(`${API}/presupuestos/:id/apus`, ({ params, request }) => {
     if (params.id !== PRESUPUESTO_V1 && params.id !== PRESUPUESTO_V2) {
@@ -1230,7 +1229,7 @@ export const handlers = [
     async ({ request }) =>
       (await soloCampos(request, "nombre")) ?? HttpResponse.json(basesCentralesFixtureAdmin[0]),
   ),
-  http.delete(`${API}/admin/bases-centrales/:id`, () => HttpResponse.json(null, { status: 204 })),
+  http.delete(`${API}/admin/bases-centrales/:id`, () => new HttpResponse(null, { status: 204 })),
   // Insumos bajo la base central: mismos DTOs que el catálogo de proyecto.
   // Ojo a `/import` (admin) frente a `/importar` (proyecto).
   http.post(
@@ -1245,8 +1244,9 @@ export const handlers = [
       (await soloCampos(request, "descripcion", "unidad", "precioUnitario")) ??
       HttpResponse.json(insumosFixture[0]),
   ),
-  http.delete(`${API}/admin/bases-centrales/:id/insumos/:iid`, () =>
-    HttpResponse.json(null, { status: 204 }),
+  http.delete(
+    `${API}/admin/bases-centrales/:id/insumos/:iid`,
+    () => new HttpResponse(null, { status: 204 }),
   ),
   http.post(`${API}/admin/bases-centrales/:id/insumos/import`, () =>
     HttpResponse.json(importResultadoFixture),
@@ -1316,7 +1316,7 @@ export const handlers = [
           "usuario-con-proyectos-impedido",
           "No se puede eliminar: el usuario tiene proyectos propios",
         )
-      : HttpResponse.json(null, { status: 204 }),
+      : new HttpResponse(null, { status: 204 }),
   ),
 
   // ———— Admin: plantillas APU de sistema (Plan 078) ————
@@ -1367,7 +1367,7 @@ export const handlers = [
       ...cuerpo,
     });
   }),
-  http.delete(`${API}/admin/plantillas-apu/:id`, () => HttpResponse.json(null, { status: 204 })),
+  http.delete(`${API}/admin/plantillas-apu/:id`, () => new HttpResponse(null, { status: 204 })),
 
   // ———— Admin: plantillas de proyecto de sistema (plan 044 del backend) ————
   http.get(`${API}/admin/plantillas-proyecto`, ({ request }) => {
@@ -1406,8 +1406,9 @@ export const handlers = [
       ...cuerpo,
     });
   }),
-  http.delete(`${API}/admin/plantillas-proyecto/:id`, () =>
-    HttpResponse.json(null, { status: 204 }),
+  http.delete(
+    `${API}/admin/plantillas-proyecto/:id`,
+    () => new HttpResponse(null, { status: 204 }),
   ),
 
   // ———— Admin: valores de referencia (Plan 079) ————
@@ -1453,7 +1454,7 @@ export const handlers = [
   http.delete(`${API}/admin/valores-referencia/:clave`, ({ params }) =>
     decodeURIComponent(String(params.clave)) === VALOR_INEXISTENTE
       ? problema(404, "no-encontrado", "Valor de referencia no encontrado")
-      : HttpResponse.json(null, { status: 204 }),
+      : new HttpResponse(null, { status: 204 }),
   ),
 
   // ———— Admin: logs de actividad (Plan 080) ————

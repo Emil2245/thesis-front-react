@@ -127,7 +127,7 @@ el backend y se verifica como tal**.
 
 ## Testing
 
-- **Vitest + RTL + MSW** for unit tests. MSW intercepts all HTTP with `onUnhandledRequest: "error"`
+- **Vitest + RTL + MSW** for unit tests. MSW intercepts all HTTP with `onUnhandledFrame: "error"`
 - Toda ruta de un **endpoint de listado** interceptada en **Playwright** lleva
   `*` al final (`page.route(\`${API}/proyectos*\`)`): la paginación añade
 `?page=0`, un patrón literal deja de casar, cae en el catch-all y la página

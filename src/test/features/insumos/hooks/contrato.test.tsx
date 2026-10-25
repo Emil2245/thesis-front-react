@@ -61,7 +61,7 @@ describe("contrato de useInsumos", () => {
   it("sin guard `enabled`, un proyectoId vacío dispara /proyectos//insumos", async () => {
     const peticiones = espiar();
     // Se declara el handler del agujero para que el fallo sea la aserción y no
-    // el `onUnhandledRequest: "error"` de MSW.
+    // el `onUnhandledFrame: "error"` de MSW.
     server.use(http.get(`${API}/proyectos//insumos`, () => HttpResponse.json({ items: [] })));
 
     renderHook(() => useInsumos(""), { wrapper });

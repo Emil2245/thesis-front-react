@@ -6,7 +6,7 @@ architecture/08-codebase-design.md §9.
 - **Unit/componente:** Vitest + React Testing Library + user-event. Consulta por
   rol/etiqueta accesible en español (`getByRole("button", { name: /guardar/i })`).
   Nunca por test-id ni por clase.
-- **Red:** siempre MSW. `onUnhandledRequest: "error"` — si un test falla por una
+- **Red:** siempre MSW. `onUnhandledFrame: "error"` — si un test falla por una
   petición no mockeada, el defecto es la URL o el handler, no el test.
 - **Test de contrato (plan 057):** un hook se prueba por la **petición que sale**
   —método, ruta exacta, cuerpo con `toEqual`—, no por `isSuccess`. El mock
