@@ -875,3 +875,10 @@ Backend: plan `044` de `thesis-back-quarkus` (V013 + endpoints). Frontend:
 - Entrevista **N05** (cronograma): **6** preguntas sin responder — la 7ª («¿estructura del
   documento exportado?») la respondió el backend implementándola en `5673615`. Bloquea **solo** la
   rebanada 5 del plan 055, que va de vistas del cronograma, no de export. Ninguna ola la espera.
+
+## Plan 025 — interruptores, porcentajes admin y E2E en CI (2026-10-24)
+
+- Interruptor: pista apagada `--switch-off` (`oklch(0.62 0 0)` claro / `oklch(0.55 0 0)` oscuro), contraste de la pista contra el fondo **3.65:1** (claro) y **4.07:1** (oscuro), >= 3:1 (WCAG 1.4.11). `--muted-foreground` oscurecido a `oklch(0.5 0 0)` porque axe marcaba 4.34:1 sobre `#f5f5f5`.
+- `AdminParametrosPage` edita en porcentaje 0-100 % (sufijo `%`, rango en la etiqueta) y envía fracciones; prueba: `18` envía `0.18`.
+- E2E: antes de corregir fallaban 6 de 68 en chromium (deriva de selectores/UI: Insumos duplicado en el menú, bases centrales ahora en `/insumos`, fixture de plantillas sin `tipo`, falta mock de `/ci`, contraste muted). Tras corregir: chromium **68/68** (3 corridas), firefox **3/3**, mobile-chrome **3/3**. Job `e2e` agregado a CI (solo chromium).
+- `pnpm run verify` (con `NODE_OPTIONS=--no-experimental-webstorage`, como CI) verde: 748/748 tests en 101 archivos.

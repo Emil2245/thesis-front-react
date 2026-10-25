@@ -195,8 +195,9 @@ test("06-import-errores", async ({ page }, testInfo) => {
 
 test("07-bases-centrales", async ({ page }, testInfo) => {
   await baseAutenticado(page);
-  await page.goto(`/proyectos/${PROYECTO_1}/insumos`, { waitUntil: "networkidle", timeout: 30000 });
-  await page.getByRole("tab", { name: "Bases centrales" }).click();
+  // Las bases de sistema viven en la sección global /insumos (pestaña «Sistema»).
+  await page.goto("/insumos", { waitUntil: "networkidle", timeout: 30000 });
+  await page.getByRole("tab", { name: "Sistema" }).click();
   await expect(page.getByText("Base IESS 2026")).toBeVisible();
   await expect(page.getByText("Base MTOP 2025")).toBeVisible();
   await capturar(page, "07-bases-centrales", testInfo, true);

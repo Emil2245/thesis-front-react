@@ -33,14 +33,14 @@ El **código y las pruebas actuales de `../thesis-back-quarkus` son la fuente de
 ```bash
 pnpm install
 pnpm run verify   # typecheck + lint + guard:adr9 + format:check + test + build
-pnpm run e2e      # Playwright E2E (67 tests: 13 capturas + 3 smoke × 3 navegadores + 45 del manual)
+pnpm run e2e      # Playwright E2E (74 tests: chromium 68 [13 capturas + 3 smoke + 52 del manual] + firefox 3 + mobile-chrome 3; CI corre solo chromium)
 pnpm run e2e:screenshots   # solo las 13 capturas de escritorio (chromium)
 pnpm run e2e:manual        # capturas de docs/manual/ (chromium)
 pnpm run dev      # http://localhost:5173
 ```
 
 Baseline funcional verificado en el corte de código `be5fc776`: `pnpm run verify` pasa entero —**typecheck, lint,
-guard:adr9, format:check, test y build**— con **637/637 tests en 92 archivos** y **9 warnings
+guard:adr9, format:check, test y build**— con **748/748 tests en 101 archivos** y **9 warnings
 de lint** (0 errores). Lint y guard:adr9 ya conocidos por su ruido de
 `react(incompatible-library)` heredado de react-hook-form; los reales quedan anotados en
 [`INVENTARIO-COBERTURA.md`](plans/INVENTARIO-COBERTURA.md) §7.2. **E2E, CI y CD no se
