@@ -338,6 +338,7 @@ export const importResultadoSchema = z
   .object({
     creados: z.number(),
     actualizados: z.number(),
+    sinCambios: z.number(),
     errores: z.array(
       z.object({ fila: z.number(), campo: z.string().optional(), mensaje: z.string() }).strict(),
     ),
