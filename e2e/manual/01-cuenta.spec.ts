@@ -71,6 +71,7 @@ test("02-registro", async ({ page }, testInfo) => {
   await page.getByLabel("Correo electrónico").fill("ana@ejemplo.ec");
   await page.getByLabel("Contraseña", { exact: true }).fill("Clave1234");
   await page.getByLabel("Confirmar contraseña").fill("Clave1234");
+  await page.getByLabel(/acepto la/i).click();
   await capturar(page, "02-registro", testInfo, true);
 });
 
@@ -82,6 +83,7 @@ test("03-registro-password-invalida", async ({ page }, testInfo) => {
   const password = page.getByLabel("Contraseña", { exact: true });
   await password.fill("abcdefgh");
   await page.getByLabel("Confirmar contraseña").fill("abcdefgh");
+  await page.getByLabel(/acepto la/i).click();
   await page.getByRole("button", { name: "Crear cuenta" }).click();
   const campo = page.locator("form > div").filter({ has: password });
   await expect(page.getByText("La contraseña debe incluir al menos un número")).toBeVisible();

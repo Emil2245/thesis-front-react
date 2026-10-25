@@ -15,6 +15,7 @@ describe("rutas del mapa §3", () => {
   const esperadas = [
     "/login",
     "/registro",
+    "/privacidad",
     "/verificar-email",
     "/recuperar",
     "/restablecer/:token",
