@@ -70,6 +70,7 @@ const plantillasFixture: PlantillaProyectoResponse[] = [
   {
     id: PLANTILLA_1,
     nombre: "Puente tipo — vigas prefabricadas",
+    tipo: "PERSONAL",
     descripcion: "Estructura de capítulos y APUs de un puente estándar",
     snapshotEstructura: {},
     fechaCreacion: "2026-07-01T00:00:00Z",
@@ -124,7 +125,7 @@ test("01-shell", async ({ page }, testInfo) => {
   await baseAutenticado(page);
   await page.goto(`/proyectos/${PROYECTO_1}`, { waitUntil: "networkidle", timeout: 30000 });
   await expect(page.getByRole("heading", { name: "Puente Ambato" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Insumos" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Insumos" }).first()).toBeVisible();
   await capturar(page, "01-shell", testInfo, true);
 });
 
@@ -192,7 +193,9 @@ test("07-sin-permiso", async ({ page }, testInfo) => {
 test("08-plantillas-proyecto", async ({ page }, testInfo) => {
   await baseAutenticado(page);
   await page.goto("/plantillas-proyecto", { waitUntil: "networkidle", timeout: 30000 });
-  await expect(page.getByRole("heading", { name: "Plantillas de proyecto" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Plantillas de proyecto", exact: true }),
+  ).toBeVisible();
   await expect(page.getByText("Puente tipo — vigas prefabricadas")).toBeVisible();
   await capturar(page, "08-plantillas-proyecto", testInfo, true);
 });

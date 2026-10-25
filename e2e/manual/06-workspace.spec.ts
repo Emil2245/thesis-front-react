@@ -19,6 +19,7 @@ import {
 } from "../../src/test/fixtures/presupuesto";
 import {
   PROYECTO_1,
+  parametrosCiFixture,
   parametrosFixture,
   proyectoDetalleFixture,
 } from "../../src/test/fixtures/proyectos";
@@ -110,6 +111,9 @@ async function baseWorkspace(
   );
   await page.route(`${API}/proyectos/${PROYECTO_1}/parametros`, (route) =>
     route.fulfill(json({ ...parametrosFixture, modoCodigoRubro })),
+  );
+  await page.route(`${API}/proyectos/${PROYECTO_1}/ci`, (route) =>
+    route.fulfill(json(parametrosCiFixture)),
   );
   await page.route(`${API}/proyectos/${PROYECTO_1}/insumos*`, (route) =>
     route.fulfill(json(pagina(insumosFixture, 200))),
@@ -362,6 +366,11 @@ test("creación manual automática agrega una fila y omite código y capítulo",
   });
   const trigger = await abrirDialogo(page);
   await page.getByRole("button", { name: "Crear manualmente" }).click();
+  // El botón nace deshabilitado hasta que llegan los parámetros CI; axe lo
+  // mide a media transición de opacidad si se corre antes.
+  const crear = page.getByRole("button", { name: "Crear APU" });
+  await expect(crear).toBeEnabled();
+  await expect.poll(() => crear.evaluate((el) => getComputedStyle(el).opacity)).toBe("1");
   await sinViolacionesA11y(page);
   await page.getByLabel("Descripción").fill("Adoquín manual");
   await page.getByLabel("Unidad").fill("m2");
