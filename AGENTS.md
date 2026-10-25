@@ -127,14 +127,14 @@ el backend y se verifica como tal**.
 
 ## Testing
 
-- **Vitest + RTL + MSW** for unit tests. MSW intercepts all HTTP with `onUnhandledRequest: "error"`
+- **Vitest + RTL + MSW** for unit tests. MSW intercepts all HTTP with `onUnhandledFrame: "error"`
 - Toda ruta de un **endpoint de listado** interceptada en **Playwright** lleva
   `*` al final (`page.route(\`${API}/proyectos*\`)`): la paginación añade
-  `?page=0`, un patrón literal deja de casar, cae en el catch-all y la página
-  revienta. **En MSW no**, y esta línea decía lo contrario hasta el plan 077:
-  `http.get()` casa por *pathname* e ignora el query string, así que ninguno de
-  los handlers de `src/test/handlers.ts` lo lleva —se comprobó: **0 de 51**— y
-  añadirlo sería contraproducente, porque `\`${API}/admin/usuarios*\``capturaría
+`?page=0`, un patrón literal deja de casar, cae en el catch-all y la página
+revienta. **En MSW no**, y esta línea decía lo contrario hasta el plan 077:
+`http.get()`casa por *pathname* e ignora el query string, así que ninguno de
+los handlers de`src/test/handlers.ts`lo lleva —se comprobó: **0 de 51**— y
+añadirlo sería contraproducente, porque`\`${API}/admin/usuarios*\``capturaría
 también`/admin/usuarios/:id` y las rutas de acción
 - Query by accessible role/label in Spanish
 - Shared test render wrapper in `src/test/render.tsx` (providers: QueryClient, Router, TooltipProvider)

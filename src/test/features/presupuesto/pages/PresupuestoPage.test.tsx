@@ -251,7 +251,7 @@ describe("VersionesPage", () => {
     server.use(
       http.delete(`${API}/presupuestos/:id`, ({ params }) => {
         idEliminado = String(params.id);
-        return HttpResponse.json(null, { status: 204 });
+        return new HttpResponse(null, { status: 204 });
       }),
     );
     const { user } = await setupVersionesPage();

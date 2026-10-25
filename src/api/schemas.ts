@@ -227,15 +227,14 @@ const snapshotPlantillaLineaSchema = z.object({
   cantidad: snapshotDecimalSchema.optional(),
   rendimiento: snapshotDecimalSchema.optional(),
 });
-export const snapshotPlantillaApuSchema: z.ZodType<SnapshotPlantillaApu, z.ZodTypeDef, unknown> =
-  z.object({
-    secciones: z.array(
-      z.object({
-        tipo: z.enum(["EQUIPO", "MANO_OBRA", "MATERIAL", "TRANSPORTE"]),
-        lineas: z.array(snapshotPlantillaLineaSchema),
-      }),
-    ),
-  });
+export const snapshotPlantillaApuSchema: z.ZodType<SnapshotPlantillaApu, unknown> = z.object({
+  secciones: z.array(
+    z.object({
+      tipo: z.enum(["EQUIPO", "MANO_OBRA", "MATERIAL", "TRANSPORTE"]),
+      lineas: z.array(snapshotPlantillaLineaSchema),
+    }),
+  ),
+});
 
 /**
  * `PlantillaApuAdminResponse` (plan 078). `usuarioId` llega siempre `null`
@@ -295,7 +294,7 @@ export const logActividadSchema = z
     evento: z.string(),
     entidad: z.string(),
     entidadId: z.string().nullable(),
-    detalle: z.record(z.unknown()),
+    detalle: z.record(z.string(), z.unknown()),
     fecha: z.string(),
   })
   .strict();
@@ -347,11 +346,9 @@ export const importResultadoSchema = z
 export const displayConfigSchema = z
   .object({ precisionDinero: z.number(), precisionPorcentaje: z.number() })
   .strict();
-export const copiaBaseResultadoSchema: z.ZodType<
-  CopiaBaseResultadoResponse,
-  z.ZodTypeDef,
-  unknown
-> = z.object({ copiados: z.number(), omitidos: z.array(z.string()) }).strict();
+export const copiaBaseResultadoSchema: z.ZodType<CopiaBaseResultadoResponse, unknown> = z
+  .object({ copiados: z.number(), omitidos: z.array(z.string()) })
+  .strict();
 export const validacionPresupuestoSchema = z
   .object({
     exportable: z.boolean(),
@@ -524,7 +521,7 @@ export const insumoUsoSchema = z
   })
   .strict();
 
-const decimalSchema: z.ZodType<Decimal, z.ZodTypeDef, unknown> = z.string().transform(asDecimal);
+const decimalSchema: z.ZodType<Decimal, unknown> = z.string().transform(asDecimal);
 const rubroRefSchema = z
   .object({ id: z.string(), item: z.string(), codigo: z.string(), descripcion: z.string() })
   .strict();
@@ -567,7 +564,7 @@ export const parametrosSistemaSchema = z
     updatedAt: z.string(),
   })
   .strict();
-const rubroSchema: z.ZodType<RubroResponse, z.ZodTypeDef, unknown> = z
+const rubroSchema: z.ZodType<RubroResponse, unknown> = z
   .object({
     id: z.string(),
     item: z.string(),
@@ -580,7 +577,7 @@ const rubroSchema: z.ZodType<RubroResponse, z.ZodTypeDef, unknown> = z
     apuId: z.string(),
   })
   .strict();
-const capituloSchema: z.ZodType<CapituloResponse, z.ZodTypeDef, unknown> = z.lazy(() =>
+const capituloSchema: z.ZodType<CapituloResponse, unknown> = z.lazy(() =>
   z
     .object({
       id: z.string(),
@@ -593,7 +590,7 @@ const capituloSchema: z.ZodType<CapituloResponse, z.ZodTypeDef, unknown> = z.laz
     })
     .strict(),
 );
-export const presupuestoSchema: z.ZodType<PresupuestoResponse, z.ZodTypeDef, unknown> = z
+export const presupuestoSchema: z.ZodType<PresupuestoResponse, unknown> = z
   .object({
     presupuestoId: z.string(),
     version: z.number(),
@@ -602,11 +599,7 @@ export const presupuestoSchema: z.ZodType<PresupuestoResponse, z.ZodTypeDef, unk
     capitulos: z.array(capituloSchema),
   })
   .strict();
-export const agregarPlantillasResponseSchema: z.ZodType<
-  AgregarPlantillasResponse,
-  z.ZodTypeDef,
-  unknown
-> = z
+export const agregarPlantillasResponseSchema: z.ZodType<AgregarPlantillasResponse, unknown> = z
   .object({
     presupuesto: presupuestoSchema,
     resultados: z.array(
@@ -622,12 +615,10 @@ export const agregarPlantillasResponseSchema: z.ZodType<
     ),
   })
   .strict();
-export const apuManualCompletoResponseSchema: z.ZodType<
-  ApuManualCompletoResponse,
-  z.ZodTypeDef,
-  unknown
-> = z.object({ apu: apuSchema, presupuesto: presupuestoSchema }).strict();
-export const versionSchema: z.ZodType<PresupuestoVersionResponse, z.ZodTypeDef, unknown> = z
+export const apuManualCompletoResponseSchema: z.ZodType<ApuManualCompletoResponse, unknown> = z
+  .object({ apu: apuSchema, presupuesto: presupuestoSchema })
+  .strict();
+export const versionSchema: z.ZodType<PresupuestoVersionResponse, unknown> = z
   .object({
     presupuestoId: z.string(),
     version: z.number(),
@@ -638,13 +629,9 @@ export const versionSchema: z.ZodType<PresupuestoVersionResponse, z.ZodTypeDef, 
     totalGeneral: decimalSchema,
   })
   .strict();
-export const resumenComponentesSchema: z.ZodType<
-  ResumenComponentesResponse,
-  z.ZodTypeDef,
-  unknown
-> = z
+export const resumenComponentesSchema: z.ZodType<ResumenComponentesResponse, unknown> = z
   .object({
-    porComponente: z.record(decimalSchema),
+    porComponente: z.record(z.string(), decimalSchema),
     totalGeneral: decimalSchema,
     ivaReferencial: decimalSchema,
     totalConIva: decimalSchema,
@@ -653,11 +640,7 @@ export const resumenComponentesSchema: z.ZodType<
 const comparacionItemSchema = z
   .object({ item: z.string(), descripcion: z.string(), total: decimalSchema })
   .strict();
-export const comparacionVersionesSchema: z.ZodType<
-  ComparacionVersionesResponse,
-  z.ZodTypeDef,
-  unknown
-> = z
+export const comparacionVersionesSchema: z.ZodType<ComparacionVersionesResponse, unknown> = z
   .object({
     versiones: z.array(
       z
@@ -673,7 +656,6 @@ export const comparacionVersionesSchema: z.ZodType<
   .strict();
 export const validacionPresupuestoCompletaSchema: z.ZodType<
   ValidacionPresupuestoResponse,
-  z.ZodTypeDef,
   unknown
 > = z
   .object({
@@ -695,12 +677,12 @@ const actividadSchema = z
     precioUnitario: decimalSchema,
     precioTotal: decimalSchema,
     pesoPonderado: decimalSchema,
-    avancePorPeriodo: z.record(decimalSchema),
+    avancePorPeriodo: z.record(z.string(), decimalSchema),
     segmentos: z.array(z.object({ inicio: z.number(), fin: z.number() }).strict()),
     desviacion: decimalSchema,
   })
   .strict();
-export const cronogramaSchema: z.ZodType<CronogramaResponse, z.ZodTypeDef, unknown> = z
+export const cronogramaSchema: z.ZodType<CronogramaResponse, unknown> = z
   .object({
     id: z.string(),
     presupuestoId: z.string(),
@@ -719,7 +701,7 @@ export const cronogramaSchema: z.ZodType<CronogramaResponse, z.ZodTypeDef, unkno
   .strict();
 const actividadVistasSchema = actividadSchema;
 
-const rubroCronogramaSchema: z.ZodType<RubroCronogramaResponse, z.ZodTypeDef, unknown> = z
+const rubroCronogramaSchema: z.ZodType<RubroCronogramaResponse, unknown> = z
   .object({
     id: z.string(),
     item: z.string(),
@@ -729,26 +711,25 @@ const rubroCronogramaSchema: z.ZodType<RubroCronogramaResponse, z.ZodTypeDef, un
     cantidad: decimalSchema,
     precioUnitario: decimalSchema,
     precioTotal: decimalSchema,
-    montoPorPeriodo: z.record(decimalSchema).nullable(),
+    montoPorPeriodo: z.record(z.string(), decimalSchema).nullable(),
     montoTotal: decimalSchema.nullable(),
     actividad: actividadVistasSchema.nullable(),
   })
   .strict();
 
-const capituloCronogramaSchema: z.ZodType<CapituloCronogramaResponse, z.ZodTypeDef, unknown> =
-  z.lazy(() =>
-    z
-      .object({
-        id: z.string(),
-        item: z.string(),
-        descripcion: z.string(),
-        subcapitulos: z.array(capituloCronogramaSchema),
-        rubros: z.array(rubroCronogramaSchema),
-      })
-      .strict(),
-  );
+const capituloCronogramaSchema: z.ZodType<CapituloCronogramaResponse, unknown> = z.lazy(() =>
+  z
+    .object({
+      id: z.string(),
+      item: z.string(),
+      descripcion: z.string(),
+      subcapitulos: z.array(capituloCronogramaSchema),
+      rubros: z.array(rubroCronogramaSchema),
+    })
+    .strict(),
+);
 
-const periodoValorizadoSchema: z.ZodType<PeriodoValorizadoResponse, z.ZodTypeDef, unknown> = z
+const periodoValorizadoSchema: z.ZodType<PeriodoValorizadoResponse, unknown> = z
   .object({
     periodo: z.number(),
     porcentajeParcial: decimalSchema,
@@ -758,7 +739,7 @@ const periodoValorizadoSchema: z.ZodType<PeriodoValorizadoResponse, z.ZodTypeDef
   })
   .strict();
 
-const totalesCronogramaSchema: z.ZodType<TotalesCronogramaResponse, z.ZodTypeDef, unknown> = z
+const totalesCronogramaSchema: z.ZodType<TotalesCronogramaResponse, unknown> = z
   .object({
     avanceFinalPorcentaje: decimalSchema,
     montoTotalGeneral: decimalSchema,
@@ -766,7 +747,7 @@ const totalesCronogramaSchema: z.ZodType<TotalesCronogramaResponse, z.ZodTypeDef
   })
   .strict();
 
-const puntoCurvaSSchema: z.ZodType<PuntoCurvaSResponse, z.ZodTypeDef, unknown> = z
+const puntoCurvaSSchema: z.ZodType<PuntoCurvaSResponse, unknown> = z
   .object({
     periodo: z.number(),
     porcentajeParcial: decimalSchema,
@@ -776,7 +757,7 @@ const puntoCurvaSSchema: z.ZodType<PuntoCurvaSResponse, z.ZodTypeDef, unknown> =
   })
   .strict();
 
-export const cronogramaVistasSchema: z.ZodType<CronogramaVistasResponse, z.ZodTypeDef, unknown> = z
+export const cronogramaVistasSchema: z.ZodType<CronogramaVistasResponse, unknown> = z
   .object({
     cronogramaId: z.string(),
     gantt: z
@@ -797,13 +778,13 @@ export const cronogramaVistasSchema: z.ZodType<CronogramaVistasResponse, z.ZodTy
   .strict();
 
 const documentoRubroRefSchema = z
-  .object({ id: z.string().uuid(), item: z.string(), codigo: z.string(), descripcion: z.string() })
+  .object({ id: z.uuid(), item: z.string(), codigo: z.string(), descripcion: z.string() })
   .strict();
 const documentoDetalleSchema = z
   .object({ codigo: z.string(), mensaje: z.string(), rubros: z.array(documentoRubroRefSchema) })
   .strict();
 const documentoPreflightCampos = {
-  presupuestoId: z.string().uuid(),
+  presupuestoId: z.uuid(),
   version: z.number().int(),
   exportable: z.boolean(),
   bloqueos: z.array(documentoDetalleSchema),
@@ -811,11 +792,7 @@ const documentoPreflightCampos = {
 };
 
 /** Opciones cerradas de OpcionesDocumento, sin coerción ni pérdida de detalles. */
-export const documentoPreflightSchema: z.ZodType<
-  DocumentoPreflightResponse,
-  z.ZodTypeDef,
-  unknown
-> = z.union([
+export const documentoPreflightSchema: z.ZodType<DocumentoPreflightResponse, unknown> = z.union([
   z
     .object({
       ...documentoPreflightCampos,

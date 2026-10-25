@@ -7,6 +7,8 @@ export default defineConfig({
   resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
   test: {
     environment: "jsdom",
+    // jsdom 30 hace preflight CORS real en XHR: mismo origen que la API de los tests lo evita.
+    environmentOptions: { jsdom: { url: "http://localhost:8080" } },
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
     css: false,

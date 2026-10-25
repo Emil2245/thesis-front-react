@@ -7,7 +7,7 @@ export const passwordSchema = z
   .regex(/[0-9]/, "La contraseña debe incluir al menos un número");
 
 const confirmacion = <T extends { password: string; passwordConfirmacion: string }>(
-  s: z.ZodType<T>,
+  s: z.ZodType<T, T>,
 ) =>
   s.refine((d) => d.password === d.passwordConfirmacion, {
     message: "Las contraseñas no coinciden",
@@ -17,14 +17,14 @@ const confirmacion = <T extends { password: string; passwordConfirmacion: string
 export const registroSchema = confirmacion(
   z.object({
     nombre: z.string().min(1, "El nombre es obligatorio"),
-    email: z.string().email("Correo electrónico inválido"),
+    email: z.email("Correo electrónico inválido"),
     password: passwordSchema,
     passwordConfirmacion: z.string(),
   }),
 );
 
 export const loginSchema = z.object({
-  email: z.string().email("Correo electrónico inválido"),
+  email: z.email("Correo electrónico inválido"),
   password: z.string().min(1, "La contraseña es obligatoria"),
   recordarSesion: z.boolean().default(false),
 });
@@ -35,7 +35,7 @@ export const restablecerSchema = confirmacion(
 
 export const perfilSchema = z.object({
   nombre: z.string().min(1, "El nombre es obligatorio"),
-  email: z.string().email("Correo electrónico inválido"),
+  email: z.email("Correo electrónico inválido"),
 });
 
 export const cambiarPasswordSchema = z

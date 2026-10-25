@@ -66,8 +66,9 @@ describe("AdminBasesPage", () => {
           totalPaginas: 2,
         });
       }),
-      http.delete("*/api/v1/admin/bases-centrales/:id", () =>
-        HttpResponse.json(null, { status: 204 }),
+      http.delete(
+        "*/api/v1/admin/bases-centrales/:id",
+        () => new HttpResponse(null, { status: 204 }),
       ),
     );
 

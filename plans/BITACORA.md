@@ -882,3 +882,10 @@ Backend: plan `044` de `thesis-back-quarkus` (V013 + endpoints). Frontend:
 - `AdminParametrosPage` edita en porcentaje 0-100 % (sufijo `%`, rango en la etiqueta) y envía fracciones; prueba: `18` envía `0.18`.
 - E2E: antes de corregir fallaban 6 de 68 en chromium (deriva de selectores/UI: Insumos duplicado en el menú, bases centrales ahora en `/insumos`, fixture de plantillas sin `tipo`, falta mock de `/ci`, contraste muted). Tras corregir: chromium **68/68** (3 corridas), firefox **3/3**, mobile-chrome **3/3**. Job `e2e` agregado a CI (solo chromium).
 - `pnpm run verify` (con `NODE_OPTIONS=--no-experimental-webstorage`, como CI) verde: 748/748 tests en 101 archivos.
+
+## Plan 029 — dependencias a las últimas versiones estables (2026-10-24)
+
+- Runtime: `node:26-alpine` (Node 26 ya no trae corepack: el Dockerfile instala `pnpm@12.15.0` con npm), `nginx-unprivileged:1.30-alpine`, pnpm 12.15.0 (CI + `packageManager`), `engines.node >=26`, `.nvmrc` = 26.
+- Mayores: TypeScript 7.0.2 (sin cambios de código), zod 4.6.7 + @hookform/resolvers 6.0.0 (`ZodType<T, Input>`, `z.record` con 2 args, `z.email()`/`z.uuid()`), @tanstack/react-table 9.3.1 (`useTable` + `tableFeatures`, solo `TablaInsumos`), vitest/coverage 5.0.5, jsdom 30.1.3 (preflight CORS real: origen de tests = API), msw 3.0.3 (`onUnhandledFrame`; 204 con `new HttpResponse(null)`), @types/node 26.6.5.
+- Tests: 748/748 en 101 archivos antes y después; e2e chromium 68/68; `pnpm outdated` vacío.
+- prettier 3.9.10 reformateó `AGENTS.md` (commit aparte).

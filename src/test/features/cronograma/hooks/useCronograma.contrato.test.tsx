@@ -282,6 +282,9 @@ describe("useCronograma — los tres 409", () => {
         ),
       ),
     );
+    // Sin observador la query sembrada se recolecta con gcTime 0 antes de que
+    // llegue el 409; se retiene para poder leer `isInvalidated`.
+    cliente.setDefaultOptions({ queries: { retry: false, gcTime: Infinity, staleTime: 0 } });
     cliente.setQueryData(qk.cronograma(PRESUPUESTO_V2), cronogramaFixture);
 
     const { result } = renderHook(() => useCrearCronograma(PRESUPUESTO_V2), { wrapper });
