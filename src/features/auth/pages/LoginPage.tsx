@@ -112,6 +112,11 @@ export function LoginPage() {
                 Crear cuenta
               </Link>
             </div>
+            <p className="text-center text-xs">
+              <Link to="/privacidad" className="text-muted-foreground underline">
+                Política de privacidad
+              </Link>
+            </p>
           </form>
         </CardContent>
       </Card>

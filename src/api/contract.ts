@@ -60,12 +60,14 @@ export interface RegistroRequest {
   email: string;
   password: string;
   passwordConfirmacion: string;
+  aceptaPolitica: boolean;
 }
 
 export interface AceptarInvitacionRequest {
   token: string;
   password: string;
   passwordConfirmacion: string;
+  aceptaPolitica: boolean;
 }
 
 export interface PerfilResponse {

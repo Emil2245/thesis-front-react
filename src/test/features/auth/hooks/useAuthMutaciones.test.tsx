@@ -96,7 +96,7 @@ describe("contrato de las mutaciones de auth", () => {
     expect((error as ApiError).status).toBe(400);
   });
 
-  it("registro manda nombre, email, password y passwordConfirmacion", async () => {
+  it("registro manda nombre, email, password, passwordConfirmacion y aceptaPolitica", async () => {
     const peticiones = espiar();
 
     const { result } = renderHook(() => useRegistro(), { wrapper });
@@ -104,6 +104,7 @@ describe("contrato de las mutaciones de auth", () => {
       nombre: "Ana Torres",
       email: "ana@ejemplo.ec",
       password: "abc12345",
+      aceptaPolitica: true,
       passwordConfirmacion: "abc12345",
     });
 
@@ -115,6 +116,7 @@ describe("contrato de las mutaciones de auth", () => {
         email: "ana@ejemplo.ec",
         password: "abc12345",
         passwordConfirmacion: "abc12345",
+        aceptaPolitica: true,
       }),
     );
   });

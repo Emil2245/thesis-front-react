@@ -33,6 +33,10 @@ export const router = createBrowserRouter([
         lazy: lazyPage(() => import("@/features/auth/pages/RegistroPage"), "RegistroPage"),
       },
       {
+        path: "/privacidad",
+        lazy: lazyPage(() => import("@/features/legal/pages/PrivacidadPage"), "PrivacidadPage"),
+      },
+      {
         path: "/verificar-email",
         lazy: lazyPage(
           () => import("@/features/auth/pages/VerificarEmailPage"),

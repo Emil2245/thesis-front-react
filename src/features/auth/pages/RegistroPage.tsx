@@ -1,8 +1,9 @@
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Field } from "@/components/ui/field";
@@ -14,7 +15,13 @@ import { ApiError } from "@/api/problem";
 export function RegistroPage() {
   const form = useForm({
     resolver: zodResolver(registroSchema),
-    defaultValues: { nombre: "", email: "", password: "", passwordConfirmacion: "" },
+    defaultValues: {
+      nombre: "",
+      email: "",
+      password: "",
+      passwordConfirmacion: "",
+      aceptaPolitica: false,
+    },
   });
   const registro = useRegistro();
   const [errorGeneral, setErrorGeneral] = useState("");
@@ -24,6 +31,7 @@ export function RegistroPage() {
     email: string;
     password: string;
     passwordConfirmacion: string;
+    aceptaPolitica: boolean;
   }) {
     setErrorGeneral("");
     try {
@@ -32,6 +40,7 @@ export function RegistroPage() {
         email: data.email,
         password: data.password,
         passwordConfirmacion: data.passwordConfirmacion,
+        aceptaPolitica: data.aceptaPolitica,
       });
     } catch (e) {
       // El backend no dice *qué* campo falló: `ErrorPayload` son dos strings y
@@ -93,7 +102,38 @@ export function RegistroPage() {
               )}
             </Field>
 
-            <Button type="submit" className="w-full" disabled={registro.isPending}>
+            <div className="flex items-start gap-2">
+              <Controller
+                control={form.control}
+                name="aceptaPolitica"
+                render={({ field }) => (
+                  <Checkbox
+                    id="aceptaPolitica"
+                    checked={field.value}
+                    onCheckedChange={(v) => field.onChange(v === true)}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
+                  />
+                )}
+              />
+              <Label htmlFor="aceptaPolitica" className="text-sm leading-snug">
+                He leído y acepto la{" "}
+                <Link
+                  to="/privacidad"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary underline"
+                >
+                  política de privacidad
+                </Link>
+              </Label>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={registro.isPending || !form.watch("aceptaPolitica")}
+            >
               {registro.isPending ? "Creando…" : "Crear cuenta"}
             </Button>
 

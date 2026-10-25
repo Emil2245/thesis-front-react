@@ -20,6 +20,7 @@ export const registroSchema = confirmacion(
     email: z.email("Correo electrónico inválido"),
     password: passwordSchema,
     passwordConfirmacion: z.string(),
+    aceptaPolitica: z.boolean().refine((v) => v, "Debes aceptar la política de privacidad"),
   }),
 );
 

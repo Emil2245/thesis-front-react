@@ -552,7 +552,14 @@ export const handlers = [
   http.post(
     `${API}/auth/registro`,
     async ({ request }) =>
-      (await soloCampos(request, "nombre", "email", "password", "passwordConfirmacion")) ??
+      (await soloCampos(
+        request,
+        "nombre",
+        "email",
+        "password",
+        "passwordConfirmacion",
+        "aceptaPolitica",
+      )) ??
       // El backend real devuelve 201 con el usuario creado
       // (`{id,nombre,email,rol,emailVerificado}`), no un cuerpo vacío, y
       // `usuarioSchema` lo valida. Devolver `null` hacía fallar el registro

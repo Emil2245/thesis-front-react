@@ -24,6 +24,7 @@ describe("RegistroPage", () => {
     await user.type(screen.getByLabelText("Correo electrónico"), "ana@ejemplo.ec");
     await user.type(screen.getByLabelText("Contraseña"), "abc12345");
     await user.type(screen.getByLabelText("Confirmar contraseña"), "abc12345");
+    await user.click(screen.getByLabelText(/acepto la/i));
     await user.click(screen.getByRole("button", { name: /crear cuenta/i }));
 
     await waitFor(() => {
@@ -46,10 +47,19 @@ describe("RegistroPage", () => {
     await user.type(screen.getByLabelText("Correo electrónico"), "duplicado@ejemplo.ec");
     await user.type(screen.getByLabelText("Contraseña"), "abc12345");
     await user.type(screen.getByLabelText("Confirmar contraseña"), "abc12345");
+    await user.click(screen.getByLabelText(/acepto la/i));
     await user.click(screen.getByRole("button", { name: /crear cuenta/i }));
 
     await waitFor(() => {
       expect(screen.getByText("El correo ya está registrado")).toBeInTheDocument();
     });
+  });
+
+  it("deshabilita crear cuenta hasta aceptar la política", async () => {
+    const { user } = renderConProviders(<RegistroPage />, { ruta: "/registro" });
+    const boton = screen.getByRole("button", { name: /crear cuenta/i });
+    expect(boton).toBeDisabled();
+    await user.click(screen.getByLabelText(/acepto la/i));
+    expect(boton).toBeEnabled();
   });
 });
