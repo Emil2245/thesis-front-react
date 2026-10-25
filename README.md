@@ -5,7 +5,7 @@ Part of a cloud-native platform automating SERCOP _propuestas técnico-económic
 
 ## Stack
 
-- **React 19** + **TypeScript 6** + **Vite 8**
+- **React 19** + **TypeScript 7** + **Vite 8**
 - **shadcn/ui 4** (Radix UI) + **Tailwind CSS 4**
 - **TanStack Query 5** + **React Router 7**
 - **Zustand** (client state) + **Zod** (validation)
