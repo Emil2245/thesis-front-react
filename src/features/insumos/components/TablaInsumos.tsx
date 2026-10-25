@@ -1,12 +1,14 @@
 import { useState, useMemo } from "react";
 import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
+  useTable,
+  tableFeatures,
+  rowSortingFeature,
+  createSortedRowModel,
+  sortFns,
+  metaHelper,
   createColumnHelper,
   flexRender,
   type SortingState,
-  type RowData,
 } from "@tanstack/react-table";
 import { useInsumosDeDestino } from "../hooks/useInsumos";
 import { useEliminarInsumo } from "../hooks/useInsumoMutaciones";
@@ -61,12 +63,14 @@ import {
 import type { InsumoResponse } from "@/api/contract";
 import { notificarError } from "@/lib/manejoErrores";
 
-declare module "@tanstack/react-table" {
-  interface ColumnMeta<TData extends RowData, TValue> {
-    align?: "left" | "right";
-    _phantom?: [TData, TValue];
-  }
-}
+type MetaColumna = { align?: "left" | "right" };
+
+const features = tableFeatures({
+  rowSortingFeature,
+  sortedRowModel: createSortedRowModel(),
+  sortFns,
+  columnMeta: metaHelper<MetaColumna>(),
+});
 
 const TIPO_TABS = [
   { value: "", label: "Todos" },
@@ -76,7 +80,9 @@ const TIPO_TABS = [
   { value: "TRANSPORTE", label: "Transporte" },
 ];
 
-const columnHelper = createColumnHelper<InsumoResponse>();
+const SIN_FILAS: InsumoResponse[] = [];
+
+const columnHelper = createColumnHelper<typeof features, InsumoResponse>();
 
 /**
  * Tabla de insumos de cualquier base. Con `proyectoId` es el catálogo del
@@ -123,7 +129,7 @@ export function TablaInsumos({
   const eliminar = useEliminarInsumo(destino);
 
   const columns = useMemo(() => {
-    const base = [
+    const base = columnHelper.columns([
       columnHelper.accessor("codigo", {
         header: "Código",
         cell: (info) => <span className="font-mono text-xs">{info.getValue()}</span>,
@@ -149,9 +155,9 @@ export function TablaInsumos({
       }),
       // Sin columna "Fuente": InsumoResponse no trae `fuente`; es de
       // InsumoBusquedaResponse, el DTO del selector. Pintaba siempre "Local".
-    ];
+    ]);
     if (soloLectura) return base;
-    return [
+    return columnHelper.columns([
       ...base,
       columnHelper.display({
         id: "acciones",
@@ -216,16 +222,15 @@ export function TablaInsumos({
           );
         },
       }),
-    ];
+    ]);
   }, [eliminar, proyectoId, soloLectura]);
 
-  const table = useReactTable({
-    data: data?.contenido ?? [],
+  const table = useTable({
+    features,
+    data: data?.contenido ?? SIN_FILAS,
     columns,
     state: { sorting },
     onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
   });
 
   const handleNuevo = () => {
@@ -353,7 +358,7 @@ export function TablaInsumos({
                 <TableBody>
                   {table.getRowModel().rows.map((row) => (
                     <TableRow key={row.id}>
-                      {row.getVisibleCells().map((cell) => (
+                      {row.getAllCells().map((cell) => (
                         <TableCell
                           key={cell.id}
                           className={
