@@ -11,7 +11,7 @@ import { Field } from "@/components/ui/field";
 import { useRecuperarPassword } from "../hooks/useAuthMutaciones";
 
 const recuperarSchema = z.object({
-  email: z.string().email("Correo electrónico inválido"),
+  email: z.email("Correo electrónico inválido"),
 });
 
 export function RecuperarPage() {
