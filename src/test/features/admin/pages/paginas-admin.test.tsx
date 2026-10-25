@@ -87,7 +87,7 @@ describe("AdminParametrosPage", () => {
     // es punto siempre. Por eso el valor esperado es el string con punto, no el
     // número de la fixture.
     expect(parametrosSistemaFixture.porcentajeHerramientaMenor).toBe(0.05);
-    expect(await screen.findByLabelText("% Herramienta menor")).toHaveValue("0.05");
+    expect(await screen.findByLabelText("% Herramienta menor (0–100 %)")).toHaveValue("5");
     expect(screen.getByLabelText("Moneda")).toHaveValue(parametrosSistemaFixture.moneda);
   });
 
@@ -105,12 +105,12 @@ describe("AdminParametrosPage", () => {
     renderConProviders(<AdminParametrosPage />);
 
     for (const etiqueta of [
-      "Rango HM mínimo",
-      "Rango HM máximo",
-      "Rango CI mínimo",
-      "Rango CI máximo",
-      "Rango IVA mínimo",
-      "Rango IVA máximo",
+      "Rango HM mínimo (0–100 %)",
+      "Rango HM máximo (0–100 %)",
+      "Rango CI mínimo (0–100 %)",
+      "Rango CI máximo (0–100 %)",
+      "Rango IVA mínimo (0–100 %)",
+      "Rango IVA máximo (0–100 %)",
     ]) {
       expect(await screen.findByLabelText(etiqueta)).toBeInTheDocument();
     }
@@ -142,6 +142,26 @@ describe("AdminParametrosPage", () => {
           "rangoIvaMin",
         ].sort(),
       );
+    });
+  });
+
+  it("edita en porcentaje (18 → 0.18) y manda fracciones a la API", async () => {
+    const user = userEvent.setup();
+    const peticiones = espiar();
+    renderConProviders(<AdminParametrosPage />);
+
+    const iva = await screen.findByLabelText("IVA (0–100 %)");
+    expect(iva).toHaveValue("12");
+    await user.clear(iva);
+    await user.type(iva, "18");
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
+
+    await waitFor(() => {
+      const cuerpo = ultima(peticiones, "PUT", "/parametros-sistema")?.cuerpo as Record<
+        string,
+        unknown
+      >;
+      expect(cuerpo.iva).toBe(0.18);
     });
   });
 

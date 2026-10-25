@@ -8,7 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
-import { ESCALA_PORCENTAJE, parsearEntradaNumerica } from "@/lib/decimal";
+import {
+  ESCALA_PORCENTAJE,
+  fraccionAPorcentaje,
+  parsearEntradaNumerica,
+  porcentajeAFraccion,
+} from "@/lib/decimal";
 import { useParametrosSistema, useActualizarParametros } from "../hooks/useParametrosSistema";
 
 /**
@@ -23,16 +28,17 @@ import { useParametrosSistema, useActualizarParametros } from "../hooks/useParam
  * como funcionalidad editable porque descuento global fue retirado.
  */
 
-// Todos los campos son fracciones en [0, 1] a escala 4 (`precision 5, scale 4`
-// en la entidad). Se teclean como texto y se cuantizan una sola vez, en la
-// frontera de entrada (plan 061).
+// La API guarda fracciones en [0, 1] (`precision 5, scale 4` en la entidad), pero
+// la UI las edita como porcentaje 0–100 %, igual que ParametrosPage: se siembran
+// con `fraccionAPorcentaje` y se mandan con `porcentajeAFraccion`. Se teclean
+// como texto y se cuantizan una sola vez, en la frontera de entrada (plan 061).
 const fraccion = z
   .string()
   .refine((v) => parsearEntradaNumerica(v, ESCALA_PORCENTAJE) !== null, "Ingresa un número válido")
   .refine((v) => {
     const n = parsearEntradaNumerica(v, ESCALA_PORCENTAJE);
-    return n !== null && n >= 0 && n <= 1;
-  }, "Debe estar entre 0 y 1");
+    return n !== null && n >= 0 && n <= 100;
+  }, "Debe estar entre 0 y 100 %");
 
 const RANGOS = [
   ["rangoHmMin", "rangoHmMax", "HM"],
@@ -74,7 +80,8 @@ const esquema = z
 
 type FormularioParametros = z.infer<typeof esquema>;
 
-const num = (v: string) => parsearEntradaNumerica(v, ESCALA_PORCENTAJE) ?? 0;
+const num = (v: string) => porcentajeAFraccion(parsearEntradaNumerica(v, ESCALA_PORCENTAJE) ?? 0);
+const pct = (fraccion: number) => String(fraccionAPorcentaje(fraccion));
 
 export function AdminParametrosPage() {
   const { data, isLoading } = useParametrosSistema();
@@ -85,17 +92,17 @@ export function AdminParametrosPage() {
     // `values` en vez de `defaultValues`: los parámetros llegan del servidor y
     // el formulario se resiembra solo cuando cambian.
     values: data && {
-      porcentajeHerramientaMenor: String(data.porcentajeHerramientaMenor),
-      porcentajeIndirecto: data.porcentajeIndirecto == null ? "" : String(data.porcentajeIndirecto),
-      iva: String(data.iva),
-      rangoHmMin: String(data.rangoHmMin),
-      rangoHmMax: String(data.rangoHmMax),
-      rangoCiMin: String(data.rangoCiMin),
-      rangoCiMax: String(data.rangoCiMax),
-      rangoDescuentoMin: String(data.rangoDescuentoMin),
-      rangoDescuentoMax: String(data.rangoDescuentoMax),
-      rangoIvaMin: String(data.rangoIvaMin),
-      rangoIvaMax: String(data.rangoIvaMax),
+      porcentajeHerramientaMenor: pct(data.porcentajeHerramientaMenor),
+      porcentajeIndirecto: data.porcentajeIndirecto == null ? "" : pct(data.porcentajeIndirecto),
+      iva: pct(data.iva),
+      rangoHmMin: pct(data.rangoHmMin),
+      rangoHmMax: pct(data.rangoHmMax),
+      rangoCiMin: pct(data.rangoCiMin),
+      rangoCiMax: pct(data.rangoCiMax),
+      rangoDescuentoMin: pct(data.rangoDescuentoMin),
+      rangoDescuentoMax: pct(data.rangoDescuentoMax),
+      rangoIvaMin: pct(data.rangoIvaMin),
+      rangoIvaMax: pct(data.rangoIvaMax),
       moneda: data.moneda,
     },
   });
@@ -135,13 +142,18 @@ export function AdminParametrosPage() {
           locale del navegador y en español pinta «0,1800» donde el requisito es
           punto. El campo ya era un string validado por `fraccion` (zod +
           `parsearEntradaNumerica`), que acepta punto y coma y acota a [0, 1]. */}
-      <Input
-        id={nombre}
-        type="text"
-        inputMode="decimal"
-        className="font-mono w-40"
-        {...form.register(nombre)}
-      />
+      <div className="flex items-center gap-2">
+        <Input
+          id={nombre}
+          type="text"
+          inputMode="decimal"
+          className="font-mono w-40"
+          {...form.register(nombre)}
+        />
+        <span aria-hidden="true" className="text-sm text-muted-foreground">
+          %
+        </span>
+      </div>
       {errors[nombre] && <FieldError>{errors[nombre]?.message}</FieldError>}
     </Field>
   );
@@ -155,9 +167,9 @@ export function AdminParametrosPage() {
             <CardTitle>Configuración global</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {campoFraccion("porcentajeHerramientaMenor", "% Herramienta menor")}
-            {campoFraccion("porcentajeIndirecto", "% Costos indirectos")}
-            {campoFraccion("iva", "IVA")}
+            {campoFraccion("porcentajeHerramientaMenor", "% Herramienta menor (0–100 %)")}
+            {campoFraccion("porcentajeIndirecto", "% Costos indirectos (0–100 %)")}
+            {campoFraccion("iva", "IVA (0–100 %)")}
 
             <div className="pt-2">
               <h3 className="text-sm font-medium">Rangos configurables</h3>
@@ -168,8 +180,8 @@ export function AdminParametrosPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               {RANGOS.map(([min, max, nombre]) => (
                 <div key={nombre} className="contents">
-                  {campoFraccion(min, `Rango ${nombre} mínimo`)}
-                  {campoFraccion(max, `Rango ${nombre} máximo`)}
+                  {campoFraccion(min, `Rango ${nombre} mínimo (0–100 %)`)}
+                  {campoFraccion(max, `Rango ${nombre} máximo (0–100 %)`)}
                 </div>
               ))}
             </div>
