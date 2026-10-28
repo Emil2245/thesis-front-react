@@ -7,6 +7,7 @@ import type {
   ValorizadoBloqueResponse,
 } from "@/api/contract";
 import { formatearMoneda, formatearPuntosPorcentaje, type Decimal } from "@/lib/decimal";
+import { textoActividadesIncompletas } from "./actividadesIncompletas";
 import { etiquetaPeriodo } from "./etiquetaPeriodo";
 
 /** Hay monto sin programar (> 0); comparación sin aritmética flotante. */
@@ -343,10 +344,9 @@ export function CronogramaValorizado({ valorizado, unidadTiempo }: CronogramaVal
               data-testid="sin-programar"
             >
               {formatearMoneda(totales.montoSinProgramar)}
-              {hayBrecha(totales.montoSinProgramar) && totales.actividadesSinAsignar !== undefined
-                ? ` (${totales.actividadesSinAsignar} ${
-                    totales.actividadesSinAsignar === 1 ? "actividad" : "actividades"
-                  })`
+              {hayBrecha(totales.montoSinProgramar) &&
+              textoActividadesIncompletas(totales.actividadesSinAsignar)
+                ? ` (${textoActividadesIncompletas(totales.actividadesSinAsignar)})`
                 : ""}
             </dd>
           </div>
