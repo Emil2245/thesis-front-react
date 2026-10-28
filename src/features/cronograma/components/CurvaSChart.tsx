@@ -7,6 +7,7 @@ import type {
   UnidadTiempo,
 } from "@/api/contract";
 import { formatearMoneda, formatearPuntosPorcentaje } from "@/lib/decimal";
+import { textoActividadesIncompletas } from "./actividadesIncompletas";
 import { etiquetaPeriodo } from "./etiquetaPeriodo";
 
 const VIEWBOX_WIDTH = 720;
@@ -255,9 +256,9 @@ export function CurvaSChart({ curvaS, unidadTiempo, totales }: CurvaSChartProps)
           <p className="text-sm text-amber-600 dark:text-amber-400" data-testid="curva-s-brecha">
             La curva cubre {formatearMoneda(totales.montoTotalGeneral)} de{" "}
             {formatearMoneda(totales.montoPresupuesto)}
-            {totales.actividadesSinAsignar !== undefined
-              ? `; faltan ${totales.actividadesSinAsignar} actividades por programar.`
-              : "; hay actividades por programar."}
+            {textoActividadesIncompletas(totales.actividadesSinAsignar)
+              ? `; hay ${textoActividadesIncompletas(totales.actividadesSinAsignar)}.`
+              : "; hay actividades con distribución incompleta."}
           </p>
         )}
 

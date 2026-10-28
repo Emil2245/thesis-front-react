@@ -96,7 +96,9 @@ describe("CronogramaValorizado", () => {
     expect(screen.getByText("$10,000.00")).toBeInTheDocument();
     expect(screen.getByText("Total del presupuesto")).toBeInTheDocument();
     expect(screen.getByText("$25,000.00")).toBeInTheDocument();
-    expect(screen.getByTestId("sin-programar")).toHaveTextContent("$15,000.00 (3 actividades)");
+    expect(screen.getByTestId("sin-programar")).toHaveTextContent(
+      "$15,000.00 (3 actividades con distribución incompleta)",
+    );
     expect(screen.getByTestId("sin-programar")).toHaveClass("text-amber-600");
   });
 
@@ -119,5 +121,36 @@ describe("CronogramaValorizado", () => {
     renderValorizado();
     expect(screen.queryByText("Sin programar")).not.toBeInTheDocument();
     expect(screen.getByText("Monto programado")).toBeInTheDocument();
+  });
+
+  it("con brecha y contador 0 (back antiguo) no muestra «0 actividades» (plan 039b)", () => {
+    renderValorizado({
+      ...cronogramaVistasFixture.valorizado,
+      totales: {
+        ...cronogramaVistasFixture.valorizado.totales,
+        montoPresupuesto: asDecimal("25000.000000"),
+        montoSinProgramar: asDecimal("7589.960304"),
+        actividadesSinAsignar: 0,
+      },
+    });
+    const celda = screen.getByTestId("sin-programar");
+    expect(celda).toHaveTextContent("$7,589.96");
+    expect(celda).not.toHaveTextContent(/\b0 actividad/);
+    expect(celda).not.toHaveTextContent("(");
+  });
+
+  it("singulariza una actividad con distribución incompleta (plan 039b)", () => {
+    renderValorizado({
+      ...cronogramaVistasFixture.valorizado,
+      totales: {
+        ...cronogramaVistasFixture.valorizado.totales,
+        montoPresupuesto: asDecimal("100.000000"),
+        montoSinProgramar: asDecimal("15.000000"),
+        actividadesSinAsignar: 1,
+      },
+    });
+    expect(screen.getByTestId("sin-programar")).toHaveTextContent(
+      "$15.00 (1 actividad con distribución incompleta)",
+    );
   });
 });

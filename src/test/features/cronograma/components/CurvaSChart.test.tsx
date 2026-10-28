@@ -105,7 +105,7 @@ describe("CurvaSChart", () => {
       />,
     );
     expect(screen.getByTestId("curva-s-brecha")).toHaveTextContent(
-      "La curva cubre $10,000.00 de $25,000.00; faltan 3 actividades por programar.",
+      "La curva cubre $10,000.00 de $25,000.00; hay 3 actividades con distribución incompleta.",
     );
   });
 
