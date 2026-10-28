@@ -1,6 +1,11 @@
 import { useId, useState } from "react";
 
-import type { CurvaSResponse, PuntoCurvaSResponse, UnidadTiempo } from "@/api/contract";
+import type {
+  CurvaSResponse,
+  PuntoCurvaSResponse,
+  TotalesCronogramaResponse,
+  UnidadTiempo,
+} from "@/api/contract";
 import { formatearMoneda, formatearPuntosPorcentaje } from "@/lib/decimal";
 import { etiquetaPeriodo } from "./etiquetaPeriodo";
 
@@ -13,6 +18,8 @@ const MAX_VISIBLE_X_LABELS = 8;
 type CurvaSChartProps = {
   curvaS: CurvaSResponse;
   unidadTiempo: UnidadTiempo;
+  /** Plan 039: totales del valorizado, para avisar si la curva cubre solo lo programado. */
+  totales?: TotalesCronogramaResponse;
 };
 
 type GeometriaPunto = {
@@ -202,7 +209,7 @@ function tablaAlternativa(puntos: PuntoCurvaSResponse[], unidadTiempo: UnidadTie
   );
 }
 
-export function CurvaSChart({ curvaS, unidadTiempo }: CurvaSChartProps) {
+export function CurvaSChart({ curvaS, unidadTiempo, totales }: CurvaSChartProps) {
   const { puntos } = curvaS;
   const [puntoActivo, setPuntoActivo] = useState(0);
   const id = useId();
@@ -242,6 +249,17 @@ export function CurvaSChart({ curvaS, unidadTiempo }: CurvaSChartProps) {
       <p className="text-sm text-muted-foreground">
         Programación acumulada por período; no representa avance ejecutado.
       </p>
+      {totales?.montoSinProgramar !== undefined &&
+        /[1-9]/.test(totales.montoSinProgramar) &&
+        totales.montoPresupuesto !== undefined && (
+          <p className="text-sm text-amber-600 dark:text-amber-400" data-testid="curva-s-brecha">
+            La curva cubre {formatearMoneda(totales.montoTotalGeneral)} de{" "}
+            {formatearMoneda(totales.montoPresupuesto)}
+            {totales.actividadesSinAsignar !== undefined
+              ? `; faltan ${totales.actividadesSinAsignar} actividades por programar.`
+              : "; hay actividades por programar."}
+          </p>
+        )}
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
         <div className="overflow-x-auto rounded-lg border p-2">

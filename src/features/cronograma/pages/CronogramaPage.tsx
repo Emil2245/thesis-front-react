@@ -199,6 +199,7 @@ export function CronogramaPage() {
               {vistas.data && (
                 <CurvaSChart
                   curvaS={vistas.data.curvaS}
+                  totales={vistas.data.valorizado.totales}
                   unidadTiempo={vistas.data.gantt.cronograma.unidadTiempo}
                 />
               )}

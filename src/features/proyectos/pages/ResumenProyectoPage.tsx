@@ -8,6 +8,7 @@ import { CargandoTabla } from "@/components/comunes/CargandoTabla";
 import { ConfirmarDestructivo } from "@/components/comunes/ConfirmarDestructivo";
 import { EncabezadoPagina, PuntoMeta } from "@/components/comunes/EncabezadoPagina";
 import { TarjetaTabla } from "@/components/comunes/TarjetaTabla";
+import { formatearFechaLarga } from "@/lib/fecha";
 import { Moneda } from "@/components/comunes/Moneda";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -196,15 +197,7 @@ export function ResumenProyectoPage() {
               <Dato etiqueta="Subdirección" valor={proyecto.subdireccionInstitucional} />
               <Dato
                 etiqueta="Fecha de inicio"
-                valor={
-                  proyecto.fechaInicio
-                    ? new Date(proyecto.fechaInicio).toLocaleDateString("es-EC", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })
-                    : undefined
-                }
+                valor={proyecto.fechaInicio ? formatearFechaLarga(proyecto.fechaInicio) : undefined}
               />
               <Dato
                 etiqueta="Plazo de ejecución"

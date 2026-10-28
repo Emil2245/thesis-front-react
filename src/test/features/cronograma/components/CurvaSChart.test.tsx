@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { asDecimal } from "@/lib/decimal";
 import { CurvaSChart } from "@/features/cronograma/components/CurvaSChart";
 import {
   cronogramaValorizado120PeriodosFixture,
@@ -87,5 +88,40 @@ describe("CurvaSChart", () => {
 
     expect(screen.getByText("No hay puntos de curva S para mostrar.")).toBeInTheDocument();
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
+
+  it("avisa que la curva cubre solo lo programado cuando hay brecha (plan 039)", () => {
+    render(
+      <CurvaSChart
+        curvaS={cronogramaVistasFixture.curvaS}
+        unidadTiempo="MES"
+        totales={{
+          ...cronogramaVistasFixture.valorizado.totales,
+          montoTotalGeneral: asDecimal("10000.000000"),
+          montoPresupuesto: asDecimal("25000.000000"),
+          montoSinProgramar: asDecimal("15000.000000"),
+          actividadesSinAsignar: 3,
+        }}
+      />,
+    );
+    expect(screen.getByTestId("curva-s-brecha")).toHaveTextContent(
+      "La curva cubre $10,000.00 de $25,000.00; faltan 3 actividades por programar.",
+    );
+  });
+
+  it("no muestra el aviso cuando todo está programado (plan 039)", () => {
+    render(
+      <CurvaSChart
+        curvaS={cronogramaVistasFixture.curvaS}
+        unidadTiempo="MES"
+        totales={{
+          ...cronogramaVistasFixture.valorizado.totales,
+          montoPresupuesto: asDecimal("18500.000000"),
+          montoSinProgramar: asDecimal("0.000000"),
+          actividadesSinAsignar: 0,
+        }}
+      />,
+    );
+    expect(screen.queryByTestId("curva-s-brecha")).not.toBeInTheDocument();
   });
 });
