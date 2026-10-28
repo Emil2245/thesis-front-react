@@ -6,7 +6,13 @@ import type {
   UnidadTiempo,
   ValorizadoBloqueResponse,
 } from "@/api/contract";
+import { formatearMoneda, formatearPuntosPorcentaje, type Decimal } from "@/lib/decimal";
 import { etiquetaPeriodo } from "./etiquetaPeriodo";
+
+/** Hay monto sin programar (> 0); comparación sin aritmética flotante. */
+function hayBrecha(monto: Decimal): boolean {
+  return /[1-9]/.test(monto);
+}
 
 const PERIOD_WIDTH = 96;
 const IDENTITY_WIDTHS = {
@@ -303,16 +309,48 @@ export function CronogramaValorizado({ valorizado, unidadTiempo }: CronogramaVal
       <dl className="grid gap-3 rounded-lg border bg-muted/20 p-4 sm:grid-cols-3">
         <div>
           <dt className="text-xs text-muted-foreground">Avance final</dt>
-          <dd className="font-mono text-sm tabular-nums">{totales.avanceFinalPorcentaje}</dd>
+          <dd className="font-mono text-sm tabular-nums">
+            {formatearPuntosPorcentaje(totales.avanceFinalPorcentaje)}
+          </dd>
         </div>
         <div>
-          <dt className="text-xs text-muted-foreground">Monto total general</dt>
-          <dd className="font-mono text-sm tabular-nums">{totales.montoTotalGeneral}</dd>
+          <dt className="text-xs text-muted-foreground">Monto programado</dt>
+          <dd className="font-mono text-sm tabular-nums">
+            {formatearMoneda(totales.montoTotalGeneral)}
+          </dd>
         </div>
         <div>
           <dt className="text-xs text-muted-foreground">Porcentaje de cierre</dt>
-          <dd className="font-mono text-sm tabular-nums">{totales.porcentajeCierre}</dd>
+          <dd className="font-mono text-sm tabular-nums">
+            {formatearPuntosPorcentaje(totales.porcentajeCierre)}
+          </dd>
         </div>
+        {totales.montoPresupuesto !== undefined && (
+          <div>
+            <dt className="text-xs text-muted-foreground">Total del presupuesto</dt>
+            <dd className="font-mono text-sm tabular-nums">
+              {formatearMoneda(totales.montoPresupuesto)}
+            </dd>
+          </div>
+        )}
+        {totales.montoSinProgramar !== undefined && (
+          <div>
+            <dt className="text-xs text-muted-foreground">Sin programar</dt>
+            <dd
+              className={`font-mono text-sm tabular-nums ${
+                hayBrecha(totales.montoSinProgramar) ? "text-amber-600 dark:text-amber-400" : ""
+              }`}
+              data-testid="sin-programar"
+            >
+              {formatearMoneda(totales.montoSinProgramar)}
+              {hayBrecha(totales.montoSinProgramar) && totales.actividadesSinAsignar !== undefined
+                ? ` (${totales.actividadesSinAsignar} ${
+                    totales.actividadesSinAsignar === 1 ? "actividad" : "actividades"
+                  })`
+                : ""}
+            </dd>
+          </div>
+        )}
       </dl>
     </section>
   );

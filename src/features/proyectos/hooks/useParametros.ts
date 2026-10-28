@@ -48,6 +48,24 @@ export function useActualizarParametros(proyectoId: string) {
         }),
         iva: body.iva,
         ...(body.moneda !== undefined && { moneda: body.moneda }),
+        ...(body.mostrarSeccionesVacias !== undefined && {
+          mostrarSeccionesVacias: body.mostrarSeccionesVacias,
+        }),
+        ...(body.sufijosSeccionActivos !== undefined && {
+          sufijosSeccionActivos: body.sufijosSeccionActivos,
+        }),
+        ...(body.mostrarSubtotalesSeccion !== undefined && {
+          mostrarSubtotalesSeccion: body.mostrarSubtotalesSeccion,
+        }),
+        ...(body.mostrarSubtotalesPie !== undefined && {
+          mostrarSubtotalesPie: body.mostrarSubtotalesPie,
+        }),
+        ...(body.mostrarNombreProyectoHeader !== undefined && {
+          mostrarNombreProyectoHeader: body.mostrarNombreProyectoHeader,
+        }),
+        ...(body.enumerarApus !== undefined && { enumerarApus: body.enumerarApus }),
+        ...(body.mensajeFooter !== undefined && { mensajeFooter: body.mensajeFooter }),
+        ...(body.modoCodigoRubro !== undefined && { modoCodigoRubro: body.modoCodigoRubro }),
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.parametrosProyecto(proyectoId) });

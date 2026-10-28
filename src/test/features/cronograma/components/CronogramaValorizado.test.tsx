@@ -2,6 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { CronogramaValorizado } from "@/features/cronograma/components/CronogramaValorizado";
+import { asDecimal } from "@/lib/decimal";
 import {
   cronogramaValorizado120PeriodosFixture,
   cronogramaVistasFixture,
@@ -57,7 +58,7 @@ describe("CronogramaValorizado", () => {
 
     expect(screen.getByText("No hay períodos valorizados para mostrar.")).toBeInTheDocument();
     expect(screen.queryByText("No hay rubros valorizados para mostrar.")).not.toBeInTheDocument();
-    expect(screen.getAllByText("100.0000")).toHaveLength(2);
+    expect(screen.getAllByText("100.0000 %")).toHaveLength(2);
     first.unmount();
 
     renderValorizado({
@@ -74,5 +75,49 @@ describe("CronogramaValorizado", () => {
     expect(screen.getByRole("columnheader", { name: "M1" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "M120" })).toBeInTheDocument();
     expect(screen.getAllByRole("columnheader")).toHaveLength(127);
+  });
+
+  it("muestra la brecha cuando hay actividades sin programar (plan 039)", () => {
+    renderValorizado({
+      ...cronogramaVistasFixture.valorizado,
+      totales: {
+        ...cronogramaVistasFixture.valorizado.totales,
+        avanceFinalPorcentaje: asDecimal("40.0000"),
+        montoTotalGeneral: asDecimal("10000.000000"),
+        porcentajeCierre: asDecimal("40.0000"),
+        montoPresupuesto: asDecimal("25000.000000"),
+        montoSinProgramar: asDecimal("15000.000000"),
+        actividadesSinAsignar: 3,
+      },
+    });
+
+    expect(screen.getByText("Monto programado")).toBeInTheDocument();
+    expect(screen.queryByText("Monto total general")).not.toBeInTheDocument();
+    expect(screen.getByText("$10,000.00")).toBeInTheDocument();
+    expect(screen.getByText("Total del presupuesto")).toBeInTheDocument();
+    expect(screen.getByText("$25,000.00")).toBeInTheDocument();
+    expect(screen.getByTestId("sin-programar")).toHaveTextContent("$15,000.00 (3 actividades)");
+    expect(screen.getByTestId("sin-programar")).toHaveClass("text-amber-600");
+  });
+
+  it("con todo programado, Sin programar muestra 0 y sin aviso (plan 039)", () => {
+    renderValorizado({
+      ...cronogramaVistasFixture.valorizado,
+      totales: {
+        ...cronogramaVistasFixture.valorizado.totales,
+        montoPresupuesto: asDecimal("18500.000000"),
+        montoSinProgramar: asDecimal("0.000000"),
+        actividadesSinAsignar: 0,
+      },
+    });
+
+    expect(screen.getByTestId("sin-programar")).toHaveTextContent(/^\$0\.00$/);
+    expect(screen.getByTestId("sin-programar")).not.toHaveClass("text-amber-600");
+  });
+
+  it("sigue renderizando contra un back sin los campos nuevos", () => {
+    renderValorizado();
+    expect(screen.queryByText("Sin programar")).not.toBeInTheDocument();
+    expect(screen.getByText("Monto programado")).toBeInTheDocument();
   });
 });

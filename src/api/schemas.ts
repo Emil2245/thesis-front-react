@@ -745,6 +745,9 @@ const totalesCronogramaSchema: z.ZodType<TotalesCronogramaResponse, unknown> = z
     avanceFinalPorcentaje: decimalSchema,
     montoTotalGeneral: decimalSchema,
     porcentajeCierre: decimalSchema,
+    montoPresupuesto: decimalSchema.optional(),
+    montoSinProgramar: decimalSchema.optional(),
+    actividadesSinAsignar: z.number().optional(),
   })
   .strict();
 

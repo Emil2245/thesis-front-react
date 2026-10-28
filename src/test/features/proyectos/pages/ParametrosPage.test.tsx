@@ -84,6 +84,33 @@ describe("ParametrosPage", () => {
     });
   });
 
+  it("incluye Presentación y Codificación en el cuerpo del PUT (plan 039)", async () => {
+    let sentBody: Record<string, unknown> = {};
+    server.use(
+      http.put(`${API}/proyectos/:id/parametros`, async ({ request }) => {
+        sentBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(parametrosFixture);
+      }),
+    );
+    const { user } = renderConProviders(
+      <Routes>
+        <Route path="/proyectos/:id/parametros" element={<ParametrosPage />} />
+      </Routes>,
+      { ruta: "/proyectos/01927f4e-1a2b-7c3d-8e4f-000000000001/parametros" },
+    );
+
+    await screen.findByDisplayValue("5");
+    await user.click(screen.getByRole("button", { name: /guardar parámetros/i }));
+
+    await waitFor(() => {
+      expect(sentBody).toMatchObject({
+        mostrarNombreProyectoHeader: parametrosFixture.mostrarNombreProyectoHeader,
+        modoCodigoRubro: parametrosFixture.modoCodigoRubro,
+        enumerarApus: parametrosFixture.enumerarApus,
+      });
+    });
+  });
+
   // Los campos de porcentaje son de texto, no `type="number"`: ese input delega
   // el separador decimal al locale del NAVEGADOR y en un Chrome en español
   // pinta «7,5» donde el requisito es punto. jsdom no reproduce esa

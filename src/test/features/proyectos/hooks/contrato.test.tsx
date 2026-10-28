@@ -171,7 +171,7 @@ describe("contrato de parámetros de proyecto", () => {
     expect(ultima(peticiones, "GET", `/proyectos/${PROYECTO_1}/parametros`)).toBeDefined();
   });
 
-  it("useActualizarParametros hace PUT con los cuatro campos que acepta el backend", async () => {
+  it("useActualizarParametros hace PUT con los campos obligatorios", async () => {
     const peticiones = espiar();
     const { result } = renderHook(() => useActualizarParametros(PROYECTO_1), { wrapper });
     const body = {
@@ -191,13 +191,31 @@ describe("contrato de parámetros de proyecto", () => {
   // 057), `useActualizarParametros` tipaba el cuerpo como `Record<string, unknown>`
   // y reenviaba lo que le dieran, así que un parámetro inventado llegaba a la red
   // y sólo fallaba en runtime. Hoy tipa `ParametrosProyectoEditarRequest` y
-  // reenvía **sólo** los cuatro campos del contrato, de modo que el campo de más
+  // reenvía **sólo** los campos del contrato, de modo que el campo de más
   // ya no compila ni sale del cliente.
   //
   // La garantía es la misma y sigue probada, ahora por la vía buena: se le pasa un
   // campo que el backend no conoce y se afirma que el PUT **no lo lleva**. El cast
   // es deliberado —simula a quien le pase el objeto leído tal cual— y es la única
   // forma de ejercitar el filtro desde TypeScript.
+  it("useActualizarParametros reenvía Presentación y Codificación (plan 039)", async () => {
+    const peticiones = espiar();
+    const { result } = renderHook(() => useActualizarParametros(PROYECTO_1), { wrapper });
+    const body = {
+      porcentajeHerramientaMenor: 0.05,
+      iva: 0.15,
+      mostrarNombreProyectoHeader: true,
+      enumerarApus: true,
+      mensajeFooter: "Pie",
+      modoCodigoRubro: "MANUAL" as const,
+    };
+
+    await result.current.mutateAsync(body);
+
+    const p = ultima(peticiones, "PUT", `/proyectos/${PROYECTO_1}/parametros`);
+    await waitFor(() => expect(p?.cuerpo).toEqual(body));
+  });
+
   it("el seam no reenvía un parámetro que el backend no conoce", async () => {
     const peticiones = espiar();
     const { result } = renderHook(() => useActualizarParametros(PROYECTO_1), { wrapper });
@@ -205,12 +223,12 @@ describe("contrato de parámetros de proyecto", () => {
     await result.current.mutateAsync({
       porcentajeHerramientaMenor: 0.05,
       iva: 0.15,
-      mostrarSeccionesVacias: true,
+      campoInventado: true,
     } as unknown as ParametrosProyectoEditarRequest);
 
     const p = ultima(peticiones, "PUT", `/proyectos/${PROYECTO_1}/parametros`);
     const cuerpo = p?.cuerpo as Record<string, unknown>;
-    expect(cuerpo).not.toHaveProperty("mostrarSeccionesVacias");
+    expect(cuerpo).not.toHaveProperty("campoInventado");
     expect(Object.keys(cuerpo).sort()).toEqual(["iva", "porcentajeHerramientaMenor"]);
   });
 });

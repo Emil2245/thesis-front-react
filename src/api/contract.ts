@@ -201,6 +201,15 @@ export interface ParametrosProyectoEditarRequest {
   porcentajeIndirecto?: number | null;
   iva: number;
   moneda?: string;
+  /** Plan 039: presentación y codificación; si se omiten, el back conserva lo guardado. */
+  mostrarSeccionesVacias?: boolean;
+  sufijosSeccionActivos?: boolean;
+  mostrarSubtotalesSeccion?: boolean;
+  mostrarSubtotalesPie?: boolean;
+  mostrarNombreProyectoHeader?: boolean;
+  enumerarApus?: boolean;
+  mensajeFooter?: string;
+  modoCodigoRubro?: "AUTOGENERADO" | "MANUAL";
 }
 
 export type PoliticaOverridesCi = "PRESERVAR" | "RESTABLECER";
@@ -833,6 +842,12 @@ export interface TotalesCronogramaResponse {
   avanceFinalPorcentaje: Decimal;
   montoTotalGeneral: Decimal;
   porcentajeCierre: Decimal;
+  /** Plan 039: total del presupuesto (opcional: un back anterior no lo envía). */
+  montoPresupuesto?: Decimal;
+  /** Plan 039: max(0, montoPresupuesto − montoTotalGeneral). */
+  montoSinProgramar?: Decimal;
+  /** Plan 039: actividades sin distribución por período. */
+  actividadesSinAsignar?: number;
 }
 export interface ValorizadoBloqueResponse {
   periodos: PeriodoValorizadoResponse[];
