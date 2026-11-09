@@ -10,6 +10,11 @@ import {
 } from "@/api/schemas";
 import { ApiError } from "@/api/problem";
 import { toast } from "sonner";
+import {
+  generarClaveExportacion,
+  navegarDescarga,
+  solicitarExportacion,
+} from "@/api/exportaciones";
 
 export function useValidacionExport(presupuestoId: string) {
   return useQuery({
@@ -153,6 +158,51 @@ export function useExportar() {
   const cliente = useQueryClient();
   const [descargando, setDescargando] = useState(false);
   const descargaEnCurso = useRef(false);
+  const claves = useRef(new Map<string, string>());
+
+  const exportarPrivado = useCallback(
+    async (
+      documento: "presupuesto" | "apus" | "especificaciones-tecnicas",
+      presupuestoId: string,
+      opciones: Record<string, string | undefined>,
+    ) => {
+      if (!esUuidV7(presupuestoId) || descargaEnCurso.current) return;
+      const body = Object.fromEntries(
+        Object.entries(opciones).filter(
+          (entry): entry is [string, string] => entry[1] !== undefined,
+        ),
+      );
+      const identidad = JSON.stringify([documento, presupuestoId, body]);
+      let clave = claves.current.get(identidad);
+      if (!clave) {
+        clave = generarClaveExportacion();
+        claves.current.set(identidad, clave);
+      }
+      descargaEnCurso.current = true;
+      setDescargando(true);
+      try {
+        const respuesta = await solicitarExportacion(
+          `/documentos/${documento}/${presupuestoId}/exportaciones`,
+          body,
+          clave,
+        );
+        navegarDescarga(respuesta.downloadUrl);
+      } catch (error) {
+        if (
+          error instanceof ApiError &&
+          (error.problem.codigo === "idempotencia-conflicto" ||
+            error.problem.codigo === "exportacion-expirada")
+        ) {
+          claves.current.delete(identidad);
+        }
+        throw error;
+      } finally {
+        descargaEnCurso.current = false;
+        setDescargando(false);
+      }
+    },
+    [],
+  );
 
   // Guarda el UUIDv7 público: la autorización y el dominio son del servidor.
   const descargarDocumento = useCallback(
@@ -243,6 +293,7 @@ export function useExportar() {
 
   return {
     descargarEspecificacionesTecnicas,
+    exportarPrivado,
     descargarCronograma,
     descargarPresupuesto,
     descargarApus,

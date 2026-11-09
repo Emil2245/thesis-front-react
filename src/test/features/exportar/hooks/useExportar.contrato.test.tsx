@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import type { ReactNode } from "react";
@@ -83,6 +83,114 @@ describe("useValidacionExport — contrato de salida", () => {
 
     await waitFor(() => expect(result.current.fetchStatus).toBe("idle"));
     expect(peticiones).toHaveLength(0);
+  });
+});
+
+describe("useExportar — ciclo de clave privada", () => {
+  it("no navega si la respuesta contiene un ticket externo", async () => {
+    server.use(
+      http.post(`${API}/documentos/apus/${PRESUPUESTO_V1}/exportaciones`, () =>
+        HttpResponse.json({
+          operationId: PRESUPUESTO_V1,
+          downloadUrl: "https://external.invalid/ticket",
+          expiresAt: "2026-01-01T00:05:00Z",
+          objectExpiresAt: "2026-01-02T00:00:00Z",
+          filename: "apu.pdf",
+          mediaType: "application/pdf",
+          sizeBytes: 1,
+          sha256: `${"a".repeat(43)}=`,
+          warnings: [],
+        }),
+      ),
+    );
+    const { result } = renderHook(() => useExportar(), { wrapper });
+    await act(async () => {
+      await expect(
+        result.current.exportarPrivado("apus", PRESUPUESTO_V1, { formato: "pdf" }),
+      ).rejects.toBeDefined();
+    });
+    expect(clicks).toHaveLength(0);
+  });
+
+  it("envía opciones distintas para presupuesto PDF y APUs XLSX", async () => {
+    const requests: Array<{ documento: string; body: unknown; key: string | null }> = [];
+    server.use(
+      http.post(
+        `${API}/documentos/:documento/${PRESUPUESTO_V1}/exportaciones`,
+        async ({ params, request }) => {
+          requests.push({
+            documento: String(params.documento),
+            body: await request.json(),
+            key: request.headers.get("Idempotency-Key"),
+          });
+          return HttpResponse.json({
+            operationId: PRESUPUESTO_V1,
+            downloadUrl: `/api/v1/documentos/descargas/${"a".repeat(43)}`,
+            expiresAt: "2026-01-01T00:05:00Z",
+            objectExpiresAt: "2026-01-02T00:00:00Z",
+            filename: "documento.pdf",
+            mediaType: "application/pdf",
+            sizeBytes: 1,
+            sha256: `${"a".repeat(43)}=`,
+            warnings: [],
+          });
+        },
+      ),
+    );
+    const { result } = renderHook(() => useExportar(), { wrapper });
+    await act(async () => {
+      await result.current.exportarPrivado("presupuesto", PRESUPUESTO_V1, {
+        formato: "pdf",
+        orientacion: "horizontal",
+      });
+    });
+    await act(async () => {
+      await result.current.exportarPrivado("apus", PRESUPUESTO_V1, {
+        formato: "xlsx",
+        layout: "apilado",
+      });
+    });
+    expect(requests.map(({ documento, body }) => ({ documento, body }))).toEqual([
+      { documento: "presupuesto", body: { formato: "pdf", orientacion: "horizontal" } },
+      { documento: "apus", body: { formato: "xlsx", layout: "apilado" } },
+    ]);
+    expect(requests[0].key).not.toBe(requests[1].key);
+    expect(clicks).toHaveLength(2);
+  });
+  it.each([
+    ["idempotencia-conflicto", 409, true],
+    ["exportacion-expirada", 409, true],
+    ["exportacion-en-curso", 409, false],
+    ["servidor", 500, false],
+    ["red", 0, false],
+  ])("%s %i: nueva clave = %s solo en el siguiente gesto", async (codigo, status, nueva) => {
+    const claves: string[] = [];
+    server.use(
+      http.post(`${API}/documentos/presupuesto/${PRESUPUESTO_V1}/exportaciones`, ({ request }) => {
+        claves.push(request.headers.get("Idempotency-Key") ?? "");
+        return status === 0
+          ? HttpResponse.error()
+          : HttpResponse.json({ codigo, mensaje: "error" }, { status });
+      }),
+    );
+    const { result } = renderHook(() => useExportar(), { wrapper });
+    const ejecutar = () =>
+      result.current.exportarPrivado("presupuesto", PRESUPUESTO_V1, { formato: "xlsx" });
+    await act(async () => {
+      await expect(ejecutar()).rejects.toBeDefined();
+    });
+    expect(claves).toHaveLength(1);
+    expect(clicks).toHaveLength(0);
+    await act(async () => {
+      await expect(ejecutar()).rejects.toBeDefined();
+    });
+    expect(claves).toHaveLength(2);
+    expect(claves[0]).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
+    if (nueva) expect(claves[1]).not.toBe(claves[0]);
+    else expect(claves[1]).toBe(claves[0]);
+    expect(clicks).toHaveLength(0);
   });
 });
 

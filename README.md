@@ -37,6 +37,26 @@ Key architectural decisions (see `plans/README.md` for full ADR log):
 - `src/api/` is the only HTTP-aware layer
 - Version selector uses `?v=` search param (not nested routes)
 
+## Private document exports (stage 03)
+
+The budget, APU and technical-specification buttons send an authenticated JSON
+`POST /documentos/{type}/{budgetId}/exportaciones` to Core. The client generates
+an `Idempotency-Key` UUIDv7 for the selected version and options; Core returns
+a validated, short-lived **relative Core download path**. Only an explicit
+button click opens that path; the browser does not receive an S3 URL or store
+the ticket in the page before the click. The existing preflight display is
+informative: the POST rechecks access and exportability.
+
+Retry a failed request with the same key so Core can reissue a one-use ticket
+without rendering again. If Core responds `idempotencia-conflicto` (changed
+revision/options) or `exportacion-expirada`, the next explicit click starts a
+new operation with a new key. Cronograma still downloads through its existing
+GET while its POST remains deferred; Core's public byte-serving GETs remain
+available for transition callers. Configure `VITE_API_BASE_URL` to the Core
+`/api/v1` origin, and allow `Idempotency-Key` in the Core CORS preflight for
+cross-origin deployments. Local component tests do not prove browser download,
+Ingress log suppression or deployed S3 permissions.
+
 ## Números y dinero
 
 > **Se visualiza en string. Se maneja en número.** — decisión del autor, 2026-09-06
