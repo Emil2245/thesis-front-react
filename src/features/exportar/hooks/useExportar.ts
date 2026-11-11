@@ -11,6 +11,7 @@ import {
 import { ApiError } from "@/api/problem";
 import { toast } from "sonner";
 import {
+  CronogramaBloqueadoError,
   generarClaveExportacion,
   navegarDescarga,
   solicitarExportacion,
@@ -56,9 +57,6 @@ const guardar = (blob: Blob, nombreArchivo: string) => {
   URL.revokeObjectURL(link.href);
   toast.success("Descarga iniciada");
 };
-
-/** MSPDI viaja como XML: `.mspdi` no lo produce ningún camino del backend. */
-const extensionDe = (formato: FormatoExportCronograma) => (formato === "mspdi" ? "xml" : formato);
 
 export type OpcionesPresupuesto =
   | { formato: "xlsx"; orientacion?: never; layout?: never }
@@ -162,7 +160,7 @@ export function useExportar() {
 
   const exportarPrivado = useCallback(
     async (
-      documento: "presupuesto" | "apus" | "especificaciones-tecnicas",
+      documento: "presupuesto" | "apus" | "especificaciones-tecnicas" | "cronograma",
       presupuestoId: string,
       opciones: Record<string, string | undefined>,
     ) => {
@@ -187,6 +185,7 @@ export function useExportar() {
           clave,
         );
         navegarDescarga(respuesta.downloadUrl);
+        return respuesta;
       } catch (error) {
         if (
           error instanceof ApiError &&
@@ -270,25 +269,33 @@ export function useExportar() {
   const descargarCronograma = useCallback(
     async (presupuestoId: string, formato: FormatoExportCronograma, papel?: "a4" | "a3") => {
       try {
-        const { blob, nombreArchivo } = await descargar(`/documentos/cronograma/${presupuestoId}`, {
+        const respuesta = await exportarPrivado("cronograma", presupuestoId, {
           formato,
-          // Ausencia conserva A4 backend para los callers existentes; solo PDF admite papel.
           ...(formato === "pdf" && papel !== undefined ? { papel } : {}),
         });
-        guardar(blob, nombreArchivo ?? `cronograma.${extensionDe(formato)}`);
+        respuesta?.warnings.forEach((warning) => {
+          if ("detalle" in warning) toast.warning(warning.detalle, { duration: Infinity });
+        });
       } catch (e) {
         // El 409 `export-bloqueado` trae el recuento de bloqueos en `mensaje`:
         // decírselo al usuario es más útil que un genérico, y significa además
         // que el preflight que la pantalla enseña ya no vale.
-        toast.error(esErrorDeContrato(e) ? e.problem.mensaje : "Error al descargar");
-        if (e instanceof ApiError && e.status === 409) {
+        toast.error(
+          e instanceof CronogramaBloqueadoError
+            ? e.detalle.mensaje
+            : esErrorDeContrato(e)
+              ? e.problem.mensaje
+              : "Error al descargar",
+        );
+        if (e instanceof CronogramaBloqueadoError) {
           await cliente.invalidateQueries({
             queryKey: qk.cronogramaExportPreflight(presupuestoId, formato),
+            exact: true,
           });
         }
       }
     },
-    [cliente],
+    [cliente, exportarPrivado],
   );
 
   return {

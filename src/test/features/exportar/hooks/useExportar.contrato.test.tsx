@@ -9,7 +9,6 @@ import { server } from "@/test/server";
 import { espiar, ultima } from "@/test/espia";
 import { PRESUPUESTO_V1, PRESUPUESTO_V2 } from "@/test/fixtures/presupuesto";
 import { getAccessToken, setAccessToken } from "@/api/client";
-import { PRESUPUESTO_BLOQUEADO } from "@/test/handlers";
 import { descargar } from "@/api/request";
 import type { ApiError } from "@/api/problem";
 import type { FormatoExportCronograma } from "@/api/contract";
@@ -20,7 +19,7 @@ import {
 } from "@/features/exportar/hooks/useExportar";
 import { toast } from "sonner";
 
-vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn() } }));
 
 const API = "*/api/v1";
 const RUTA = "/api/v1";
@@ -198,50 +197,82 @@ describe("useExportar — ciclo de clave privada", () => {
 // en DOCX. Las cuatro opciones que ofrecía la UI (presupuesto PDF/Excel, APUs,
 // cronograma) apuntaban a rutas inventadas y se borraron: no existen en main.
 describe("useExportar — papel PDF cronograma", () => {
-  it("envía papel explícito solo PDF y conserva A4 por ausencia en llamadas antiguas", async () => {
-    const consultas: Array<Array<[string, string]>> = [];
+  it("reintenta con la misma clave y muestra advertencia de captura", async () => {
+    const claves: string[] = [];
     server.use(
-      http.get(`${API}/documentos/cronograma/${PRESUPUESTO_V1}`, ({ request }) => {
-        expect(request.method).toBe("GET");
-        consultas.push([...new URL(request.url).searchParams.entries()].sort());
-        return HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-          headers: { "Content-Type": "application/octet-stream" },
+      http.post(`${API}/documentos/cronograma/${PRESUPUESTO_V1}/exportaciones`, ({ request }) => {
+        claves.push(request.headers.get("Idempotency-Key") ?? "");
+        if (claves.length === 1)
+          return HttpResponse.json({ codigo: "error", mensaje: "Error" }, { status: 500 });
+        return HttpResponse.json({
+          operationId: PRESUPUESTO_V1,
+          downloadUrl: `/api/v1/documentos/descargas/${"a".repeat(43)}`,
+          expiresAt: "2026-01-01T00:05:00Z",
+          objectExpiresAt: "2026-01-02T00:00:00Z",
+          filename: "cronograma.xml",
+          mediaType: "application/xml",
+          sizeBytes: 1,
+          sha256: `${"a".repeat(43)}=`,
+          warnings: [{ codigo: "stale", detalle: "Cronograma desactualizado" }],
         });
       }),
     );
     const { result } = renderHook(() => useExportar(), { wrapper });
+    await act(async () => {
+      await result.current.descargarCronograma(PRESUPUESTO_V1, "mspdi");
+    });
+    expect(clicks).toHaveLength(0);
+    await act(async () => {
+      await result.current.descargarCronograma(PRESUPUESTO_V1, "mspdi");
+    });
+    expect(claves).toHaveLength(2);
+    expect(claves[0]).toBe(claves[1]);
+    expect(clicks).toHaveLength(1);
+    expect(toast.warning).toHaveBeenCalledWith("Cronograma desactualizado", { duration: Infinity });
+  });
+  it("envía papel explícito solo PDF y conserva A4 por ausencia en llamadas antiguas", async () => {
+    const consultas: unknown[] = [];
+    server.use(
+      http.post(
+        `${API}/documentos/cronograma/${PRESUPUESTO_V1}/exportaciones`,
+        async ({ request }) => {
+          const body = (await request.json()) as { formato: string };
+          consultas.push(body);
+          return HttpResponse.json({
+            operationId: PRESUPUESTO_V1,
+            downloadUrl: `/api/v1/documentos/descargas/${"a".repeat(43)}`,
+            expiresAt: "2026-01-01T00:05:00Z",
+            objectExpiresAt: "2026-01-02T00:00:00Z",
+            filename: "cronograma.pdf",
+            mediaType:
+              body.formato === "pdf"
+                ? "application/pdf"
+                : body.formato === "mspdi"
+                  ? "application/xml"
+                  : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            sizeBytes: 1,
+            sha256: `${"a".repeat(43)}=`,
+            warnings: [],
+          });
+        },
+      ),
+    );
+    const { result } = renderHook(() => useExportar(), { wrapper });
     await result.current.descargarCronograma(PRESUPUESTO_V1, "pdf", "a3");
-    expect(consultas).toEqual([
-      [
-        ["formato", "pdf"],
-        ["papel", "a3"],
-      ],
-    ]);
+    expect(consultas).toEqual([{ formato: "pdf", papel: "a3" }]);
     await result.current.descargarCronograma(PRESUPUESTO_V1, "pdf");
     await result.current.descargarCronograma(PRESUPUESTO_V1, "pdf", "a4");
     await result.current.descargarCronograma(PRESUPUESTO_V1, "xlsx", "a3");
     await result.current.descargarCronograma(PRESUPUESTO_V1, "mspdi", "a3");
     expect(consultas).toEqual([
-      [
-        ["formato", "pdf"],
-        ["papel", "a3"],
-      ],
-      [["formato", "pdf"]],
-      [
-        ["formato", "pdf"],
-        ["papel", "a4"],
-      ],
-      [["formato", "xlsx"]],
-      [["formato", "mspdi"]],
+      { formato: "pdf", papel: "a3" },
+      { formato: "pdf" },
+      { formato: "pdf", papel: "a4" },
+      { formato: "xlsx" },
+      { formato: "mspdi" },
     ]);
-    expect(clicks.map((click) => click.download)).toEqual([
-      "cronograma.pdf",
-      "cronograma.pdf",
-      "cronograma.pdf",
-      "cronograma.xlsx",
-      "cronograma.xml",
-    ]);
-    expect(revocadas).toHaveLength(5);
+    expect(clicks).toHaveLength(5);
+    expect(revocadas).toHaveLength(0);
   });
 });
 
@@ -574,52 +605,45 @@ describe("useExportar — cronograma valorizado", () => {
       const { result } = renderHook(() => useExportar(), { wrapper });
       await result.current.descargarCronograma(PRESUPUESTO_V2, formato);
 
-      const p = ultima(peticiones, "GET", CRONO);
-      expect(p?.ruta).toBe(`${RUTA}${CRONO}`);
-      expect([...(p?.url.searchParams.keys() ?? [])]).toEqual(["formato"]);
-      expect(p?.url.searchParams.get("formato")).toBe(formato);
+      const p = ultima(peticiones, "POST", `${CRONO}/exportaciones`);
+      expect(p?.ruta).toBe(`${RUTA}${CRONO}/exportaciones`);
+      expect(p?.cuerpo).toEqual({ formato });
     },
   );
 
-  it("guarda el archivo con el nombre que manda el backend en Content-Disposition", async () => {
-    server.use(
-      http.get(`${API}/documentos/cronograma/:id`, () =>
-        HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-          headers: {
-            "Content-Disposition": 'attachment; filename="PROY-A-Edificio_Principal-v3.xlsx"',
-          },
-        }),
-      ),
-    );
-
-    const { result } = renderHook(() => useExportar(), { wrapper });
-    await result.current.descargarCronograma(PRESUPUESTO_V2, "xlsx");
-
-    expect(clicks[0].download).toBe("PROY-A-Edificio_Principal-v3.xlsx");
-    expect(toast.success).toHaveBeenCalledWith("Descarga iniciada");
-  });
-
-  // MSPDI se sirve como XML: el fallback no puede inventar una extensión
-  // `.mspdi` que ningún camino del backend produce.
-  it("sin cabecera, mspdi cae a cronograma.xml", async () => {
-    server.use(
-      http.get(`${API}/documentos/cronograma/:id`, () =>
-        HttpResponse.arrayBuffer(new ArrayBuffer(8)),
-      ),
-    );
-
-    const { result } = renderHook(() => useExportar(), { wrapper });
-    await result.current.descargarCronograma(PRESUPUESTO_V2, "mspdi");
-
-    expect(clicks[0].download).toBe("cronograma.xml");
+  it("conserva el GET de bytes como API separada", async () => {
+    const archivo = await descargar(CRONO, { formato: "mspdi" });
+    expect(archivo.blob.type).toBe("application/xml");
+    expect(archivo.nombreArchivo).toMatch(/\.xml$/);
   });
 
   // Ata el arreglo del interceptor: con el cuerpo de error llegando como Blob
   // sin rehidratar, este mensaje sería el genérico «Error al descargar».
   it("el 409 avisa con el mensaje del backend y no fabrica ningún enlace", async () => {
+    const invalidar = vi.spyOn(cliente, "invalidateQueries");
+    server.use(
+      http.post(`${API}/documentos/cronograma/${PRESUPUESTO_V1}/exportaciones`, () =>
+        HttpResponse.json(
+          {
+            presupuestoId: PRESUPUESTO_V1,
+            formato: "xlsx",
+            codigo: "export-bloqueado",
+            mensaje: "Exportación bloqueada: 2 bloqueo(s)",
+            bloqueos: [],
+            warnings: [],
+          },
+          { status: 409 },
+        ),
+      ),
+    );
     const { result } = renderHook(() => useExportar(), { wrapper });
-    await result.current.descargarCronograma(PRESUPUESTO_BLOQUEADO, "xlsx");
-
+    await act(async () => {
+      await result.current.descargarCronograma(PRESUPUESTO_V1, "xlsx");
+    });
+    expect(invalidar).toHaveBeenCalledWith({
+      queryKey: ["presupuesto", PRESUPUESTO_V1, "export-cronograma", "xlsx"],
+      exact: true,
+    });
     expect(toast.error).toHaveBeenCalledWith("Exportación bloqueada: 2 bloqueo(s)");
     expect(clicks).toHaveLength(0);
   });

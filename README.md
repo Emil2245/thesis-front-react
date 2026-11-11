@@ -37,9 +37,9 @@ Key architectural decisions (see `plans/README.md` for full ADR log):
 - `src/api/` is the only HTTP-aware layer
 - Version selector uses `?v=` search param (not nested routes)
 
-## Private document exports (stage 03)
+## Private document exports (stages 03–04)
 
-The budget, APU and technical-specification buttons send an authenticated JSON
+The budget, APU, technical-specification and cronograma buttons send an authenticated JSON
 `POST /documentos/{type}/{budgetId}/exportaciones` to Core. The client generates
 an `Idempotency-Key` UUIDv7 for the selected version and options; Core returns
 a validated, short-lived **relative Core download path**. Only an explicit
@@ -50,9 +50,10 @@ informative: the POST rechecks access and exportability.
 Retry a failed request with the same key so Core can reissue a one-use ticket
 without rendering again. If Core responds `idempotencia-conflicto` (changed
 revision/options) or `exportacion-expirada`, the next explicit click starts a
-new operation with a new key. Cronograma still downloads through its existing
-GET while its POST remains deferred; Core's public byte-serving GETs remain
-available for transition callers. Configure `VITE_API_BASE_URL` to the Core
+new operation with a new key. Cronograma accepts XLSX, PDF (`papel` only for
+PDF), and MSPDI XML; its captured stale warning remains visible. Core's public
+byte-serving GETs and cronograma preflight remain available for transition
+callers. Configure `VITE_API_BASE_URL` to the Core
 `/api/v1` origin, and allow `Idempotency-Key` in the Core CORS preflight for
 cross-origin deployments. Local component tests do not prove browser download,
 Ingress log suppression or deployed S3 permissions.

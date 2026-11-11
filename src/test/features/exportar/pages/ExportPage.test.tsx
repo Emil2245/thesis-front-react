@@ -530,14 +530,31 @@ describe("ExportPage — presupuesto/APUs", () => {
 // qué bloqueos si no. La pantalla enseña el `detalle` que el servidor redacta.
 describe("ExportPage — cronograma valorizado", () => {
   it("ofrece papel solo PDF, descarga A3 histórica y limpia la opción al cambiar formato", async () => {
-    const consultas: Array<Array<[string, string]>> = [];
+    const consultas: unknown[] = [];
     server.use(
-      http.get(`${API}/documentos/cronograma/${PRESUPUESTO_V1}`, ({ request }) => {
-        consultas.push([...new URL(request.url).searchParams.entries()].sort());
-        return HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-          headers: { "Content-Type": "application/octet-stream" },
-        });
-      }),
+      http.post(
+        `${API}/documentos/cronograma/${PRESUPUESTO_V1}/exportaciones`,
+        async ({ request }) => {
+          const body = (await request.json()) as { formato: string };
+          consultas.push(body);
+          return HttpResponse.json({
+            operationId: PRESUPUESTO,
+            downloadUrl: `/api/v1/documentos/descargas/${"a".repeat(43)}`,
+            expiresAt: "2026-01-01T00:05:00Z",
+            objectExpiresAt: "2026-01-02T00:00:00Z",
+            filename: "cronograma.pdf",
+            mediaType:
+              body.formato === "pdf"
+                ? "application/pdf"
+                : body.formato === "mspdi"
+                  ? "application/xml"
+                  : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            sizeBytes: 1,
+            sha256: `${"a".repeat(43)}=`,
+            warnings: [],
+          });
+        },
+      ),
     );
     const { user } = await setup({
       presupuestoId: PRESUPUESTO_V1,
@@ -556,40 +573,28 @@ describe("ExportPage — cronograma valorizado", () => {
     const boton = screen.getByRole("button", { name: "Descargar cronograma" });
     await waitFor(() => expect(boton).toBeEnabled());
     await user.click(boton);
-    await waitFor(() =>
-      expect(consultas).toEqual([
-        [
-          ["formato", "pdf"],
-          ["papel", "a3"],
-        ],
-      ]),
-    );
+    await waitFor(() => expect(consultas).toEqual([{ formato: "pdf", papel: "a3" }]));
     await seleccionar(user, "Formato", "MS Project (.xml)");
     expect(
       screen.queryByRole("combobox", { name: "Papel del PDF de cronograma" }),
     ).not.toBeInTheDocument();
     await waitFor(() => expect(boton).toBeEnabled());
     await user.click(boton);
-    await waitFor(() => expect(consultas[1]).toEqual([["formato", "mspdi"]]));
+    await waitFor(() => expect(consultas[1]).toEqual({ formato: "mspdi" }));
     await seleccionar(user, "Formato", "Excel (.xlsx)");
     expect(
       screen.queryByRole("combobox", { name: "Papel del PDF de cronograma" }),
     ).not.toBeInTheDocument();
     await waitFor(() => expect(boton).toBeEnabled());
     await user.click(boton);
-    await waitFor(() => expect(consultas[2]).toEqual([["formato", "xlsx"]]));
+    await waitFor(() => expect(consultas[2]).toEqual({ formato: "xlsx" }));
     await seleccionar(user, "Formato", "PDF (.pdf)");
     expect(screen.getByRole("combobox", { name: "Papel del PDF de cronograma" })).toHaveTextContent(
       "A4",
     );
     await waitFor(() => expect(boton).toBeEnabled());
     await user.click(boton);
-    await waitFor(() =>
-      expect(consultas[3]).toEqual([
-        ["formato", "pdf"],
-        ["papel", "a4"],
-      ]),
-    );
+    await waitFor(() => expect(consultas[3]).toEqual({ formato: "pdf", papel: "a4" }));
   });
 
   it("elegir A3 no elimina los bloqueos del cronograma", async () => {
@@ -656,7 +661,9 @@ describe("ExportPage — cronograma valorizado", () => {
     await user.click(boton);
 
     await waitFor(() =>
-      expect(ultima(peticiones, "GET", `/documentos/cronograma/${PRESUPUESTO}`)).toBeDefined(),
+      expect(
+        ultima(peticiones, "POST", `/documentos/cronograma/${PRESUPUESTO}/exportaciones`),
+      ).toBeDefined(),
     );
   });
 });
