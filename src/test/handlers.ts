@@ -80,8 +80,8 @@ export const VALOR_INEXISTENTE = "ZZZ_NO_EXISTE";
 // Los dos presupuestos con los que la exportación del cronograma se sale del
 // camino feliz: uno ajeno (404) y uno con bloqueos (preflight `exportable:
 // false` y 409 en la descarga).
-export const PRESUPUESTO_AJENO = "018f8a60-0000-7000-8000-0000000000404";
-export const PRESUPUESTO_BLOQUEADO = "018f8a60-0000-7000-8000-0000000000409";
+export const PRESUPUESTO_AJENO = "018f8a60-0000-7000-8000-000000000404";
+export const PRESUPUESTO_BLOQUEADO = "018f8a60-0000-7000-8000-000000000409";
 export const PROYECTO_DESDE_PLANTILLA = "018f8a10-0000-7000-8000-000000000099";
 
 const esRegistro = (valor: unknown): valor is Record<string, unknown> =>
@@ -1179,6 +1179,50 @@ export const handlers = [
       params.id === PRESUPUESTO_BLOQUEADO ? preflightBloqueadoFixture : preflightExportableFixture;
     // El backend devuelve el formato PEDIDO (`formato.token()`), no uno fijo.
     return HttpResponse.json({ ...base, formato });
+  }),
+
+  http.post(`${API}/documentos/cronograma/:id/exportaciones`, async ({ request, params }) => {
+    const body = await leerCuerpo(request);
+    const formato = body.formato;
+    if (
+      typeof formato !== "string" ||
+      !Object.hasOwn(ARCHIVO_CRONOGRAMA, formato) ||
+      !camposExactos(body, ["formato", ...(formato === "pdf" ? ["papel"] : [])]) ||
+      (body.papel !== undefined && body.papel !== "a3" && body.papel !== "a4") ||
+      !esUuidV7(request.headers.get("Idempotency-Key")) ||
+      !esUuidV7(params.id)
+    )
+      return problema(400, "validacion", FORMATO_NO_SOPORTADO);
+    if (
+      ![PRESUPUESTO_V1, PRESUPUESTO_V2, PRESUPUESTO_V3, PRESUPUESTO_BLOQUEADO].includes(
+        String(params.id),
+      )
+    )
+      return problema(404, "no-encontrado", "Presupuesto no encontrado");
+    if (params.id === PRESUPUESTO_BLOQUEADO)
+      return HttpResponse.json(
+        {
+          presupuestoId: String(params.id),
+          formato,
+          codigo: "export-bloqueado",
+          mensaje: `Exportación bloqueada: ${preflightBloqueadoFixture.bloqueos.length} bloqueo(s)`,
+          bloqueos: preflightBloqueadoFixture.bloqueos,
+          warnings: preflightBloqueadoFixture.warnings,
+        },
+        { status: 409 },
+      );
+    const archivo = ARCHIVO_CRONOGRAMA[formato as FormatoExportCronograma];
+    return HttpResponse.json({
+      operationId: PRESUPUESTO_V1,
+      downloadUrl: `/api/v1/documentos/descargas/${"a".repeat(43)}`,
+      expiresAt: "2026-01-01T00:05:00Z",
+      objectExpiresAt: "2026-01-02T00:00:00Z",
+      filename: `cronograma.${archivo.extension}`,
+      mediaType: archivo.mediaType,
+      sizeBytes: 8,
+      sha256: `${"a".repeat(43)}=`,
+      warnings: [],
+    });
   }),
 
   http.get<PathParams, DefaultBodyType, Problem | BloqueoExportDetalle | ArrayBuffer>(

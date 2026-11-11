@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "@/test/server";
+import { PRESUPUESTO_AJENO } from "@/test/handlers";
 import { API_BASE_URL } from "@/lib/env";
 import { DocumentoPreflightError } from "@/api/client";
 import { ApiError } from "@/api/problem";
@@ -26,6 +27,82 @@ const resultado = {
 };
 
 describe("exportaciones privadas", () => {
+  it("rechaza cronogramas ajenos y desconocidos en el POST simulado", async () => {
+    for (const id of [PRESUPUESTO_AJENO, "0198c1a0-0000-7000-8000-000000000099"]) {
+      const response = await solicitarExportacion(
+        `/documentos/cronograma/${id}/exportaciones`,
+        { formato: "xlsx" },
+        generarClaveExportacion(),
+      ).catch((error: unknown) => error);
+      expect(response).toBeInstanceOf(ApiError);
+      expect((response as ApiError).status).toBe(404);
+    }
+  });
+  it("valida ticket XML y advertencias propias de cronograma", async () => {
+    server.use(
+      http.post(`*/api/v1/documentos/cronograma/${ID}/exportaciones`, async ({ request }) => {
+        expect(await request.json()).toEqual({ formato: "mspdi" });
+        return HttpResponse.json({
+          ...resultado,
+          filename: "cronograma.xml",
+          mediaType: "application/xml",
+          warnings: [{ codigo: "stale", detalle: "Desactualizado" }],
+        });
+      }),
+    );
+    const respuesta = await solicitarExportacion(
+      `/documentos/cronograma/${ID}/exportaciones`,
+      { formato: "mspdi" },
+      ID,
+    );
+    expect(respuesta.warnings).toEqual([{ codigo: "stale", detalle: "Desactualizado" }]);
+  });
+  it("rechaza warnings ajenos, MIME incorrecto y tickets externos de cronograma", async () => {
+    let respuesta = {
+      ...resultado,
+      mediaType: "application/xml",
+      warnings: [{ codigo: "stale", mensaje: "No", rubros: [] as never[] }],
+    };
+    server.use(
+      http.post(`*/api/v1/documentos/cronograma/${ID}/exportaciones`, () =>
+        HttpResponse.json(respuesta),
+      ),
+    );
+    const solicitar = () =>
+      solicitarExportacion(`/documentos/cronograma/${ID}/exportaciones`, { formato: "mspdi" }, ID);
+    await expect(solicitar()).rejects.toBeDefined();
+    respuesta = { ...resultado, mediaType: "application/pdf", warnings: [] };
+    await expect(solicitar()).rejects.toBeDefined();
+    respuesta = {
+      ...resultado,
+      mediaType: "application/xml",
+      downloadUrl: "https://externo.invalid/archivo",
+      warnings: [],
+    };
+    await expect(solicitar()).rejects.toBeDefined();
+  });
+
+  it("no acepta XML ni warnings de cronograma en presupuesto/APUs", async () => {
+    for (const documento of ["presupuesto", "apus"]) {
+      server.use(
+        http.post(`*/api/v1/documentos/${documento}/${ID}/exportaciones`, () =>
+          HttpResponse.json({
+            ...resultado,
+            mediaType: "application/xml",
+            warnings: [{ codigo: "stale", detalle: "No" }],
+          }),
+        ),
+      );
+      await expect(
+        solicitarExportacion(
+          `/documentos/${documento}/${ID}/exportaciones`,
+          { formato: "pdf" },
+          ID,
+        ),
+      ).rejects.toBeDefined();
+    }
+  });
+
   it("envía JSON autenticable con clave UUIDv7 y acepta únicamente un ticket Core relativo", async () => {
     const key = generarClaveExportacion();
     expect(key).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);

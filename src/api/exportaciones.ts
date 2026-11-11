@@ -45,6 +45,37 @@ export const exportacionResponseSchema = z
   })
   .strict();
 
+const warningCronograma = z.object({ codigo: z.string(), detalle: z.string() }).strict();
+const cronogramaResponseSchema = exportacionResponseSchema.extend({
+  mediaType: z.enum([
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/xml",
+  ]),
+  warnings: z.array(warningCronograma),
+});
+const bloqueoCronogramaSchema = z
+  .object({
+    presupuestoId: z.string().regex(uuidV7),
+    formato: z.enum(["xlsx", "pdf", "mspdi"]),
+    codigo: z.literal("export-bloqueado"),
+    mensaje: z.string(),
+    bloqueos: z.array(
+      z
+        .object({ codigo: z.string(), actividadId: z.string().nullable(), detalle: z.string() })
+        .strict(),
+    ),
+    warnings: z.array(warningCronograma),
+  })
+  .strict();
+export class CronogramaBloqueadoError extends Error {
+  readonly detalle: z.infer<typeof bloqueoCronogramaSchema>;
+  constructor(detalle: z.infer<typeof bloqueoCronogramaSchema>) {
+    super(detalle.mensaje);
+    this.detalle = detalle;
+  }
+}
+
 export type ExportacionResponse = z.infer<typeof exportacionResponseSchema>;
 
 /** Secure browser randomness plus a timestamp in the RFC 9562 UUIDv7 layout. */
@@ -65,7 +96,7 @@ export function generarClaveExportacion(): string {
 export async function solicitarExportacion(url: string, body: Record<string, string>, key: string) {
   if (
     !uuidV7.test(key) ||
-    !/^\/documentos\/(presupuesto|apus|especificaciones-tecnicas)\/[0-9a-f-]+\/exportaciones$/.test(
+    !/^\/documentos\/(presupuesto|apus|especificaciones-tecnicas|cronograma)\/[0-9a-f-]+\/exportaciones$/.test(
       url,
     )
   ) {
@@ -76,6 +107,16 @@ export async function solicitarExportacion(url: string, body: Record<string, str
     validateStatus: (status) => (status >= 200 && status < 300) || status === 409,
   });
   if (status === 409) {
+    const cronograma = url.match(/^\/documentos\/cronograma\/([^/]+)\/exportaciones$/);
+    const bloqueo = bloqueoCronogramaSchema.safeParse(data);
+    if (
+      cronograma &&
+      bloqueo.success &&
+      bloqueo.data.presupuestoId === cronograma[1] &&
+      bloqueo.data.formato === body.formato
+    ) {
+      throw new CronogramaBloqueadoError(bloqueo.data);
+    }
     const ruta = url.match(/^\/documentos\/(presupuesto|apus)\/([^/]+)\/exportaciones$/);
     const preflight = documentoPreflightSchema.safeParse(data);
     const { formato, ...opciones } = body;
@@ -101,6 +142,18 @@ export async function solicitarExportacion(url: string, body: Record<string, str
         : problemDesconocido(status, "Request failed with status code 409"),
       status,
     );
+  }
+  if (url.startsWith("/documentos/cronograma/")) {
+    const parsed = cronogramaResponseSchema.safeParse(data);
+    if (!parsed.success) throw errorDeRespuesta(url, parsed.error);
+    const mime: Record<string, string> = {
+      pdf: "application/pdf",
+      xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      mspdi: "application/xml",
+    };
+    if (parsed.data.mediaType !== mime[body.formato])
+      throw new TypeError("La respuesta no corresponde al formato solicitado");
+    return parsed.data;
   }
   const parsed = exportacionResponseSchema.safeParse(data);
   if (!parsed.success) throw errorDeRespuesta(url, parsed.error);
