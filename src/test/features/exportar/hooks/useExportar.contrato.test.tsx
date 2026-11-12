@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import type { ReactNode } from "react";
@@ -8,9 +8,6 @@ import { crearQueryClient } from "@/test/render";
 import { server } from "@/test/server";
 import { espiar, ultima } from "@/test/espia";
 import { PRESUPUESTO_V1, PRESUPUESTO_V2 } from "@/test/fixtures/presupuesto";
-import { getAccessToken, setAccessToken } from "@/api/client";
-import { PRESUPUESTO_BLOQUEADO } from "@/test/handlers";
-import { descargar } from "@/api/request";
 import type { ApiError } from "@/api/problem";
 import type { FormatoExportCronograma } from "@/api/contract";
 import {
@@ -20,38 +17,25 @@ import {
 } from "@/features/exportar/hooks/useExportar";
 import { toast } from "sonner";
 
-vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn() } }));
 
 const API = "*/api/v1";
 const RUTA = "/api/v1";
-const ET = `/documentos/especificaciones-tecnicas/${PRESUPUESTO_V2}`;
 const CRONO = `/documentos/cronograma/${PRESUPUESTO_V2}`;
 
 let cliente: QueryClient;
 // Cada `<a download>` que fabrica el hook se anota aquí en vez de navegar:
 // jsdom no implementa la descarga y el click real solo produce ruido.
 let clicks: Array<{ href: string; download: string }>;
-let blobs: Blob[];
-let revocadas: string[];
 
 beforeEach(() => {
   vi.clearAllMocks();
   cliente = crearQueryClient();
   clicks = [];
-  blobs = [];
-  revocadas = [];
   vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
     this: HTMLAnchorElement,
   ) {
     clicks.push({ href: this.href, download: this.download });
-  });
-  // jsdom no trae Object URLs; se sustituyen para poder mirar el Blob.
-  URL.createObjectURL = vi.fn((b: Blob) => {
-    blobs.push(b);
-    return `blob:apu/${blobs.length}`;
-  });
-  URL.revokeObjectURL = vi.fn((u: string) => {
-    revocadas.push(u);
   });
 });
 
@@ -86,314 +70,212 @@ describe("useValidacionExport — contrato de salida", () => {
   });
 });
 
+describe("useExportar — ciclo de clave privada", () => {
+  it("no navega si la respuesta contiene un ticket externo", async () => {
+    server.use(
+      http.post(`${API}/documentos/apus/${PRESUPUESTO_V1}/exportaciones`, () =>
+        HttpResponse.json({
+          operationId: PRESUPUESTO_V1,
+          downloadUrl: "https://external.invalid/ticket",
+          expiresAt: "2026-01-01T00:05:00Z",
+          objectExpiresAt: "2026-01-02T00:00:00Z",
+          filename: "apu.pdf",
+          mediaType: "application/pdf",
+          sizeBytes: 1,
+          sha256: `${"a".repeat(43)}=`,
+          warnings: [],
+        }),
+      ),
+    );
+    const { result } = renderHook(() => useExportar(), { wrapper });
+    await act(async () => {
+      await expect(
+        result.current.exportarPrivado("apus", PRESUPUESTO_V1, { formato: "pdf" }),
+      ).rejects.toBeDefined();
+    });
+    expect(clicks).toHaveLength(0);
+  });
+
+  it("envía opciones distintas para presupuesto PDF y APUs XLSX", async () => {
+    const requests: Array<{ documento: string; body: unknown; key: string | null }> = [];
+    server.use(
+      http.post(
+        `${API}/documentos/:documento/${PRESUPUESTO_V1}/exportaciones`,
+        async ({ params, request }) => {
+          requests.push({
+            documento: String(params.documento),
+            body: await request.json(),
+            key: request.headers.get("Idempotency-Key"),
+          });
+          return HttpResponse.json({
+            operationId: PRESUPUESTO_V1,
+            downloadUrl: `/api/v1/documentos/descargas/${"a".repeat(43)}`,
+            expiresAt: "2026-01-01T00:05:00Z",
+            objectExpiresAt: "2026-01-02T00:00:00Z",
+            filename: "documento.pdf",
+            mediaType: "application/pdf",
+            sizeBytes: 1,
+            sha256: `${"a".repeat(43)}=`,
+            warnings: [],
+          });
+        },
+      ),
+    );
+    const { result } = renderHook(() => useExportar(), { wrapper });
+    await act(async () => {
+      await result.current.exportarPrivado("presupuesto", PRESUPUESTO_V1, {
+        formato: "pdf",
+        orientacion: "horizontal",
+      });
+    });
+    await act(async () => {
+      await result.current.exportarPrivado("apus", PRESUPUESTO_V1, {
+        formato: "xlsx",
+        layout: "apilado",
+      });
+    });
+    expect(requests.map(({ documento, body }) => ({ documento, body }))).toEqual([
+      { documento: "presupuesto", body: { formato: "pdf", orientacion: "horizontal" } },
+      { documento: "apus", body: { formato: "xlsx", layout: "apilado" } },
+    ]);
+    expect(requests[0].key).not.toBe(requests[1].key);
+    expect(clicks).toHaveLength(2);
+  });
+  it.each([
+    ["idempotencia-conflicto", 409, true],
+    ["exportacion-expirada", 409, true],
+    ["exportacion-en-curso", 409, false],
+    ["servidor", 500, false],
+    ["red", 0, false],
+  ])("%s %i: nueva clave = %s solo en el siguiente gesto", async (codigo, status, nueva) => {
+    const claves: string[] = [];
+    server.use(
+      http.post(`${API}/documentos/presupuesto/${PRESUPUESTO_V1}/exportaciones`, ({ request }) => {
+        claves.push(request.headers.get("Idempotency-Key") ?? "");
+        return status === 0
+          ? HttpResponse.error()
+          : HttpResponse.json({ codigo, mensaje: "error" }, { status });
+      }),
+    );
+    const { result } = renderHook(() => useExportar(), { wrapper });
+    const ejecutar = () =>
+      result.current.exportarPrivado("presupuesto", PRESUPUESTO_V1, { formato: "xlsx" });
+    await act(async () => {
+      await expect(ejecutar()).rejects.toBeDefined();
+    });
+    expect(claves).toHaveLength(1);
+    expect(clicks).toHaveLength(0);
+    await act(async () => {
+      await expect(ejecutar()).rejects.toBeDefined();
+    });
+    expect(claves).toHaveLength(2);
+    expect(claves[0]).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
+    if (nueva) expect(claves[1]).not.toBe(claves[0]);
+    else expect(claves[1]).toBe(claves[0]);
+    expect(clicks).toHaveLength(0);
+  });
+});
+
 // Plan 051: el backend expone UN endpoint de export, la especificación técnica
 // en DOCX. Las cuatro opciones que ofrecía la UI (presupuesto PDF/Excel, APUs,
 // cronograma) apuntaban a rutas inventadas y se borraron: no existen en main.
 describe("useExportar — papel PDF cronograma", () => {
-  it("envía papel explícito solo PDF y conserva A4 por ausencia en llamadas antiguas", async () => {
-    const consultas: Array<Array<[string, string]>> = [];
+  it("reintenta con la misma clave y muestra advertencia de captura", async () => {
+    const claves: string[] = [];
     server.use(
-      http.get(`${API}/documentos/cronograma/${PRESUPUESTO_V1}`, ({ request }) => {
-        expect(request.method).toBe("GET");
-        consultas.push([...new URL(request.url).searchParams.entries()].sort());
-        return HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-          headers: { "Content-Type": "application/octet-stream" },
+      http.post(`${API}/documentos/cronograma/${PRESUPUESTO_V1}/exportaciones`, ({ request }) => {
+        claves.push(request.headers.get("Idempotency-Key") ?? "");
+        if (claves.length === 1)
+          return HttpResponse.json({ codigo: "error", mensaje: "Error" }, { status: 500 });
+        return HttpResponse.json({
+          operationId: PRESUPUESTO_V1,
+          downloadUrl: `/api/v1/documentos/descargas/${"a".repeat(43)}`,
+          expiresAt: "2026-01-01T00:05:00Z",
+          objectExpiresAt: "2026-01-02T00:00:00Z",
+          filename: "cronograma.xml",
+          mediaType: "application/xml",
+          sizeBytes: 1,
+          sha256: `${"a".repeat(43)}=`,
+          warnings: [{ codigo: "stale", detalle: "Cronograma desactualizado" }],
         });
       }),
     );
     const { result } = renderHook(() => useExportar(), { wrapper });
+    await act(async () => {
+      await result.current.descargarCronograma(PRESUPUESTO_V1, "mspdi");
+    });
+    expect(clicks).toHaveLength(0);
+    await act(async () => {
+      await result.current.descargarCronograma(PRESUPUESTO_V1, "mspdi");
+    });
+    expect(claves).toHaveLength(2);
+    expect(claves[0]).toBe(claves[1]);
+    expect(clicks).toHaveLength(1);
+    expect(toast.warning).toHaveBeenCalledWith("Cronograma desactualizado", { duration: Infinity });
+  });
+  it("envía papel explícito solo PDF y conserva A4 por ausencia en llamadas antiguas", async () => {
+    const consultas: unknown[] = [];
+    server.use(
+      http.post(
+        `${API}/documentos/cronograma/${PRESUPUESTO_V1}/exportaciones`,
+        async ({ request }) => {
+          const body = (await request.json()) as { formato: string };
+          consultas.push(body);
+          return HttpResponse.json({
+            operationId: PRESUPUESTO_V1,
+            downloadUrl: `/api/v1/documentos/descargas/${"a".repeat(43)}`,
+            expiresAt: "2026-01-01T00:05:00Z",
+            objectExpiresAt: "2026-01-02T00:00:00Z",
+            filename: "cronograma.pdf",
+            mediaType:
+              body.formato === "pdf"
+                ? "application/pdf"
+                : body.formato === "mspdi"
+                  ? "application/xml"
+                  : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            sizeBytes: 1,
+            sha256: `${"a".repeat(43)}=`,
+            warnings: [],
+          });
+        },
+      ),
+    );
+    const { result } = renderHook(() => useExportar(), { wrapper });
     await result.current.descargarCronograma(PRESUPUESTO_V1, "pdf", "a3");
-    expect(consultas).toEqual([
-      [
-        ["formato", "pdf"],
-        ["papel", "a3"],
-      ],
-    ]);
+    expect(consultas).toEqual([{ formato: "pdf", papel: "a3" }]);
     await result.current.descargarCronograma(PRESUPUESTO_V1, "pdf");
     await result.current.descargarCronograma(PRESUPUESTO_V1, "pdf", "a4");
     await result.current.descargarCronograma(PRESUPUESTO_V1, "xlsx", "a3");
     await result.current.descargarCronograma(PRESUPUESTO_V1, "mspdi", "a3");
     expect(consultas).toEqual([
-      [
-        ["formato", "pdf"],
-        ["papel", "a3"],
-      ],
-      [["formato", "pdf"]],
-      [
-        ["formato", "pdf"],
-        ["papel", "a4"],
-      ],
-      [["formato", "xlsx"]],
-      [["formato", "mspdi"]],
+      { formato: "pdf", papel: "a3" },
+      { formato: "pdf" },
+      { formato: "pdf", papel: "a4" },
+      { formato: "xlsx" },
+      { formato: "mspdi" },
     ]);
-    expect(clicks.map((click) => click.download)).toEqual([
-      "cronograma.pdf",
-      "cronograma.pdf",
-      "cronograma.pdf",
-      "cronograma.xlsx",
-      "cronograma.xml",
-    ]);
-    expect(revocadas).toHaveLength(5);
+    expect(clicks).toHaveLength(5);
+    // Navega al ticket de Core; nunca fabrica un Object URL de un Blob.
+    expect(clicks.every((c) => !c.href.startsWith("blob:"))).toBe(true);
   });
 });
 
-describe("useExportar — especificaciones técnicas", () => {
-  it("pide el único endpoint que existe, sin inventar `formato` ni títulos vacíos", async () => {
-    const peticiones = espiar();
-
+// Etapa 05: las descargas de bytes (GET + Blob) se retiraron del backend; toda
+// exportación pasa por POST /exportaciones y el ticket de un solo uso de Core.
+describe("useExportar — sin descargas de bytes legadas", () => {
+  it("no expone las funciones GET/Blob retiradas", () => {
     const { result } = renderHook(() => useExportar(), { wrapper });
-    await result.current.descargarEspecificacionesTecnicas(PRESUPUESTO_V2);
-
-    const p = ultima(peticiones, "GET", ET);
-    expect(p?.ruta).toBe(`${RUTA}${ET}`);
-    // Mandar `titulo1=` vacío no es lo mismo que omitirlo: acaba en la portada.
-    expect([...(p?.url.searchParams.keys() ?? [])]).toEqual([]);
-  });
-
-  it("guarda el archivo con el nombre que manda el backend en Content-Disposition", async () => {
-    server.use(
-      http.get(`${API}/documentos/especificaciones-tecnicas/:id`, () =>
-        HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-          headers: {
-            "Content-Disposition": 'attachment; filename="ET-Proyecto Norte-v2.docx"',
-          },
-        }),
-      ),
-    );
-
-    const { result } = renderHook(() => useExportar(), { wrapper });
-    await result.current.descargarEspecificacionesTecnicas(PRESUPUESTO_V2);
-
-    expect(clicks).toEqual([{ href: "blob:apu/1", download: "ET-Proyecto Norte-v2.docx" }]);
-    expect(toast.success).toHaveBeenCalledWith("Descarga iniciada");
-  });
-
-  it("si el backend no manda la cabecera, cae a un nombre propio", async () => {
-    server.use(
-      http.get(`${API}/documentos/especificaciones-tecnicas/:id`, () =>
-        HttpResponse.arrayBuffer(new ArrayBuffer(8)),
-      ),
-    );
-
-    const { result } = renderHook(() => useExportar(), { wrapper });
-    await result.current.descargarEspecificacionesTecnicas(PRESUPUESTO_V2);
-
-    expect(clicks[0].download).toBe("especificaciones-tecnicas.docx");
-  });
-
-  it("recibe un Blob real y lo libera tras el click", async () => {
-    const { result } = renderHook(() => useExportar(), { wrapper });
-    await result.current.descargarEspecificacionesTecnicas(PRESUPUESTO_V2);
-
-    expect(blobs).toHaveLength(1);
-    expect(blobs[0]).toBeInstanceOf(Blob);
-    expect(blobs[0].size).toBe(8);
-    // El enlace se retira del DOM y el object URL se revoca: si no, cada
-    // export deja un blob vivo en memoria para el resto de la sesión.
-    expect(document.querySelector("a[download]")).toBeNull();
-    expect(revocadas).toEqual(["blob:apu/1"]);
-  });
-
-  it("un fallo del backend avisa con toast y no fabrica ningún enlace", async () => {
-    server.use(
-      http.get(`${API}/documentos/especificaciones-tecnicas/:id`, () =>
-        HttpResponse.json({ title: "Boom" }, { status: 500 }),
-      ),
-    );
-
-    const { result } = renderHook(() => useExportar(), { wrapper });
-    await result.current.descargarEspecificacionesTecnicas(PRESUPUESTO_V2);
-
-    expect(toast.error).toHaveBeenCalledWith("Error al descargar");
-    expect(clicks).toHaveLength(0);
-  });
-
-  // El hook no manda `formato`, así que este 400 es inalcanzable desde la UI —
-  // que es justamente lo que hay que sostener: no hay botón «PDF» que cablear.
-  it("el backend rechaza con 400 cualquier formato que no sea docx", async () => {
-    await expect(descargar(ET, { formato: "pdf" })).rejects.toMatchObject({ status: 400 });
-    await expect(descargar(ET, { formato: "docx" })).resolves.toBeDefined();
-  });
-});
-
-// F04-02: extensión mínima del objeto real de useExportar, sin exports ficticios.
-// Reflect permite observar RED por capacidad ausente antes de invocar el método.
-describe("useExportar — presupuesto/APUs de la versión seleccionada", () => {
-  let tokenAnterior: string | null;
-  beforeEach(() => {
-    tokenAnterior = getAccessToken();
-    setAccessToken("documentos-test");
-  });
-  afterEach(() => setAccessToken(tokenAnterior));
-
-  const casos = [
-    { documento: "presupuesto", metodo: "descargarPresupuesto", opciones: { formato: "xlsx" } },
-    { documento: "presupuesto", metodo: "descargarPresupuesto", opciones: { formato: "pdf" } },
-    {
-      documento: "presupuesto",
-      metodo: "descargarPresupuesto",
-      opciones: { formato: "pdf", orientacion: "horizontal" },
-    },
-    { documento: "apus", metodo: "descargarApus", opciones: { formato: "xlsx" } },
-    {
-      documento: "apus",
-      metodo: "descargarApus",
-      opciones: { formato: "xlsx", layout: "apilado" },
-    },
-    { documento: "apus", metodo: "descargarApus", opciones: { formato: "pdf" } },
-  ] as const;
-  const mime = (formato: string) =>
-    formato === "pdf"
-      ? "application/pdf"
-      : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-  const contenido = (blob: Blob) =>
-    new Promise<string>((resolve, reject) => {
-      const lector = new FileReader();
-      lector.onload = () => resolve(String(lector.result));
-      lector.onerror = () => reject(lector.error);
-      lector.readAsText(blob);
-    });
-
-  it("descarga sólo las combinaciones cerradas con UUID no vigente, bytes y nombre del servidor", async () => {
-    const { result } = renderHook(() => useExportar(), { wrapper });
-    for (const [indice, caso] of casos.entries()) {
-      expect(result.current).toHaveProperty(caso.metodo, expect.any(Function));
-      const peticiones: string[] = [];
-      const nombre = `${caso.documento}-Selected-${PRESUPUESTO_V1}-v1.${caso.opciones.formato}`;
-      const cuerpo = `${PRESUPUESTO_V1}:v1:${JSON.stringify(caso.opciones)}`;
-      const query = [...new URLSearchParams(caso.opciones).entries()].sort();
-      server.use(
-        http.get(`${API}/documentos/${caso.documento}/:id`, ({ request, params }) => {
-          const url = new URL(request.url);
-          peticiones.push(url.pathname);
-          if (
-            params.id !== PRESUPUESTO_V1 ||
-            JSON.stringify([...url.searchParams.entries()].sort()) !== JSON.stringify(query)
-          ) {
-            return HttpResponse.json(
-              { codigo: "validacion", mensaje: "Opciones inválidas" },
-              { status: 400 },
-            );
-          }
-          if (request.headers.get("Authorization") !== "Bearer documentos-test") {
-            return new HttpResponse(null, { status: 401 });
-          }
-          return HttpResponse.arrayBuffer(new TextEncoder().encode(cuerpo).buffer, {
-            headers: {
-              "Content-Type": mime(caso.opciones.formato),
-              "Content-Disposition": `attachment; filename="${nombre}"`,
-            },
-          });
-        }),
-      );
-      const callback = Reflect.get(result.current, caso.metodo);
-      expect(typeof callback).toBe("function");
-      if (caso.metodo === "descargarPresupuesto") {
-        await result.current.descargarPresupuesto(PRESUPUESTO_V1, caso.opciones);
-      } else {
-        await result.current.descargarApus(PRESUPUESTO_V1, caso.opciones);
-      }
-      expect(peticiones).toEqual([`${RUTA}/documentos/${caso.documento}/${PRESUPUESTO_V1}`]);
-      expect(clicks[indice]?.download).toBe(nombre);
-      expect(blobs[indice]?.type).toBe(mime(caso.opciones.formato));
-      expect(await contenido(blobs[indice])).toBe(cuerpo);
-    }
-    expect(clicks).toHaveLength(casos.length);
-    expect(revocadas).toEqual(clicks.map((click) => click.href));
-    expect(toast.error).not.toHaveBeenCalled();
-  });
-
-  it("rechaza UUID no v7 o variante inválida sin HTTP ni guardar archivo", async () => {
-    const peticiones = espiar();
-    server.use(
-      http.get(`${API}/documentos/:documento/:id`, () =>
-        HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-          headers: { "Content-Type": "application/pdf" },
-        }),
-      ),
-    );
-    const { result } = renderHook(() => useExportar(), { wrapper });
-    for (const id of [
-      "01900000-0000-4000-8000-000000000001",
-      "01900000-0000-7000-c000-000000000001",
+    for (const retirada of [
+      "descargarPresupuesto",
+      "descargarApus",
+      "descargarEspecificacionesTecnicas",
     ]) {
-      await result.current.descargarPresupuesto(id, { formato: "pdf" });
-      await result.current.descargarApus(id, { formato: "pdf" });
+      expect(result.current).not.toHaveProperty(retirada);
     }
-    expect(peticiones).toHaveLength(0);
-    expect(clicks).toHaveLength(0);
-    expect(blobs).toHaveLength(0);
-    expect(revocadas).toHaveLength(0);
-    expect(toast.success).not.toHaveBeenCalled();
-  });
-
-  it("conserva UUID y opciones capturados mientras cambia la selección con HTTP pendiente", async () => {
-    let liberar: () => void = () => {};
-    const pendiente = new Promise<void>((resolve) => {
-      liberar = resolve;
-    });
-    const peticiones: string[] = [];
-    const nombre = `presupuesto-Selected-${PRESUPUESTO_V1}-v1.pdf`;
-    server.use(
-      http.get(`${API}/documentos/presupuesto/:id`, async ({ request, params }) => {
-        const url = new URL(request.url);
-        if (
-          params.id !== PRESUPUESTO_V1 ||
-          JSON.stringify([...url.searchParams.entries()].sort()) !==
-            JSON.stringify(
-              [
-                ["formato", "pdf"],
-                ["orientacion", "horizontal"],
-              ].sort(),
-            )
-        ) {
-          return HttpResponse.json(
-            { codigo: "validacion", mensaje: "Contexto incorrecto" },
-            { status: 400 },
-          );
-        }
-        if (request.headers.get("Authorization") !== "Bearer documentos-test") {
-          return new HttpResponse(null, { status: 401 });
-        }
-        peticiones.push(url.pathname);
-        await pendiente;
-        return HttpResponse.arrayBuffer(
-          new TextEncoder().encode(`${params.id}:v1:horizontal`).buffer,
-          {
-            headers: {
-              "Content-Type": "application/pdf",
-              "Content-Disposition": `attachment; filename="${nombre}"`,
-            },
-          },
-        );
-      }),
-    );
-    const { result, rerender } = renderHook(
-      ({ presupuestoId }) => ({ hook: useExportar(), presupuestoId }),
-      { wrapper, initialProps: { presupuestoId: PRESUPUESTO_V1 } },
-    );
-    expect(result.current.hook).toHaveProperty("descargarPresupuesto", expect.any(Function));
-    const callback = Reflect.get(result.current.hook, "descargarPresupuesto");
-    expect(typeof callback).toBe("function");
-    const descarga = callback(result.current.presupuestoId, {
-      formato: "pdf",
-      orientacion: "horizontal",
-    });
-    try {
-      await waitFor(() => expect(peticiones).toHaveLength(1));
-      rerender({ presupuestoId: PRESUPUESTO_V2 });
-      expect(result.current.presupuestoId).toBe(PRESUPUESTO_V2);
-      expect(clicks).toHaveLength(0);
-    } finally {
-      liberar();
-      await descarga;
-    }
-    expect(peticiones).toEqual([`${RUTA}/documentos/presupuesto/${PRESUPUESTO_V1}`]);
-    expect(clicks).toEqual([{ href: "blob:apu/1", download: nombre }]);
-    expect(blobs[0].type).toBe("application/pdf");
-    expect(await contenido(blobs[0])).toBe(`${PRESUPUESTO_V1}:v1:horizontal`);
-    expect(revocadas).toEqual(["blob:apu/1"]);
-    expect(toast.error).not.toHaveBeenCalled();
+    expect(result.current).toHaveProperty("exportarPrivado", expect.any(Function));
+    expect(result.current).toHaveProperty("descargarCronograma", expect.any(Function));
   });
 });
 
@@ -466,52 +348,39 @@ describe("useExportar — cronograma valorizado", () => {
       const { result } = renderHook(() => useExportar(), { wrapper });
       await result.current.descargarCronograma(PRESUPUESTO_V2, formato);
 
-      const p = ultima(peticiones, "GET", CRONO);
-      expect(p?.ruta).toBe(`${RUTA}${CRONO}`);
-      expect([...(p?.url.searchParams.keys() ?? [])]).toEqual(["formato"]);
-      expect(p?.url.searchParams.get("formato")).toBe(formato);
+      const p = ultima(peticiones, "POST", `${CRONO}/exportaciones`);
+      expect(p?.ruta).toBe(`${RUTA}${CRONO}/exportaciones`);
+      expect(p?.cuerpo).toEqual({ formato });
     },
   );
 
-  it("guarda el archivo con el nombre que manda el backend en Content-Disposition", async () => {
-    server.use(
-      http.get(`${API}/documentos/cronograma/:id`, () =>
-        HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-          headers: {
-            "Content-Disposition": 'attachment; filename="PROY-A-Edificio_Principal-v3.xlsx"',
-          },
-        }),
-      ),
-    );
-
-    const { result } = renderHook(() => useExportar(), { wrapper });
-    await result.current.descargarCronograma(PRESUPUESTO_V2, "xlsx");
-
-    expect(clicks[0].download).toBe("PROY-A-Edificio_Principal-v3.xlsx");
-    expect(toast.success).toHaveBeenCalledWith("Descarga iniciada");
-  });
-
-  // MSPDI se sirve como XML: el fallback no puede inventar una extensión
-  // `.mspdi` que ningún camino del backend produce.
-  it("sin cabecera, mspdi cae a cronograma.xml", async () => {
-    server.use(
-      http.get(`${API}/documentos/cronograma/:id`, () =>
-        HttpResponse.arrayBuffer(new ArrayBuffer(8)),
-      ),
-    );
-
-    const { result } = renderHook(() => useExportar(), { wrapper });
-    await result.current.descargarCronograma(PRESUPUESTO_V2, "mspdi");
-
-    expect(clicks[0].download).toBe("cronograma.xml");
-  });
-
-  // Ata el arreglo del interceptor: con el cuerpo de error llegando como Blob
-  // sin rehidratar, este mensaje sería el genérico «Error al descargar».
+  // El 409 `export-bloqueado` del POST trae el recuento en `mensaje`: sin él,
+  // el toast sería el genérico «Error al descargar».
   it("el 409 avisa con el mensaje del backend y no fabrica ningún enlace", async () => {
+    const invalidar = vi.spyOn(cliente, "invalidateQueries");
+    server.use(
+      http.post(`${API}/documentos/cronograma/${PRESUPUESTO_V1}/exportaciones`, () =>
+        HttpResponse.json(
+          {
+            presupuestoId: PRESUPUESTO_V1,
+            formato: "xlsx",
+            codigo: "export-bloqueado",
+            mensaje: "Exportación bloqueada: 2 bloqueo(s)",
+            bloqueos: [],
+            warnings: [],
+          },
+          { status: 409 },
+        ),
+      ),
+    );
     const { result } = renderHook(() => useExportar(), { wrapper });
-    await result.current.descargarCronograma(PRESUPUESTO_BLOQUEADO, "xlsx");
-
+    await act(async () => {
+      await result.current.descargarCronograma(PRESUPUESTO_V1, "xlsx");
+    });
+    expect(invalidar).toHaveBeenCalledWith({
+      queryKey: ["presupuesto", PRESUPUESTO_V1, "export-cronograma", "xlsx"],
+      exact: true,
+    });
     expect(toast.error).toHaveBeenCalledWith("Exportación bloqueada: 2 bloqueo(s)");
     expect(clicks).toHaveLength(0);
   });

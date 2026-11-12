@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { API_BASE_URL } from "@/lib/env";
 import { screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { renderConProviders } from "@/test/render";
@@ -17,8 +18,22 @@ const API = "*/api/v1";
 const PRESUPUESTO = "0198c1a0-0000-7000-8000-000000000011";
 
 beforeEach(() => {
+  vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
   useSesionStore.setState({ usuario: usuarioFixture, cargando: false });
   server.use(
+    http.post(`${API}/documentos/:documento/:id/exportaciones`, () =>
+      HttpResponse.json({
+        operationId: PRESUPUESTO,
+        downloadUrl: `/api/v1/documentos/descargas/${"a".repeat(43)}`,
+        expiresAt: "2026-01-01T00:05:00Z",
+        objectExpiresAt: "2026-01-02T00:00:00Z",
+        filename: "documento.pdf",
+        mediaType: "application/pdf",
+        sizeBytes: 1,
+        sha256: `${"a".repeat(43)}=`,
+        warnings: [],
+      }),
+    ),
     http.get(`${API}/documentos/:documento/:id/preflight`, ({ params, request }) => {
       if (params.documento !== "presupuesto" && params.documento !== "apus") return;
       expect([PRESUPUESTO_V1, PRESUPUESTO_V2]).toContain(params.id);
@@ -45,6 +60,8 @@ beforeEach(() => {
     }),
   );
 });
+
+afterEach(() => vi.restoreAllMocks());
 
 async function setup({
   exportable = false,
@@ -123,6 +140,56 @@ describe("ExportPage", () => {
     });
   });
 
+  it("solicita ET por POST y navega al ticket únicamente al pulsar", async () => {
+    const solicitudes: Array<{ body: unknown; key: string | null }> = [];
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      expect(this.href).toBe(
+        new URL(
+          `/api/v1/documentos/descargas/${"a".repeat(43)}`,
+          new URL(API_BASE_URL, window.location.origin).origin,
+        ).href,
+      );
+    });
+    server.use(
+      http.post(
+        `${API}/documentos/especificaciones-tecnicas/${PRESUPUESTO}/exportaciones`,
+        async ({ request }) => {
+          solicitudes.push({
+            body: await request.json(),
+            key: request.headers.get("Idempotency-Key"),
+          });
+          return HttpResponse.json({
+            operationId: PRESUPUESTO,
+            downloadUrl: `/api/v1/documentos/descargas/${"a".repeat(43)}`,
+            expiresAt: "2026-01-01T00:05:00Z",
+            objectExpiresAt: "2026-01-02T00:00:00Z",
+            filename: "et.docx",
+            mediaType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            sizeBytes: 1,
+            sha256: `${"a".repeat(43)}=`,
+            warnings: [],
+          });
+        },
+      ),
+    );
+    const { user } = await setup({ exportable: true });
+    const boton = await screen.findByRole("button", { name: /^descargar$/i });
+    await waitFor(() => expect(boton).toBeEnabled());
+    expect(solicitudes).toHaveLength(0);
+    await user.click(boton);
+    await waitFor(() => expect(solicitudes).toHaveLength(1));
+    expect(solicitudes[0]).toEqual({
+      body: { formato: "docx" },
+      key: expect.stringMatching(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+      ),
+    });
+    expect(click).toHaveBeenCalledOnce();
+    click.mockRestore();
+  });
+
   it("descarga la ET del endpoint real cuando el presupuesto es exportable", async () => {
     const peticiones = espiar();
     const { user } = await setup({ exportable: true });
@@ -133,7 +200,11 @@ describe("ExportPage", () => {
 
     await waitFor(() =>
       expect(
-        ultima(peticiones, "GET", `/documentos/especificaciones-tecnicas/${PRESUPUESTO}`),
+        ultima(
+          peticiones,
+          "POST",
+          `/documentos/especificaciones-tecnicas/${PRESUPUESTO}/exportaciones`,
+        ),
       ).toBeDefined(),
     );
   });
@@ -170,7 +241,11 @@ describe("ExportPage", () => {
     // `/proyectos/:id/presupuestos`.
     await waitFor(() =>
       expect(
-        ultima(peticiones, "GET", `/documentos/especificaciones-tecnicas/${PRESUPUESTO_V2}`),
+        ultima(
+          peticiones,
+          "POST",
+          `/documentos/especificaciones-tecnicas/${PRESUPUESTO_V2}/exportaciones`,
+        ),
       ).toBeDefined(),
     );
     expect(ultima(peticiones, "GET", "/documentos/especificaciones-tecnicas/")).toBeUndefined();
@@ -209,6 +284,46 @@ async function seleccionar(
 }
 
 describe("ExportPage — presupuesto/APUs", () => {
+  it("reintenta explícitamente con la misma clave y no navega ante error", async () => {
+    const claves: string[] = [];
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    server.use(
+      http.post(
+        `${API}/documentos/presupuesto/${PRESUPUESTO}/exportaciones`,
+        async ({ request }) => {
+          expect(await request.json()).toEqual({ formato: "xlsx" });
+          claves.push(request.headers.get("Idempotency-Key") ?? "");
+          if (claves.length === 1)
+            return HttpResponse.json({ codigo: "error", mensaje: "Error" }, { status: 500 });
+          return HttpResponse.json({
+            operationId: PRESUPUESTO,
+            downloadUrl: `/api/v1/documentos/descargas/${"b".repeat(43)}`,
+            expiresAt: "2026-01-01T00:05:00Z",
+            objectExpiresAt: "2026-01-02T00:00:00Z",
+            filename: "presupuesto.xlsx",
+            mediaType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            sizeBytes: 1,
+            sha256: `${"a".repeat(43)}=`,
+            warnings: [],
+          });
+        },
+      ),
+    );
+    const { user } = await setup();
+    const boton = screen.getByRole("button", { name: "Descargar presupuesto" });
+    await waitFor(() => expect(boton).toBeEnabled());
+    await user.click(boton);
+    await screen.findByText("No se pudo descargar el documento. Intente nuevamente.");
+    expect(click).not.toHaveBeenCalled();
+    await user.click(boton);
+    await waitFor(() => expect(click).toHaveBeenCalledOnce());
+    expect(claves).toHaveLength(2);
+    expect(claves[0]).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
+    expect(claves[1]).toBe(claves[0]);
+    click.mockRestore();
+  });
   it("no descarga durante preflight pendiente ni con respuesta de otro contexto", async () => {
     let resolver!: () => void;
     const espera = new Promise<void>((resolve) => {
@@ -281,9 +396,19 @@ describe("ExportPage — presupuesto/APUs", () => {
   it("descarga la versión histórica y elimina opciones incompatibles al cambiar formato", async () => {
     const peticiones = espiar();
     server.use(
-      http.get(`${API}/documentos/apus/${PRESUPUESTO_V1}`, ({ request }) => {
-        expect([...new URL(request.url).searchParams.entries()]).toEqual([["formato", "pdf"]]);
-        return new HttpResponse("%PDF-1.7", { headers: { "Content-Type": "application/pdf" } });
+      http.post(`${API}/documentos/apus/${PRESUPUESTO_V1}/exportaciones`, async ({ request }) => {
+        expect(await request.json()).toEqual({ formato: "pdf" });
+        return HttpResponse.json({
+          operationId: PRESUPUESTO,
+          downloadUrl: `/api/v1/documentos/descargas/${"a".repeat(43)}`,
+          expiresAt: "2026-01-01T00:05:00Z",
+          objectExpiresAt: "2026-01-02T00:00:00Z",
+          filename: "apu.pdf",
+          mediaType: "application/pdf",
+          sizeBytes: 1,
+          sha256: `${"a".repeat(43)}=`,
+          warnings: [],
+        });
       }),
     );
     const { user } = await setup({ presupuestoId: PRESUPUESTO_V1 });
@@ -299,7 +424,9 @@ describe("ExportPage — presupuesto/APUs", () => {
     await waitFor(() => expect(boton).toBeEnabled());
     await user.click(boton);
     await waitFor(() =>
-      expect(ultima(peticiones, "GET", `/documentos/apus/${PRESUPUESTO_V1}`)).toBeDefined(),
+      expect(
+        ultima(peticiones, "POST", `/documentos/apus/${PRESUPUESTO_V1}/exportaciones`),
+      ).toBeDefined(),
     );
     expect(ultima(peticiones, "GET", `/documentos/apus/${PRESUPUESTO_V2}`)).toBeUndefined();
     const pre = ultima(peticiones, "GET", `/documentos/apus/${PRESUPUESTO_V1}/preflight`);
@@ -332,22 +459,28 @@ describe("ExportPage — presupuesto/APUs", () => {
               },
         );
       }),
-      http.get(`${API}/documentos/presupuesto/${PRESUPUESTO}`, ({ request }) => {
-        expect([...new URL(request.url).searchParams.entries()]).toEqual([["formato", "xlsx"]]);
-        descargas++;
-        return HttpResponse.json(presupuestoPreflight, { status: 409 });
-      }),
+      http.post(
+        `${API}/documentos/presupuesto/${PRESUPUESTO}/exportaciones`,
+        async ({ request }) => {
+          expect(await request.json()).toEqual({ formato: "xlsx" });
+          descargas++;
+          return HttpResponse.json(presupuestoPreflight, { status: 409 });
+        },
+      ),
     );
     const { user } = await setup();
     const boton = screen.getByRole("button", { name: "Descargar presupuesto" });
     await waitFor(() => expect(boton).toBeEnabled());
     await user.click(boton);
-    expect(await screen.findByText(bloqueoDocumento.mensaje)).toBeInTheDocument();
     await waitFor(() => expect(preflights).toBe(2));
+    expect(await screen.findByText(bloqueoDocumento.mensaje)).toBeInTheDocument();
+    expect(screen.getByText("1.1 — Excavación del presupuesto")).toBeInTheDocument();
+    expect(HTMLAnchorElement.prototype.click).not.toHaveBeenCalled();
     expect(boton).toBeDisabled();
     await user.click(boton);
     expect(descargas).toBe(1);
     resolver();
+    expect(await screen.findByText(bloqueoDocumento.mensaje)).toBeInTheDocument();
     await waitFor(() => expect(boton).toBeDisabled());
   });
 
@@ -358,12 +491,15 @@ describe("ExportPage — presupuesto/APUs", () => {
       resolver = resolve;
     });
     server.use(
-      http.get(`${API}/documentos/presupuesto/${PRESUPUESTO}`, async ({ request }) => {
-        expect([...new URL(request.url).searchParams.entries()]).toEqual([["formato", "xlsx"]]);
-        solicitada = true;
-        await espera;
-        return HttpResponse.json(presupuestoPreflight, { status: 409 });
-      }),
+      http.post(
+        `${API}/documentos/presupuesto/${PRESUPUESTO}/exportaciones`,
+        async ({ request }) => {
+          expect(await request.json()).toEqual({ formato: "xlsx" });
+          solicitada = true;
+          await espera;
+          return HttpResponse.json(presupuestoPreflight, { status: 409 });
+        },
+      ),
     );
     const { user, client } = await setup();
     const invalidar = vi.spyOn(client, "invalidateQueries");
@@ -394,14 +530,31 @@ describe("ExportPage — presupuesto/APUs", () => {
 // qué bloqueos si no. La pantalla enseña el `detalle` que el servidor redacta.
 describe("ExportPage — cronograma valorizado", () => {
   it("ofrece papel solo PDF, descarga A3 histórica y limpia la opción al cambiar formato", async () => {
-    const consultas: Array<Array<[string, string]>> = [];
+    const consultas: unknown[] = [];
     server.use(
-      http.get(`${API}/documentos/cronograma/${PRESUPUESTO_V1}`, ({ request }) => {
-        consultas.push([...new URL(request.url).searchParams.entries()].sort());
-        return HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-          headers: { "Content-Type": "application/octet-stream" },
-        });
-      }),
+      http.post(
+        `${API}/documentos/cronograma/${PRESUPUESTO_V1}/exportaciones`,
+        async ({ request }) => {
+          const body = (await request.json()) as { formato: string };
+          consultas.push(body);
+          return HttpResponse.json({
+            operationId: PRESUPUESTO,
+            downloadUrl: `/api/v1/documentos/descargas/${"a".repeat(43)}`,
+            expiresAt: "2026-01-01T00:05:00Z",
+            objectExpiresAt: "2026-01-02T00:00:00Z",
+            filename: "cronograma.pdf",
+            mediaType:
+              body.formato === "pdf"
+                ? "application/pdf"
+                : body.formato === "mspdi"
+                  ? "application/xml"
+                  : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            sizeBytes: 1,
+            sha256: `${"a".repeat(43)}=`,
+            warnings: [],
+          });
+        },
+      ),
     );
     const { user } = await setup({
       presupuestoId: PRESUPUESTO_V1,
@@ -420,40 +573,28 @@ describe("ExportPage — cronograma valorizado", () => {
     const boton = screen.getByRole("button", { name: "Descargar cronograma" });
     await waitFor(() => expect(boton).toBeEnabled());
     await user.click(boton);
-    await waitFor(() =>
-      expect(consultas).toEqual([
-        [
-          ["formato", "pdf"],
-          ["papel", "a3"],
-        ],
-      ]),
-    );
+    await waitFor(() => expect(consultas).toEqual([{ formato: "pdf", papel: "a3" }]));
     await seleccionar(user, "Formato", "MS Project (.xml)");
     expect(
       screen.queryByRole("combobox", { name: "Papel del PDF de cronograma" }),
     ).not.toBeInTheDocument();
     await waitFor(() => expect(boton).toBeEnabled());
     await user.click(boton);
-    await waitFor(() => expect(consultas[1]).toEqual([["formato", "mspdi"]]));
+    await waitFor(() => expect(consultas[1]).toEqual({ formato: "mspdi" }));
     await seleccionar(user, "Formato", "Excel (.xlsx)");
     expect(
       screen.queryByRole("combobox", { name: "Papel del PDF de cronograma" }),
     ).not.toBeInTheDocument();
     await waitFor(() => expect(boton).toBeEnabled());
     await user.click(boton);
-    await waitFor(() => expect(consultas[2]).toEqual([["formato", "xlsx"]]));
+    await waitFor(() => expect(consultas[2]).toEqual({ formato: "xlsx" }));
     await seleccionar(user, "Formato", "PDF (.pdf)");
     expect(screen.getByRole("combobox", { name: "Papel del PDF de cronograma" })).toHaveTextContent(
       "A4",
     );
     await waitFor(() => expect(boton).toBeEnabled());
     await user.click(boton);
-    await waitFor(() =>
-      expect(consultas[3]).toEqual([
-        ["formato", "pdf"],
-        ["papel", "a4"],
-      ]),
-    );
+    await waitFor(() => expect(consultas[3]).toEqual({ formato: "pdf", papel: "a4" }));
   });
 
   it("elegir A3 no elimina los bloqueos del cronograma", async () => {
@@ -520,7 +661,9 @@ describe("ExportPage — cronograma valorizado", () => {
     await user.click(boton);
 
     await waitFor(() =>
-      expect(ultima(peticiones, "GET", `/documentos/cronograma/${PRESUPUESTO}`)).toBeDefined(),
+      expect(
+        ultima(peticiones, "POST", `/documentos/cronograma/${PRESUPUESTO}/exportaciones`),
+      ).toBeDefined(),
     );
   });
 });

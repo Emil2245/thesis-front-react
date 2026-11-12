@@ -84,8 +84,8 @@ describe("ApiError contra el cuerpo real del backend", () => {
   /**
    * El catálogo son EXACTAMENTE los códigos que emite `origin/main` @ 5673615.
    * `export-bloqueado` estaba fuera porque en `c337950` el backend no lo
-   * emitía; su plan 031 lo trajo de vuelta en
-   * `CronogramaDocumentoResource.descargar`. `insumo-en-uso` y `csv-invalido`
+   * emitía; su plan 031 lo trajo de vuelta y hoy lo emite
+   * `CronogramaExportPostResource` (POST de exportación). `insumo-en-uso` y `csv-invalido`
    * siguen con cero apariciones en todo el repo.
    */
   it("el catálogo son los códigos que el backend emite de verdad", () => {

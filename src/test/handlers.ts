@@ -1,8 +1,6 @@
 import { asDecimal } from "@/lib/decimal";
 import { http, HttpResponse } from "msw";
-import type { DefaultBodyType, PathParams } from "msw";
 import type {
-  BloqueoExportDetalle,
   FormatoExportCronograma,
   ProyectoResponse,
   PresupuestoVersionResponse,
@@ -80,8 +78,8 @@ export const VALOR_INEXISTENTE = "ZZZ_NO_EXISTE";
 // Los dos presupuestos con los que la exportación del cronograma se sale del
 // camino feliz: uno ajeno (404) y uno con bloqueos (preflight `exportable:
 // false` y 409 en la descarga).
-export const PRESUPUESTO_AJENO = "018f8a60-0000-7000-8000-0000000000404";
-export const PRESUPUESTO_BLOQUEADO = "018f8a60-0000-7000-8000-0000000000409";
+export const PRESUPUESTO_AJENO = "018f8a60-0000-7000-8000-000000000404";
+export const PRESUPUESTO_BLOQUEADO = "018f8a60-0000-7000-8000-000000000409";
 export const PROYECTO_DESDE_PLANTILLA = "018f8a10-0000-7000-8000-000000000099";
 
 const esRegistro = (valor: unknown): valor is Record<string, unknown> =>
@@ -1143,29 +1141,6 @@ export const handlers = [
     }),
   ),
 
-  // ———— Exportar (Plan 051) ————
-  // El único endpoint de documentos que existe en origin/main. `formato` es
-  // opcional y solo admite `docx`; cualquier otro valor es 400 `validacion`.
-  http.get<PathParams, DefaultBodyType, Problem | ArrayBuffer>(
-    `${API}/documentos/especificaciones-tecnicas/:id`,
-    ({ request }) => {
-      const formato = new URL(request.url).searchParams.get("formato");
-      if (formato !== null && formato !== "docx")
-        return problema(
-          400,
-          "validacion",
-          `Formato no soportado: ${formato} (solo DOCX en esta iteración)`,
-        );
-      return HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          "Content-Disposition": 'attachment; filename="especificaciones-tecnicas.docx"',
-        },
-      });
-    },
-  ),
-
   // ———— Exportación del cronograma (plan 031 del backend, @ 5673615) ————
   // `formato` es OBLIGATORIO y solo admite `xlsx|pdf|mspdi`: el backend
   // responde 400 `validacion` a cualquier otra cosa, así que estos handlers lo
@@ -1181,36 +1156,49 @@ export const handlers = [
     return HttpResponse.json({ ...base, formato });
   }),
 
-  http.get<PathParams, DefaultBodyType, Problem | BloqueoExportDetalle | ArrayBuffer>(
-    `${API}/documentos/cronograma/:id`,
-    ({ request, params }) => {
-      const formato = leerFormatoCronograma(request);
-      if (formato === null) return problema(400, "validacion", FORMATO_NO_SOPORTADO);
-      if (params.id === PRESUPUESTO_AJENO)
-        return problema(404, "no-encontrado", "Presupuesto no encontrado");
-      if (params.id === PRESUPUESTO_BLOQUEADO)
-        return HttpResponse.json<BloqueoExportDetalle>(
-          {
-            presupuestoId: String(params.id),
-            formato,
-            codigo: "export-bloqueado",
-            mensaje: `Exportación bloqueada: ${preflightBloqueadoFixture.bloqueos.length} bloqueo(s)`,
-            bloqueos: preflightBloqueadoFixture.bloqueos,
-            warnings: preflightBloqueadoFixture.warnings,
-          },
-          { status: 409, headers: { "X-Cronograma-Desactualizado": "false" } },
-        );
-      const { mediaType, extension } = ARCHIVO_CRONOGRAMA[formato];
-      return HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-        status: 200,
-        headers: {
-          "Content-Type": mediaType,
-          "Content-Disposition": `attachment; filename="PROY-A-Edificio_Principal-v2.${extension}"`,
-          "X-Cronograma-Desactualizado": "false",
+  http.post(`${API}/documentos/cronograma/:id/exportaciones`, async ({ request, params }) => {
+    const body = await leerCuerpo(request);
+    const formato = body.formato;
+    if (
+      typeof formato !== "string" ||
+      !Object.hasOwn(ARCHIVO_CRONOGRAMA, formato) ||
+      !camposExactos(body, ["formato", ...(formato === "pdf" ? ["papel"] : [])]) ||
+      (body.papel !== undefined && body.papel !== "a3" && body.papel !== "a4") ||
+      !esUuidV7(request.headers.get("Idempotency-Key")) ||
+      !esUuidV7(params.id)
+    )
+      return problema(400, "validacion", FORMATO_NO_SOPORTADO);
+    if (
+      ![PRESUPUESTO_V1, PRESUPUESTO_V2, PRESUPUESTO_V3, PRESUPUESTO_BLOQUEADO].includes(
+        String(params.id),
+      )
+    )
+      return problema(404, "no-encontrado", "Presupuesto no encontrado");
+    if (params.id === PRESUPUESTO_BLOQUEADO)
+      return HttpResponse.json(
+        {
+          presupuestoId: String(params.id),
+          formato,
+          codigo: "export-bloqueado",
+          mensaje: `Exportación bloqueada: ${preflightBloqueadoFixture.bloqueos.length} bloqueo(s)`,
+          bloqueos: preflightBloqueadoFixture.bloqueos,
+          warnings: preflightBloqueadoFixture.warnings,
         },
-      });
-    },
-  ),
+        { status: 409 },
+      );
+    const archivo = ARCHIVO_CRONOGRAMA[formato as FormatoExportCronograma];
+    return HttpResponse.json({
+      operationId: PRESUPUESTO_V1,
+      downloadUrl: `/api/v1/documentos/descargas/${"a".repeat(43)}`,
+      expiresAt: "2026-01-01T00:05:00Z",
+      objectExpiresAt: "2026-01-02T00:00:00Z",
+      filename: `cronograma.${archivo.extension}`,
+      mediaType: archivo.mediaType,
+      sizeBytes: 8,
+      sha256: `${"a".repeat(43)}=`,
+      warnings: [],
+    });
+  }),
 
   // ———— Admin (Plan 014) ————
   // El mock reproduce la Page del backend. El interceptor es el único lugar que

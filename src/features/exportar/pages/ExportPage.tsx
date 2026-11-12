@@ -21,6 +21,8 @@ import {
   type ContextoPreflightDocumento,
 } from "../hooks/useExportar";
 import { DocumentoPreflightError } from "@/api/client";
+import { ApiError } from "@/api/problem";
+import { toast } from "sonner";
 import { EncabezadoPagina } from "@/components/comunes/EncabezadoPagina";
 import { useProyectoActivoId, useVersionActiva } from "@/shell/contexto";
 import { useCronograma } from "@/features/cronograma/hooks/useCronograma";
@@ -112,9 +114,9 @@ function DocumentoPresupuestario({
     setFeedback(undefined);
     try {
       if (contexto.documento === "presupuesto") {
-        await exportar.descargarPresupuesto(versionId, contexto.opciones);
+        await exportar.exportarPrivado("presupuesto", versionId, contexto.opciones);
       } else {
-        await exportar.descargarApus(versionId, contexto.opciones);
+        await exportar.exportarPrivado("apus", versionId, contexto.opciones);
       }
     } catch (error) {
       if (error instanceof DocumentoPreflightError) {
@@ -146,6 +148,7 @@ function DocumentoPresupuestario({
           identidad,
           mensaje: "No se pudo descargar el documento. Intente nuevamente.",
         });
+        if (error instanceof ApiError && error.status === 409) await invalidar();
       }
     }
   };
@@ -283,7 +286,7 @@ export function ExportPage() {
 
   const { data: validacion, isLoading: valLoading } = useValidacionExport(versionId);
   const exportar = useExportar();
-  const { descargarEspecificacionesTecnicas, descargarCronograma } = exportar;
+  const { descargarCronograma } = exportar;
   const [descargando, setDescargando] = useState(false);
 
   const [formato, setFormato] = useState<FormatoExportCronograma>("xlsx");
@@ -305,8 +308,13 @@ export function ExportPage() {
 
   const handleExport = async () => {
     setDescargando(true);
-    await descargarEspecificacionesTecnicas(versionId);
-    setDescargando(false);
+    try {
+      await exportar.exportarPrivado("especificaciones-tecnicas", versionId, { formato: "docx" });
+    } catch {
+      toast.error("Error al descargar");
+    } finally {
+      setDescargando(false);
+    }
   };
 
   const handleExportCronograma = async () => {

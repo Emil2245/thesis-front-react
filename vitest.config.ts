@@ -5,6 +5,8 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
+  // Test requests must be same-origin with jsdom, independent of the local .env.
+  define: { "import.meta.env.VITE_API_BASE_URL": JSON.stringify("http://localhost:8080/api/v1") },
   test: {
     environment: "jsdom",
     // jsdom 30 hace preflight CORS real en XHR: mismo origen que la API de los tests lo evita.

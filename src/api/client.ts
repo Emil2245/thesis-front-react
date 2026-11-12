@@ -1,10 +1,13 @@
 import axios, { AxiosError } from "axios";
 import { API_BASE_URL } from "@/lib/env";
 import { ApiError, problemDesconocido, type Problem } from "./problem";
-import { documentoPreflightSchema, errorPayloadSchema } from "./schemas";
+import { errorPayloadSchema } from "./schemas";
 import type { DocumentoPreflightResponse } from "./contract";
 
-/** El 409 directo no tiene codigo/mensaje de Problem: conserva su DTO validado. */
+/**
+ * El 409 de `POST /documentos/{presupuesto|apus}/{id}/exportaciones` no tiene
+ * codigo/mensaje de Problem: conserva su DTO validado (lo lanza `exportaciones.ts`).
+ */
 export class DocumentoPreflightError extends Error {
   readonly status = 409;
   readonly preflight: DocumentoPreflightResponse;
@@ -73,37 +76,7 @@ http.interceptors.response.use(
       onSesionExpirada?.();
     }
 
-    // Con `responseType: "blob"` —el helper `descargar()`— axios entrega
-    // también el cuerpo de ERROR como Blob, así que `safeParse` fallaba
-    // siempre y cualquier fallo de descarga se degradaba a `sin-respuesta`:
-    // el 409 `export-bloqueado` del cronograma perdía sus `bloqueos[]`, que
-    // son justo lo que el usuario necesita para desbloquear la exportación.
-    let datos: unknown = error.response?.data;
-    if (datos instanceof Blob) {
-      try {
-        datos = JSON.parse(await datos.text());
-      } catch {
-        // Un Blob de bytes binarios (un PDF a medias, un proxy que devuelve
-        // HTML) no es JSON: ahí el fallback sintético es lo correcto.
-        datos = undefined;
-      }
-    }
-
-    // Sólo las descargas de presupuesto/APUs devuelven este DTO directo.
-    const documentoRuta = original?.url?.match(
-      /^\/documentos\/(presupuesto|apus)\/([^/?]+)(?:\?.*)?$/,
-    );
-    if (status === 409 && original?.method?.toLowerCase() === "get" && documentoRuta) {
-      const preflight = documentoPreflightSchema.safeParse(datos);
-      if (
-        preflight.success &&
-        !preflight.data.exportable &&
-        preflight.data.documento === documentoRuta[1] &&
-        preflight.data.presupuestoId === documentoRuta[2]
-      ) {
-        throw new DocumentoPreflightError(preflight.data);
-      }
-    }
+    const datos: unknown = error.response?.data;
 
     // El cuerpo de error también es frontera de confianza: se valida en vez de
     // castearse. Si no trae `{codigo, mensaje}` no se hace pasar por un error

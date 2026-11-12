@@ -34,8 +34,9 @@ export interface Problem {
  * backend. Ver el plan 063 para qué manda en su lugar cada uno.
  *
  * `export-bloqueado` cayó con ellos contra `c337950` y **volvió** en `5673615`
- * (plan 031 del backend): lo emite `CronogramaDocumentoResource.descargar` con
- * el cuerpo tipado `BloqueoExportDetalle`, un superconjunto de `ErrorPayload`.
+ * (plan 031 del backend). Desde la etapa 05 lo emite
+ * `CronogramaExportPostResource` (`POST /documentos/cronograma/{id}/exportaciones`)
+ * con el cuerpo tipado `BloqueoExportDetalle`, un superconjunto de `ErrorPayload`.
  */
 export const PROBLEM_TYPES = [
   // GlobalExceptionMapper.codePorEstatus + ValidacionExceptionMapper
@@ -61,7 +62,7 @@ export const PROBLEM_TYPES = [
   // Excepciones propias del módulo cronograma, con su propio entity
   "segmento-solapado",
   "configuracion-cronograma-requiere-confirmacion",
-  // CronogramaDocumentoResource.descargar — 409 con cuerpo `BloqueoExportDetalle`
+  // CronogramaExportPostResource — 409 con cuerpo `BloqueoExportDetalle`
   "export-bloqueado",
 ] as const;
 
