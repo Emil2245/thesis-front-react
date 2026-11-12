@@ -58,8 +58,7 @@ export const putValidado = async <S extends z.ZodTypeAny>(
  * actualizó. Existe sólo para el upsert de valores de referencia (plan 079,
  * §9bis): el backend distingue creación de actualización únicamente por el
  * status (201 vs 200, mismo cuerpo), y ningún otro helper de este archivo
- * expone el status de la respuesta. Precedente: `descargar()` más abajo
- * también devuelve más que `.data` cuando el llamante lo necesita.
+ * expone el status de la respuesta.
  */
 export const putValidadoConEstado = async <S extends z.ZodTypeAny>(
   url: string,
@@ -100,29 +99,4 @@ export const delValidado = async <S extends z.ZodTypeAny>(
   const r = schema.safeParse(data);
   if (!r.success) throw errorDeRespuesta(url, r.error);
   return r.data;
-};
-
-/**
- * El nombre del archivo lo pone el backend en `Content-Disposition`; el cliente
- * no lo inventa. Se devuelve `undefined` si la cabecera falta o no trae nombre,
- * para que el llamante elija su propio fallback.
- */
-const nombreDeContentDisposition = (cabecera: unknown): string | undefined => {
-  if (typeof cabecera !== "string") return undefined;
-  const m = /filename\*=UTF-8''([^;]+)|filename="([^"]*)"|filename=([^;]+)/i.exec(cabecera);
-  if (!m) return undefined;
-  const bruto = m[1] ? decodeURIComponent(m[1]) : (m[2] ?? m[3]);
-  // Solo el nombre base: la cabecera viene de la red y no decide rutas.
-  return bruto.trim().split(/[/\\]/).pop() || undefined;
-};
-
-export const descargar = async (
-  url: string,
-  params?: unknown,
-): Promise<{ blob: Blob; nombreArchivo: string | undefined }> => {
-  const r = await http.get<Blob>(url, { params, responseType: "blob" });
-  return {
-    blob: r.data,
-    nombreArchivo: nombreDeContentDisposition(r.headers["content-disposition"]),
-  };
 };

@@ -8,8 +8,6 @@ import { crearQueryClient } from "@/test/render";
 import { server } from "@/test/server";
 import { espiar, ultima } from "@/test/espia";
 import { PRESUPUESTO_V1, PRESUPUESTO_V2 } from "@/test/fixtures/presupuesto";
-import { getAccessToken, setAccessToken } from "@/api/client";
-import { descargar } from "@/api/request";
 import type { ApiError } from "@/api/problem";
 import type { FormatoExportCronograma } from "@/api/contract";
 import {
@@ -23,34 +21,21 @@ vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), warning: v
 
 const API = "*/api/v1";
 const RUTA = "/api/v1";
-const ET = `/documentos/especificaciones-tecnicas/${PRESUPUESTO_V2}`;
 const CRONO = `/documentos/cronograma/${PRESUPUESTO_V2}`;
 
 let cliente: QueryClient;
 // Cada `<a download>` que fabrica el hook se anota aquí en vez de navegar:
 // jsdom no implementa la descarga y el click real solo produce ruido.
 let clicks: Array<{ href: string; download: string }>;
-let blobs: Blob[];
-let revocadas: string[];
 
 beforeEach(() => {
   vi.clearAllMocks();
   cliente = crearQueryClient();
   clicks = [];
-  blobs = [];
-  revocadas = [];
   vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
     this: HTMLAnchorElement,
   ) {
     clicks.push({ href: this.href, download: this.download });
-  });
-  // jsdom no trae Object URLs; se sustituyen para poder mirar el Blob.
-  URL.createObjectURL = vi.fn((b: Blob) => {
-    blobs.push(b);
-    return `blob:apu/${blobs.length}`;
-  });
-  URL.revokeObjectURL = vi.fn((u: string) => {
-    revocadas.push(u);
   });
 });
 
@@ -272,267 +257,25 @@ describe("useExportar — papel PDF cronograma", () => {
       { formato: "mspdi" },
     ]);
     expect(clicks).toHaveLength(5);
-    expect(revocadas).toHaveLength(0);
+    // Navega al ticket de Core; nunca fabrica un Object URL de un Blob.
+    expect(clicks.every((c) => !c.href.startsWith("blob:"))).toBe(true);
   });
 });
 
-describe("useExportar — especificaciones técnicas", () => {
-  it("pide el único endpoint que existe, sin inventar `formato` ni títulos vacíos", async () => {
-    const peticiones = espiar();
-
+// Etapa 05: las descargas de bytes (GET + Blob) se retiraron del backend; toda
+// exportación pasa por POST /exportaciones y el ticket de un solo uso de Core.
+describe("useExportar — sin descargas de bytes legadas", () => {
+  it("no expone las funciones GET/Blob retiradas", () => {
     const { result } = renderHook(() => useExportar(), { wrapper });
-    await result.current.descargarEspecificacionesTecnicas(PRESUPUESTO_V2);
-
-    const p = ultima(peticiones, "GET", ET);
-    expect(p?.ruta).toBe(`${RUTA}${ET}`);
-    // Mandar `titulo1=` vacío no es lo mismo que omitirlo: acaba en la portada.
-    expect([...(p?.url.searchParams.keys() ?? [])]).toEqual([]);
-  });
-
-  it("guarda el archivo con el nombre que manda el backend en Content-Disposition", async () => {
-    server.use(
-      http.get(`${API}/documentos/especificaciones-tecnicas/:id`, () =>
-        HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-          headers: {
-            "Content-Disposition": 'attachment; filename="ET-Proyecto Norte-v2.docx"',
-          },
-        }),
-      ),
-    );
-
-    const { result } = renderHook(() => useExportar(), { wrapper });
-    await result.current.descargarEspecificacionesTecnicas(PRESUPUESTO_V2);
-
-    expect(clicks).toEqual([{ href: "blob:apu/1", download: "ET-Proyecto Norte-v2.docx" }]);
-    expect(toast.success).toHaveBeenCalledWith("Descarga iniciada");
-  });
-
-  it("si el backend no manda la cabecera, cae a un nombre propio", async () => {
-    server.use(
-      http.get(`${API}/documentos/especificaciones-tecnicas/:id`, () =>
-        HttpResponse.arrayBuffer(new ArrayBuffer(8)),
-      ),
-    );
-
-    const { result } = renderHook(() => useExportar(), { wrapper });
-    await result.current.descargarEspecificacionesTecnicas(PRESUPUESTO_V2);
-
-    expect(clicks[0].download).toBe("especificaciones-tecnicas.docx");
-  });
-
-  it("recibe un Blob real y lo libera tras el click", async () => {
-    const { result } = renderHook(() => useExportar(), { wrapper });
-    await result.current.descargarEspecificacionesTecnicas(PRESUPUESTO_V2);
-
-    expect(blobs).toHaveLength(1);
-    expect(blobs[0]).toBeInstanceOf(Blob);
-    expect(blobs[0].size).toBe(8);
-    // El enlace se retira del DOM y el object URL se revoca: si no, cada
-    // export deja un blob vivo en memoria para el resto de la sesión.
-    expect(document.querySelector("a[download]")).toBeNull();
-    expect(revocadas).toEqual(["blob:apu/1"]);
-  });
-
-  it("un fallo del backend avisa con toast y no fabrica ningún enlace", async () => {
-    server.use(
-      http.get(`${API}/documentos/especificaciones-tecnicas/:id`, () =>
-        HttpResponse.json({ title: "Boom" }, { status: 500 }),
-      ),
-    );
-
-    const { result } = renderHook(() => useExportar(), { wrapper });
-    await result.current.descargarEspecificacionesTecnicas(PRESUPUESTO_V2);
-
-    expect(toast.error).toHaveBeenCalledWith("Error al descargar");
-    expect(clicks).toHaveLength(0);
-  });
-
-  // El hook no manda `formato`, así que este 400 es inalcanzable desde la UI —
-  // que es justamente lo que hay que sostener: no hay botón «PDF» que cablear.
-  it("el backend rechaza con 400 cualquier formato que no sea docx", async () => {
-    await expect(descargar(ET, { formato: "pdf" })).rejects.toMatchObject({ status: 400 });
-    await expect(descargar(ET, { formato: "docx" })).resolves.toBeDefined();
-  });
-});
-
-// F04-02: extensión mínima del objeto real de useExportar, sin exports ficticios.
-// Reflect permite observar RED por capacidad ausente antes de invocar el método.
-describe("useExportar — presupuesto/APUs de la versión seleccionada", () => {
-  let tokenAnterior: string | null;
-  beforeEach(() => {
-    tokenAnterior = getAccessToken();
-    setAccessToken("documentos-test");
-  });
-  afterEach(() => setAccessToken(tokenAnterior));
-
-  const casos = [
-    { documento: "presupuesto", metodo: "descargarPresupuesto", opciones: { formato: "xlsx" } },
-    { documento: "presupuesto", metodo: "descargarPresupuesto", opciones: { formato: "pdf" } },
-    {
-      documento: "presupuesto",
-      metodo: "descargarPresupuesto",
-      opciones: { formato: "pdf", orientacion: "horizontal" },
-    },
-    { documento: "apus", metodo: "descargarApus", opciones: { formato: "xlsx" } },
-    {
-      documento: "apus",
-      metodo: "descargarApus",
-      opciones: { formato: "xlsx", layout: "apilado" },
-    },
-    { documento: "apus", metodo: "descargarApus", opciones: { formato: "pdf" } },
-  ] as const;
-  const mime = (formato: string) =>
-    formato === "pdf"
-      ? "application/pdf"
-      : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-  const contenido = (blob: Blob) =>
-    new Promise<string>((resolve, reject) => {
-      const lector = new FileReader();
-      lector.onload = () => resolve(String(lector.result));
-      lector.onerror = () => reject(lector.error);
-      lector.readAsText(blob);
-    });
-
-  it("descarga sólo las combinaciones cerradas con UUID no vigente, bytes y nombre del servidor", async () => {
-    const { result } = renderHook(() => useExportar(), { wrapper });
-    for (const [indice, caso] of casos.entries()) {
-      expect(result.current).toHaveProperty(caso.metodo, expect.any(Function));
-      const peticiones: string[] = [];
-      const nombre = `${caso.documento}-Selected-${PRESUPUESTO_V1}-v1.${caso.opciones.formato}`;
-      const cuerpo = `${PRESUPUESTO_V1}:v1:${JSON.stringify(caso.opciones)}`;
-      const query = [...new URLSearchParams(caso.opciones).entries()].sort();
-      server.use(
-        http.get(`${API}/documentos/${caso.documento}/:id`, ({ request, params }) => {
-          const url = new URL(request.url);
-          peticiones.push(url.pathname);
-          if (
-            params.id !== PRESUPUESTO_V1 ||
-            JSON.stringify([...url.searchParams.entries()].sort()) !== JSON.stringify(query)
-          ) {
-            return HttpResponse.json(
-              { codigo: "validacion", mensaje: "Opciones inválidas" },
-              { status: 400 },
-            );
-          }
-          if (request.headers.get("Authorization") !== "Bearer documentos-test") {
-            return new HttpResponse(null, { status: 401 });
-          }
-          return HttpResponse.arrayBuffer(new TextEncoder().encode(cuerpo).buffer, {
-            headers: {
-              "Content-Type": mime(caso.opciones.formato),
-              "Content-Disposition": `attachment; filename="${nombre}"`,
-            },
-          });
-        }),
-      );
-      const callback = Reflect.get(result.current, caso.metodo);
-      expect(typeof callback).toBe("function");
-      if (caso.metodo === "descargarPresupuesto") {
-        await result.current.descargarPresupuesto(PRESUPUESTO_V1, caso.opciones);
-      } else {
-        await result.current.descargarApus(PRESUPUESTO_V1, caso.opciones);
-      }
-      expect(peticiones).toEqual([`${RUTA}/documentos/${caso.documento}/${PRESUPUESTO_V1}`]);
-      expect(clicks[indice]?.download).toBe(nombre);
-      expect(blobs[indice]?.type).toBe(mime(caso.opciones.formato));
-      expect(await contenido(blobs[indice])).toBe(cuerpo);
-    }
-    expect(clicks).toHaveLength(casos.length);
-    expect(revocadas).toEqual(clicks.map((click) => click.href));
-    expect(toast.error).not.toHaveBeenCalled();
-  });
-
-  it("rechaza UUID no v7 o variante inválida sin HTTP ni guardar archivo", async () => {
-    const peticiones = espiar();
-    server.use(
-      http.get(`${API}/documentos/:documento/:id`, () =>
-        HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-          headers: { "Content-Type": "application/pdf" },
-        }),
-      ),
-    );
-    const { result } = renderHook(() => useExportar(), { wrapper });
-    for (const id of [
-      "01900000-0000-4000-8000-000000000001",
-      "01900000-0000-7000-c000-000000000001",
+    for (const retirada of [
+      "descargarPresupuesto",
+      "descargarApus",
+      "descargarEspecificacionesTecnicas",
     ]) {
-      await result.current.descargarPresupuesto(id, { formato: "pdf" });
-      await result.current.descargarApus(id, { formato: "pdf" });
+      expect(result.current).not.toHaveProperty(retirada);
     }
-    expect(peticiones).toHaveLength(0);
-    expect(clicks).toHaveLength(0);
-    expect(blobs).toHaveLength(0);
-    expect(revocadas).toHaveLength(0);
-    expect(toast.success).not.toHaveBeenCalled();
-  });
-
-  it("conserva UUID y opciones capturados mientras cambia la selección con HTTP pendiente", async () => {
-    let liberar: () => void = () => {};
-    const pendiente = new Promise<void>((resolve) => {
-      liberar = resolve;
-    });
-    const peticiones: string[] = [];
-    const nombre = `presupuesto-Selected-${PRESUPUESTO_V1}-v1.pdf`;
-    server.use(
-      http.get(`${API}/documentos/presupuesto/:id`, async ({ request, params }) => {
-        const url = new URL(request.url);
-        if (
-          params.id !== PRESUPUESTO_V1 ||
-          JSON.stringify([...url.searchParams.entries()].sort()) !==
-            JSON.stringify(
-              [
-                ["formato", "pdf"],
-                ["orientacion", "horizontal"],
-              ].sort(),
-            )
-        ) {
-          return HttpResponse.json(
-            { codigo: "validacion", mensaje: "Contexto incorrecto" },
-            { status: 400 },
-          );
-        }
-        if (request.headers.get("Authorization") !== "Bearer documentos-test") {
-          return new HttpResponse(null, { status: 401 });
-        }
-        peticiones.push(url.pathname);
-        await pendiente;
-        return HttpResponse.arrayBuffer(
-          new TextEncoder().encode(`${params.id}:v1:horizontal`).buffer,
-          {
-            headers: {
-              "Content-Type": "application/pdf",
-              "Content-Disposition": `attachment; filename="${nombre}"`,
-            },
-          },
-        );
-      }),
-    );
-    const { result, rerender } = renderHook(
-      ({ presupuestoId }) => ({ hook: useExportar(), presupuestoId }),
-      { wrapper, initialProps: { presupuestoId: PRESUPUESTO_V1 } },
-    );
-    expect(result.current.hook).toHaveProperty("descargarPresupuesto", expect.any(Function));
-    const callback = Reflect.get(result.current.hook, "descargarPresupuesto");
-    expect(typeof callback).toBe("function");
-    const descarga = callback(result.current.presupuestoId, {
-      formato: "pdf",
-      orientacion: "horizontal",
-    });
-    try {
-      await waitFor(() => expect(peticiones).toHaveLength(1));
-      rerender({ presupuestoId: PRESUPUESTO_V2 });
-      expect(result.current.presupuestoId).toBe(PRESUPUESTO_V2);
-      expect(clicks).toHaveLength(0);
-    } finally {
-      liberar();
-      await descarga;
-    }
-    expect(peticiones).toEqual([`${RUTA}/documentos/presupuesto/${PRESUPUESTO_V1}`]);
-    expect(clicks).toEqual([{ href: "blob:apu/1", download: nombre }]);
-    expect(blobs[0].type).toBe("application/pdf");
-    expect(await contenido(blobs[0])).toBe(`${PRESUPUESTO_V1}:v1:horizontal`);
-    expect(revocadas).toEqual(["blob:apu/1"]);
-    expect(toast.error).not.toHaveBeenCalled();
+    expect(result.current).toHaveProperty("exportarPrivado", expect.any(Function));
+    expect(result.current).toHaveProperty("descargarCronograma", expect.any(Function));
   });
 });
 
@@ -611,14 +354,8 @@ describe("useExportar — cronograma valorizado", () => {
     },
   );
 
-  it("conserva el GET de bytes como API separada", async () => {
-    const archivo = await descargar(CRONO, { formato: "mspdi" });
-    expect(archivo.blob.type).toBe("application/xml");
-    expect(archivo.nombreArchivo).toMatch(/\.xml$/);
-  });
-
-  // Ata el arreglo del interceptor: con el cuerpo de error llegando como Blob
-  // sin rehidratar, este mensaje sería el genérico «Error al descargar».
+  // El 409 `export-bloqueado` del POST trae el recuento en `mensaje`: sin él,
+  // el toast sería el genérico «Error al descargar».
   it("el 409 avisa con el mensaje del backend y no fabrica ningún enlace", async () => {
     const invalidar = vi.spyOn(cliente, "invalidateQueries");
     server.use(

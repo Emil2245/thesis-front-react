@@ -1,8 +1,6 @@
 import { asDecimal } from "@/lib/decimal";
 import { http, HttpResponse } from "msw";
-import type { DefaultBodyType, PathParams } from "msw";
 import type {
-  BloqueoExportDetalle,
   FormatoExportCronograma,
   ProyectoResponse,
   PresupuestoVersionResponse,
@@ -1143,29 +1141,6 @@ export const handlers = [
     }),
   ),
 
-  // ———— Exportar (Plan 051) ————
-  // El único endpoint de documentos que existe en origin/main. `formato` es
-  // opcional y solo admite `docx`; cualquier otro valor es 400 `validacion`.
-  http.get<PathParams, DefaultBodyType, Problem | ArrayBuffer>(
-    `${API}/documentos/especificaciones-tecnicas/:id`,
-    ({ request }) => {
-      const formato = new URL(request.url).searchParams.get("formato");
-      if (formato !== null && formato !== "docx")
-        return problema(
-          400,
-          "validacion",
-          `Formato no soportado: ${formato} (solo DOCX en esta iteración)`,
-        );
-      return HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          "Content-Disposition": 'attachment; filename="especificaciones-tecnicas.docx"',
-        },
-      });
-    },
-  ),
-
   // ———— Exportación del cronograma (plan 031 del backend, @ 5673615) ————
   // `formato` es OBLIGATORIO y solo admite `xlsx|pdf|mspdi`: el backend
   // responde 400 `validacion` a cualquier otra cosa, así que estos handlers lo
@@ -1224,37 +1199,6 @@ export const handlers = [
       warnings: [],
     });
   }),
-
-  http.get<PathParams, DefaultBodyType, Problem | BloqueoExportDetalle | ArrayBuffer>(
-    `${API}/documentos/cronograma/:id`,
-    ({ request, params }) => {
-      const formato = leerFormatoCronograma(request);
-      if (formato === null) return problema(400, "validacion", FORMATO_NO_SOPORTADO);
-      if (params.id === PRESUPUESTO_AJENO)
-        return problema(404, "no-encontrado", "Presupuesto no encontrado");
-      if (params.id === PRESUPUESTO_BLOQUEADO)
-        return HttpResponse.json<BloqueoExportDetalle>(
-          {
-            presupuestoId: String(params.id),
-            formato,
-            codigo: "export-bloqueado",
-            mensaje: `Exportación bloqueada: ${preflightBloqueadoFixture.bloqueos.length} bloqueo(s)`,
-            bloqueos: preflightBloqueadoFixture.bloqueos,
-            warnings: preflightBloqueadoFixture.warnings,
-          },
-          { status: 409, headers: { "X-Cronograma-Desactualizado": "false" } },
-        );
-      const { mediaType, extension } = ARCHIVO_CRONOGRAMA[formato];
-      return HttpResponse.arrayBuffer(new ArrayBuffer(8), {
-        status: 200,
-        headers: {
-          "Content-Type": mediaType,
-          "Content-Disposition": `attachment; filename="PROY-A-Edificio_Principal-v2.${extension}"`,
-          "X-Cronograma-Desactualizado": "false",
-        },
-      });
-    },
-  ),
 
   // ———— Admin (Plan 014) ————
   // El mock reproduce la Page del backend. El interceptor es el único lugar que

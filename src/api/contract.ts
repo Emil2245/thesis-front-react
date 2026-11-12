@@ -940,7 +940,9 @@ export type DocumentoPreflightResponse = {
 /**
  * Transcritos de `ec.uce.propuestas.cronograma.dto` en `origin/main @ 5673615`
  * (plan 031 del backend), que los sirve por
- * `GET /documentos/cronograma/{presupuestoId}[/preflight]?formato=xlsx|pdf|mspdi`.
+ * `GET /documentos/cronograma/{presupuestoId}/preflight?formato=xlsx|pdf|mspdi` y
+ * el 409 de `POST /documentos/cronograma/{presupuestoId}/exportaciones` (el GET
+ * de bytes se retiró en la etapa 05).
  *
  * Los cuatro `record` llevan `@JsonInclude(JsonInclude.Include.ALWAYS)` —lo
  * contrario del patrón C de `docs/bugs.md`—, así que ninguna clave se omite:

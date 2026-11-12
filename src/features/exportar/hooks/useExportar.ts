@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { descargar, getValidado } from "@/api/request";
+import { getValidado } from "@/api/request";
 import { qk } from "@/api/queryKeys";
 import type { FormatoExportCronograma } from "@/api/contract";
 import {
@@ -45,18 +45,6 @@ export function usePreflightCronograma(presupuestoId: string, formato: FormatoEx
     enabled: !!presupuestoId,
   });
 }
-
-/** jsdom aparte, esto es la única forma de guardar un Blob desde el navegador. */
-const guardar = (blob: Blob, nombreArchivo: string) => {
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = nombreArchivo;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(link.href);
-  toast.success("Descarga iniciada");
-};
 
 export type OpcionesPresupuesto =
   | { formato: "xlsx"; orientacion?: never; layout?: never }
@@ -146,8 +134,7 @@ export function usePreflightDocumento(contexto: ContextoPreflightDocumento) {
  * Cuando el cuerpo no era `{codigo, mensaje}`, `client.ts` sintetiza un
  * `Problem` con `codigo: "sin-respuesta"` y un `mensaje` que viene de axios
  * **en inglés**. Enseñarlo llevaría «Request failed with status code 500» a una
- * UI que es es-EC, así que ahí se usa texto propio. Los dos `catch` de abajo lo
- * comparten y cada uno formatea a su manera.
+ * UI que es es-EC, así que ahí se usa texto propio (el `catch` del cronograma).
  */
 const esErrorDeContrato = (e: unknown): e is ApiError =>
   e instanceof ApiError && e.problem.codigo !== "sin-respuesta";
@@ -203,69 +190,6 @@ export function useExportar() {
     [],
   );
 
-  // Guarda el UUIDv7 público: la autorización y el dominio son del servidor.
-  const descargarDocumento = useCallback(
-    async (
-      documento: "presupuesto" | "apus",
-      presupuestoId: string,
-      opciones: OpcionesPresupuesto | OpcionesApus,
-    ) => {
-      if (!esUuidV7(presupuestoId)) {
-        return;
-      }
-      const params = parametrosDocumento(documento, opciones);
-      if (descargaEnCurso.current) return;
-      descargaEnCurso.current = true;
-      setDescargando(true);
-      try {
-        const { blob, nombreArchivo } = await descargar(
-          `/documentos/${documento}/${presupuestoId}`,
-          params,
-        );
-        const esperado =
-          params.formato === "pdf"
-            ? "application/pdf"
-            : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-        const mime = blob.type.split(";")[0].trim().toLowerCase();
-        if (mime !== esperado && mime !== "application/octet-stream") {
-          throw new TypeError("La respuesta no es un archivo del formato solicitado");
-        }
-        guardar(blob, nombreArchivo ?? `${documento}.${params.formato}`);
-      } finally {
-        descargaEnCurso.current = false;
-        setDescargando(false);
-      }
-    },
-    [],
-  );
-
-  const descargarPresupuesto = useCallback(
-    (presupuestoId: string, opciones: OpcionesPresupuesto) =>
-      descargarDocumento("presupuesto", presupuestoId, opciones),
-    [descargarDocumento],
-  );
-  const descargarApus = useCallback(
-    (presupuestoId: string, opciones: OpcionesApus) =>
-      descargarDocumento("apus", presupuestoId, opciones),
-    [descargarDocumento],
-  );
-
-  const descargarEspecificacionesTecnicas = useCallback(async (presupuestoId: string) => {
-    try {
-      // Sin `formato`: es opcional en `DocumentoResource` (sólo valida si
-      // llega) y su único valor admitido es `docx`. Mandarlo era contradecir el
-      // comentario de arriba y el propio contrato.
-      const { blob, nombreArchivo } = await descargar(
-        `/documentos/especificaciones-tecnicas/${presupuestoId}`,
-      );
-      guardar(blob, nombreArchivo ?? "especificaciones-tecnicas.docx");
-    } catch (e) {
-      toast.error(
-        esErrorDeContrato(e) ? `${e.problem.codigo}: ${e.problem.mensaje}` : "Error al descargar",
-      );
-    }
-  }, []);
-
   const descargarCronograma = useCallback(
     async (presupuestoId: string, formato: FormatoExportCronograma, papel?: "a4" | "a3") => {
       try {
@@ -299,11 +223,8 @@ export function useExportar() {
   );
 
   return {
-    descargarEspecificacionesTecnicas,
     exportarPrivado,
     descargarCronograma,
-    descargarPresupuesto,
-    descargarApus,
     descargando,
   };
 }
