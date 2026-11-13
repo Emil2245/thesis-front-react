@@ -5,6 +5,6 @@ playwright-report
 pnpm-lock.yaml
 src/components/ui
 
-# Out of scope for this repo's plans (see plans/001 §4) — not this tool's to reformat
+# Historical notes under plans/ are not this tool's to reformat
 plans
 .agents

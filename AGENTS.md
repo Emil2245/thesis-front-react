@@ -33,29 +33,23 @@ El **código y las pruebas actuales de `../thesis-back-quarkus` son la fuente de
 ```bash
 pnpm install
 pnpm run verify   # typecheck + lint + guard:adr9 + format:check + test + build
-pnpm run e2e      # Playwright E2E (74 tests: chromium 68 [13 capturas + 3 smoke + 52 del manual] + firefox 3 + mobile-chrome 3; CI corre solo chromium)
+pnpm run e2e      # Playwright E2E (proyectos chromium, firefox y mobile-chrome; CI corre solo chromium)
 pnpm run e2e:screenshots   # solo las 13 capturas de escritorio (chromium)
 pnpm run e2e:manual        # capturas de docs/manual/ (chromium)
 pnpm run dev      # http://localhost:5173
 ```
 
-Baseline funcional verificado en el corte de código `be5fc776`: `pnpm run verify` pasa entero —**typecheck, lint,
-guard:adr9, format:check, test y build**— con **748/748 tests en 101 archivos** y **9 warnings
-de lint** (0 errores). Lint y guard:adr9 ya conocidos por su ruido de
-`react(incompatible-library)` heredado de react-hook-form; los reales quedan anotados en
-[`INVENTARIO-COBERTURA.md`](plans/INVENTARIO-COBERTURA.md) §7.2. **E2E, CI y CD no se
-ejecutaron en esta verificación**: el conteo de 637/637 cubre solo la unidad/componente;
-los 67 lanzamientos E2E documentados en `pnpm run e2e` mantienen su última medición
-(Capturas Chromium verdes; Firefox pendiente por binario ambiental; ver
-[`BITACORA.md`](plans/BITACORA.md)). Si tocas ese número, actualízalo aquí también: el plan 060 se encontró con el de 197/43, cinco olas caducado, y un baseline que miente no detecta nada.
+`pnpm run verify` es la puerta: **typecheck, lint, guard:adr9, format:check, test y build**. CI
+(`.github/workflows/ci.yml`) corre `verify`, los E2E en Chromium y el build de la imagen en cada
+push y pull request. Este archivo ya no fija cifras de tests ni de warnings: caducan en cada
+cambio y un baseline que miente no detecta nada. Mide con `pnpm run verify` y `pnpm run e2e`
+antes de afirmar un número.
 
-Trazabilidad: este baseline reemplaza al 635/635 reportado al cierre de F-004 (2026-09-11)
-tras integrar los Planes 094–096 sobre `fix/cronograma` (commits `0067df9`..`be5fc77`); antes
-de la ola admin-077–081 el repo medía 459 ✅ / **20 ❌** en 75 archivos, con `typecheck` y
-`format:check` rojos y `vite build` bloqueado. Los 20 fallos eran fixtures y `server.use(...)`
-que no se actualizaron cuando el plan 076 metió validación runtime en el seam. Están en
-[`docs/bugs.md`](docs/bugs.md) §6, con la regla que faltaba: **una fixture es una afirmación sobre
-el backend y se verifica como tal**.
+Antecedente que explica la regla de [`docs/bugs.md`](docs/bugs.md) §6: antes de la ola
+admin-077–081 había 20 tests rojos, con `typecheck` y `format:check` rojos y `vite build`
+bloqueado. Eran fixtures y `server.use(...)` que no se actualizaron cuando el plan 076 metió
+validación runtime en el seam. La regla que faltaba: **una fixture es una afirmación sobre el
+backend y se verifica como tal**.
 
 > **Punto ciego del gate:** `verify` **no comprueba tipos en `e2e/`**.
 > `tsconfig.app.json` incluye sólo `src`, así que un error de tipos en un
@@ -77,8 +71,8 @@ el backend y se verifica como tal**.
 - **API layer:** `src/api/` is the only place that knows HTTP exists. No feature module imports axios directly
 - **Dinero — «se visualiza en string, se maneja en número»** (decisión del autor,
   2026-09-06). Son **dos ejes**, y confundirlos en uno solo produjo los `as never`
-  que el plan 060 retiró. Versión larga en [`docs/bugs.md`](docs/bugs.md) §0 y
-  `plans/README.md` §2. **Transporte**, lo fija el backend y
+  que el plan 060 retiró. Versión larga en [`docs/bugs.md`](docs/bugs.md) §0.
+  **Transporte**, lo fija el backend y
   no se negocia: presupuesto y cronograma (`totalGeneral`, `precioTotal`,
   `cantidad`, avances) serializan **string** —el tipo marcado `Decimal` de
   `src/lib/decimal.ts`—; APU, insumo y parámetros (`costoDirecto`,
@@ -122,8 +116,18 @@ el backend y se verifica como tal**.
 | apu-editor  | `/proyectos/:id/apus`, `/proyectos/:id/apus/:apuId`                                                                              | `useApuEditor.ts`, `GridSeccion.tsx`, `PieTotales.tsx`                              |
 | presupuesto | `/proyectos/:id/presupuesto`, `/proyectos/:id/versiones`                                                                         | `ArbolPresupuesto.tsx`, `ComparadorVersiones.tsx`                                   |
 | cronograma  | `/proyectos/:id/cronograma`                                                                                                      | `TablaActividades.tsx`, `GanttChart.tsx`                                            |
-| exportar    | `/proyectos/:id/documentos`                                                                                                      | `ExportPage.tsx`                                                                    |
+| exportar    | `/proyectos/:id/documentos`                                                                                                      | `ExportPage.tsx`, `hooks/useExportar.ts`                                            |
+| workspace   | `/proyectos/:id/workspace`                                                                                                       | `WorkspacePage.tsx`                                                                 |
+| plantillas  | `/plantillas`, `/plantillas-proyecto`                                                                                            | `MisPlantillasPage.tsx`, `PlantillasProyectoPage.tsx`                               |
+| legal       | `/privacidad`                                                                                                                    | `PrivacidadPage.tsx`                                                                |
 | admin       | `/admin/usuarios`, `/admin/bases`, `/admin/bases/:id`, `/admin/plantillas`, `/admin/parametros`, `/admin/valores`, `/admin/logs` | One page per route. `/admin/bases/:id` es el detalle de una base central (plan 050) |
+
+## Exportación de documentos
+
+- Presupuesto, APUs, especificaciones técnicas y cronograma se descargan con `POST /documentos/{documento}/{presupuestoId}/exportaciones` (`solicitarExportacion` en `src/api/exportaciones.ts`, orquestado por `src/features/exportar/hooks/useExportar.ts`). No existen GET de bytes: se retiraron en la etapa 05 y responden 404; no los reintroduzcas.
+- Cada operación lleva un `Idempotency-Key` UUIDv7 (`generarClaveExportacion`). Reintentar con la misma clave reemite el ticket sin renderizar de nuevo; `idempotencia-conflicto` o `exportacion-expirada` obligan a una operación nueva con otra clave.
+- La respuesta se valida con Zod (`exportacionResponseSchema`): `downloadUrl` es una ruta relativa de Core `/api/v1/documentos/descargas/{ticket}` de un solo uso. El navegador solo la abre tras un clic explícito (`navegarDescarga`); nunca ve una URL de S3 ni guarda el ticket antes del clic.
+- Un 409 con preflight (`DocumentoPreflightError`) o bloqueo de cronograma (`CronogramaBloqueadoError`) significa «no exportable»; los GET de preflight siguen siendo solo informativos.
 
 ## Testing
 
@@ -138,7 +142,7 @@ añadirlo sería contraproducente, porque`\`${API}/admin/usuarios*\``capturaría
 también`/admin/usuarios/:id` y las rutas de acción
 - Query by accessible role/label in Spanish
 - Shared test render wrapper in `src/test/render.tsx` (providers: QueryClient, Router, TooltipProvider)
-- Fixtures in `src/test/fixtures/`, handlers in `src/test/handlers.ts` (40+ endpoints)
+- Fixtures in `src/test/fixtures/`, handlers in `src/test/handlers.ts`
 - Playwright for E2E with `@axe-core/playwright` for a11y checks
 
 ## DTOs & API
@@ -153,7 +157,7 @@ también`/admin/usuarios/:id` y las rutas de acción
 - `src/test/handlers.ts` — all MSW endpoint mocks
 - `src/api/contract.ts` — all TypeScript DTOs
 - `src/lib/decimal.ts` — `Decimal` branded type and formatters
-- `src/routes/index.tsx` — all 28 routes
+- `src/routes/index.tsx` — todas las rutas
 - `src/lib/disponibilidad.ts` — qué módulos aún no tienen backend
 - `src/components/comunes/EncabezadoPagina.tsx` / `TarjetaTabla.tsx` — encabezado
   y contenedor de tabla que usan todas las páginas; el padding y el espaciado los

@@ -31,13 +31,13 @@ Single-page application with route-based code splitting:
 - **Private routes** (behind `RutaPrivada`): proyectos, insumos, APUs, presupuesto, cronograma, documentos, plantillas
 - **Admin routes** (behind `RutaAdmin`): usuarios, bases, plantillas, parámetros, valores ref., logs
 
-Key architectural decisions (see `plans/README.md` for full ADR log):
+Key architectural decisions (see [`AGENTS.md`](AGENTS.md) and [`docs/bugs.md`](docs/bugs.md)):
 
 - No calc engine in the client — all cost/pricing math is server-side (ADR 9)
 - `src/api/` is the only HTTP-aware layer
 - Version selector uses `?v=` search param (not nested routes)
 
-## Private document exports (stages 03–04)
+## Private document exports
 
 The budget, APU, technical-specification and cronograma buttons send an authenticated JSON
 `POST /documentos/{type}/{budgetId}/exportaciones` to Core. The client generates
@@ -51,9 +51,11 @@ Retry a failed request with the same key so Core can reissue a one-use ticket
 without rendering again. If Core responds `idempotencia-conflicto` (changed
 revision/options) or `exportacion-expirada`, the next explicit click starts a
 new operation with a new key. Cronograma accepts XLSX, PDF (`papel` only for
-PDF), and MSPDI XML; its captured stale warning remains visible. Core's public
-byte-serving GETs and cronograma preflight remain available for transition
-callers. Configure `VITE_API_BASE_URL` to the Core
+PDF), and MSPDI XML; its captured stale warning remains visible. Since stage 05
+Core's legacy byte-serving GETs (`GET /documentos/{documento}/{id}`) are retired and
+answer 404: the only download path is `POST /documentos/{documento}/{id}/exportaciones`
+followed by the one-use `GET /documentos/descargas/{ticket}`. The read-only
+preflight GETs remain. Configure `VITE_API_BASE_URL` to the Core
 `/api/v1` origin, and allow `Idempotency-Key` in the Core CORS preflight for
 cross-origin deployments. Local component tests do not prove browser download,
 Ingress log suppression or deployed S3 permissions.
@@ -86,7 +88,7 @@ Tres reglas que se derivan:
 > back»— **era falsa** desde que existe el backend real. Si la encuentras en algún sitio, es
 > documentación caducada.
 
-Detalle completo en [`docs/bugs.md`](docs/bugs.md) §0 y en `plans/README.md` §2.
+Detalle completo en [`docs/bugs.md`](docs/bugs.md) §0.
 
 ## Project structure
 
@@ -104,43 +106,14 @@ src/
 
 ## Tests
 
-> **Estado verificado en el corte funcional (frontend `be5fc776`, backend `origin/main @ ac84c945`).**
-> `pnpm run verify` pasa entero — typecheck, lint, guard:adr9, format:check, test y build —
-> con **637/637 tests unitarios en 92 archivos** y **9 warnings de lint** (0 errores).
->
-> **E2E, CI y CD no se volvieron a correr en esta pasada documental.** El conteo de 637/637
-> cubre solo unidad/componente. La última medición E2E conocida es del cierre de F-004
-> (Playwright Chromium **67/67**, capturas **13/13**, axe WCAG 2A/2AA verde en Chromium) y
-> queda registrada con fecha 2026-09-11 en [`plans/BITACORA.md`](plans/BITACORA.md);
-> **Firefox quedó sin ejecutar por ausencia del binario Playwright en el entorno**, no por
-> un fallo de producto. Si vuelve a medirse E2E y cambia, actualiza esa bitácora — y este
-> README, si quieres que siga siendo de un golpe de vista.
->
-> Trazabilidad del baseline: 459 ✅ / 20 ❌ (con typecheck y format:check rojos) → 635/635 al
-> cierre de F-004 → **637/637 actual** tras integrar los Planes 094–096 sobre `fix/cronograma`
-> (commits `0067df9`..`be5fc77`). El conteo anterior (461 tests / 74 archivos) corresponde al
-> cierre de la ronda de paridad 1 y está **caducado**; no lo uses para razonar.
+El baseline vigente de `pnpm run verify` (typecheck, lint, guard:adr9, format:check, test y
+build) y de los E2E se mantiene en un solo lugar: [`AGENTS.md`](AGENTS.md). No se repiten
+aquí cifras que caducan.
 
-- **637 unit tests** across 92 files (Vitest + RTL + MSW) — verified at `be5fc776`
-- **67 E2E tests** (última medición conocida, Playwright Chromium): capturas de escritorio,
-  humo y accesibilidad con axe-core; Firefox queda pendiente por ausencia del binario
+- Unit/component: Vitest + RTL + MSW. E2E: Playwright (Chromium, humo, capturas y
+  accesibilidad con axe-core).
 - Commands: `pnpm test`, `pnpm run test:watch`, `pnpm run test:coverage`,
   `pnpm run e2e`, `pnpm run e2e:screenshots`
-
-## CI
-
-**No hay CI.** `.github/` está en `.gitignore` (commit `7635176`, «bypass workflow token
-requirement») y el directorio no existe en el repositorio.
-
-La puerta es local y hay que correrla a mano:
-
-```bash
-pnpm run verify   # typecheck → lint → guard:adr9 → format:check → test → build
-pnpm run e2e      # Playwright
-```
-
-Cualquier guarda que quieras hacer cumplir tiene que ir **dentro de `verify`**, no en un workflow:
-allí sería letra muerta.
 
 ## Spec repository
 
@@ -148,27 +121,19 @@ API contracts and design docs live in the companion [thesis-docs](https://github
 DTOs are hand-transcribed from Apéndice B; el backend Quarkus expone OpenAPI en `/q/openapi`,
 pero el frontend mantiene su costura tipada explícita hasta sustituirla por generación automática.
 
-El paquete backend complementario [`plans_busquedas_plantilla`](../thesis-back-quarkus/plans/plans_busquedas_plantilla/README.md) está DONE (planes 001–005, 2026-09-10/11) y define los contratos de FTS, lote atómico y alta manual de APU consumidos por F-004.
-
-**El backend es la fuente de verdad del contrato.** Implementa **36 recursos JAX-RS**
-(`origin/main` @ `ac84c945` — incluye cronograma completo desde el 2026-09-05, los cuatro
-recursos admin de planes 077–080, y el Plan 005 de búsqueda/lote/APU manual integrado el
-2026-09-11); el frontend tiene pantallas para los 44 procesos del contrato. Cuando el código
-y los docs discrepan, **gana el código** y los docs se corrigen.
+**El backend es la fuente de verdad del contrato.** Cuando el código y los docs
+discrepan, **gana el código** y los docs se corrigen.
 
 Las páginas pendientes con contrato backend aprobado se degradan a un aviso explícito en vez
 de romperse. El inventario vive en `src/lib/disponibilidad.ts` y **el gate es por página, no
 por módulo**: `MODULOS_SIN_BACKEND` queda **vacío desde el plan 081**, así que las cuatro
 páginas `/admin/*` (`/admin/usuarios`, `/admin/plantillas`, `/admin/valores`, `/admin/logs`)
 están **activas** y consumen el backend real. La búsqueda de plantillas y el alta manual
-completa de APU están integradas en el workspace (F-004 ✅ con verificación contra backend
-real `localhost:8090`). Las operaciones sin contrato consolidado —duplicar proyecto, subir
+completa de APU están integradas en el workspace. Las operaciones sin contrato consolidado —duplicar proyecto, subir
 logo y descuento global— **siguen retiradas del frontend por decisión de producto**; el uso
 de insumo (`GET /proyectos/{id}/insumos/{id}/usos`) existe como endpoint pero el backend
-devuelve `[]` (stub documentado en `docs/bugs.md`). Detalle de la cobertura y de los gaps
-funcionales abiertos (058 bases personales por contrato backend PERSONAL, 074 armado
-posterior de APU, 089 integración final) en [`plans/00.INDEX.md`](plans/00.INDEX.md) y
-[`plans/HANDOFF-ESTADO-Y-GAPS.md`](plans/HANDOFF-ESTADO-Y-GAPS.md).
+devuelve `[]` (stub documentado en `docs/bugs.md`). Las pendientes de producto
+conocidas están en [`plans/pendientes2/bugs-pendientes.md`](plans/pendientes2/bugs-pendientes.md).
 
 > **Antes de tipar un DTO, lee el record de Java** (`git show origin/main:<path>` en
 > `../thesis-back-quarkus`; no hagas checkout, el working tree está en otra rama). Ocho planes de
@@ -199,4 +164,4 @@ podman run -d --rm -p 8089:8080 --read-only --tmpfs /tmp --tmpfs /var/cache/ngin
 - Puerto `8080`; salud en `GET /healthz` (responde `ok`); log de acceso JSON a stdout.
 - El bundle se compila con la base de API relativa `/api/v1` (mismo origen: el Ingress enruta `/api` al backend), así que no hace falta recompilar por entorno ni hay CORS.
 - Para despliegues sin Ingress común: `podman build --build-arg VITE_API_BASE_URL=https://api.ejemplo/api/v1 -t propuestas-web:dev .`
-- CI (`.github/workflows/ci.yml`): `pnpm run verify` y build de imagen con trivy (solo reporte). E2E no corre en CI (requiere backend).
+- CI (`.github/workflows/ci.yml`, en cada push y pull request), tres jobs: `verify` (`pnpm run verify`), `e2e` (Playwright, solo proyecto `chromium`; todos los specs mockean la API con `page.route`, no requieren backend; sube `playwright-report` si falla) y `image` (build de la imagen y escaneo trivy `CRITICAL`, solo reporte, `exit-code: 0`).
