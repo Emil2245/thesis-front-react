@@ -130,7 +130,7 @@ Estado: todos **corregidos** salvo los marcados 🔴, que son del backend.
 | 11  | **`AdminParametrosPage` pintaba valores por defecto sobre un 404**                                                                  | El handler de `/proyectos/:id` capturaba `/proyectos/parametros-sistema`; las rutas literales deben registrarse antes que las paramétricas                                                                               | A      | `057` |
 | 12  | **`porcentajeIndirecto` se descartaba en silencio**                                                                                 | Iba dentro del cuerpo de `PATCH /apus/{id}`, que solo acepta `{codigo, descripcion, unidad}`; Jackson lo tiraba y la UI mostraba éxito. El endpoint real es `PATCH /apus/{id}/porcentaje-indirecto` con un escalar crudo | A      | `054` |
 | 13  | **Editar %CI no invalidaba nada**                                                                                                   | Invalidaba solo `qk.apus`, y además pegaba al endpoint equivocado, así que nunca funcionó                                                                                                                                | —      | `054` |
-| 14  | **El nombre de archivo de las descargas era inalcanzable**                                                                          | `descargar()` devolvía solo `.data`; ningún llamante podía leer `Content-Disposition`                                                                                                                                    | —      | `051` |
+| 14  | **El nombre de archivo de las descargas era inalcanzable**                                                                          | `descargar()` devolvía solo `.data`; ningún llamante podía leer `Content-Disposition` (helper retirado en la etapa 05)                                                                                                   | —      | `051` |
 | 15  | **`DialogoAgregarItem` iteraba un objeto**                                                                                          | `get<ApuResumenResponse[]>` sobre un endpoint que devuelve `Page<ApuResumenResponse>` siempre                                                                                                                            | A      | `028` |
 | 16  | **Guardar plantilla dejaba «Mis plantillas» rancia**                                                                                | `DialogoGuardarPlantilla` llamaba a `post` en paralelo al hook, sin invalidar                                                                                                                                            | —      | `052` |
 | 17  | **Las cuatro pantallas de auth no distinguían ningún error**                                                                        | Consecuencia del #3: credenciales inválidas, email no verificado, cuenta desactivada, token expirado y cooldown caían todos al mensaje genérico                                                                          | A      | `063` |
@@ -292,9 +292,9 @@ tipo ganó: actualiza el test, no lo revientes.
   `AGENTS.md` y volverá a hacer falta. **Si en la próxima ronda siguen sin usarse, bórralos**: un
   componente sin llamantes es la clase de promesa que el siguiente agente cree cumplida.
 - **Los planes 083–089 se escribieron el mismo día, con el mismo formato y las mismas cuatro
-  premisas falsas que 077–081.** Están enumeradas en
-  [`../plans/README.md`](../plans/README.md) §«Rama administrativa 077–081». **Compruébalas contra
-  el código y el backend antes de despachar cualquiera de ellos**, no después.
+  premisas falsas que 077–081.** Los planes ya no están en el repositorio (historial de git), pero
+  la lección se conserva: **comprueba las premisas de un plan contra el código y el backend antes
+  de despachar cualquier tarea**, no después.
 - **No hay ningún `SUPER_ADMIN` sembrado** (`V004__seed_escenarios.sql` crea dos `USUARIO`), así que
   ninguna ruta `/admin/**` se puede ejercitar contra el backend real sin promover un usuario a mano
   en la BD de desarrollo. Se hizo y se revirtió. Sembrar uno es del backend, no de aquí.

@@ -161,19 +161,21 @@ error no se importan; corrige el archivo y repite la importación.
 
 **Pasos**
 
-1. En **Insumos**, pulsa la pestaña **Bases centrales**.
+1. En el menú lateral, sección **General**, pulsa **Insumos** (la sección global, fuera de
+   cualquier proyecto) y luego la pestaña **Sistema**. La pestaña **Personales** lista tus propias
+   bases.
 
    ![Vista de bases centrales](../img/03-insumos/07-bases-centrales.png)
 
    La vista muestra cada base con su nombre y el total de insumos que contiene. Las bases que ya
-   no se actualizan llevan la etiqueta **Archivada**. Es una vista de solo consulta.
+   no se actualizan llevan la etiqueta **Archivada**. Las bases del sistema son de solo consulta.
 
 **Si algo sale mal**
 
 - _"No hay bases centrales disponibles"_ → el administrador todavía no ha creado ninguna.
 
 **Al terminar:** sabes qué bases existen y cuántos insumos trae cada una. Para usarlos en tu
-proyecto, cópialos (§3.5).
+proyecto, cópialos desde los insumos del proyecto con **Copiar base** (§3.5).
 
 ---
 

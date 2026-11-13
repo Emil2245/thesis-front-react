@@ -3,6 +3,7 @@
 Lista simple de cosas que faltan o fallan. Por ítem: qué falla, en qué page/sección, cuál es el fallo y panorama corto (qué módulo se afectaría).
 
 ## 1. Parámetros de Presentación y Codificación no se guardan
+- **Estado:** HECHO — el PUT del frontend ya envía los parámetros de Presentación y Codificación (commit `3e28488`). Se conserva el texto original como contexto histórico.
 - **Page/sección:** `/proyectos/:id/parametros` — tarjeta "Presentación" (6 switches + mensaje footer) y tarjeta "Codificación" (select Autogenerado/Manual).
 - **Fallo:** al Guardar, el toast dice "Parámetros actualizados" pero esos 8 campos vuelven a su valor anterior al recargar. Solo la tarjeta "Cálculo" (3 % + moneda) persiste de verdad.
 - **Panorama:** el DTO del PUT (`ParametrosProyectoEditarRequest`) solo acepta 4 campos y el servicio (`ParametrosProyectoService.actualizar`) ignora el resto; Quarkus descarta lo desconocido sin error, por eso el Guardar responde 200 aunque no guarda nada. Además hoy nada consume esos flags.
@@ -10,11 +11,13 @@ Lista simple de cosas que faltan o fallan. Por ítem: qué falla, en qué page/s
 - **Afecta:** backend (`proyecto` — DTO + servicio, sin migración, riesgo bajo) y textos de ayuda en frontend. Darles efecto visual real (qué cambia en pantalla/export con cada switch) es fase aparte con decisión de producto.
 
 ## 2. Falta dataset real de rubros/APUs (hoy solo excels sueltos)
+- **Estado:** trabajo de datos del backend (ingreso de datasets); no es trabajo de este repositorio.
 - **Qué falta:** extraer, limpiar y vincular excels públicos de APUs/presupuestos en un dataset versionado: rubros ↔ APUs sin duplicados, más metadata extra por fila (fecha de extracción, fecha del APU si se conoce, URL fuente, etc.).
 - **Panorama:** hoy el seed solo trae 93 insumos V003 + 2 plantillas y 12 APUs sintéticas; no hay fuente real para poblar catálogos. **Afecta:** en principio solo datos/scripts fuera del backend (nueva migración seed cuando esté listo). De este dataset salen el punto 3 (plantillas APU y plantilla de proyecto).
 - **Decidir:** formato del dataset (CSV/JSON) y dónde vive (repo o carpeta aparte).
 
 ## 3. Seeds de ejemplo incompletos y poco realistas (verificar o reemplazar)
+- **Estado:** trabajo de datos del backend (seeds); no es trabajo de este repositorio.
 - **Qué falla:** los 2 proyectos sintéticos del seed (`BORRADOR` de Ana, `EN_PROCESO` de John) no sirven como caso real completo:
   - Presupuesto B: 12 rubros 1:1 con sus APUs (FK ok), pero 10 de los 12 APUs (`ST-001`…`ST-010`) son solo cabecera sin secciones ni detalle de insumos — rubros sin desglose de APU detrás.
   - Ningún APU del seed trae especificación técnica → la exportación de ET (DOCX) no se puede probar con seeds.
@@ -24,6 +27,7 @@ Lista simple de cosas que faltan o fallan. Por ítem: qué falla, en qué page/s
 - **Afecta:** backend (nueva migración seed `V0XX`, más filas; sin cambio de código salvo que se detecte un bug al verificar relaciones) y docs del seed (`04-SEED-ESCENARIOS.md`).
 
 ## 4. Gantt de cronograma: UX de segmentos por rehacer
+- **Estado:** parcialmente abierto; verificar contra `GanttJerarquicoInteractivo.tsx` antes de actuar.
 - **Page/sección:** `/proyectos/:id/cronograma` — Gantt jerárquico interactivo (`GanttJerarquicoInteractivo.tsx`).
 - **Fallo / faltantes:**
   - Al crear un cronograma, las actividades nacen vacías (`{}`) y hay que programar fila por fila. Pedido: segmento por defecto en el primer periodo (mes/semana) al crear.
@@ -35,7 +39,7 @@ Lista simple de cosas que faltan o fallan. Por ítem: qué falla, en qué page/s
 - **Preguntas abiertas:** ¿default = todo el peso en periodo 1 o reparto uniforme en el plazo? ¿Dividir con punto de corte elegido por click ("cuchilla") o mitad automática? ¿Eliminar el único segmento deja la fila en `{}` (borrador)?
 
 ## 5. Insumos: quitar tab de Bases centrales y nueva sección global en sidebar
-- **Estado:** HECHO (2026-09-23) — ver `plans/BITACORA.md` y el plan 044 del backend.
+- **Estado:** HECHO (2026-09-23) — ver el plan 044 del backend.
 - **Page/sección:** `/proyectos/:id/insumos` (tabs) y sidebar grupo "General".
 - **Fallo / faltantes:**
   - Quitar el tab "Bases centrales" de `InsumosPage.tsx` (hoy `Insumos del proyecto` + `Bases centrales` vía `VistaBasesCentrales`): esa pantalla debe mostrar solo insumos del proyecto. Las centrales se verán en otro lado.
@@ -45,7 +49,7 @@ Lista simple de cosas que faltan o fallan. Por ítem: qué falla, en qué page/s
 - **Preguntas abiertas:** ¿dónde copia el usuario una central a su proyecto (desde la nueva sección global o desde la base del proyecto)? ¿La sección global de insumos también permite crear bases personales?
 
 ## 6. Plantillas sin distinción sistema/personal ni previsualización útil
-- **Estado:** HECHO (2026-09-23) — ver `plans/BITACORA.md` y el plan 044 del backend.
+- **Estado:** HECHO (2026-09-23) — ver el plan 044 del backend.
 - **Page/sección:** sidebar General → `/plantillas` (Mis plantillas) y `/plantillas-proyecto`.
 - **Fallo / faltantes:**
   - `/plantillas` solo lista las PERSONALES (`usePlantillas("PERSONAL")`); las SISTEMA no se ven en ningún lado para el usuario normal (solo en el panel admin). Pedido: diferenciar tabs o badges sistema vs. personal, con las de sistema en solo lectura.
