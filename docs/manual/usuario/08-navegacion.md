@@ -25,7 +25,7 @@ Procesos cubiertos: **P-43**, **P-44**, **P-46**.
 
    | Sección                 | Cuándo aparece            | Qué contiene                                                                                                       |
    | ----------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-   | **General**             | Siempre                   | **Proyectos**, **Plantillas APU**, **Plantillas de proyecto**                                                      |
+   | **General**             | Siempre                   | **Proyectos**, **Insumos**, **Plantillas APU**, **Plantillas de proyecto**                                         |
    | _(nombre del proyecto)_ | Con un proyecto abierto   | **Resumen**, **Insumos**, **APUs**, **Presupuesto**, **Cronograma**, **Documentos**, **Parámetros**, **Versiones** |
    | **Administración**      | Solo para administradores | Usuarios, Bases, Plantillas, Parámetros, Valores ref., Logs                                                        |
 
@@ -49,10 +49,8 @@ Procesos cubiertos: **P-43**, **P-44**, **P-46**.
 **Al terminar:** sabes en qué proyecto y en qué pantalla estás en todo momento, sin tener que
 volver a Proyectos para orientarte.
 
-> **Administración solo para administradores.** Varias de sus entradas —**Usuarios**,
-> **Plantillas**, **Valores ref.** y **Logs**— aparecen atenuadas y, al pasar el ratón por
-> encima, muestran _"Disponible cuando el backend implemente esta operación."_ **Bases** y
-> **Parámetros** del sistema sí funcionan.
+> **Administración solo para administradores.** Todas sus entradas —**Usuarios**, **Bases**,
+> **Plantillas**, **Parámetros**, **Valores ref.** y **Logs**— están operativas.
 
 ---
 
@@ -236,8 +234,5 @@ plantilla"_. Tiene la misma estructura de capítulos, rubros y APUs que la plant
 
 ## Lo que todavía no está disponible
 
-- En **Administración**, las entradas **Usuarios**, **Plantillas**, **Valores ref.** y **Logs**
-  aparecen en el menú pero desactivadas, con el aviso _"Disponible cuando el backend implemente
-  esta operación."_ **Bases** y **Parámetros** del sistema sí están operativas.
 - **Duplicar un proyecto** no aparece en el menú porque el backend no expone esa operación; para
   reutilizar la estructura usa las plantillas de este capítulo.

@@ -4,8 +4,9 @@ Dos manuales, en español (es-EC), con capturas reales generadas por la suite de
 este repositorio.
 
 - **[Manual del Usuario](usuario/)** — todo lo que hace un usuario con rol `USUARIO`.
-- **[Manual del Administrador](admin/)** — lo que hace `ADMIN`. Hoy es corto a propósito: solo
-  dos de sus cinco procesos tienen backend.
+- **Manual del Administrador** — aún no existe en este repositorio. Las pantallas de
+  administración (usuarios, bases, plantillas, parámetros, valores de referencia y logs) están
+  operativas, pero sus capítulos no se han escrito.
 
 ## Regla que gobierna estos documentos
 
@@ -33,27 +34,27 @@ falla en vez de guardar una captura de una pantalla vacía o equivocada.
 
 ## Cobertura
 
-**38 procesos documentables**, medidos contra el código el 2026-09-07. La especificación
-(`thesis-docs`, `plan/design/03-procesos-detalle.md`) describe 46; los ocho que faltan no se
-documentan porque no existen en la interfaz — ver _Lo que no se documenta_, abajo.
+La especificación (`thesis-docs`, `plan/design/03-procesos-detalle.md`) describe 46 procesos.
+Algunos no se documentan porque no existen en la interfaz — ver _Lo que no se documenta_, abajo —
+y varios capítulos están pendientes de redactar.
 
-| Capítulo                                                         | Procesos                     | Estado       |
-| ---------------------------------------------------------------- | ---------------------------- | ------------ |
-| [00 · Introducción](usuario/00-introduccion.md)                  | —                            | ⏳ pendiente |
-| [01 · Cuenta y acceso](usuario/01-cuenta-y-acceso.md)            | P-01…P-04                    | ✅ escrito   |
-| [02 · Proyectos](usuario/02-proyectos.md)                        | P-05, P-06, P-08, P-10, P-11 | ✅ escrito   |
-| [03 · Insumos](usuario/03-insumos.md)                            | P-13…P-18                    | ✅ escrito   |
-| [04 · APU](usuario/04-apu.md)                                    | P-19…P-23, P-26, P-27, P-45  | ⏳ pendiente |
-| [05 · Presupuesto](usuario/05-presupuesto.md)                    | P-28…P-32                    | ✅ escrito   |
-| [06 · Cronograma](usuario/06-cronograma.md)                      | P-33…P-36                    | ⏳ pendiente |
-| [07 · Documentos](usuario/07-documentos.md)                      | P-37                         | ⏳ pendiente |
-| [08 · Navegación](usuario/08-navegacion.md)                      | P-43, P-44, P-46             | ✅ escrito   |
-| [admin · Bases centrales](admin/01-bases-centrales.md)           | P-39                         | ⏳ pendiente |
-| [admin · Parámetros del sistema](admin/02-parametros-sistema.md) | P-41 (defaults)              | ⏳ pendiente |
+| Capítulo                                              | Procesos                     | Estado       |
+| ----------------------------------------------------- | ---------------------------- | ------------ |
+| 00 · Introducción                                     | —                            | ⏳ pendiente |
+| [01 · Cuenta y acceso](usuario/01-cuenta-y-acceso.md) | P-01…P-04                    | ✅ escrito   |
+| [02 · Proyectos](usuario/02-proyectos.md)             | P-05, P-06, P-08, P-10, P-11 | ✅ escrito   |
+| [03 · Insumos](usuario/03-insumos.md)                 | P-13…P-18                    | ✅ escrito   |
+| 04 · APU                                              | P-19…P-23, P-26, P-27, P-45  | ⏳ pendiente |
+| [05 · Presupuesto](usuario/05-presupuesto.md)         | P-28…P-32                    | ✅ escrito   |
+| 06 · Cronograma                                       | P-33…P-36                    | ⏳ pendiente |
+| 07 · Documentos                                       | P-37                         | ⏳ pendiente |
+| [08 · Navegación](usuario/08-navegacion.md)           | P-43, P-44, P-46             | ✅ escrito   |
+| admin · Bases centrales                               | P-39                         | ⏳ pendiente |
+| admin · Parámetros del sistema                        | P-41                         | ⏳ pendiente |
 
 ## Lo que no se documenta, y por qué
 
-Ocho procesos de la especificación quedan fuera, todos por decisión:
+Cinco procesos de la especificación quedan fuera, todos por decisión:
 
 | Proceso                            | Motivo                                                                                  |
 | ---------------------------------- | --------------------------------------------------------------------------------------- |
@@ -62,16 +63,16 @@ Ocho procesos de la especificación quedan fuera, todos por decisión:
 | **P-12** Descuento global al CD    | Sin backend. Su UI, hooks, DTOs y mocks fueron retirados; no es un pendiente de entrega |
 | **P-24** Descuento al CD por rubro | Retirado de la especificación (`WITHDRAWN / SUPERSEDED`)                                |
 | **P-25** Rubro auxiliar            | Retirado. La regla vigente es que no hay enlaces entre APUs                             |
-| **P-38** Gestión de usuarios       | Sin backend; la pantalla muestra el aviso de no disponible                              |
-| **P-40** Plantillas de sistema     | Ídem                                                                                    |
-| **P-42** Logs de actividad         | Ídem                                                                                    |
 
 Dos matices que el manual dice en su propio texto, en vez de callarlos:
 
-- **P-37 (Documentos)** está a medias: hoy se exportan las **especificaciones técnicas en DOCX**
-  y el **cronograma valorizado** en XLSX, PDF y MSPDI. El presupuesto y los APUs todavía no.
-- **P-41 (Parámetros del sistema)** solo cubre los valores por defecto. La pestaña de _valores de
-  referencia_ no tiene backend.
+- **P-37 (Documentos)** ya exporta presupuesto, APUs, **especificaciones técnicas en DOCX** y
+  **cronograma valorizado** (XLSX, PDF y MSPDI), mediante una solicitud de exportación y un enlace
+  de descarga de un solo uso. Su capítulo del manual (07) sigue pendiente.
+- **P-38, P-40, P-41 y P-42** (usuarios, plantillas de sistema, parámetros y valores de
+  referencia, logs de actividad) tienen backend y pantalla operativos desde el plan 081; están
+  pendientes de documentar, no ausentes.
+- Las capturas de `img/09-privacidad-exportar/` no tienen aún capítulo propio.
 
 ## Convenciones de redacción
 
